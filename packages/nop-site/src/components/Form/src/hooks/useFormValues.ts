@@ -4,7 +4,7 @@ import type { Ref, ComputedRef } from 'vue';
 import type { FormProps, FormSchema } from '../types/form';
 import dayjs from "dayjs";
 import { set } from 'lodash-es';
-import { handleRangeValue } from '/@/components/Form/src/utils/formUtils';
+import { handleRangeValue } from '/@/Form/src/utils/formUtils';
 
 interface UseFormValuesContext {
   defaultValueRef: Ref<any>;

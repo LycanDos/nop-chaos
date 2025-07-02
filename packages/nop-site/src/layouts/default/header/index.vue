@@ -49,11 +49,11 @@
   import { propTypes } from '/@/utils/propTypes';
 
   import { Layout } from 'ant-design-vue';
-  import { AppLogo } from '/@/components/Application';
+  import { AppLogo } from '/@/Application';
   import LayoutMenu from '../menu/index.vue';
   import LayoutTrigger from '../trigger/index.vue';
 
-  // import { AppSearch } from '/@/components/Application';
+  // import { AppSearch } from '/@/Application';
 
   import { useHeaderSetting } from '/@/hooks/setting/useHeaderSetting';
   import { useMenuSetting } from '/@/hooks/setting/useMenuSetting';
@@ -61,7 +61,7 @@
 
   import { MenuModeEnum, MenuSplitTyeEnum } from '/@/enums/menuEnum';
   import { SettingButtonPositionEnum } from '/@/enums/appEnum';
-  import { AppLocalePicker } from '/@/components/Application';
+  import { AppLocalePicker } from '/@/Application';
 
   import { UserDropDown, LayoutBreadcrumb, FullScreen, LockScreen } from './components';
   import { useAppInject } from '/@/hooks/web/useAppInject';

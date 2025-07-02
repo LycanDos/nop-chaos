@@ -17,13 +17,13 @@
 </template>
 <script lang="ts" name="monitor-route" setup>
   import { ref } from 'vue';
-  import { BasicTable, TableAction } from '/@/components/Table';
-  import { useModal } from '/@/components/Modal';
+  import { BasicTable, TableAction } from '/@/Table';
+  import { useModal } from '/@/Modal';
   import { getRouteList, deleteRoute } from './route.api';
   import { columns } from './route.data';
   import RouteModal from './RouteModal.vue';
   import { useMessage } from '/@/hooks/web/useMessage';
-  import { useDrawer } from '/@/components/Drawer';
+  import { useDrawer } from '/@/Drawer';
   import { useListPage } from '/@/hooks/system/useListPage';
   const { createMessage } = useMessage();
   const [registerDrawer, { openDrawer }] = useDrawer();

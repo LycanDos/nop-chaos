@@ -12,7 +12,7 @@
   </BasicModal>
 </template>
 <script lang="ts" setup>
-  import { BasicModal, useModalInner } from '/@/components/Modal';
+  import { BasicModal, useModalInner } from '/@/Modal';
   import { propTypes } from '/@/utils/propTypes';
   import { ArrowRightOutlined } from '@ant-design/icons-vue';
   import { useRouter } from 'vue-router'

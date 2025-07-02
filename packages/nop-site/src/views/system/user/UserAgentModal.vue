@@ -5,8 +5,8 @@
 </template>
 <script lang="ts" setup>
   import { ref, computed, unref } from 'vue';
-  import { BasicModal, useModalInner } from '/@/components/Modal';
-  import { BasicForm, useForm } from '/@/components/Form/index';
+  import { BasicModal, useModalInner } from '/@/Modal';
+  import { BasicForm, useForm } from '/@/Form/index';
   import { formAgentSchema } from './user.data';
   import { getUserAgent, saveOrUpdateAgent } from './user.api';
   // 声明Emits

@@ -17,7 +17,7 @@
   import { isString } from '/@/utils/is';
   import { useRuleFormItem } from '/@/hooks/component/useFormItem';
   import { useAttrs } from '/@/hooks/core/useAttrs';
-  import { Icon } from '/@/components/Icon';
+  import { Icon } from '/@/Icon';
   type OptionsItem = {
     icon?: string;
     label?: string;

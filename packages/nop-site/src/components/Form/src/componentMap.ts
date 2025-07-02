@@ -24,10 +24,10 @@ import ApiRadioGroup from './components/ApiRadioGroup.vue';
 import RadioButtonGroup from './components/RadioButtonGroup.vue';
 import ApiSelect from './components/ApiSelect.vue';
 import ApiTreeSelect from './components/ApiTreeSelect.vue';
-//import { BasicUpload } from '/@/components/Upload';
-import { StrengthMeter } from '/@/components/StrengthMeter';
-import { IconPicker } from '/@/components/Icon';
-import { CountdownInput } from '/@/components/CountDown';
+//import { BasicUpload } from '/@/Upload';
+import { StrengthMeter } from '/@/StrengthMeter';
+import { IconPicker } from '/@/Icon';
+import { CountdownInput } from '/@/CountDown';
 //自定义组件
 // import JAreaLinkage from './jeecg/components/JAreaLinkage.vue';
 // import JSelectUser from './jeecg/components/JSelectUser.vue';
@@ -56,7 +56,7 @@ import { CountdownInput } from '/@/components/CountDown';
 // import JUpload from './jeecg/components/JUpload/JUpload.vue';
 // import JSearchSelect from './jeecg/components/JSearchSelect.vue';
 // import JAddInput from './jeecg/components/JAddInput.vue';
-import { Time } from '/@/components/Time';
+import { Time } from '/@/Time';
 // import JRangeNumber from './jeecg/components/JRangeNumber.vue';
 
 const componentMap = new Map<ComponentType, Component>();

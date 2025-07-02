@@ -42,7 +42,7 @@
   import NoticeList from './NoticeList.vue';
   import DetailModal from '/@/views/monitor/mynews/DetailModal.vue';
   import DynamicNotice from '/@/views/monitor/mynews/DynamicNotice.vue';
-  import { useModal } from '/@/components/Modal';
+  import { useModal } from '/@/Modal';
   import { useDesign } from '/@/hooks/web/useDesign';
   import { useGlobSetting } from '/@/hooks/setting';
   import { useUserStore } from '/@/store/modules/user';

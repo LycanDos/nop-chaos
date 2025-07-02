@@ -65,7 +65,7 @@
   import { PriorityTypes, ListItem } from './data';
   import { useDesign } from '/@/hooks/web/useDesign';
   import { List, Avatar, Tag, Typography } from 'ant-design-vue';
-  import { Time } from '/@/components/Time';
+  import { Time } from '/@/Time';
   import { isNumber } from '/@/utils/is';
   export default defineComponent({
     components: {

@@ -7,8 +7,8 @@
   import { ref, unref, defineExpose } from 'vue';
   import { rules } from '/@/utils/helper/validator';
   import { defHttp } from '/@/utils/http/axios';
-  import { BasicModal, useModalInner } from '/@/components/Modal';
-  import { BasicForm, useForm } from '/@/components/Form/index';
+  import { BasicModal, useModalInner } from '/@/Modal';
+  import { BasicForm, useForm } from '/@/Form/index';
   import { useMessage } from '/@/hooks/web/useMessage';
   // 声明Emits
   const emit = defineEmits(['register']);

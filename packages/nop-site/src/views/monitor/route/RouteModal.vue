@@ -140,7 +140,7 @@
 </template>
 <script lang="ts" setup>
   import { ref, computed, unref, useAttrs, reactive, nextTick } from 'vue';
-  import { BasicDrawer, useDrawerInner } from '/@/components/Drawer';
+  import { BasicDrawer, useDrawerInner } from '/@/Drawer';
   import { saveOrUpdateRoute } from './route.api';
   import { DeleteOutlined } from '@ant-design/icons-vue';
   import { PlusOutlined } from '@ant-design/icons-vue';

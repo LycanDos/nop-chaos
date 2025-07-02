@@ -1,0 +1,53 @@
+{
+  "compilerOptions": {
+    "outDir": "lib",
+    "rootDir": "./",
+    "module": "ESNext",
+    "target": "ES2017",
+    "lib": [
+      "ES6",
+      "DOM",
+      "ES2015",
+      "ES2021"
+    ],
+    "jsx": "react",
+    "moduleResolution": "node",
+    "declaration": true,
+    "importHelpers": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceRoot": "",
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noImplicitAny": false,
+    "strictNullChecks": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
+    "downlevelIteration": true,
+    "composite": true,
+    "allowJs": true,
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "types": [
+      // "@intlify/unplugin-vue-i18n/types",
+      "vite/client"
+      // "element-plus/global",
+      // "@types/qrcode",
+      // "vite-plugin-svg-icons/client"
+    ],
+    "typeRoots": ["./node_modules/@types/", "./types"]
+  },
+  "types": [
+    "typePatches"
+  ],
+  "references": [],
+  "include": [
+    "src",
+    "types/*.d.ts",
+    "src/types/auto-imports.d.ts",
+    "src/types/auto-components.d.ts",
+  ]
+}

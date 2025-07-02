@@ -13,13 +13,13 @@
 </template>
 <script lang="ts" name="monitor-mynews" setup>
   import { ref, onMounted } from 'vue';
-  import { BasicTable, useTable, TableAction } from '/@/components/Table';
+  import { BasicTable, useTable, TableAction } from '/@/Table';
   import DetailModal from './DetailModal.vue';
   import { getMyNewsList, editCementSend, syncNotic, readAllMsg, getOne } from './mynews.api';
   import { columns, searchFormSchema } from './mynews.data';
   import { useMessage } from '/@/hooks/web/useMessage';
   import { getToken } from '/@/utils/auth';
-  import { useModal } from '/@/components/Modal';
+  import { useModal } from '/@/Modal';
   import { useGlobSetting } from '/@/hooks/setting';
   const glob = useGlobSetting();
   const { createMessage } = useMessage();

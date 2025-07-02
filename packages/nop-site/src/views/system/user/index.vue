@@ -52,15 +52,15 @@
 <script lang="ts" name="system-user" setup>
   //ts语法
   import { ref, computed, unref } from 'vue';
-  import { BasicTable, TableAction, ActionItem } from '/@/components/Table';
+  import { BasicTable, TableAction, ActionItem } from '/@/Table';
   import UserDrawer from './UserDrawer.vue';
   import UserRecycleBinModal from './UserRecycleBinModal.vue';
   import PasswordModal from './PasswordModal.vue';
   import UserAgentModal from './UserAgentModal.vue';
-  import JThirdAppButton from '/@/components/jeecg/thirdApp/JThirdAppButton.vue';
-  import { useDrawer } from '/@/components/Drawer';
+  import JThirdAppButton from '/@/jeecg/thirdApp/JThirdAppButton.vue';
+  import { useDrawer } from '/@/Drawer';
   import { useListPage } from '/@/hooks/system/useListPage';
-  import { useModal } from '/@/components/Modal';
+  import { useModal } from '/@/Modal';
   import { useMessage } from '/@/hooks/web/useMessage';
   import { columns, searchFormSchema } from './user.data';
   import { list, deleteUser, batchDeleteUser, getImportUrl, getExportUrl, frozenBatch, syncUser } from './user.api';

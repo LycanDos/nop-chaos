@@ -1,7 +1,7 @@
 import { useGlobSetting } from '/@/hooks/setting';
 import { merge, random } from 'lodash-es';
 import { isArray } from '/@/utils/is';
-import { FormSchema } from '/@/components/Form';
+import { FormSchema } from '/@/Form';
 
 const globSetting = useGlobSetting();
 const baseApiUrl = globSetting.domainUrl;

@@ -95,8 +95,8 @@
   import { Tooltip, Popover, Checkbox, Divider } from 'ant-design-vue';
   import type { CheckboxChangeEvent } from 'ant-design-vue/lib/checkbox/interface';
   import { SettingOutlined, DragOutlined } from '@ant-design/icons-vue';
-  import { Icon } from '/@/components/Icon';
-  import { ScrollContainer } from '/@/components/Container';
+  import { Icon } from '/@/Icon';
+  import { ScrollContainer } from '/@/Container';
   import { useI18n } from '/@/hooks/web/useI18n';
   import { useTableContext } from '../../hooks/useTableContext';
   import { useColumnsCache } from '../../hooks/useColumnsCache';

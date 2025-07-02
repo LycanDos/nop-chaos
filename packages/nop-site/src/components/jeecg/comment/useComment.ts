@@ -12,7 +12,7 @@ import pdf from '/@/assets/svg/fileType/pdf.svg';
 import txt from '/@/assets/svg/fileType/txt.svg';
 import word from '/@/assets/svg/fileType/word.svg';
 import { getFileAccessHttpUrl } from '/@/utils/common/compUtils';
-import { createImgPreview } from '/@/components/Preview';
+import { createImgPreview } from '/@/Preview';
 
 enum Api {
   list = '/sys/comment/listByForm',

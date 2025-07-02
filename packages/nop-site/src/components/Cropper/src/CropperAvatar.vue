@@ -17,11 +17,11 @@
   import { defineComponent, computed, CSSProperties, unref, ref, watchEffect, watch, PropType } from 'vue';
   import CopperModal from './CopperModal.vue';
   import { useDesign } from '/@/hooks/web/useDesign';
-  import { useModal } from '/@/components/Modal';
+  import { useModal } from '/@/Modal';
   import { useMessage } from '/@/hooks/web/useMessage';
   import { useI18n } from '/@/hooks/web/useI18n';
-  import type { ButtonProps } from '/@/components/Button';
-  import Icon from '/@/components/Icon';
+  import type { ButtonProps } from '/@/Button';
+  import Icon from '/@/Icon';
 
   const props = {
     width: { type: [String, Number], default: '200px' },

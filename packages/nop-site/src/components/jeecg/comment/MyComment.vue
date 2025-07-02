@@ -49,8 +49,8 @@
   import { propTypes } from '/@/utils/propTypes';
   import { UserAddOutlined, PaperClipOutlined, SmileOutlined } from '@ant-design/icons-vue';
   import { Tooltip } from 'ant-design-vue';
-  import UserSelectModal from '/@/components/Form/src/jeecg/components/modal/UserSelectModal.vue';
-  import { useModal } from '/@/components/Modal';
+  import UserSelectModal from '/@/Form/src/jeecg/components/modal/UserSelectModal.vue';
+  import { useModal } from '/@/Modal';
   import UploadChunk from './UploadChunk.vue';
   import 'emoji-mart-vue-fast/css/emoji-mart.css';
   import { useEmojiHtml } from './useComment';

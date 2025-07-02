@@ -2,7 +2,7 @@ import type { VNode, FunctionalComponent } from 'vue';
 
 import { h } from 'vue';
 import { isString } from '/@/utils/is';
-import { Icon } from '/@/components/Icon';
+import { Icon } from '/@/Icon';
 
 export interface ComponentProps {
   icon: VNode | string;

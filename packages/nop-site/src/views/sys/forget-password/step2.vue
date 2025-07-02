@@ -21,7 +21,7 @@
 <script lang="ts">
   import { defineComponent, reactive, ref, computed, unref, toRaw, toRefs } from 'vue';
   import { Form, Input, Button } from 'ant-design-vue';
-  import { StrengthMeter } from '/@/components/StrengthMeter';
+  import { StrengthMeter } from '/@/StrengthMeter';
   import { useI18n } from '/@/hooks/web/useI18n';
   import { useMessage } from '/@/hooks/web/useMessage';
   import { useFormRules, useFormValid } from '../login/useLogin';

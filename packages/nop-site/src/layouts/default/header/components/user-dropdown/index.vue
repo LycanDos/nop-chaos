@@ -43,7 +43,7 @@
   import { useHeaderSetting } from '/@/hooks/setting/useHeaderSetting';
   import { useI18n } from '/@/hooks/web/useI18n';
   import { useDesign } from '/@/hooks/web/useDesign';
-  import { useModal } from '/@/components/Modal';
+  import { useModal } from '/@/Modal';
   import { useMessage } from '/src/hooks/web/useMessage';
   import { useGo } from '/@/hooks/web/usePage';
   import headerImg from '/@/assets/images/header.jpg';

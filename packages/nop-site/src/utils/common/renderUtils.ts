@@ -1,8 +1,8 @@
 import { h } from 'vue';
 import { Avatar, Tag, Tooltip } from 'ant-design-vue';
 import { getFileAccessHttpUrl } from '/@/utils/common/compUtils';
-//import { Tinymce } from '/@/components/Tinymce';
-import Icon from '/@/components/Icon';
+//import { Tinymce } from '/@/Tinymce';
+import Icon from '/@/Icon';
 import { getDictItemsByCode } from '/@/utils/dict/index';
 import { filterMultiDictText } from '/@/utils/dict/JDictSelectUtil.js';
 import { isEmpty } from '/@/utils/is';

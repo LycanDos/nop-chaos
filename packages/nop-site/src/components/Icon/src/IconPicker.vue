@@ -46,7 +46,7 @@
 <script lang="ts" setup name="icon-picker">
   import { ref, watchEffect, watch, unref } from 'vue';
   import { useDesign } from '/@/hooks/web/useDesign';
-  import { ScrollContainer } from '/@/components/Container';
+  import { ScrollContainer } from '/@/Container';
   import { Input, Popover, Pagination, Empty } from 'ant-design-vue';
   import Icon from './Icon.vue';
   import SvgIcon from './SvgIcon.vue';

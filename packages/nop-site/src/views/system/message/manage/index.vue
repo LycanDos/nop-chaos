@@ -30,8 +30,8 @@
 
 <script lang="ts" setup name="message-manage">
   import { unref, computed } from 'vue';
-  import { ActionItem, BasicTable, TableAction } from '/@/components/Table';
-  import { useDrawer } from '/@/components/Drawer';
+  import { ActionItem, BasicTable, TableAction } from '/@/Table';
+  import { useDrawer } from '/@/Drawer';
   import { useListPage } from '/@/hooks/system/useListPage';
   import ManageDrawer from './ManageDrawer.vue';
   import { Api, list, deleteBatch } from './manage.api';

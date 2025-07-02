@@ -1,6 +1,6 @@
 import type { App } from 'vue';
 import { Icon } from './Icon';
-import AIcon from '/@/components/jeecg/AIcon.vue';
+import AIcon from '/@/jeecg/AIcon.vue';
 import { Button } from './Button';
 import {
   // Need

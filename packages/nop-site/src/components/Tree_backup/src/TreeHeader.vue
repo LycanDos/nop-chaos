@@ -36,8 +36,8 @@
   import { defineComponent, computed, ref, watch } from 'vue';
 
   import { Dropdown, Menu, Input } from 'ant-design-vue';
-  import { Icon } from '/@/components/Icon';
-  import { BasicTitle } from '/@/components/Basic';
+  import { Icon } from '/@/Icon';
+  import { BasicTitle } from '/@/Basic';
 
   import { propTypes } from '/@/utils/propTypes';
 

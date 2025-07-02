@@ -44,8 +44,8 @@
   import { reactive, ref, unref, computed, toRaw } from 'vue';
   import LoginFormTitle from './LoginFormTitle.vue';
   import { Form, Input, Button, Checkbox } from 'ant-design-vue';
-  import { StrengthMeter } from '/@/components/StrengthMeter';
-  import { CountdownInput } from '/@/components/CountDown';
+  import { StrengthMeter } from '/@/StrengthMeter';
+  import { CountdownInput } from '/@/CountDown';
   import { useI18n } from '/@/hooks/web/useI18n';
   import { useMessage } from '/@/hooks/web/useMessage';
   import { useLoginState, useFormRules, useFormValid, LoginStateEnum, SmsEnum } from './useLogin';

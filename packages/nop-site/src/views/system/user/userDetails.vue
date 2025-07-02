@@ -3,7 +3,7 @@
 </template>
 <script lang="ts">
   import { defineComponent } from 'vue';
-  import { Description, DescItem, useDescription } from '/@/components/Description/index';
+  import { Description, DescItem, useDescription } from '/@/Description/index';
   const mockData = {
     username: 'test',
     nickName: 'VB',

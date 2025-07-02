@@ -1233,6 +1233,7 @@ function ajaxFetch(options) {
   let query = options.query || {};
   const pos = url2.indexOf("?");
   if (pos > 0) {
+    //? 这里的什么语法 解释下
     query = { ...query, ...parse$1(url2.substring(pos + 1)) };
     url2 = url2.substring(0, pos);
   }
@@ -1268,10 +1269,12 @@ function ajaxFetch(options) {
       return data2;
     if (data2 instanceof FormData || data2 instanceof ArrayBuffer)
       return data2;
+    //? 解析语法 JS中浅拷贝? 深拷贝是什么
     return Object.assign({}, data2);
   }
   const data = normalizeData2(options.data);
   const config = {
+    //? 这里两个问号是什么语法
     withCredentials: options.config.withCredentials ?? true,
     url: url2,
     method: options.method || "post",
@@ -1280,6 +1283,7 @@ function ajaxFetch(options) {
     params: query,
     responseType: options.responseType
   };
+  //? 这里void 0 是什么意思
   if ((_b = options.config) == null ? void 0 : _b.cancelExecutor) {
     const controller = new AbortController();
     options.config.cancelExecutor(() => {

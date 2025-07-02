@@ -64,7 +64,7 @@
 <script lang="ts">
   import { defineComponent, ref, computed, watch, unref, reactive, UnwrapRef } from 'vue';
   import { Avatar } from 'ant-design-vue';
-  import { BasicModal, useModalInner } from '/@/components/Modal';
+  import { BasicModal, useModalInner } from '/@/Modal';
   import { useMessage } from '/@/hooks/web/useMessage';
   import { useUserStore } from '/@/store/modules/user';
   import { defHttp } from '/@/utils/http/axios';

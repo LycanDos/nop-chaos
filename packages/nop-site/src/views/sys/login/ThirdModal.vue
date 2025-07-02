@@ -45,7 +45,7 @@
 <script lang="ts">
   import { defineComponent } from 'vue';
   import { Form, Input } from 'ant-design-vue';
-  import { CountdownInput } from '/@/components/CountDown';
+  import { CountdownInput } from '/@/CountDown';
   import { useThirdLogin } from '/@/hooks/system/useThirdLogin';
   import { QuestionCircleFilled } from '@ant-design/icons-vue';
 

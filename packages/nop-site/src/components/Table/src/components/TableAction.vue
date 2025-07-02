@@ -29,10 +29,10 @@
   import { defineComponent, PropType, computed, toRaw, unref } from 'vue';
   import { MoreOutlined } from '@ant-design/icons-vue';
   import { Divider, Tooltip, TooltipProps } from 'ant-design-vue';
-  import Icon from '/@/components/Icon/index';
-  import { ActionItem, TableActionType } from '/@/components/Table';
-  import { PopConfirmButton } from '/@/components/Button';
-  import { Dropdown } from '/@/components/Dropdown';
+  import Icon from '/@/Icon/index';
+  import { ActionItem, TableActionType } from '/@/Table';
+  import { PopConfirmButton } from '/@/Button';
+  import { Dropdown } from '/@/Dropdown';
   import { useDesign } from '/@/hooks/web/useDesign';
   import { useTableContext } from '../hooks/useTableContext';
   import { usePermission } from '/@/hooks/web/usePermission';
