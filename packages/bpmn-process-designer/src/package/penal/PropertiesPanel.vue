@@ -85,7 +85,6 @@ import UserTaskListeners from './listeners/UserTaskListeners.vue'
 import { getTaskCollapseItemName, isTaskCollapseItemShow } from './task/data'
 
 defineOptions({ name: 'MyPropertiesPanel' })
-
 /**
  * 侧边栏
  * @Author MiyueFE
@@ -121,11 +120,14 @@ const formVisible = ref(false) // 表单配置
 const bpmnElement = ref()
 const isReady = ref(false)
 
+console.log('[PropertiesPanel] props.bpmnModeler:', props.bpmnModeler)
+console.log('[PropertiesPanel] isReady:', isReady.value)
 provide('prefix', props.prefix)
 provide('width', props.width)
 
 // 初始化 bpmnInstances
 const initBpmnInstances = () => {
+  console.log('[PropertiesPanel] initBpmnInstances called, props.bpmnModeler:', props.bpmnModeler)
   if (!props.bpmnModeler) return false
   try {
     const instances = {
@@ -139,7 +141,7 @@ const initBpmnInstances = () => {
       replace: props.bpmnModeler.get('replace'),
       selection: props.bpmnModeler.get('selection')
     }
-
+    console.log('[PropertiesPanel] bpmnInstances:', instances)
     // 检查所有实例是否都存在
     const allInstancesExist = Object.values(instances).every(instance => instance)
     if (allInstancesExist) {
@@ -149,7 +151,7 @@ const initBpmnInstances = () => {
     }
     return false
   } catch (error) {
-    console.error('初始化 bpmnInstances 失败:', error)
+    console.error('[PropertiesPanel] 初始化 bpmnInstances 失败:', error)
     return false
   }
 }
@@ -186,19 +188,21 @@ const unwatchBpmn = watch(
 )
 
 const getActiveElement = () => {
+  console.log('[PropertiesPanel] getActiveElement called, isReady:', isReady.value, 'props.bpmnModeler:', props.bpmnModeler)
   if (!isReady.value || !props.bpmnModeler) return
-
   // 初始第一个选中元素 bpmn:Process
   initFormOnChanged(null)
   props.bpmnModeler.on('import.done', (e) => {
-    console.log(e, 'eeeee')
+    console.log('[PropertiesPanel] import.done event:', e)
     initFormOnChanged(null)
   })
   // 监听选择事件，修改当前激活的元素以及表单
   props.bpmnModeler.on('selection.changed', ({ newSelection }) => {
+    console.log('[PropertiesPanel] selection.changed event:', newSelection)
     initFormOnChanged(newSelection[0] || null)
   })
   props.bpmnModeler.on('element.changed', ({ element }) => {
+    console.log('[PropertiesPanel] element.changed event:', element)
     // 保证 修改 "默认流转路径" 类似需要修改多个元素的事件发生的时候，更新表单的元素与原选中元素不一致。
     if (element && element.id === elementId.value) {
       initFormOnChanged(element)
@@ -208,6 +212,7 @@ const getActiveElement = () => {
 
 // 初始化数据
 const initFormOnChanged = (element) => {
+  console.log('[PropertiesPanel] initFormOnChanged called, isReady:', isReady.value, 'element:', element)
   if (!isReady.value || !bpmnInstances()) return
 
   let activatedElement = element
@@ -216,17 +221,13 @@ const initFormOnChanged = (element) => {
       bpmnInstances().elementRegistry.find((el) => el.type === 'bpmn:Process') ??
       bpmnInstances().elementRegistry.find((el) => el.type === 'bpmn:Collaboration')
   }
-  if (!activatedElement) return
+  if (!activatedElement) {
+    console.log('[PropertiesPanel] No activatedElement found')
+    return
+  }
 
   try {
-    console.log(`
-                ----------
-        select element changed:
-                  id:  ${activatedElement.id}
-                type:  ${activatedElement.businessObject.$type}
-                ----------
-                `)
-    console.log('businessObject: ', activatedElement.businessObject)
+    console.log('[PropertiesPanel] select element changed:', activatedElement)
     bpmnInstances().bpmnElement = activatedElement
     bpmnElement.value = activatedElement
     elementId.value = activatedElement.id
@@ -239,7 +240,7 @@ const initFormOnChanged = (element) => {
     )
     formVisible.value = elementType.value === 'UserTask' || elementType.value === 'StartEvent'
   } catch (error) {
-    console.error('初始化表单数据失败:', error)
+    console.error('[PropertiesPanel] 初始化表单数据失败:', error)
   }
 }
 

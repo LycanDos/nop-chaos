@@ -1,5 +1,4 @@
-export { default as ProcessDesigner } from './package/designer/ProcessDesigner.vue';
-export { default as ProcessViewer } from './package/designer/ProcessViewer.vue';
+
 // 可根据需要继续导出其他组件或工具
 import { createApp } from 'vue'
 import App from './App.vue'

@@ -1,4 +1,5 @@
 <template>
+  <div>modeler: {{ modeler && modeler.value ? '有值' : '无值' }}</div>
   <ContentWrap>
     <!-- 流程设计器，负责绘制流程等 -->
     <MyProcessDesigner
@@ -12,14 +13,14 @@
       :additionalModel="controlForm.additionalModel"
       :model="model"
       @save="save"
-      :process-id="modelKey"
-      :process-name="modelName"
+      :process-id="modelData.value.key"
+      :process-name="modelData.value.name"
     />
     <!-- 流程属性器，负责编辑每个流程节点的属性 -->
     <MyProcessPenal
-      v-if="modeler"
+      v-if="modeler && modeler.value"
       key="penal"
-      :bpmnModeler="modeler"
+      :bpmnModeler="modeler && modeler.value"
       :prefix="controlForm.prefix"
       class="process-panel"
       :model="model"
@@ -36,7 +37,7 @@ import CustomPaletteProvider from '@/components/bpmnProcessDesigner/package/desi
 import * as ModelApi from '@/api/bpm/model'
 import { BpmModelFormType } from '@/utils/constants'
 import * as FormApi from '@/api/bpm/form'
-
+import { shallowRef, ref, inject, provide, onBeforeUnmount, watch } from 'vue'
 defineOptions({ name: 'BpmModelEditor' })
 
 defineProps<{
@@ -57,9 +58,9 @@ provide('formFields', formFields)
 provide('formType', formType)
 
 // 注入流程数据
-const xmlString = inject('processData') as Ref
+const xmlString = inject('processData') as any
 // 注入模型数据
-const modelData = inject('modelData') as Ref
+const modelData = inject('modelData') as any
 
 const modeler = shallowRef() // BPMN Modeler
 const processDesigner = ref()
@@ -78,6 +79,8 @@ const initModeler = async (item: any) => {
   // 先初始化模型数据
   model.value = modelData.value
   modeler.value = item
+  console.log('[editor] initModeler called, item:', item)
+  console.log('[editor] modeler after set:', modeler)
 }
 
 /** 添加/修改模型 */
@@ -104,6 +107,15 @@ watch(
   },
   { immediate: true }
 )
+
+watch(
+  () => modeler.value,
+  (val) => {
+    console.log('[editor] modeler.value changed:', val)
+  },
+  { immediate: true }
+)
+console.log('[editor] modeler:', modeler)
 
 // 在组件卸载时清理
 onBeforeUnmount(() => {
