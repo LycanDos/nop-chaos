@@ -11,7 +11,7 @@ export default defineConfig({
 
     AutoImport({
       imports: ['vue'],
-      dts: 'auto-imports.d.ts',
+      dts: 'src/types/auto-imports.d.ts',
     }),
     dts({ rollupTypes: true, outDir: "lib" })
   ],

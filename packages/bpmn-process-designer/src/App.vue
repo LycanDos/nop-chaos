@@ -1,4 +1,5 @@
 <template>
+  <!-- 调试信息 -->
   <div>[app] xmlString: {{ xmlString }}</div>
   <div>[app] modeler: {{ modeler && modeler.value ? '有值' : '无值' }}</div>
   <div>[app] MyProcessPenal v-if: {{ modeler && modeler.value ? 'YES' : 'NO' }}</div>
@@ -27,77 +28,97 @@
     class="process-panel"
     :model="model"
   />
-  <div>[app] MyProcessPenal rendered below (if v-if passed)</div>
 </template>
 <script setup lang="ts">
-import { MyProcessDesigner, MyProcessPenal, MyProcessViewer }from '@/package'
+import { MyProcessDesigner, MyProcessPenal}from '@/package'
+// 自定义元素选中时的弹出菜单（修改 默认任务 为 用户任务）
 import CustomContentPadProvider from '@/package/designer/plugins/content-pad'
+// 自定义左侧菜单（修改 默认任务 为 用户任务）
 import CustomPaletteProvider from '@/package/designer/plugins/palette'
-import { ref, shallowRef, watch } from 'vue'
+import * as ModelApi from '@/api/bpm/model'
 
 console.log('[app] App.vue loaded')
 
+defineProps<{
+  modelId?: string
+  modelKey: string
+  modelName: string
+  value?: string
+}>()
+
+const emit = defineEmits(['success', 'init-finished'])
+// const message = useMessage() // 国际化
+
+// 表单信息
+const formFields = ref<string[]>([])
+// 表单类型，暂仅限流程表单
+// const formType = ref(BpmModelFormType.NORMAL)
+provide('formFields', formFields)
+// provide('formType', formType)
+
+// 注入流程数据
+const xmlString = inject('processData') as Ref
+// 注入模型数据
+// const modelData = inject('modelData') as Ref
+
 const modeler = shallowRef() // BPMN Modeler
-const xmlString = ref(`<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
-                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
-                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
-                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
-                  id="Definitions_1"
-                  targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="Process_1" isExecutable="false">
-    <bpmn:startEvent id="StartEvent_1"/>
-  </bpmn:process>
-  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
-    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
-      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
-        <dc:Bounds x="100" y="100" width="36" height="36"/>
-      </bpmndi:BPMNShape>
-    </bpmndi:BPMNPlane>
-  </bpmndi:BPMNDiagram>
-</bpmn:definitions>`)
-const model = ref({})
-const modelKey = ref('')
-const modelName = ref('')
-
-console.log('[app] xmlString:', xmlString)
-console.log('[app] model:', model)
-console.log('[app] modelKey:', modelKey)
-console.log('[app] modelName:', modelName)
-
-const controlForm = {
+const processDesigner = ref()
+const controlForm = ref({
   simulation: true,
   labelEditing: false,
   labelVisible: false,
   prefix: 'flowable',
   headerButtonSize: 'mini',
   additionalModel: [CustomContentPadProvider, CustomPaletteProvider]
-}
+})
+// const model = ref<ModelApi.ModelVO>() // 流程模型的信息
 
-watch(
-  () => modeler.value,
-  (val) => {
-    console.log('[app] modeler.value changed:', val)
-  },
-  { immediate: true }
-)
-
-watch(
-  () => xmlString.value,
-  (val) => {
-    console.log('[app] xmlString.value changed:', val)
-  },
-  { immediate: true }
-)
-console.log('[app] xmlString init:', xmlString.value)
-
-function initModeler(item) {
+/** 初始化 modeler */
+const initModeler = async (item: any) => {
+  // 先初始化模型数据
+  // model.value = modelData.value
   modeler.value = item
-  console.log('[app] initModeler called, item:', item)
-  console.log('[app] modeler after set:', modeler)
 }
-function save(val) {
-  xmlString.value = val
+
+/** 添加/修改模型 */
+const save = async (bpmnXml: string) => {
+  try {
+    xmlString.value = bpmnXml
+    emit('success', bpmnXml)
+  } catch (error) {
+    console.error('保存失败:', error)
+    // message.error('保存失败')®
+  }
 }
+
+/** 监听表单 ID 变化，加载表单数据 */
+// watch(
+//   () => modelData.value.formId,
+//   async (newFormId) => {
+//     if (newFormId && modelData.value.formType === BpmModelFormType.NORMAL) {
+//       const data = await FormApi.getForm(newFormId)
+//       formFields.value = data.fields
+//     } else {
+//       formFields.value = []
+//     }
+//   },
+//   { immediate: true }
+// )
+
+// 在组件卸载时清理
+onBeforeUnmount(() => {
+  modeler.value = null
+  // 清理全局实例
+  const w = window as any
+  if (w.bpmnInstances) {
+    w.bpmnInstances = null
+  }
+})
 </script>
+<style lang="scss">
+.process-panel__container {
+  position: absolute;
+  top: 172px;
+  right: 70px;
+}
+</style>
