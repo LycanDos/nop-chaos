@@ -1,11 +1,5 @@
 <template>
-  <div class="process-panel__container debug-force-visible" :style="{ width: `${width}px`, maxHeight: '600px' }">
-    <div v-if="!isReady" style="padding: 32px; color: #999; text-align: center;">
-      属性面板未就绪，请检查流程设计器是否加载完成
-      <div>props.bpmnModeler: {{ JSON.stringify(props.bpmnModeler) }}</div>
-      <div>isReady: {{ isReady }}</div>
-    </div>
-    <div v-if="isReady" style="font-size: 32px; color: red; text-align: center; background: #fffbe6; border: 2px dashed #f00; margin-bottom: 16px;">属性面板已渲染</div>
+  <div class="process-panel__container" :style="{ width: `${width}px`, maxHeight: '600px' }">
     <el-collapse v-model="activeTab" v-if="isReady">
       <el-collapse-item name="base">
         <!-- class="panel-tab__title" -->
@@ -91,6 +85,7 @@ import UserTaskListeners from './listeners/UserTaskListeners.vue'
 import { getTaskCollapseItemName, isTaskCollapseItemShow } from './task/data'
 
 defineOptions({ name: 'MyPropertiesPanel' })
+
 /**
  * 侧边栏
  * @Author MiyueFE
@@ -117,8 +112,6 @@ const props = defineProps({
   model: Object // 流程模型的数据
 })
 
-console.log('[PropertiesPanel] setup props:', JSON.stringify(props))
-
 const activeTab = ref('base')
 const elementId = ref('')
 const elementType = ref('')
@@ -128,14 +121,11 @@ const formVisible = ref(false) // 表单配置
 const bpmnElement = ref()
 const isReady = ref(false)
 
-console.log('[PropertiesPanel] props.bpmnModeler:', props.bpmnModeler)
-console.log('[PropertiesPanel] isReady:', isReady.value)
 provide('prefix', props.prefix)
 provide('width', props.width)
 
 // 初始化 bpmnInstances
 const initBpmnInstances = () => {
-  console.log('[PropertiesPanel] initBpmnInstances called, props.bpmnModeler:', props.bpmnModeler)
   if (!props.bpmnModeler) return false
   try {
     const instances = {
@@ -149,7 +139,7 @@ const initBpmnInstances = () => {
       replace: props.bpmnModeler.get('replace'),
       selection: props.bpmnModeler.get('selection')
     }
-    console.log('[PropertiesPanel] bpmnInstances:', instances)
+
     // 检查所有实例是否都存在
     const allInstancesExist = Object.values(instances).every(instance => instance)
     if (allInstancesExist) {
@@ -159,7 +149,7 @@ const initBpmnInstances = () => {
     }
     return false
   } catch (error) {
-    console.error('[PropertiesPanel] 初始化 bpmnInstances 失败:', error)
+    console.error('初始化 bpmnInstances 失败:', error)
     return false
   }
 }
@@ -170,10 +160,9 @@ const bpmnInstances = () => (window as any)?.bpmnInstances
 const unwatchBpmn = watch(
   () => props.bpmnModeler,
   async () => {
-    console.log('[PropertiesPanel] watch props.bpmnModeler changed:', props.bpmnModeler)
     // 避免加载时 流程图 并未加载完成
     if (!props.bpmnModeler) {
-      console.log('[PropertiesPanel] 缺少props.bpmnModeler')
+      console.log('缺少props.bpmnModeler')
       return
     }
 
@@ -182,14 +171,13 @@ const unwatchBpmn = watch(
       await nextTick()
       if (initBpmnInstances()) {
         isReady.value = true
-        console.log('[PropertiesPanel] isReady set true')
         await nextTick()
         getActiveElement()
       } else {
-        console.error('[PropertiesPanel] modeler 实例未完全初始化')
+        console.error('modeler 实例未完全初始化')
       }
     } catch (error) {
-      console.error('[PropertiesPanel] 初始化失败:', error)
+      console.error('初始化失败:', error)
     }
   },
   {
@@ -198,21 +186,19 @@ const unwatchBpmn = watch(
 )
 
 const getActiveElement = () => {
-  console.log('[PropertiesPanel] getActiveElement called, isReady:', isReady.value, 'props.bpmnModeler:', props.bpmnModeler)
   if (!isReady.value || !props.bpmnModeler) return
+
   // 初始第一个选中元素 bpmn:Process
   initFormOnChanged(null)
   props.bpmnModeler.on('import.done', (e) => {
-    console.log('[PropertiesPanel] import.done event:', e)
+    console.log(e, 'eeeee')
     initFormOnChanged(null)
   })
   // 监听选择事件，修改当前激活的元素以及表单
   props.bpmnModeler.on('selection.changed', ({ newSelection }) => {
-    console.log('[PropertiesPanel] selection.changed event:', newSelection)
     initFormOnChanged(newSelection[0] || null)
   })
   props.bpmnModeler.on('element.changed', ({ element }) => {
-    console.log('[PropertiesPanel] element.changed event:', element)
     // 保证 修改 "默认流转路径" 类似需要修改多个元素的事件发生的时候，更新表单的元素与原选中元素不一致。
     if (element && element.id === elementId.value) {
       initFormOnChanged(element)
@@ -222,7 +208,6 @@ const getActiveElement = () => {
 
 // 初始化数据
 const initFormOnChanged = (element) => {
-  console.log('[PropertiesPanel] initFormOnChanged called, isReady:', isReady.value, 'element:', element)
   if (!isReady.value || !bpmnInstances()) return
 
   let activatedElement = element
@@ -231,13 +216,17 @@ const initFormOnChanged = (element) => {
       bpmnInstances().elementRegistry.find((el) => el.type === 'bpmn:Process') ??
       bpmnInstances().elementRegistry.find((el) => el.type === 'bpmn:Collaboration')
   }
-  if (!activatedElement) {
-    console.log('[PropertiesPanel] No activatedElement found')
-    return
-  }
+  if (!activatedElement) return
 
   try {
-    console.log('[PropertiesPanel] select element changed:', activatedElement)
+    console.log(`
+                ----------
+        select element changed:
+                  id:  ${activatedElement.id}
+                type:  ${activatedElement.businessObject.$type}
+                ----------
+                `)
+    console.log('businessObject: ', activatedElement.businessObject)
     bpmnInstances().bpmnElement = activatedElement
     bpmnElement.value = activatedElement
     elementId.value = activatedElement.id
@@ -249,24 +238,21 @@ const initFormOnChanged = (element) => {
       activatedElement.source.type.indexOf('StartEvent') === -1
     )
     formVisible.value = elementType.value === 'UserTask' || elementType.value === 'StartEvent'
-    console.log('[PropertiesPanel] elementId:', elementId.value, 'elementType:', elementType.value, 'elementBusinessObject:', elementBusinessObject.value)
   } catch (error) {
-    console.error('[PropertiesPanel] 初始化表单数据失败:', error)
+    console.error('初始化表单数据失败:', error)
   }
 }
-
-watch(
-  () => elementId.value,
-  () => {
-    console.log('[PropertiesPanel] watch elementId changed:', elementId.value)
-    activeTab.value = 'base'
-  }
-)
 
 onBeforeUnmount(() => {
   const w = window as any
   w.bpmnInstances = null
   isReady.value = false
-  console.log('[PropertiesPanel] onBeforeUnmount 清理')
 })
+
+watch(
+  () => elementId.value,
+  () => {
+    activeTab.value = 'base'
+  }
+)
 </script>

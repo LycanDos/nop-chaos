@@ -1,32 +1,28 @@
 <template>
   <!-- 调试信息 -->
-  <div>[app] xmlString: {{ xmlString }}</div>
-  <div>[app] modeler: {{ modeler && modeler.value ? '有值' : '无值' }}</div>
+<!--  <div>[app] xmlString: {{ xmlString }}</div>-->
+  <div>modeler.value: {{ modeler && modeler.value ? JSON.stringify(modeler.value) : 'null' }}</div>
   <div>[app] MyProcessPenal v-if: {{ modeler && modeler.value ? 'YES' : 'NO' }}</div>
   <div>[app] MyProcessPenal props.bpmnModeler: {{ modeler && modeler.value ? JSON.stringify(modeler.value) : 'undefined' }}</div>
-  <!-- 流程设计器，负责绘制流程等 -->
+  <!-- 流程设计器，负责绘制流程等  -->
   <MyProcessDesigner
     key="designer"
-    v-model="xmlString"
-    :value="xmlString"
     v-bind="controlForm"
     keyboard
     ref="processDesigner"
     @init-finished="initModeler"
     :additionalModel="controlForm.additionalModel"
-    :model="model"
-    @save="save"
+    :model-id="modelId"
     :process-id="modelKey"
     :process-name="modelName"
   />
   <!-- 流程属性器，负责编辑每个流程节点的属性 -->
   <MyProcessPenal
-    v-if="modeler && modeler.value"
-    key="penal"
+    :key="modeler && modeler.value ? modeler.value._instanceId || Date.now() : 0"
     :bpmnModeler="modeler && modeler.value"
     :prefix="controlForm.prefix"
     class="process-panel"
-    :model="model"
+    :model-id="modelId"
   />
 </template>
 <script setup lang="ts">
@@ -35,7 +31,6 @@ import { MyProcessDesigner, MyProcessPenal}from '@/package'
 import CustomContentPadProvider from '@/package/designer/plugins/content-pad'
 // 自定义左侧菜单（修改 默认任务 为 用户任务）
 import CustomPaletteProvider from '@/package/designer/plugins/palette'
-import * as ModelApi from '@/api/bpm/model'
 
 console.log('[app] App.vue loaded')
 
@@ -57,11 +52,12 @@ provide('formFields', formFields)
 // provide('formType', formType)
 
 // 注入流程数据
-const xmlString = inject('processData') as Ref
+const xmlString = ref('')
 // 注入模型数据
-// const modelData = inject('modelData') as Ref
+const modelData = ref({})
 
-const modeler = shallowRef() // BPMN Modeler
+const modeler = ref<any>(null) // BPMN Modeler
+window._debugModelerRef = modeler // 全局唯一性调试
 const processDesigner = ref()
 const controlForm = ref({
   simulation: true,
@@ -74,10 +70,10 @@ const controlForm = ref({
 // const model = ref<ModelApi.ModelVO>() // 流程模型的信息
 
 /** 初始化 modeler */
-const initModeler = async (item: any) => {
-  // 先初始化模型数据
-  // model.value = modelData.value
-  modeler.value = item
+const initModeler = (item: any) => {
+    modeler.value = item
+    window._debugModelerRef = modeler
+    console.log('[app] modeler.value after set:', modeler.value)
 }
 
 /** 添加/修改模型 */
@@ -114,6 +110,19 @@ onBeforeUnmount(() => {
     w.bpmnInstances = null
   }
 })
+
+onMounted(() => {
+  console.log('[app] App.vue onMounted')
+})
+
+// 解决 window._debugModeler linter 错误
+declare global {
+  interface Window {
+    _debugModeler: any
+    _debugModelerRaw: any
+    _debugModelerRef: any
+  }
+}
 </script>
 <style lang="scss">
 .process-panel__container {

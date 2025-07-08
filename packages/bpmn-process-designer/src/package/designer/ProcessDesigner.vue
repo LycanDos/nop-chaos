@@ -447,43 +447,38 @@ const moddleExtensions = computed(() => {
 console.log(additionalModules, "additionalModules()");
 console.log(moddleExtensions, "moddleExtensions()");
 const initBpmnModeler = () => {
-  if (bpmnModeler) return;
-  let data = document.getElementById("bpmnCanvas");
-  console.log(data, "data");
-  console.log(props.keyboard, "props.keyboard");
-  console.log(additionalModules, "additionalModules()");
-  console.log(moddleExtensions, "moddleExtensions()");
-
-  bpmnModeler = new BpmnModeler({
-    // container: this.$refs['bpmn-canvas'],
-    // container: getCurrentInstance(),
-    // container: needClass,
-    // container: bpmnCanvas.value,
-    container: data,
-    // width: '100%',
-    // 添加控制板
-    // propertiesPanel: {
-    // parent: '#js-properties-panel'
-    // },
-    keyboard: props.keyboard ? { bindTo: document } : null,
-    // additionalModules: additionalModules.value,
-    additionalModules: additionalModules.value,
-    moddleExtensions: moddleExtensions.value,
-
-    // additionalModules: [
-    // additionalModules.value
-    // propertiesPanelModule,
-    // propertiesProviderModule
-    // propertiesProviderModule
-    // ],
-    // moddleExtensions: { camunda: moddleExtensions.value }
-  });
-
-  // bpmnModeler.createDiagram()
-
-  // console.log(bpmnModeler, 'bpmnModeler111111')
-  emit("init-finished", bpmnModeler);
-  initModelListeners();
+  try {
+    console.log("[designer] initBpmnModeler called");
+    if (bpmnModeler) {
+      console.log("[designer] bpmnModeler 已存在，直接返回");
+      return;
+    }
+    let data = bpmnCanvas.value || document.getElementById("bpmnCanvas");
+    console.log(
+      "[designer] bpmnCanvas.value:",
+      bpmnCanvas.value,
+      "document.getElementById:",
+      document.getElementById("bpmnCanvas"),
+    );
+    if (!data) {
+      console.error("[designer] bpmnModeler 初始化失败，容器不存在");
+      return;
+    }
+    console.log("[designer] props:", props);
+    console.log("[designer] additionalModules:", additionalModules.value);
+    console.log("[designer] moddleExtensions:", moddleExtensions.value);
+    bpmnModeler = new BpmnModeler({
+      container: data,
+      keyboard: props.keyboard ? { bindTo: document } : null,
+      additionalModules: additionalModules.value,
+      moddleExtensions: moddleExtensions.value,
+    });
+    console.log("[designer] bpmnModeler 实例化成功:", bpmnModeler);
+    emit("init-finished", bpmnModeler);
+    initModelListeners();
+  } catch (e) {
+    console.error("[designer] bpmnModeler 初始化异常:", e);
+  }
 };
 
 const initModelListeners = () => {
@@ -694,8 +689,14 @@ const previewProcessJson = () => {
 
 /* ------------------------------------------------ 芋道源码 methods ------------------------------------------------------ */
 onMounted(() => {
+  console.log("[designer] ProcessDesigner.vue onMounted");
   initBpmnModeler();
   createNewDiagram(props.value);
+  // emit init-finished 日志
+  setTimeout(() => {
+    console.log("[designer] emit init-finished", bpmnModeler);
+    emit("init-finished", bpmnModeler);
+  }, 0);
 });
 onBeforeUnmount(() => {
   if (bpmnModeler) bpmnModeler.destroy();

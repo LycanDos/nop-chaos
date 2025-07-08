@@ -6,6 +6,13 @@
   max-height: 100%;
   overflow-y: scroll;
 }
+.process-panel__container.debug-force-visible {
+  background: #fffbe6 !important;
+  border: 3px solid red !important;
+  z-index: 9999 !important;
+  min-height: 200px;
+  min-width: 300px;
+}
 .panel-tab__title {
   font-weight: 600;
   padding: 0 8px;

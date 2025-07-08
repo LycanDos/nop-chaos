@@ -30,7 +30,9 @@
     "allowJs": true,
     "baseUrl": "./",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [
+        "src/*"
+      ]
     },
     "types": [
       // "@intlify/unplugin-vue-i18n/types",
@@ -39,7 +41,10 @@
       // "@types/qrcode",
       // "vite-plugin-svg-icons/client"
     ],
-    "typeRoots": ["./node_modules/@types/", "./types"]
+    "typeRoots": [
+      "./node_modules/@types/",
+      "./types"
+    ]
   },
   "types": [
     "typePatches"
@@ -48,7 +53,14 @@
   "include": [
     "src",
     "types/*.d.ts",
+    "src/**/*.vue",
+    "src/**/*.json",
     "src/types/auto-imports.d.ts",
-    "src/types/auto-components.d.ts",
+    "src/types/auto-components.d.ts"
+  ],
+  "exclude": [
+    "dist",
+    "target",
+    "node_modules"
   ]
 }

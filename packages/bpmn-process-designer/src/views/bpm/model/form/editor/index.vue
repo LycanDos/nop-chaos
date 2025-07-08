@@ -1,5 +1,9 @@
 <template>
   <div>modeler: {{ modeler && modeler.value ? '有值' : '无值' }}</div>
+  <div style="color: blue; font-weight: bold;">[debug] modelKey: {{ modelKey }}</div>
+  <div style="color: blue; font-weight: bold;">[debug] modelName: {{ modelName }}</div>
+  <div style="color: blue; font-weight: bold;">[debug] modelId: {{ modelId }}</div>
+  <div style="color: blue; font-weight: bold;">[debug] controlForm: {{ JSON.stringify(controlForm) }}</div>
   <ContentWrap>
     <!-- 流程设计器，负责绘制流程等 -->
     <MyProcessDesigner
@@ -18,8 +22,7 @@
     />
     <!-- 流程属性器，负责编辑每个流程节点的属性 -->
     <MyProcessPenal
-      v-if="modeler && modeler.value"
-      key="penal"
+      :key="modeler && modeler.value ? modeler.value._instanceId || Date.now() : 0"
       :bpmnModeler="modeler && modeler.value"
       :prefix="controlForm.prefix"
       class="process-panel"
@@ -29,11 +32,11 @@
 </template>
 
 <script lang="ts" setup>
-import { MyProcessDesigner, MyProcessPenal } from '@/components/bpmnProcessDesigner/package'
+import { MyProcessDesigner, MyProcessPenal } from '@/package'
 // 自定义元素选中时的弹出菜单（修改 默认任务 为 用户任务）
-import CustomContentPadProvider from '@/components/bpmnProcessDesigner/package/designer/plugins/content-pad'
+import CustomContentPadProvider from '@/package/designer/plugins/content-pad'
 // 自定义左侧菜单（修改 默认任务 为 用户任务）
-import CustomPaletteProvider from '@/components/bpmnProcessDesigner/package/designer/plugins/palette'
+import CustomPaletteProvider from '@/package/designer/plugins/palette'
 import * as ModelApi from '@/api/bpm/model'
 import { BpmModelFormType } from '@/utils/constants'
 import * as FormApi from '@/api/bpm/form'
@@ -79,7 +82,10 @@ const initModeler = async (item: any) => {
   // 先初始化模型数据
   model.value = modelData.value
   modeler.value = item
-  console.log('[editor] initModeler called, item:', item)
+  window._debugModeler = modeler
+  window._debugModelerRaw = item
+  console.log('[editor] initModeler called, item:', item, typeof item, item && Object.keys(item))
+  debugger // 让你在浏览器里断点
   console.log('[editor] modeler after set:', modeler)
 }
 
