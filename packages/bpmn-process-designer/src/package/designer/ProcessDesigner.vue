@@ -693,10 +693,10 @@ onMounted(() => {
   initBpmnModeler();
   createNewDiagram(props.value);
   // emit init-finished 日志
-  setTimeout(() => {
-    console.log("[designer] emit init-finished", bpmnModeler);
-    emit("init-finished", bpmnModeler);
-  }, 0);
+  // setTimeout(() => {
+  //   console.log("[designer] emit init-finished", bpmnModeler);
+  //   emit("init-finished", bpmnModeler);
+  // }, 0);
 });
 onBeforeUnmount(() => {
   if (bpmnModeler) bpmnModeler.destroy();

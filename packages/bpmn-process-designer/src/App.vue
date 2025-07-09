@@ -1,9 +1,6 @@
 <template>
   <!-- 调试信息 -->
-<!--  <div>[app] xmlString: {{ xmlString }}</div>-->
-  <div>modeler.value: {{ modeler && modeler.value ? JSON.stringify(modeler.value) : 'null' }}</div>
-  <div>[app] MyProcessPenal v-if: {{ modeler && modeler.value ? 'YES' : 'NO' }}</div>
-  <div>[app] MyProcessPenal props.bpmnModeler: {{ modeler && modeler.value ? JSON.stringify(modeler.value) : 'undefined' }}</div>
+
   <!-- 流程设计器，负责绘制流程等  -->
   <MyProcessDesigner
     key="designer"
@@ -18,74 +15,79 @@
   />
   <!-- 流程属性器，负责编辑每个流程节点的属性 -->
   <MyProcessPenal
-    :key="modeler && modeler.value ? modeler.value._instanceId || Date.now() : 0"
-    :bpmnModeler="modeler && modeler.value"
+    v-if="modeler"
+    key="penal"
+    :bpmnModeler="modeler"
     :prefix="controlForm.prefix"
     class="process-panel"
-    :model-id="modelId"
+    :model="model"
   />
 </template>
 <script setup lang="ts">
-import { MyProcessDesigner, MyProcessPenal}from '@/package'
+import { MyProcessDesigner, MyProcessPenal } from "@/package";
 // 自定义元素选中时的弹出菜单（修改 默认任务 为 用户任务）
-import CustomContentPadProvider from '@/package/designer/plugins/content-pad'
+import CustomContentPadProvider from "@/package/designer/plugins/content-pad";
 // 自定义左侧菜单（修改 默认任务 为 用户任务）
-import CustomPaletteProvider from '@/package/designer/plugins/palette'
+import CustomPaletteProvider from "@/package/designer/plugins/palette";
 
-console.log('[app] App.vue loaded')
+console.log("[app] App.vue loaded");
 
 defineProps<{
-  modelId?: string
-  modelKey: string
-  modelName: string
-  value?: string
-}>()
+  modelId?: string;
+  modelKey: string;
+  modelName: string;
+  value?: string;
+}>();
 
-const emit = defineEmits(['success', 'init-finished'])
+const emit = defineEmits(["success", "init-finished"]);
 // const message = useMessage() // 国际化
 
 // 表单信息
-const formFields = ref<string[]>([])
+const formFields = ref<string[]>([]);
 // 表单类型，暂仅限流程表单
 // const formType = ref(BpmModelFormType.NORMAL)
-provide('formFields', formFields)
+provide("formFields", formFields);
 // provide('formType', formType)
 
 // 注入流程数据
-const xmlString = ref('')
+const xmlString = ref("");
 // 注入模型数据
-const modelData = ref({})
+const modelData = ref({});
 
-const modeler = ref<any>(null) // BPMN Modeler
-window._debugModelerRef = modeler // 全局唯一性调试
-const processDesigner = ref()
+const modeler = shallowRef(); // BPMN Modeler
+const processDesigner = ref();
 const controlForm = ref({
   simulation: true,
   labelEditing: false,
   labelVisible: false,
-  prefix: 'flowable',
-  headerButtonSize: 'mini',
-  additionalModel: [CustomContentPadProvider, CustomPaletteProvider]
-})
+  prefix: "flowable",
+  headerButtonSize: "mini",
+  additionalModel: [CustomContentPadProvider, CustomPaletteProvider],
+});
 // const model = ref<ModelApi.ModelVO>() // 流程模型的信息
 
 /** 初始化 modeler */
 const initModeler = (item: any) => {
-    modeler.value = item
-    window._debugModelerRef = modeler
-    console.log('[app] modeler.value after set:', modeler.value)
-}
+  console.log("[app] modeler.value before set:", modeler.value);
+  modeler.value = item;
+  
+    modeler.value = item;
+    nextTick(() => {
+      console.log("nextTick modeler.value:", modeler.value);
+    });
+  console.log("[app] modeler.value after set:", modeler.value);
+};
 
 /** 添加/修改模型 */
 const save = async (bpmnXml: string) => {
   try {
-    xmlString.value = bpmnXml
-    emit('success', bpmnXml)
+    xmlString.value = bpmnXml;
+    emit("success", bpmnXml);
   } catch (error) {
-    console.error('保存失败:', error)
+    console.error("保存失败:", error);
     // message.error('保存失败')®
   }
-}
+};
 
 /** 监听表单 ID 变化，加载表单数据 */
 // watch(
@@ -103,24 +105,24 @@ const save = async (bpmnXml: string) => {
 
 // 在组件卸载时清理
 onBeforeUnmount(() => {
-  modeler.value = null
+  // modeler.value = null;
   // 清理全局实例
-  const w = window as any
+  const w = window as any;
   if (w.bpmnInstances) {
-    w.bpmnInstances = null
+    w.bpmnInstances = null;
   }
-})
+});
 
 onMounted(() => {
-  console.log('[app] App.vue onMounted')
-})
+  console.log("[app] App.vue onMounted");
+});
 
 // 解决 window._debugModeler linter 错误
 declare global {
   interface Window {
-    _debugModeler: any
-    _debugModelerRaw: any
-    _debugModelerRef: any
+    _debugModeler: any;
+    _debugModelerRaw: any;
+    _debugModelerRef: any;
   }
 }
 </script>
