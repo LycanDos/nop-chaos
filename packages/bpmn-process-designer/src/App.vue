@@ -29,6 +29,12 @@ import { MyProcessDesigner, MyProcessPenal } from "@/package";
 import CustomContentPadProvider from "@/package/designer/plugins/content-pad";
 // 自定义左侧菜单（修改 默认任务 为 用户任务）
 import CustomPaletteProvider from "@/package/designer/plugins/palette";
+import ReplaceMenuProvider from '@/package/designer/plugins/replaceMenuProvider'
+
+const ReplaceMenuModule = {
+  __init__: ['replaceMenuProvider'],
+  replaceMenuProvider: ['type', ReplaceMenuProvider]
+}
 
 console.log("[app] App.vue loaded");
 
@@ -62,22 +68,22 @@ const controlForm = ref({
   labelVisible: false,
   prefix: "flowable",
   headerButtonSize: "mini",
-  additionalModel: [CustomContentPadProvider, CustomPaletteProvider],
+  additionalModel: [CustomContentPadProvider, CustomPaletteProvider, ReplaceMenuModule],
 });
 // const model = ref<ModelApi.ModelVO>() // 流程模型的信息
 
 /** 初始化 modeler */
 const initModeler = (item: any) => {
-  console.log("[app] modeler.value before set:", modeler.value);
   modeler.value = item;
-  
-    modeler.value = item;
-    nextTick(() => {
-      console.log("nextTick modeler.value:", modeler.value);
-    });
-  console.log("[app] modeler.value after set:", modeler.value);
+  // 关键：主动注册自定义replace菜单
+  const provider = modeler.value.get('replaceMenuProvider');
+  if (provider && typeof provider.register === 'function') {
+    provider.register();
+  }
+  nextTick(() => {
+    console.log("nextTick modeler.value:", modeler.value);
+  });
 };
-
 /** 添加/修改模型 */
 const save = async (bpmnXml: string) => {
   try {
