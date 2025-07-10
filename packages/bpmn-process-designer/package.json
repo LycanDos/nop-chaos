@@ -9,7 +9,7 @@
     "src"
   ],
   "scripts": {
-    "dev": "build/vite",
+    "dev": "vite --mode env.local",
     "build": "build/vite build",
     "preview": "build/vite preview"
   },

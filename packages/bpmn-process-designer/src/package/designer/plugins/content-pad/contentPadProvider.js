@@ -302,8 +302,8 @@ ContextPadProvider.prototype.getContextPadEntries = function (element) {
           translate('Append Gateway')
         ),
         'append.append-task': appendAction(
-          'bpmn:UserTask',
-          'bpmn-icon-user-task',
+          'bpmn:Task',
+          'bpmn-icon-task',
           translate('Append Task')
         ),
         'append.intermediate-event': appendAction(
