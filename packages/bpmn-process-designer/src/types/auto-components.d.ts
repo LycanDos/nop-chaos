@@ -7,6 +7,7 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
+    '__unconfig_vite.config': typeof import('./../../__unconfig_vite.config.ts')['default']
     '.editorconfig': typeof import('./../.editorconfig')['default']
     '.eslintignore': typeof import('./../.eslintignore')['default']
     '.eslintrc': typeof import('./../.eslintrc.js')['default']
