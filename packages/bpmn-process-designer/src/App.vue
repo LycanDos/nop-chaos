@@ -30,6 +30,7 @@ import CustomContentPadProvider from "@/package/designer/plugins/content-pad";
 // 自定义左侧菜单（修改 默认任务 为 用户任务）
 import CustomPaletteProvider from "@/package/designer/plugins/palette";
 import ReplaceMenuProvider from '@/package/designer/plugins/replaceMenuProvider'
+import CustomRendererModule from '@/src/modules/custom-renderer' // 路径按实际调整
 
 const ReplaceMenuModule = {
   __init__: ['replaceMenuProvider'],
@@ -68,7 +69,7 @@ const controlForm = ref({
   labelVisible: false,
   prefix: "flowable",
   headerButtonSize: "mini",
-  additionalModel: [CustomContentPadProvider, CustomPaletteProvider, ReplaceMenuModule],
+  additionalModel: [CustomContentPadProvider, CustomPaletteProvider, ReplaceMenuModule, CustomRendererModule],
 });
 // const model = ref<ModelApi.ModelVO>() // 流程模型的信息
 

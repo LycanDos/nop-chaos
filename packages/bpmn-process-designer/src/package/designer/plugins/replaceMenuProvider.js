@@ -23,11 +23,21 @@ const staticActivities = [
 // API获取数据
 async function fetchActivities() {
   try {
-    const res = await fetch('/api/bpmn/activities')
-    if (!res.ok) return []
+    // 支持全局 window.BPMN_API_BASE 或 VITE_BPMN_API_BASE
+    const base = (typeof window !== 'undefined' && window.BPMN_API_BASE) || (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_BPMN_API_BASE) || ''
+    const url = base + '/api/bpmn/activities'
+    console.log('[replaceMenuProvider] fetchActivities 请求地址:', url)
+    const res = await fetch(url)
+    console.log('[replaceMenuProvider] fetchActivities 响应:', res)
+    if (!res.ok) {
+      console.warn('[replaceMenuProvider] fetchActivities 响应非200:', res.status)
+      return []
+    }
     const data = await res.json()
+    console.log('[replaceMenuProvider] fetchActivities 数据:', data)
     return Array.isArray(data) ? data : []
   } catch (e) {
+    console.error('[replaceMenuProvider] fetchActivities 异常:', e)
     return []
   }
 }
@@ -40,30 +50,64 @@ const ReplaceMenu = {
     const loading = ref(true)
     const apiList = ref([])
     const allList = computed(() => {
-      // 合并静态和API数据，去重
-      const map = new Map()
-      staticActivities.forEach(item => map.set(item.type, item))
-      apiList.value.forEach(item => map.set(item.type, item))
-      return Array.from(map.values())
+      // 静态和API数据全部保留，不去重，API数据如缺icon自动补全
+      const staticList = staticActivities.map(item => ({ ...item, source: 'static' }))
+      const apiData = apiList.value.map(item => {
+        // 支持API自定义icon、iconClass、iconColor、bgColor等样式
+        const match = staticActivities.find(s => s.type === item.type)
+        const style = item.itemStyle || {}
+        return {
+          ...item,
+          id: item.code, // 用code作为唯一标识
+          icon: style.icon || (match ? match.icon : ''),
+          iconClass: style.iconClass || '',
+          iconColor: style.iconColor || '',
+          bgColor: style.bgColor || '',
+          source: 'api'
+        }
+      })
+      const arr = staticList.concat(apiData)
+      console.log('[replaceMenuProvider] allList 合并后:', arr)
+      return arr
     })
+    const filterStaticOnly = ref(false)
     const filteredList = computed(() => {
-      if (!search.value) return allList.value
-      return allList.value.filter(item => item.name.includes(search.value))
+      let list = allList.value
+      if (filterStaticOnly.value) {
+        list = list.filter(item => item.source === 'static')
+      }
+      if (!search.value) {
+        return list
+      }
+      return list.filter(item => item.name.includes(search.value))
     })
     onMounted(async () => {
       loading.value = true
       apiList.value = await fetchActivities()
       loading.value = false
+      console.log('[replaceMenuProvider] onMounted apiList:', apiList.value)
     })
     return () =>
       h('div', { style: 'width:260px;max-height:400px;padding:8px 0;' }, [
-        h(ElInput, {
-          modelValue: search.value,
-          'onUpdate:modelValue': v => (search.value = v),
-          placeholder: '搜索任务类型',
-          clearable: true,
-          style: 'margin-bottom:8px;'
-        }),
+        h('div', { style: 'display:flex;align-items:center;margin-bottom:8px;' }, [
+          h(ElInput, {
+            modelValue: search.value,
+            'onUpdate:modelValue': v => (search.value = v),
+            placeholder: '搜索任务类型',
+            clearable: true,
+            style: 'flex:1;'
+          }),
+          h('button', {
+            style: `margin-left:6px;border:none;background:none;cursor:pointer;padding:0;outline:none;display:flex;align-items:center;${filterStaticOnly.value ? 'color:#409eff;' : 'color:#bbb;'}`,
+            title: '仅显示静态',
+            onClick: () => { filterStaticOnly.value = !filterStaticOnly.value }
+          }, [
+            h('svg', { width: 20, height: 20, viewBox: '0 0 20 20' }, [
+              h('rect', { x: 3, y: 6, width: 14, height: 8, rx: 3, fill: filterStaticOnly.value ? '#409eff' : '#bbb', stroke: filterStaticOnly.value ? '#409eff' : '#bbb', 'stroke-width': 1 }),
+              h('rect', { x: 7, y: 9, width: 6, height: 2, fill: '#fff' })
+            ])
+          ])
+        ]),
         loading.value
           ? h('div', { style: 'text-align:center;padding:20px 0;' }, '加载中...')
           : h(ElScrollbar, { style: 'max-height:340px;' }, () =>
@@ -73,8 +117,12 @@ const ReplaceMenu = {
                   style: 'display:flex;align-items:center;cursor:pointer;padding:6px 12px;',
                   onClick: () => props.onSelect(item)
                 }, [
-                  h('span', { class: item.icon, style: 'margin-right:8px;font-size:18px;' }),
-                  h('span', null, item.name)
+                  h('span', {
+                    class: item.iconClass ? item.iconClass : item.icon,
+                    style: `margin-right:8px;font-size:18px;${item.iconColor ? `color:${item.iconColor};` : ''}${item.bgColor ? `background:${item.bgColor};border-radius:3px;` : ''}`
+                  }),
+                  h('span', null, item.name),
+                  h('span', { style: 'margin-left:8px;font-size:12px;color:#bbb;' }, item.id)
                 ])
               )
             )
@@ -257,6 +305,7 @@ CustomReplaceMenuProvider.prototype.register = function() {
           container.innerHTML = ''
           // 统一的响应式搜索关键字
           const search = window.Vue ? window.Vue.ref('') : ref('')
+          const filterStaticOnly = window.Vue ? window.Vue.ref(false) : ref(false)
           // 只渲染任务类型列表（带滚动）
           const listDiv = document.createElement('div')
           listDiv.className = 'bpmn-replace-list'
@@ -265,18 +314,34 @@ CustomReplaceMenuProvider.prototype.register = function() {
           container.appendChild(listDiv)
           // 挂载 Vue 任务类型列表（不含搜索框）
           const app = createApp({
-            setup() {
+            setup(props) {
+              const p = props
               const loading = ref(true)
               const apiList = ref([])
               const allList = computed(() => {
-                const map = new Map()
-                staticActivities.forEach(item => map.set(item.type, item))
-                apiList.value.forEach(item => map.set(item.type, item))
-                return Array.from(map.values())
+                const staticList = staticActivities.map(item => ({ ...item, source: 'static' }))
+                const apiData = apiList.value.map(item => {
+                  // 支持API自定义icon、iconClass、iconColor、bgColor等样式
+                  const style = item.itemStyle || {}
+                  return {
+                    ...item,
+                    id: item.code, // 用code作为唯一标识
+                    icon: style.icon || '',
+                    iconClass: style.iconClass || '',
+                    iconColor: style.iconColor || '',
+                    bgColor: style.bgColor || '',
+                    source: 'api'
+                  }
+                })
+                return staticList.concat(apiData)
               })
               const filteredList = computed(() => {
-                if (!search.value) return allList.value
-                return allList.value.filter(item => item.name.includes(search.value))
+                let list = allList.value
+                if (filterStaticOnly.value) {
+                  list = list.filter(item => item.source === 'static')
+                }
+                if (!search.value) return list
+                return list.filter(item => item.name.includes(search.value))
               })
               onMounted(async () => {
                 loading.value = true
@@ -285,51 +350,129 @@ CustomReplaceMenuProvider.prototype.register = function() {
               })
               return () => loading.value
                 ? h('div', { style: 'text-align:center;padding:20px 0;' }, '加载中...')
-                : filteredList.value.map(item =>
-                    h('div', {
+                : filteredList.value.map((item, idx) => {
+                    return h('div', {
                       class: 'bpmn-replace-entry',
+                      key: `${item.type}_${item.source}_${idx}`,
                       style: 'display:flex;align-items:center;cursor:pointer;padding:6px 12px;',
-                      onClick: () => self._bpmnReplace.replaceElement(element, { type: item.type }) && popupMenu.close()
+                      onClick: async () => {
+                        if (item.source === 'api') {
+                          const base = (typeof window !== 'undefined' && window.BPMN_API_BASE)
+                            || (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_BPMN_API_BASE)
+                            || 'http://localhost:8888'
+                          const url = base + '/api/bpmn/activitiesStyle?id=' + encodeURIComponent(item.code) + '&_t=' + Date.now()
+                          console.log('[replaceMenuProvider] 点击API节点:', item)
+                          console.log('[replaceMenuProvider] fetch activitiesStyle url:', url)
+                          try {
+                            const res = await fetch(url)
+                            const data = await res.json()
+                            if (!window._bpmnContentHtmlMap) window._bpmnContentHtmlMap = {}
+                            console.log('[replaceMenuProvider] fetch activitiesStyle 返回:', data)
+                            window._bpmnContentHtmlMap[item.code] = data.contentHtml || ''
+                            console.log('[replaceMenuProvider] _bpmnContentHtmlMap 写入:', JSON.stringify(window._bpmnContentHtmlMap))
+                            // fetch后强制刷新所有节点，彻底触发重绘
+                            setTimeout(() => {
+                              if (window._debugModeler && window._debugModeler.get) {
+                                const registry = window._debugModeler.get('elementRegistry')
+                                const allElements = registry.getAll && typeof registry.getAll === 'function' ? registry.getAll() : Object.values(registry._elements).map(e => e.element)
+                                console.log('[replaceMenuProvider] 触发 elements.changed 刷新节点:', allElements.map(e => e.id))
+                                window._debugModeler.get('eventBus').fire('elements.changed', { elements: allElements })
+                              }
+                            }, 0)
+                          } catch (e) {
+                            console.error('fetch activitiesStyle error', e)
+                          }
+                        }
+                        // 替换节点类型并关闭弹窗，API数据写入扩展属性apiActivityId
+                        let props = { type: item.type }
+                        if (item.source === 'api') {
+                          props.id = undefined // 让bpmn自动生成id
+                        }
+                        // 替换节点
+                        const newElement = self._bpmnReplace.replaceElement(element, props)
+                        // API数据写入扩展属性
+                        if (item.source === 'api' && newElement && newElement.businessObject) {
+                          // 写入扩展属性apiActivityId
+                          let moddle = self._moddle
+                          let extensionElements = newElement.businessObject.extensionElements
+                          if (!extensionElements) {
+                            extensionElements = moddle.create('bpmn:ExtensionElements', { values: [] })
+                            newElement.businessObject.extensionElements = extensionElements
+                          }
+                          // 删除所有旧的apiActivityId属性，确保只保留当前code
+                          extensionElements.values = extensionElements.values.filter(e => !(e.$type === 'bpmn:Documentation' && e.text && e.text.startsWith('apiActivityId:')))
+                          // 添加当前code
+                          let doc = moddle.create('bpmn:Documentation', { text: 'apiActivityId:' + item.code })
+                          extensionElements.get('values').push(doc)
+                          // 强制同步更新属性，确保立即生效
+                          self._modeling.updateProperties(newElement, { extensionElements })
+                        }
+                        // 非API数据，清除apiActivityId扩展属性
+                        if (item.source !== 'api' && newElement && newElement.businessObject && newElement.businessObject.extensionElements) {
+                          let extensionElements = newElement.businessObject.extensionElements
+                          let idx = extensionElements.values.findIndex(e => e.$type === 'bpmn:Documentation' && e.text && e.text.startsWith('apiActivityId:'))
+                          if (idx !== -1) {
+                            extensionElements.values.splice(idx, 1)
+                            // 强制同步更新属性，确保立即生效
+                            self._modeling.updateProperties(newElement, { extensionElements })
+                          }
+                        }
+                        popupMenu.close()
+                        // 强制刷新新节点
+                        setTimeout(() => {
+                          if (window._debugModeler && window._debugModeler.get) {
+                            const el = window._debugModeler.get('elementRegistry').get(newElement.id)
+                            if (el) {
+                              window._debugModeler.get('eventBus').fire('elements.changed', { elements: [el] })
+                              window._debugModeler.get('eventBus').fire('element.changed', { element: el })
+                            }
+                          }
+                        }, 0)
+                      }
                     }, [
-                      h('span', { class: item.icon, style: 'margin-right:8px;font-size:18px;' }),
-                      h('span', null, item.name)
+                      h('span', {
+                        class: item.iconClass ? item.iconClass : item.icon,
+                        style: `margin-right:8px;font-size:18px;${item.iconColor ? `color:${item.iconColor};` : ''}${item.bgColor ? `background:${item.bgColor};border-radius:3px;` : ''}`
+                      }),
+                      h('span', null, item.name),
+                      h('span', { style: 'margin-left:8px;font-size:12px;color:#bbb;' }, item.id)
                     ])
-                  )
+                  })
             }
           })
           app.mount(listDiv)
-          // 渲染搜索框到 header，插入到最左侧
+          // 渲染搜索框和过滤按钮到 header，插入到最左侧
           if (header && !header.querySelector('.bpmn-replace-search')) {
             const searchDiv = document.createElement('div')
             searchDiv.className = 'bpmn-replace-search'
             searchDiv.style.padding = '0 8px 0 0'
             searchDiv.style.display = 'inline-block'
             searchDiv.style.verticalAlign = 'middle'
-            searchDiv.style.width = '180px'
+            searchDiv.style.width = '220px'
             header.insertBefore(searchDiv, header.firstChild)
-            // 只挂载搜索框，直接绑定同一个 search 变量
+            // 搜索框+按钮
             const searchApp = createApp({
               setup() {
-                // 处理自定义清空按钮点击
-                const handleClear = (event) => {
-                  event && event.stopPropagation && event.stopPropagation()
-                  search.value = ''
-                }
-                return () => h(ElInput, {
-                  modelValue: search.value,
-                  'onUpdate:modelValue': v => (search.value = v),
-                  placeholder: '搜索任务类型',
-                  // 不用 clearable，改用自定义插槽
-                  size: 'small',
-                  style: 'margin-bottom:0;width:170px;vertical-align:middle;'
-                }, {
-                  suffix: () => search.value ? h('span', {
-                    class: 'el-input__clear',
-                    style: 'cursor:pointer;',
-                    onMousedown: (e) => { e.stopPropagation(); e.preventDefault() },
-                    onClick: (e) => { e.stopPropagation(); e.preventDefault(); search.value = '' }
-                  }, '✕') : null
-                })
+                return () => h('div', { style: 'display:flex;align-items:center;' }, [
+                  h(ElInput, {
+                    modelValue: search.value,
+                    'onUpdate:modelValue': v => (search.value = v),
+                    placeholder: '搜索任务类型',
+                    clearable: true,
+                    size: 'small',
+                    style: 'flex:1;margin-right:4px;'
+                  }),
+                  h('button', {
+                    style: `border:none;background:none;cursor:pointer;padding:0;outline:none;display:flex;align-items:center;${filterStaticOnly.value ? 'color:#409eff;' : 'color:#bbb;'}`,
+                    title: '仅显示静态',
+                    onClick: () => { filterStaticOnly.value = !filterStaticOnly.value }
+                  }, [
+                    h('svg', { width: 20, height: 20, viewBox: '0 0 20 20' }, [
+                      h('rect', { x: 3, y: 6, width: 14, height: 8, rx: 3, fill: filterStaticOnly.value ? '#409eff' : '#bbb', stroke: filterStaticOnly.value ? '#409eff' : '#bbb', 'stroke-width': 1 }),
+                      h('rect', { x: 7, y: 9, width: 6, height: 2, fill: '#fff' })
+                    ])
+                  ])
+                ])
               }
             })
             searchApp.mount(searchDiv)
