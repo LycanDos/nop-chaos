@@ -71,6 +71,7 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
       https: false,
       port: VITE_PORT,
       // Load proxy configuration from .env
+      allowedHosts: ['l-nop'],
       proxy: createProxy(VITE_PROXY),
     },
     build: {
@@ -99,7 +100,7 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
           	     if(id.includes("/node_modules/"+lib+'/'))
           		   return true
                  }
-                     return false			   
+                     return false
           	}
 			
           	// if(include_any(["react","react-dom","react-router"]))
