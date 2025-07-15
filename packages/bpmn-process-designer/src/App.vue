@@ -14,14 +14,14 @@
     :process-name="modelName"
   />
   <!-- 流程属性器，负责编辑每个流程节点的属性 -->
-  <MyProcessPenal
-    v-if="modeler"
-    key="penal"
-    :bpmnModeler="modeler"
-    :prefix="controlForm.prefix"
-    class="process-panel"
-    :model="model"
-  />
+<!--  <MyProcessPenal-->
+<!--    v-if="modeler"-->
+<!--    key="penal"-->
+<!--    :bpmnModeler="modeler"-->
+<!--    :prefix="controlForm.prefix"-->
+<!--    class="process-panel"-->
+<!--    :model="model"-->
+<!--  />-->
 </template>
 <script setup lang="ts">
 import { MyProcessDesigner, MyProcessPenal } from "@/package";
