@@ -19,7 +19,7 @@
 </template>
 <script lang="ts">
   import { defineComponent } from 'vue';
-  import { BasicTitle } from '/@/Basic';
+  import { BasicTitle } from '/@/components/Basic';
   import { ArrowLeftOutlined } from '@ant-design/icons-vue';
 
   import { useDesign } from '/@/hooks/web/useDesign';

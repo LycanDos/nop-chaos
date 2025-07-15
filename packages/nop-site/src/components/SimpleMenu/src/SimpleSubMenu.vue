@@ -35,7 +35,7 @@
 
   import { defineComponent, computed } from 'vue';
   import { useDesign } from '/@/hooks/web/useDesign';
-  import Icon from '/@/Icon/index';
+  import Icon from '/@/components/Icon/index';
   import { checkChildrenHidden } from '/@/utils/common/compUtils';
   import MenuItem from './components/MenuItem.vue';
   import SubMenu from './components/SubMenuItem.vue';

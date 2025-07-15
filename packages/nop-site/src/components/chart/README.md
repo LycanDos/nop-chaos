@@ -5,7 +5,7 @@
 ##### 引用方式
 
 ```js
-import Bar from '/@/chart/Bar.vue';
+import Bar from '/@/components/chart/Bar.vue';
 ```
 
 ##### 参数列表
@@ -43,7 +43,7 @@ import Bar from '/@/chart/Bar.vue';
 </template>
 
 <script lang="ts" setup>
-  import Bar from '/@/chart/Bar.vue';
+  import Bar from '/@/components/chart/Bar.vue';
   const chartData = [
     {
       name: '1月',
@@ -68,7 +68,7 @@ import Bar from '/@/chart/Bar.vue';
 ##### 引用方式
 
 ```js
-import BarMulti from '/@/chart/BarMulti.vue';
+import BarMulti from '/@/components/chart/BarMulti.vue';
 ```
 
 ##### 参数列表
@@ -125,7 +125,7 @@ import BarMulti from '/@/chart/BarMulti.vue';
 ##### 引用方式
 
 ```js
-import Line from '/@/chart/Line.vue';
+import Line from '/@/components/chart/Line.vue';
 ```
 
 ##### 参数列表
@@ -161,7 +161,7 @@ import Line from '/@/chart/Line.vue';
 ##### 引用方式
 
 ```js
-import LineMulti from '/@/chart/LineMulti.vue';
+import LineMulti from '/@/components/chart/LineMulti.vue';
 ```
 
 ##### 参数列表
@@ -182,7 +182,7 @@ import LineMulti from '/@/chart/LineMulti.vue';
 ##### 引用方式
 
 ```js
-import Pie from '/@/chart/Pie';
+import Pie from '/@/components/chart/Pie';
 ```
 
 ##### 参数列表
@@ -211,7 +211,7 @@ import Pie from '/@/chart/Pie';
 ##### 引用方式
 
 ```js
-import Radar from '/@/chart/Radar';
+import Radar from '/@/components/chart/Radar';
 ```
 
 ##### 参数列表
@@ -240,7 +240,7 @@ import Radar from '/@/chart/Radar';
 ##### 引用方式
 
 ```js
-import Gauge from '/@/chart/Gauge';
+import Gauge from '/@/components/chart/Gauge';
 ```
 
 ##### 参数列表
@@ -257,7 +257,7 @@ import Gauge from '/@/chart/Gauge';
 ##### 引用方式
 
 ```js
-import RankList from '@/chart/RankList';
+import RankList from '@/components/chart/RankList';
 ```
 
 ##### 参数列表

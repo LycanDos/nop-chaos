@@ -1,6 +1,6 @@
 import type { App } from 'vue';
-//import { registerJVxeTable } from '/@/jeecg/JVxeTable';
-//import { registerJVxeCustom } from '/@/JVxeCustom';
+//import { registerJVxeTable } from '/@/components/jeecg/JVxeTable';
+//import { registerJVxeCustom } from '/@/components/JVxeCustom';
 
 // 注册全局dayjs
 import dayjs from 'dayjs';

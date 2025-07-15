@@ -14,7 +14,7 @@
   import { computed, onMounted, unref, ref, watch } from 'vue';
   import LoginFormTitle from './LoginFormTitle.vue';
   import { Button, Divider } from 'ant-design-vue';
-  import { QrCode } from '/@/Qrcode/index';
+  import { QrCode } from '/@/components/Qrcode/index';
   import { useUserStore } from '/@/store/modules/user';
   import { useI18n } from '/@/hooks/web/useI18n';
   import { useLoginState, LoginStateEnum } from './useLogin';

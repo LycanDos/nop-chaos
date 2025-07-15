@@ -5,7 +5,7 @@
   import { Tree, Empty } from 'ant-design-vue';
   import { TreeIcon } from './TreeIcon';
   import TreeHeader from './TreeHeader.vue';
-  import { ScrollContainer } from '/@/Container';
+  import { ScrollContainer } from '/@/components/Container';
 
   import { omit, get, difference } from 'lodash-es';
   import { isArray, isBoolean, isFunction } from '/@/utils/is';
@@ -17,7 +17,7 @@
   import { useDesign } from '/@/hooks/web/useDesign';
 
   import { basicProps } from './props';
-  import { CreateContextOptions } from '/@/ContextMenu';
+  import { CreateContextOptions } from '/@/components/ContextMenu';
 
   import { CheckEvent } from './typing';
 

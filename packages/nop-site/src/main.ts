@@ -11,7 +11,7 @@ import { setupRouterGuard } from '/@/router/guard';
 import { setupStore } from '/@/store';
 import { setupGlobDirectives } from '/@/directives';
 import { setupI18n } from '/@/locales/setupI18n';
-import { registerGlobComp } from '/@/registerGlobComp';
+import { registerGlobComp } from '/@/components/registerGlobComp';
 import { registerThirdComp } from '/@/settings/registerThirdComp';
 import { useSso } from '/@/hooks/web/useSso';
 import { registerPackages } from '/@/utils/monorepo/registerPackages';

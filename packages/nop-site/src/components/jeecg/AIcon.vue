@@ -4,7 +4,7 @@
 
 <script lang="ts">
   import { computed, defineComponent } from 'vue';
-  import { Icon } from '/@/Icon';
+  import { Icon } from '/@/components/Icon';
   import { isEmpty } from '/@/utils/is';
   import { propTypes } from '/@/utils/propTypes';
 

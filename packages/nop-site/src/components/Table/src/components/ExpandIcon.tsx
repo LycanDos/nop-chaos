@@ -1,4 +1,4 @@
-import { BasicArrow } from '/@/Basic';
+import { BasicArrow } from '/@/components/Basic';
 
 export default () => {
   return (props: Recordable) => {

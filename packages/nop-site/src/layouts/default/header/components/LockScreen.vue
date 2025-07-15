@@ -9,9 +9,9 @@
   import { createAsyncComponent } from '/@/utils/factory/createAsyncComponent';
   import { Tooltip } from 'ant-design-vue';
   import { LockOutlined } from '@ant-design/icons-vue';
-  import Icon from '/@/Icon';
+  import Icon from '/@/components/Icon';
   import { useI18n } from '/@/hooks/web/useI18n';
-  import { useModal } from '/@/Modal';
+  import { useModal } from '/@/components/Modal';
 
   export default defineComponent({
     name: 'LockScreen',

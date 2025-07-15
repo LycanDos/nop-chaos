@@ -33,8 +33,8 @@
 </template>
 <script lang="ts" setup>
   import { ref, toRaw, unref } from 'vue';
-  import { BasicModal, useModalInner } from '/@/Modal';
-  import { BasicTable, useTable, TableAction } from '/@/Table';
+  import { BasicModal, useModalInner } from '/@/components/Modal';
+  import { BasicTable, useTable, TableAction } from '/@/components/Table';
   import { recycleColumns } from './user.data';
   import { getRecycleBinList, putRecycleBin, deleteRecycleBin } from './user.api';
   import { useMessage } from '/@/hooks/web/useMessage';

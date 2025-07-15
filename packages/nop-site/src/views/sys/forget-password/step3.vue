@@ -10,7 +10,7 @@
   import { Form, Input, Button, Result } from 'ant-design-vue';
   import { useI18n } from '/@/hooks/web/useI18n';
   import { useLoginState } from '../login/useLogin';
-  import { useCountdown } from '/@/CountDown/src/useCountdown';
+  import { useCountdown } from '/@/components/CountDown/src/useCountdown';
   import { propTypes } from '/@/utils/propTypes';
 
   export default defineComponent({

@@ -63,7 +63,7 @@
 
 <script>
   import { UploadOutlined, FolderOutlined, DownloadOutlined, PaperClipOutlined, DeleteOutlined } from '@ant-design/icons-vue';
-  import JUpload from '/@/Form/src/jeecg/components/JUpload/JUpload.vue';
+  import JUpload from '/@/components/Form/src/jeecg/components/JUpload/JUpload.vue';
   import { uploadFileUrl } from './useComment';
   import { propTypes } from '/@/utils/propTypes';
   import { computed, watchEffect, unref, ref } from 'vue';

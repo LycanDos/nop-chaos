@@ -5,8 +5,8 @@
 </template>
 
 <script lang="ts" setup>
-  import { BasicForm, useForm } from '/@/Form/index';
-  import { BasicDrawer, useDrawerInner } from '/@/Drawer';
+  import { BasicForm, useForm } from '/@/components/Form/index';
+  import { BasicDrawer, useDrawerInner } from '/@/components/Drawer';
   import { formSchemas } from './manage.data';
 
   // 声明 emits

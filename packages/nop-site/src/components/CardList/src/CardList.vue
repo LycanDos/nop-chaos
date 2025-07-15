@@ -71,10 +71,10 @@
   import { computed, onMounted, ref } from 'vue';
   import { EditOutlined, EllipsisOutlined, RedoOutlined, TableOutlined } from '@ant-design/icons-vue';
   import { List, Card, Image, Typography, Tooltip, Slider, Avatar } from 'ant-design-vue';
-  import { Dropdown } from '/@/Dropdown';
-  import { BasicForm, useForm } from '/@/Form';
+  import { Dropdown } from '/@/components/Dropdown';
+  import { BasicForm, useForm } from '/@/components/Form';
   import { propTypes } from '/@/utils/propTypes';
-  import { Button } from '/@/Button';
+  import { Button } from '/@/components/Button';
   import { isFunction } from '/@/utils/is';
   import { useSlider, grid } from './data';
   const ListItem = List.Item;

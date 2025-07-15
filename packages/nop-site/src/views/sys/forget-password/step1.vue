@@ -18,7 +18,7 @@
   import { defineComponent, reactive, ref, computed, unref, toRaw } from 'vue';
 
   import { Form, Input, Button, steps } from 'ant-design-vue';
-  import { CountdownInput } from '/@/CountDown';
+  import { CountdownInput } from '/@/components/CountDown';
 
   import { useI18n } from '/@/hooks/web/useI18n';
   import { useMessage } from '/@/hooks/web/useMessage';

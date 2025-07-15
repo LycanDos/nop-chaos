@@ -1,5 +1,5 @@
-import { BasicColumn } from '/@/Table';
-import { FormSchema } from '/@/Table';
+import { BasicColumn } from '/@/components/Table';
+import { FormSchema } from '/@/components/Table';
 import { getAllRolesList, getAllTenantList } from './user.api';
 import { rules } from '/@/utils/helper/validator';
 import { render } from '/@/utils/common/renderUtils';

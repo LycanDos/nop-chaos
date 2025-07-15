@@ -64,10 +64,10 @@
   import type { CSSProperties } from 'vue';
   import { computed, defineComponent, onMounted, ref, unref } from 'vue';
   import type { RouteLocationNormalized } from 'vue-router';
-  import { ScrollContainer } from '/@/Container';
-  import { SimpleMenu, SimpleMenuTag } from '/@/SimpleMenu';
-  import { Icon } from '/@/Icon';
-  import { AppLogo } from '/@/Application';
+  import { ScrollContainer } from '/@/components/Container';
+  import { SimpleMenu, SimpleMenuTag } from '/@/components/SimpleMenu';
+  import { Icon } from '/@/components/Icon';
+  import { AppLogo } from '/@/components/Application';
   import { useMenuSetting } from '/@/hooks/setting/useMenuSetting';
   import { useDragLine } from './useLayoutSider';
   import { useGlobSetting } from '/@/hooks/setting';

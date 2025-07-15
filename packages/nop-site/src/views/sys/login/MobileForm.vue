@@ -29,7 +29,7 @@
 <script lang="ts" setup>
   import { reactive, ref, computed, unref, toRaw } from 'vue';
   import { Form, Input, Button } from 'ant-design-vue';
-  import { CountdownInput } from '/@/CountDown';
+  import { CountdownInput } from '/@/components/CountDown';
   import LoginFormTitle from './LoginFormTitle.vue';
   import { useI18n } from '/@/hooks/web/useI18n';
   import { useMessage } from '/@/hooks/web/useMessage';

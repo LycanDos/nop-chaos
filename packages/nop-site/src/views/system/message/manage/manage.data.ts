@@ -1,4 +1,4 @@
-import { BasicColumn, FormSchema } from '/@/Table';
+import { BasicColumn, FormSchema } from '/@/components/Table';
 
 export const columns: BasicColumn[] = [
   {

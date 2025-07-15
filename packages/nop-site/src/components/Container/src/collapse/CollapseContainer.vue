@@ -27,7 +27,7 @@
   import { ref } from 'vue';
   // component
   import { Skeleton } from 'ant-design-vue';
-  import { CollapseTransition } from '/@/Transition';
+  import { CollapseTransition } from '/@/components/Transition';
   import CollapseHeader from './CollapseHeader.vue';
   import { triggerWindowResize } from '/@/utils/event';
   // hook

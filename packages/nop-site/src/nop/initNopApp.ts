@@ -20,7 +20,7 @@ import { clearLocalCache, importModule, registerAdapter, registerModule, XuiPage
 import { useUserStoreWithOut } from '../store/modules/user';
 import { isArray } from '../utils/is';
 
-import { IconPicker, Icon } from '/@/Icon'
+import { IconPicker, Icon } from '/@/components/Icon'
 
 import { useLocale } from '/@/locales/useLocale'
 import { useI18n } from '/@/hooks/web/useI18n'

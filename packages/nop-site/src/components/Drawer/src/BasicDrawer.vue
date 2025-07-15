@@ -31,7 +31,7 @@
   import { deepMerge } from '/@/utils';
   import DrawerFooter from './components/DrawerFooter.vue';
   import DrawerHeader from './components/DrawerHeader.vue';
-  import { ScrollContainer } from '/@/Container';
+  import { ScrollContainer } from '/@/components/Container';
   import { basicProps } from './props';
   import { useDesign } from '/@/hooks/web/useDesign';
   import { useAttrs } from '/@/hooks/core/useAttrs';

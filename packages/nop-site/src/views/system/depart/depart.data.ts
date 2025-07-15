@@ -1,4 +1,4 @@
-import { FormSchema } from '/@/Form';
+import { FormSchema } from '/@/components/Form';
 
 // 部门基础表单
 export function useBasicFormSchema() {

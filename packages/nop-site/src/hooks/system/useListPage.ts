@@ -1,9 +1,9 @@
 import { reactive, ref, Ref, unref } from 'vue';
 import { merge } from 'lodash-es';
 import { DynamicProps } from '/#/utils';
-import { BasicTableProps, TableActionType, useTable } from '/@/Table';
-import { ColEx } from '/@/Form/src/types';
-import { FormActionType } from '/@/Form';
+import { BasicTableProps, TableActionType, useTable } from '/@/components/Table';
+import { ColEx } from '/@/components/Form/src/types';
+import { FormActionType } from '/@/components/Form';
 import { useMessage } from '/@/hooks/web/useMessage';
 import { useMethods } from '/@/hooks/system/useMethods';
 import { useDesign } from '/@/hooks/web/useDesign';

@@ -29,9 +29,9 @@
   import { defineComponent, ref, watch, unref, computed } from 'vue';
   import UploadModal from './UploadModal.vue';
   import UploadPreviewModal from './UploadPreviewModal.vue';
-  import { Icon } from '/@/Icon';
+  import { Icon } from '/@/components/Icon';
   import { Tooltip } from 'ant-design-vue';
-  import { useModal } from '/@/Modal';
+  import { useModal } from '/@/components/Modal';
   import { uploadContainerProps } from './props';
   import { omit } from 'lodash-es';
   import { useI18n } from '/@/hooks/web/useI18n';

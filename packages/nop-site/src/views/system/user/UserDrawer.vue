@@ -13,9 +13,9 @@
 </template>
 <script lang="ts" setup>
   import { defineComponent, ref, computed, unref, useAttrs } from 'vue';
-  import { BasicForm, useForm } from '/@/Form/index';
+  import { BasicForm, useForm } from '/@/components/Form/index';
   import { formSchema } from './user.data';
-  import { BasicDrawer, useDrawerInner } from '/@/Drawer';
+  import { BasicDrawer, useDrawerInner } from '/@/components/Drawer';
   import { saveOrUpdateUser, getUserRoles, getUserDepartList } from './user.api';
   import { useDrawerAdaptiveWidth } from '/@/hooks/jeecg/useAdaptiveWidth';
   // 声明Emits

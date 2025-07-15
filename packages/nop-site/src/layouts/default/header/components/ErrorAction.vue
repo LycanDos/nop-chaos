@@ -8,7 +8,7 @@
 <script lang="ts">
   import { defineComponent, computed } from 'vue';
   import { Tooltip, Badge } from 'ant-design-vue';
-  import Icon from '/@/Icon';
+  import Icon from '/@/components/Icon';
 
   import { useI18n } from '/@/hooks/web/useI18n';
   import { useErrorLogStore } from '/@/store/modules/errorLog';
