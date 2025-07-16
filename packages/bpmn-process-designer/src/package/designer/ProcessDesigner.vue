@@ -228,10 +228,10 @@ import XButton from "@/components/XButton/src/XButton.vue";
 import XTextButton from "@/components/XButton/src/XTextButton.vue";
 import Dialog from "@/components/Dialog/src/Dialog.vue";
 
-// import 'bpmn-js/dist/assets/diagram-js.css' // 左边工具栏以及编辑节点的样式
-// import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css'
-// import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-codes.css'
-// import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css'
+import 'bpmn-js/dist/assets/diagram-js.css'
+import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css'
+import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-codes.css'
+import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css'
 // import 'bpmn-js-properties-panel/dist/assets/bpmn-js-properties-panel.css' // 右侧框样式
 import { ElMessage, ElMessageBox } from "element-plus";
 import BpmnModeler from "bpmn-js/lib/Modeler";
@@ -454,12 +454,8 @@ const initBpmnModeler = () => {
       return;
     }
     let data = bpmnCanvas.value || document.getElementById("bpmnCanvas");
-    console.log(
-      "[designer] bpmnCanvas.value:",
-      bpmnCanvas.value,
-      "document.getElementById:",
-      document.getElementById("bpmnCanvas"),
-    );
+    console.log("[designer] bpmnCanvas.value:", bpmnCanvas.value);
+    console.log("[designer] document.getElementById(bpmnCanvas):", document.getElementById("bpmnCanvas"));
     if (!data) {
       console.error("[designer] bpmnModeler 初始化失败，容器不存在");
       return;
@@ -469,8 +465,7 @@ const initBpmnModeler = () => {
     console.log("[designer] moddleExtensions:", moddleExtensions.value);
     bpmnModeler = new BpmnModeler({
       container: data,
-      keyboard: props.keyboard ? { bindTo: document } : null,
-      additionalModules: additionalModules.value,
+      additionalModules: additionalModules.value as any,
       moddleExtensions: moddleExtensions.value,
     });
     console.log("[designer] bpmnModeler 实例化成功:", bpmnModeler);
@@ -519,16 +514,16 @@ const initModelListeners = () => {
 };
 /* 创建新的流程图 */
 const createNewDiagram = async (xml) => {
-  console.log(xml, "xml");
+  console.log("[designer] createNewDiagram called, xml:", xml);
   // 将字符串转换成图显示出来
   let newId = props.processId || `Process_${new Date().getTime()}`;
   let newName = props.processName || `业务流程_${new Date().getTime()}`;
   let xmlString = xml || DefaultEmptyXML(newId, newName, props.prefix);
   try {
-    // console.log(xmlString, 'xmlString')
+    console.log("[designer] createNewDiagram xmlString:", xmlString);
     // console.log(this.bpmnModeler.importXML);
     let { warnings } = await bpmnModeler.importXML(xmlString);
-    console.log(warnings, "warnings");
+    console.log("[designer] importXML warnings:", warnings);
     if (warnings && warnings.length) {
       warnings.forEach((warn) => console.warn(warn));
     }
@@ -692,11 +687,12 @@ onMounted(() => {
   console.log("[designer] ProcessDesigner.vue onMounted");
   initBpmnModeler();
   createNewDiagram(props.value);
-  // emit init-finished 日志
-  // setTimeout(() => {
-  //   console.log("[designer] emit init-finished", bpmnModeler);
-  //   emit("init-finished", bpmnModeler);
-  // }, 0);
+  setTimeout(() => {
+    if (bpmnModeler) {
+      console.log('[designer] 强制重绘');
+      bpmnModeler.get('canvas').zoom('fit-viewport', 'auto');
+    }
+  }, 1000);
 });
 onBeforeUnmount(() => {
   if (bpmnModeler) bpmnModeler.destroy();

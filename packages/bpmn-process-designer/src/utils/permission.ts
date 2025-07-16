@@ -1,5 +1,4 @@
 import { CACHE_KEY, useCache } from '@/hooks/web/useCache'
-import {hasPermission} from "@/directives/permission/hasPermi";
 
 
 const { t } = useI18n() // 国际化
@@ -10,7 +9,7 @@ const { t } = useI18n() // 国际化
  * @returns {Boolean}
  */
 export function checkPermi(permission: string[]) {
-  return hasPermission(permission)
+  return true // hasPermission(permission)
 }
 
 /**

@@ -4,15 +4,15 @@
   </el-card>
 </template>
 <script lang="ts" setup>
-import { propTypes } from '@/utils/propTypes'
-import { MyProcessViewer } from '@/components/bpmnProcessDesigner/package'
+import { ref, watch } from 'vue'
+// import { MyProcessViewer } from '@/components/bpmnProcessDesigner/package'
 
 defineOptions({ name: 'BpmProcessInstanceBpmnViewer' })
 
 const props = defineProps({
-  loading: propTypes.bool.def(false), // 是否加载中
-  bpmnXml: propTypes.string, // BPMN XML
-  modelView: propTypes.object
+  loading: Boolean, // 是否加载中
+  bpmnXml: String, // BPMN XML
+  modelView: Object
 })
 
 const view = ref({
@@ -34,7 +34,7 @@ watch(
 
 /** 监听 bpmnXml */
 watch(
-  () => props.bpmnXml,
+  () => props.bpmnXml || '',
   (value) => {
     view.value.bpmnXml = value
   }

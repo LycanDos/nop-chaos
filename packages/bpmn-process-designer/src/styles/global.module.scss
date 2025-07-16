@@ -2,5 +2,5 @@
 // 导出变量
 :export {
   namespace: myvar.$namespace;
-  elNamespace: $elNamespace;
+  elNamespace: myvar.$elNamespace;
 }

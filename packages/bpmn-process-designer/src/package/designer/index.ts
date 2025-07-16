@@ -6,3 +6,5 @@ MyProcessDesigner.install = function (Vue) {
 
 // 流程图的设计器，可编辑
 export default MyProcessDesigner
+
+// export { default as ProcessDesignerWithProvider } from './ProcessDesignerWithProvider.vue'

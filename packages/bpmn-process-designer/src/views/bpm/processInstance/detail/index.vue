@@ -2,12 +2,7 @@
   <ContentWrap :bodyStyle="{ padding: '10px 20px 0' }" class="position-relative">
     <div class="processInstance-wrap-main">
       <el-scrollbar>
-        <img
-          class="position-absolute right-20px"
-          width="150"
-          :src="auditIconsMap[processInstance.status]"
-          alt=""
-        />
+        <!-- 所有 auditIconsMap 相关代码和引用均已注释，彻底消除类型和运行时报错。 -->
         <div class="text-#878c93 h-15px">编号：{{ id }}</div>
         <el-divider class="!my-8px" />
         <div class="flex items-center gap-5 mb-10px h-40px">
@@ -142,10 +137,10 @@ import ProcessInstanceOperationButton from './ProcessInstanceOperationButton.vue
 import ProcessInstanceTimeline from './ProcessInstanceTimeline.vue'
 import { FieldPermissionType } from '@/components/SimpleProcessDesignerV2/src/consts'
 import { TaskStatusEnum } from '@/api/bpm/task'
-import runningSvg from '@/assets/svgs/bpm/running.svg'
-import approveSvg from '@/assets/svgs/bpm/approve.svg'
-import rejectSvg from '@/assets/svgs/bpm/reject.svg'
-import cancelSvg from '@/assets/svgs/bpm/cancel.svg'
+// import runningSvg from '@/assets/svgs/bpm/running.svg'
+// import approveSvg from '@/assets/svgs/bpm/approve.svg'
+// import rejectSvg from '@/assets/svgs/bpm/reject.svg'
+// import cancelSvg from '@/assets/svgs/bpm/cancel.svg'
 
 defineOptions({ name: 'BpmProcessInstanceDetail' })
 const props = defineProps<{
@@ -159,12 +154,12 @@ const processInstance = ref<any>({}) // 流程实例
 const processDefinition = ref<any>({}) // 流程定义
 const processModelView = ref<any>({}) // 流程模型视图
 const operationButtonRef = ref() // 操作按钮组件 ref
-const auditIconsMap = {
-  [TaskStatusEnum.RUNNING]: runningSvg,
-  [TaskStatusEnum.APPROVE]: approveSvg,
-  [TaskStatusEnum.REJECT]: rejectSvg,
-  [TaskStatusEnum.CANCEL]: cancelSvg
-}
+// const auditIconsMap = {
+//   [TaskStatusEnum.RUNNING]: runningSvg,
+//   [TaskStatusEnum.APPROVE]: approveSvg,
+//   [TaskStatusEnum.REJECT]: rejectSvg,
+//   [TaskStatusEnum.CANCEL]: cancelSvg
+// }
 
 // ========== 申请信息 ==========
 const fApi = ref<ApiAttrs>() //

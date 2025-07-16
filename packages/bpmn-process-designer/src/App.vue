@@ -3,25 +3,13 @@
 
   <!-- 流程设计器，负责绘制流程等  -->
   <MyProcessDesigner
-    key="designer"
-    v-bind="controlForm"
-    keyboard
     ref="processDesigner"
     @init-finished="initModeler"
     :additionalModel="controlForm.additionalModel"
-    :model-id="modelId"
-    :process-id="modelKey"
-    :process-name="modelName"
+    :processId="modelKey"
+    :processName="modelName"
   />
   <!-- 流程属性器，负责编辑每个流程节点的属性 -->
-<!--  <MyProcessPenal-->
-<!--    v-if="modeler"-->
-<!--    key="penal"-->
-<!--    :bpmnModeler="modeler"-->
-<!--    :prefix="controlForm.prefix"-->
-<!--    class="process-panel"-->
-<!--    :model="model"-->
-<!--  />-->
 </template>
 <script setup lang="ts">
 import { MyProcessDesigner, MyProcessPenal } from "@/package";
@@ -92,7 +80,7 @@ const save = async (bpmnXml: string) => {
     emit("success", bpmnXml);
   } catch (error) {
     console.error("保存失败:", error);
-    // message.error('保存失败')®
+    // message.error('保存失败')
   }
 };
 
@@ -138,5 +126,17 @@ declare global {
   position: absolute;
   top: 172px;
   right: 70px;
+}
+#bpmnCanvas,
+.my-process-designer__canvas,
+.my-process-designer__container {
+  min-height: 600px !important;
+  height: 800px !important;
+  /* background: #fff !important; */
+  z-index: 10 !important;
+  position: relative !important;
+}
+body, html, #app {
+  height: 100% !important;
 }
 </style>

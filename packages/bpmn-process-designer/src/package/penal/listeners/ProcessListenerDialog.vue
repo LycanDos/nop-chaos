@@ -36,7 +36,7 @@
   </Dialog>
 </template>
 <script setup lang="ts">
-import { ProcessListenerApi, ProcessListenerVO } from '@/api/bpm/processListener'
+// import { ProcessListenerApi, ProcessListenerVO } from '@/api/bpm/processListener'
 import { DICT_TYPE } from '@/utils/dict'
 import { CommonStatusEnum } from '@/utils/constants'
 
@@ -45,7 +45,7 @@ defineOptions({ name: 'ProcessListenerDialog' })
 
 const dialogVisible = ref(false) // 弹窗的是否展示
 const loading = ref(true) // 列表的加载中
-const list = ref<ProcessListenerVO[]>([]) // 列表的数据
+// const list = ref<ProcessListenerVO[]>([]) // 列表的数据
 const total = ref(0) // 列表的总页数
 const queryParams = reactive({
   pageNo: 1,
@@ -67,9 +67,9 @@ defineExpose({ open }) // 提供 open 方法，用于打开弹窗
 const getList = async () => {
   loading.value = true
   try {
-    const data = await ProcessListenerApi.getProcessListenerPage(queryParams)
-    list.value = data.list
-    total.value = data.total
+    // const data = await ProcessListenerApi.getProcessListenerPage(queryParams)
+    // list.value = data.list
+    // total.value = data.total
   } finally {
     loading.value = false
   }

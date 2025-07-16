@@ -121,8 +121,11 @@ const showInputs = ref<boolean[]>([])
 // 失去焦点
 const blurEvent = (index: number) => {
   showInputs.value[index] = false
-  const conditionNode = currentNode.value.conditionNodes?.at(index) as SimpleFlowNode
-  conditionNode.name = conditionNode.name || `并行${index + 1}`
+  const conditionNodes = currentNode.value?.conditionNodes
+  const conditionNode = conditionNodes ? conditionNodes[index] as SimpleFlowNode : undefined
+  if (conditionNode) {
+    conditionNode.name = conditionNode.name || `并行${index + 1}`
+  }
 }
 
 // 点击条件名称
@@ -131,13 +134,13 @@ const clickEvent = (index: number) => {
 }
 
 const conditionNodeConfig = (nodeId: string) => {
-  const conditionNode = proxy.$refs[nodeId][0]
-  conditionNode.open()
+  const conditionNode = proxy.$refs[nodeId]?.[0]
+  conditionNode?.open()
 }
 
 // 新增条件
 const addCondition = () => {
-  const conditionNodes = currentNode.value.conditionNodes
+  const conditionNodes = currentNode.value?.conditionNodes
   if (conditionNodes) {
     const len = conditionNodes.length
     let lastIndex = len - 1
@@ -155,11 +158,11 @@ const addCondition = () => {
 
 // 删除条件
 const deleteCondition = (index: number) => {
-  const conditionNodes = currentNode.value.conditionNodes
+  const conditionNodes = currentNode.value?.conditionNodes
   if (conditionNodes) {
     conditionNodes.splice(index, 1)
     if (conditionNodes.length == 1) {
-      const childNode = currentNode.value.childNode
+      const childNode = currentNode.value?.childNode
       // 更新此节点为后续孩子节点
       emits('update:modelValue', childNode)
     }

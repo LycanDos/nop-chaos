@@ -108,6 +108,7 @@ const dialogStyle = computed(() => {
 </template>
 
 <style lang="scss" scoped>
+@use '@/styles/variables.scss' as *;
 @use 'element-plus/theme-chalk/src/mixins/config.scss' as *;
 @use 'element-plus/theme-chalk/src/common/var.scss' as *;
 

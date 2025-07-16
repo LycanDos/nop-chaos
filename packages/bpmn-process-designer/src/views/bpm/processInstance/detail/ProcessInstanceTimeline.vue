@@ -59,7 +59,7 @@
               class="!px-6px"
               @click="handleSelectUser(activity.id, customApproveUsers[activity.id])"
             >
-              <img class="w-18px text-#ccc" src="@/assets/svgs/bpm/add-user.svg" alt="" />
+              <!-- <img class="w-18px text-#ccc" src="@/assets/svgs/bpm/add-user.svg" alt="" /> -->
             </el-button>
           </el-tooltip>
           <div
@@ -174,20 +174,20 @@
 </template>
 
 <script lang="ts" setup>
-import { formatDate } from '@/utils/formatTime'
-import * as ProcessInstanceApi from '@/api/bpm/processInstance'
-import { TaskStatusEnum } from '@/api/bpm/task'
-import { NodeType, CandidateStrategy } from '@/components/SimpleProcessDesignerV2/src/consts'
-import { isEmpty } from '@/utils/is'
-import { Check, Close, Loading, Clock, Minus, Delete } from '@element-plus/icons-vue'
-import starterSvg from '@/assets/svgs/bpm/starter.svg'
-import auditorSvg from '@/assets/svgs/bpm/auditor.svg'
-import copySvg from '@/assets/svgs/bpm/copy.svg'
-import conditionSvg from '@/assets/svgs/bpm/condition.svg'
-import parallelSvg from '@/assets/svgs/bpm/parallel.svg'
-import finishSvg from '@/assets/svgs/bpm/finish.svg'
-import transactorSvg from '@/assets/svgs/bpm/transactor.svg'
-import childProcessSvg from '@/assets/svgs/bpm/child-process.svg'
+// import formatDate from '@/utils/formatTime'
+// import * as ProcessInstanceApi from '@/api/bpm/processInstance'
+// import { TaskStatusEnum } from '@/api/bpm/task'
+// import { NodeType, CandidateStrategy } from '@/components/SimpleProcessDesignerV2/src/consts'
+// import { isEmpty } from '@/utils/is'
+// import { Check, Close, Loading, Clock, Minus, Delete } from '@element-plus/icons-vue'
+// import starterSvg from '@/assets/svgs/bpm/starter.svg'
+// import auditorSvg from '@/assets/svgs/bpm/auditor.svg'
+// import copySvg from '@/assets/svgs/bpm/copy.svg'
+// import conditionSvg from '@/assets/svgs/bpm/condition.svg'
+// import parallelSvg from '@/assets/svgs/bpm/parallel.svg'
+// import finishSvg from '@/assets/svgs/bpm/finish.svg'
+// import transactorSvg from '@/assets/svgs/bpm/transactor.svg'
+// import childProcessSvg from '@/assets/svgs/bpm/child-process.svg'
 
 defineOptions({ name: 'BpmProcessInstanceTimeline' })
 withDefaults(

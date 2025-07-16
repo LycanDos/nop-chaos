@@ -22,6 +22,23 @@ import {initNopApp} from './nop/initNopApp'
 
 // 这个css必须放在amis引入的css后面，它的优先级才能覆盖amis的样式
 import 'uno.css';
+const style = document.createElement('style');
+style.innerHTML = `
+@font-face {
+  font-family: 'bpmn';
+  src: url('/bpmn-font/bpmn.woff2') format('woff2'),
+       url('/bpmn-font/bpmn.woff') format('woff'),
+       url('/bpmn-font/bpmn.ttf') format('truetype'),
+       url('/bpmn-font/bpmn.svg#bpmn') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+`;
+document.head.appendChild(style);
+import 'bpmn-js/dist/assets/diagram-js.css'
+import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css'
+import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-codes.css'
+import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css'
 
 // 在本地开发中引入的,以提高浏览器响应速度
 if (import.meta.env.DEV) {
@@ -71,6 +88,19 @@ async function bootstrap() {
 
   // 挂载应用
   app.mount('#app', true);
+
+  // 调试：打印所有注册的路由
+  if (app.config.globalProperties?.$router) {
+    const routes = app.config.globalProperties.$router.getRoutes();
+    console.log('【调试】当前注册的路由:', routes.map(r => ({ path: r.path, name: r.name })));
+    const bpmnRoute = routes.find(r => r.path === '/bpmn-designer');
+    console.log('【调试】/bpmn-designer 路由详情:', bpmnRoute);
+  } else if (router) {
+    const routes = router.getRoutes();
+    console.log('【调试】当前注册的路由:', routes.map(r => ({ path: r.path, name: r.name })));
+    const bpmnRoute = routes.find(r => r.path === '/bpmn-designer');
+    console.log('【调试】/bpmn-designer 路由详情:', bpmnRoute);
+  }
 }
 
 bootstrap();

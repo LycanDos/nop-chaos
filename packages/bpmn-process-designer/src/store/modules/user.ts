@@ -2,7 +2,7 @@ import { store } from '@/store'
 import { defineStore } from 'pinia'
 import { getAccessToken, removeToken } from '@/utils/auth'
 import { CACHE_KEY, useCache, deleteUserCache } from '@/hooks/web/useCache'
-import { getInfo, loginOut } from '@/api/login'
+// import { getInfo, loginOut } from '@/api/login'
 
 const { wsCache } = useCache()
 
@@ -54,14 +54,14 @@ export const useUserStore = defineStore('admin-user', {
         return null
       }
       let userInfo = wsCache.get(CACHE_KEY.USER)
-      if (!userInfo) {
-        userInfo = await getInfo()
-      } else {
-        // 特殊：在有缓存的情况下，进行加载。但是即使加载失败，也不影响后续的操作，保证可以进入系统
-        try {
-          userInfo = await getInfo()
-        } catch (error) {}
-      }
+      // if (!userInfo) {
+      //   userInfo = await getInfo()
+      // } else {
+      //   // 特殊：在有缓存的情况下，进行加载。但是即使加载失败，也不影响后续的操作，保证可以进入系统
+      //   try {
+      //     userInfo = await getInfo()
+      //   } catch (error) {}
+      // }
       this.permissions = new Set(userInfo.permissions)
       this.roles = userInfo.roles
       this.user = userInfo.user
@@ -84,7 +84,7 @@ export const useUserStore = defineStore('admin-user', {
       wsCache.set(CACHE_KEY.USER, userInfo)
     },
     async loginOut() {
-      await loginOut()
+      // await loginOut()
       removeToken()
       deleteUserCache() // 删除用户缓存
       this.resetState()

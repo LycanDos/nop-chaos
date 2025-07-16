@@ -154,10 +154,13 @@ const showInputs = ref<boolean[]>([])
 // 失去焦点
 const blurEvent = (index: number) => {
   showInputs.value[index] = false
-  const conditionNode = currentNode.value.conditionNodes?.at(index) as SimpleFlowNode
-  conditionNode.name =
-    conditionNode.name ||
-    getDefaultConditionNodeName(index, conditionNode.conditionSetting?.defaultFlow)
+  const conditionNodes = currentNode.value?.conditionNodes
+  const conditionNode = conditionNodes ? conditionNodes[index] as SimpleFlowNode : undefined
+  if (conditionNode) {
+    conditionNode.name =
+      conditionNode.name ||
+      getDefaultConditionNodeName(index, conditionNode.conditionSetting?.defaultFlow)
+  }
 }
 
 // 点击条件名称
