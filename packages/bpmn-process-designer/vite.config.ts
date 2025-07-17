@@ -64,7 +64,8 @@ export default defineConfig(({ command, mode }: ConfigEnv): UserConfig => {
         compress: {
           drop_debugger: env.VITE_DROP_DEBUGGER === 'true',
           drop_console: env.VITE_DROP_CONSOLE === 'true'
-        }
+        },
+        mangle: false
       },
       lib: {
         entry: resolve(__dirname, 'src/package/index.ts'),

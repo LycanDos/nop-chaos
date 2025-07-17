@@ -15,7 +15,7 @@ import { registerGlobComp } from '/@/components/registerGlobComp';
 import { registerThirdComp } from '/@/settings/registerThirdComp';
 import { useSso } from '/@/hooks/web/useSso';
 import { registerPackages } from '/@/utils/monorepo/registerPackages';
-
+import ElementPlus from 'element-plus';
 
 
 import {initNopApp} from './nop/initNopApp'
@@ -86,6 +86,7 @@ async function bootstrap() {
   // 当路由准备好时再执行挂载( https://next.router.vuejs.org/api/#isready)
   await router.isReady();
 
+  app.use(ElementPlus);
   // 挂载应用
   app.mount('#app', true);
 

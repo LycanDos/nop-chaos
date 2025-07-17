@@ -1,0 +1,110 @@
+<script setup lang="ts">
+import { ref, shallowRef, provide, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { MyProcessDesigner } from 'bpmn-process-designer';
+import CustomContentPadProvider from "bpmn-process-designer";
+// 自定义左侧菜单（修改 默认任务 为 用户任务）
+import CustomPaletteProvider from "bpmn-process-designer";
+import ReplaceMenuProvider from 'bpmn-process-designer'
+import CustomRendererModule from '@/src/modules/custom-renderer'
+// 如需自定义功能请在bpmn-process-designer包内暴露后再引入
+
+const emit = defineEmits(["success", "init-finished"]);
+
+const formFields = ref<string[]>([]);
+provide("formFields", formFields);
+
+const xmlString = ref("");
+const modelData = ref({});
+
+const modeler = shallowRef(); // BPMN Modeler
+const processDesigner = ref();
+const controlForm = ref({
+  simulation: true,
+  labelEditing: false,
+  labelVisible: false,
+  prefix: "flowable",
+  headerButtonSize: "mini",
+  // additionalModel: [CustomContentPadProvider, CustomPaletteProvider, ReplaceMenuModule],
+});
+
+const modelKey = ref('Process_1');
+const modelName = ref('测试流程');
+
+const initModeler = (item: any) => {
+  modeler.value = item;
+  // 主动注册自定义replace菜单
+  const provider = modeler.value.get && modeler.value.get('replaceMenuProvider');
+  if (provider && typeof provider.register === 'function') {
+    provider.register();
+  }
+  nextTick(() => {
+    console.log("nextTick modeler.value:", modeler.value);
+  });
+};
+
+const save = async (bpmnXml: string) => {
+  try {
+    xmlString.value = bpmnXml;
+    emit("success", bpmnXml);
+  } catch (error) {
+    console.error("保存失败:", error);
+  }
+};
+
+onBeforeUnmount(() => {
+  const w = window as any;
+  if (w.bpmnInstances) {
+    w.bpmnInstances = null;
+  }
+});
+
+onMounted(() => {
+  console.log("[BpmnDesigner.vue] onMounted");
+});
+</script>
+
+<template>
+  <MyProcessDesigner
+    ref="processDesigner"
+    @init-finished="initModeler"
+    :process-id="modelKey"
+    :process-name="modelName"
+    :simulation="controlForm.simulation"
+    :labelEditing="controlForm.labelEditing"
+    :labelVisible="controlForm.labelVisible"
+    :prefix="controlForm.prefix"
+    :headerButtonSize="controlForm.headerButtonSize"
+  />
+  <!-- 如需属性面板可放开下方注释 -->
+  <!--
+  <MyProcessPenal
+    v-if="modeler"
+    key="penal"
+    :bpmnModeler="modeler"
+    :prefix="controlForm.prefix"
+    class="process-panel"
+    :model="model"
+  />
+  -->
+</template>
+
+<style lang="scss">
+@import "../../../bpmn-process-designer/src/package/theme/process-designer.scss";
+.process-panel__container {
+  position: absolute;
+  top: 172px;
+  right: 70px;
+}
+#bpmnCanvas,
+.my-process-designer__canvas,
+.my-process-designer__container {
+  min-height: 600px !important;
+  height: 800px !important;
+  /* background: #fff !important; */
+  z-index: 10 !important;
+  position: relative !important;
+}
+body, html, #app {
+  height: 100% !important;
+}
+</style>

@@ -359,7 +359,6 @@ CustomReplaceMenuProvider.prototype.register = function() {
                         if (item.source === 'api') {
                           const base = (typeof window !== 'undefined' && window.BPMN_API_BASE)
                             || (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_BPMN_API_BASE)
-                            || 'http://localhost:8888'
                           const url = base + '/api/bpmn/activitiesStyle?id=' + encodeURIComponent(item.code) + '&_t=' + Date.now()
                           console.log('[replaceMenuProvider] 点击API节点:', item)
                           console.log('[replaceMenuProvider] fetch activitiesStyle url:', url)

@@ -228,10 +228,10 @@ import XButton from "@/components/XButton/src/XButton.vue";
 import XTextButton from "@/components/XButton/src/XTextButton.vue";
 import Dialog from "@/components/Dialog/src/Dialog.vue";
 
-import 'bpmn-js/dist/assets/diagram-js.css'
-import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css'
-import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-codes.css'
-import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css'
+// import 'bpmn-js/dist/assets/diagram-js.css'
+// import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css'
+// import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-codes.css'
+// import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css'
 // import 'bpmn-js-properties-panel/dist/assets/bpmn-js-properties-panel.css' // 右侧框样式
 import { ElMessage, ElMessageBox } from "element-plus";
 import BpmnModeler from "bpmn-js/lib/Modeler";
@@ -687,12 +687,12 @@ onMounted(() => {
   console.log("[designer] ProcessDesigner.vue onMounted");
   initBpmnModeler();
   createNewDiagram(props.value);
-  setTimeout(() => {
-    if (bpmnModeler) {
-      console.log('[designer] 强制重绘');
-      bpmnModeler.get('canvas').zoom('fit-viewport', 'auto');
-    }
-  }, 1000);
+  // setTimeout(() => {
+  //   if (bpmnModeler) {
+  //     console.log('[designer] 强制重绘');
+  //     bpmnModeler.get('canvas').zoom('fit-viewport', 'auto');
+  //   }
+  // }, 1000);
 });
 onBeforeUnmount(() => {
   if (bpmnModeler) bpmnModeler.destroy();

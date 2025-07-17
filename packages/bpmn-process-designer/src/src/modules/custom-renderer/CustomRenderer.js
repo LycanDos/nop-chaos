@@ -42,9 +42,8 @@ async function fetchContentHtml(id) {
   }
 }
 
-export default function CustomRenderer(config, eventBus, styles, pathMap, canvas, textRenderer) {
+function CustomRenderer(config, eventBus, styles, pathMap, canvas, textRenderer) {
   BpmnRenderer.call(this, config, eventBus, styles, pathMap, canvas, textRenderer, 2000)
-
   const self = this
   // 重写 drawShape
   this.drawShape = function(parentNode, element) {
@@ -105,8 +104,11 @@ export default function CustomRenderer(config, eventBus, styles, pathMap, canvas
     return null
   }
 }
+CustomRenderer.$inject = ['config', 'eventBus', 'styles', 'pathMap', 'canvas', 'textRenderer'];
 
 const F = function () {}
 F.prototype = BpmnRenderer.prototype
 CustomRenderer.prototype = new F()
 CustomRenderer.prototype.constructor = CustomRenderer
+
+export default CustomRenderer;
