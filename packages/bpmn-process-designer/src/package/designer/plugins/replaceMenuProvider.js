@@ -299,6 +299,16 @@ CustomReplaceMenuProvider.prototype.register = function() {
     if (type === 'bpmn-replace' && taskTypes.includes(element.type)) {
       origOpen.call(this, element, type, position)
       setTimeout(() => {
+        const popup = document.querySelector('.djs-popup');
+        if (popup) {
+          // palette宽度，按实际调整
+          const paletteWidth = 60;
+          const left = parseInt(popup.style.left || '0', 10);
+          popup.style.left = (left + paletteWidth) + 'px';
+          popup.style.zIndex = 9999;
+        }
+      }, 0);
+      setTimeout(() => {
         const container = document.querySelector('.djs-popup .djs-popup-body')
         const header = document.querySelector('.djs-popup .djs-popup-header')
         if (container) {
