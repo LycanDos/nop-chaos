@@ -5,6 +5,7 @@
   import { BasicMenu } from '/@/components/Menu';
   import { SimpleMenu } from '/@/components/SimpleMenu';
   import { AppLogo } from '/@/components/Application';
+  import { AppstoreOutlined } from '@ant-design/icons-vue';
 
   import { MenuModeEnum, MenuSplitTyeEnum } from '/@/enums/menuEnum';
 
@@ -20,6 +21,30 @@
   import { useAppInject } from '/@/hooks/web/useAppInject';
   import { useDesign } from '/@/hooks/web/useDesign';
   import { useLocaleStore } from '/@/store/modules/locale';
+
+  import { ref, onMounted } from 'vue'
+  import { getMenus } from '/@/router/menus'
+  const showAllFunctions = ref(false)
+  const search = ref('')
+  const groups = ref([])
+
+  onMounted(async () => {
+    const menus = await getMenus()
+    groups.value = menus.map(group => ({
+      name: group.meta.title,
+      items: (group.children || []).flatMap(flattenMenu)
+    }))
+  })
+  function flattenMenu(menu) {
+    if (!menu.children || !menu.children.length) return [menu]
+    return menu.children.flatMap(flattenMenu)
+  }
+  const filteredGroups = computed(() =>
+    groups.value.map(g => ({
+      ...g,
+      items: g.items.filter(i => i.meta.title.includes(search.value))
+    })).filter(g => g.items.length)
+  )
 
   export default defineComponent({
     name: 'LayoutMenu',
@@ -130,8 +155,29 @@
 
       function renderHeader() {
         if (!unref(getIsShowLogo) && !unref(getIsMobile)) return null;
-
-        return <AppLogo showTitle={!unref(getCollapsed)} class={unref(getLogoClass)} theme={unref(getComputedMenuTheme)} />;
+        return (
+          <div style="display: flex; align-items: center;">
+            <AppLogo showTitle={!unref(getCollapsed)} class={unref(getLogoClass)} theme={unref(getComputedMenuTheme)} />
+            <div style="margin-left: 8px; cursor: pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" title="全部功能" onClick={() => showAllFunctions.value = true}>
+              <AppstoreOutlined style="font-size: 20px; color: #fff;" />
+            </div>
+            <a-drawer v-model:visible={showAllFunctions.value} width="80vw" title="全部功能" placement="right">
+              <a-input v-model:value={search.value} placeholder="搜索功能名称" style="margin-bottom: 16px;" />
+              <div style="display: flex; flex-wrap: wrap; gap: 32px;">
+                {filteredGroups.value.map(group => (
+                  <div style="min-width: 200px;" key={group.name}>
+                    <div style="font-weight: bold; margin-bottom: 8px;">{group.name}</div>
+                    <ul>
+                      {group.items.map(item => (
+                        <li key={item.path}>{item.meta.title}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </a-drawer>
+          </div>
+        );
       }
 
       function renderMenu() {
