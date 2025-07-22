@@ -12,6 +12,7 @@ import { hasPrimaryModifier } from 'diagram-js/lib/util/Mouse'
 
 import { h, createApp, ref } from 'vue'
 import { ElDialog, ElTabs, ElTabPane, ElTable, ElTableColumn, ElButton, ElTag } from 'element-plus'
+import MethodDialog from './MethodDialog.vue'
 
 /**
  * A provider for BPMN 2.0 elements context pad
@@ -83,87 +84,7 @@ ContextPadProvider.$inject = [
 ]
 
 // 自定义弹窗 Vue 组件
-const MethodDialog = {
-  props: ['visible', 'onClose'],
-  setup(props) {
-    const activeTab = ref('input')
-    // mock 入参/出参，支持嵌套
-    const inputParams = ref([
-      { name: 'user', type: 'Object', desc: '用户对象', children: [
-        { name: 'id', type: 'String', desc: '用户ID' },
-        { name: 'profile', type: 'Object', desc: '用户资料', children: [
-          { name: 'age', type: 'Number', desc: '年龄' },
-          { name: 'tags', type: 'Array', desc: '标签', children: [
-            { name: 'tag', type: 'String', desc: '标签名' }
-          ] }
-        ] }
-      ] },
-      { name: 'isActive', type: 'Boolean', desc: '是否激活' }
-    ])
-    const outputParams = ref([
-      { name: 'result', type: 'Boolean', desc: '是否成功' },
-      { name: 'data', type: 'Array', desc: '返回数据', children: [
-        { name: 'item', type: 'Object', desc: '数据项', children: [
-          { name: 'value', type: 'Number', desc: '数值' },
-          { name: 'label', type: 'String', desc: '标签' }
-        ] }
-      ] }
-    ])
-    // 类型颜色映射
-    const typeColor = {
-      String: 'blue',
-      Number: 'green',
-      Boolean: 'orange',
-      Array: 'purple',
-      Object: 'gray',
-      Default: 'info'
-    }
-    // 类型渲染
-    function renderType(type) {
-      return h(
-        ElTag,
-        { type: typeColor[type] || typeColor.Default, size: 'small', effect: 'plain', style: 'margin-left:2px;' },
-        () => type
-      )
-    }
-    // 通用树表格渲染
-    function renderTable(data) {
-      return h(ElTable, {
-        data: data,
-        border: true,
-        style: 'width:100%;margin-top:8px;',
-        rowKey: 'name',
-        defaultExpandAll: true,
-        treeProps: { children: 'children' }
-      }, {
-        default: () => [
-          h(ElTableColumn, { prop: 'name', label: '参数名', width: '160' }),
-          h(ElTableColumn, { prop: 'type', label: '类型', width: '100',
-            slots: { default: scope => renderType(scope.row.type) }
-          }),
-          h(ElTableColumn, { prop: 'desc', label: '说明' })
-        ]
-      })
-    }
-    return () => h(ElDialog, {
-      modelValue: props.visible,
-      'onUpdate:modelValue': v => { if (!v) props.onClose && props.onClose() },
-      title: '方法参数',
-      width: '520px',
-      closeOnClickModal: false,
-      closeOnPressEscape: true
-    }, {
-      default: () => h(ElTabs, {
-        modelValue: activeTab.value,
-        'onUpdate:modelValue': v => (activeTab.value = v)
-      }, [
-        h(ElTabPane, { label: '入参', name: 'input' }, () => renderTable(inputParams.value)),
-        h(ElTabPane, { label: '出参', name: 'output' }, () => renderTable(outputParams.value))
-      ]),
-      footer: () => h(ElButton, { type: 'primary', onClick: () => props.onClose && props.onClose() }, '关闭')
-    })
-  }
-}
+// 删除原有 MethodDialog 组件定义
 
 // 注入自定义入参出参图标样式和SVG（只注入一次）
 if (typeof window !== 'undefined' && !window.__bpmn_custom_io_param_icon__) {
@@ -611,6 +532,36 @@ ContextPadProvider.prototype.getContextPadEntries = function (element) {
             onClose: () => {
               app.unmount()
               dialogDiv.remove()
+            }
+          })
+          app.mount(dialogDiv)
+        }
+      }
+    }
+  })
+
+  // 在 getContextPadEntries 的 actions 末尾增加：
+  assign(actions, {
+    'custom-amis-form': {
+      group: 'edit',
+      className: 'bpmn-icon-wrench', // 可换为自定义表单/设置图标class
+      title: 'AMIS配置表单',
+      action: {
+        click: function(event, element) {
+          let dialogDiv = document.getElementById('bpmn-amis-form-dialog')
+          if (!dialogDiv) {
+            dialogDiv = document.createElement('div')
+            dialogDiv.id = 'bpmn-amis-form-dialog'
+            document.body.appendChild(dialogDiv)
+          }
+          // 这里假设有 AmisFormDialog 组件（你需实现或引用amis表单弹窗）
+          const app = createApp({
+            template: '<amis-form-dialog :visible="true" @close="onClose" />',
+            methods: {
+              onClose() {
+                app.unmount()
+                dialogDiv.remove()
+              }
             }
           })
           app.mount(dialogDiv)

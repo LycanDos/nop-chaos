@@ -8,6 +8,7 @@ import { createProxy } from './build/vite/proxy';
 import { wrapperEnv } from './build/utils';
 import { createVitePlugins } from './build/vite/plugin';
 import { OUTPUT_DIR } from './build/constant';
+import { fileURLToPath, URL } from 'node:url'
 
 function pathResolve(dir: string) {
   return resolve(process.cwd(), '.', dir);
@@ -63,6 +64,10 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
           find: /#\//,
           replacement: pathResolve('types') + '/',
         },
+        {
+          find: 'bpmn-process-designer',
+          replacement: fileURLToPath(new URL('../../bpmn-process-designer/src/index.ts', import.meta.url))
+        }
       ],
     },
     server: {
