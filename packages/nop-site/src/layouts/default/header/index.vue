@@ -42,30 +42,6 @@
     </div>
   </Header>
   <LoginSelect ref="loginSelectRef" @success="loginSelectOk"></LoginSelect>
-  <div class="header-bar">
-    <!-- 原有头部内容 -->
-    <AppLogo />
-    <!-- 全部功能按钮 -->
-    <span class="all-functions-btn" @click="showAllFunctions = true" title="全部功能">
-      <icon-appstore-outlined style="font-size: 20px; color: #409eff; margin-left: 16px;" />
-    </span>
-    <!-- 自定义全部功能弹窗 -->
-    <div v-if="showAllFunctions" class="all-functions-modal" @click.self="showAllFunctions = false">
-      <div class="all-functions-modal-inner">
-        <a-input v-model="search" placeholder="搜索功能名称" style="margin-bottom: 16px; width: 300px;" />
-        <div class="all-functions-grid">
-          <div v-for="group in filteredGroups" :key="group.name" class="function-group">
-            <div class="group-title">{{ group.name }}</div>
-            <ul>
-              <li v-for="item in group.items" :key="item.path" class="function-item" @click="go(item.path)">
-                {{ item.meta.title }}
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 </template>
 <script lang="ts">
   import { defineComponent, unref, computed, ref, onMounted, toRaw } from 'vue';
@@ -101,40 +77,152 @@
 
   import { getMenus } from '/@/router/menus'
   import { useRouter } from 'vue-router'
-  const router = useRouter()
-  function go(path) {
-    if (path) router.push(path)
-  }
-  const showAllFunctions = ref(false)
-  const search = ref('')
-  interface MenuItem {
-    path: string;
-    meta: { title: string };
-    [key: string]: any;
-  }
-  interface MenuGroup {
-    name: string;
-    items: MenuItem[];
-  }
-  const groups = ref<MenuGroup[]>([] as MenuGroup[])
 
-  onMounted(async () => {
-    const menus = await getMenus()
-    groups.value = menus.map(group => ({
-      name: group.meta?.title || '',
-      items: (group.children || []).flatMap(flattenMenu)
-    }))
-  })
-  function flattenMenu(menu) {
-    if (!menu.children || !menu.children.length) return [menu]
-    return menu.children.flatMap(flattenMenu)
-  }
-  const filteredGroups = computed<MenuGroup[]>(() =>
-    groups.value.map(g => ({
-      ...g,
-      items: g.items.filter(i => i.meta?.title?.includes(search.value))
-    })).filter(g => g.items.length)
-  )
+  export default defineComponent({
+    name: 'LayoutHeader',
+    components: {
+      Header: Layout.Header,
+      AppLogo,
+      LayoutTrigger,
+      LayoutBreadcrumb,
+      LayoutMenu,
+      UserDropDown,
+      AppLocalePicker,
+      FullScreen,
+      // Notify,
+      // AppSearch,
+      // ErrorAction,
+      LockScreen,
+      LoginSelect,
+      SettingDrawer: createAsyncComponent(() => import('/@/layouts/default/setting/index.vue'), {
+        loading: true,
+      }),
+    },
+    props: {
+      fixed: propTypes.bool,
+    },
+    setup(props) {
+      const { prefixCls } = useDesign('layout-header');
+      const userStore = useUserStore();
+      const { getShowTopMenu, getShowHeaderTrigger, getSplit, getIsMixMode, getMenuWidth, getIsMixSidebar } = useMenuSetting();
+      const { getUseErrorHandle, getShowSettingButton, getSettingButtonPosition } = useRootSetting();
+      const { title } = useGlobSetting();
+
+      const {
+        getHeaderTheme,
+        getShowFullScreen,
+        getShowNotice,
+        getShowContent,
+        getShowBread,
+        getShowHeaderLogo,
+        getShowHeader,
+        getShowSearch,
+        getUseLockPage,
+        getShowBreadTitle,
+      } = useHeaderSetting();
+
+      const { getShowLocalePicker } = useLocale();
+
+      const { getIsMobile } = useAppInject();
+
+      const getHeaderClass = computed(() => {
+        const theme = unref(getHeaderTheme);
+        return [
+          prefixCls,
+          {
+            [`${prefixCls}--fixed`]: props.fixed,
+            [`${prefixCls}--mobile`]: unref(getIsMobile),
+            [`${prefixCls}--${theme}`]: theme,
+          },
+        ];
+      });
+
+      const getShowSetting = computed(() => {
+        if (!unref(getShowSettingButton)) {
+          return false;
+        }
+        const settingButtonPosition = unref(getSettingButtonPosition);
+
+        if (settingButtonPosition === SettingButtonPositionEnum.AUTO) {
+          return unref(getShowHeader);
+        }
+        return settingButtonPosition === SettingButtonPositionEnum.HEADER;
+      });
+
+      const getLogoWidth = computed(() => {
+        if (!unref(getIsMixMode) || unref(getIsMobile)) {
+          return {};
+        }
+        const width = unref(getMenuWidth) < 180 ? 180 : unref(getMenuWidth);
+        return { width: `${width}px` };
+      });
+
+      const getSplitType = computed(() => {
+        return unref(getSplit) ? MenuSplitTyeEnum.TOP : MenuSplitTyeEnum.NONE;
+      });
+
+      const getMenuMode = computed(() => {
+        return unref(getSplit) ? MenuModeEnum.HORIZONTAL : null;
+      });
+
+      /**
+       * 首页多租户部门弹窗逻辑
+       */
+      const loginSelectRef = ref();
+
+      function showLoginSelect() {
+        //update-begin---author:liusq  Date:20220101  for：判断登录进来是否需要弹窗选择租户----
+        //判断是否是登陆进来
+        const loginInfo = toRaw(userStore.getLoginInfo) || {};
+        if (!!loginInfo.isLogin) {
+          loginSelectRef.value.show(loginInfo);
+        }
+        //update-end---author:liusq  Date:20220101  for：判断登录进来是否需要弹窗选择租户----
+      }
+
+      function loginSelectOk() {
+        console.log('成功。。。。。');
+      }
+
+      onMounted(() => {
+        showLoginSelect();
+      });
+
+      const {debug, supportDebug,toggleDebug} = useDebug()
+
+      return {
+        prefixCls,
+        getHeaderClass,
+        getShowHeaderLogo,
+        getHeaderTheme,
+        getShowHeaderTrigger,
+        getIsMobile,
+        getShowBreadTitle,
+        getShowBread,
+        getShowContent,
+        getSplitType,
+        getSplit,
+        getMenuMode,
+        getShowTopMenu,
+        getShowLocalePicker,
+        getShowFullScreen,
+        getShowNotice,
+        getUseErrorHandle,
+        getLogoWidth,
+        getIsMixSidebar,
+        getShowSettingButton,
+        getShowSetting,
+        getShowSearch,
+        getUseLockPage,
+        loginSelectOk,
+        loginSelectRef,
+        title,
+        debug,
+        supportDebug,
+        toggleDebug
+      };
+    },
+  });
 </script>
 <style lang="less">
   @import './index.less';

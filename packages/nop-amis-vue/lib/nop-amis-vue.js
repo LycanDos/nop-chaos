@@ -1,5 +1,5 @@
 import * as Vue from "vue";
-import { defineComponent, ref, onUnmounted, openBlock, createElementBlock, watchEffect, onBeforeUnmount, h, onMounted, createStaticVNode, shallowRef, markRaw, Fragment as Fragment$1, createBlock, resolveDynamicComponent, mergeProps, createCommentVNode, unref, withCtx, createVNode, createElementVNode, createTextVNode, normalizeProps, guardReactiveProps, resolveComponent } from "vue";
+import { defineComponent, ref, onUnmounted, openBlock, createElementBlock, watchEffect, onBeforeUnmount, h, onMounted, createStaticVNode, shallowRef, markRaw, Fragment as Fragment$1, createBlock, resolveDynamicComponent, mergeProps, createCommentVNode, unref, withCtx, createElementVNode, createVNode, createTextVNode, normalizeProps, guardReactiveProps, resolveComponent } from "vue";
 import { ajaxFetch, useDebug, useAdapter, providePage, default_jumpTo, isCancel, default_isCurrentUrl, default_updateLocation, createPage, transformPageJson, bindActions, getSchemaProcessorType, deletePageCache, PageApis, registerAdapter, registerModule } from "@nop-chaos/nop-core";
 import { isString, cloneDeep } from "lodash-es";
 import { toast, clearStoresCache, setDefaultLocale, render, ToastComponent, ScopedContext, Renderer, FormItem, dataMapping, alert, confirm } from "amis";
@@ -140,13 +140,13 @@ const _export_sfc = (sfc, props) => {
   }
   return target;
 };
-const _hoisted_1$3 = {
+const _hoisted_1$2 = {
   style: { "width": "100%", "height": "100%", "border": "none" },
   ref: "editorRef",
   src: "/amis-editor/index.html"
 };
 function _sfc_render$3(_ctx, _cache, $props, $setup, $data, $options) {
-  return openBlock(), createElementBlock("iframe", _hoisted_1$3, null, 512);
+  return openBlock(), createElementBlock("iframe", _hoisted_1$2, null, 512);
 }
 const AmisPageEditor = /* @__PURE__ */ _export_sfc(_sfc_main$7, [["render", _sfc_render$3]]);
 function createEnv(page) {
@@ -390,17 +390,15 @@ const debuggerSchema = {
   }
 };
 const _imports_0 = "/resource/img/logo.png";
-const XuiLoading_vue_vue_type_style_index_0_scoped_2668f673_lang = "";
+const XuiLoading_vue_vue_type_style_index_0_scoped_d34df6c1_lang = "";
 const _sfc_main$5 = {};
-const _hoisted_1$2 = { class: "app-loading" };
-const _hoisted_2 = /* @__PURE__ */ createStaticVNode('<div class="app-loading-wrap" data-v-2668f673><img src="' + _imports_0 + '" class="app-loading-logo" alt="Logo" data-v-2668f673><div class="app-loading-dots" data-v-2668f673><span class="dot dot-spin" data-v-2668f673><i data-v-2668f673></i><i data-v-2668f673></i><i data-v-2668f673></i><i data-v-2668f673></i></span></div><div class="app-loading-title" data-v-2668f673><b data-v-2668f673>N</b>op is n<b data-v-2668f673>o</b>t <b data-v-2668f673>P</b>rogramming </div></div>', 1);
-const _hoisted_3 = [
-  _hoisted_2
-];
+const _hoisted_1$1 = { class: "app-loading" };
 function _sfc_render$2(_ctx, _cache) {
-  return openBlock(), createElementBlock("div", _hoisted_1$2, _hoisted_3);
+  return openBlock(), createElementBlock("div", _hoisted_1$1, _cache[0] || (_cache[0] = [
+    createStaticVNode('<div class="app-loading-wrap" data-v-d34df6c1><img src="' + _imports_0 + '" class="app-loading-logo" alt="Logo" data-v-d34df6c1><div class="app-loading-dots" data-v-d34df6c1><span class="dot dot-spin" data-v-d34df6c1><i data-v-d34df6c1></i><i data-v-d34df6c1></i><i data-v-d34df6c1></i><i data-v-d34df6c1></i></span></div><div class="app-loading-title" data-v-d34df6c1><b data-v-d34df6c1>N</b>op is n<b data-v-d34df6c1>o</b>t <b data-v-d34df6c1>P</b>rogramming </div></div>', 1)
+  ]));
 }
-const XuiLoading = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["render", _sfc_render$2], ["__scopeId", "data-v-2668f673"]]);
+const XuiLoading = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["render", _sfc_render$2], ["__scopeId", "data-v-d34df6c1"]]);
 const _sfc_main$4 = /* @__PURE__ */ defineComponent({
   __name: "XuiPageEditor",
   props: {
@@ -415,10 +413,11 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
     }
   },
   emits: ["exit"],
-  setup(__props, { emit }) {
+  setup(__props, { emit: __emit }) {
     const props = __props;
     const { getPageSource } = props;
     const { useI18n } = useAdapter();
+    const emit = __emit;
     function handleExit() {
       emit("exit");
     }
@@ -454,7 +453,6 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
     };
   }
 });
-const _hoisted_1$1 = /* @__PURE__ */ createElementVNode("header", null, null, -1);
 const _sfc_main$3 = /* @__PURE__ */ defineComponent({
   __name: "XuiPageEditorDialog",
   props: {
@@ -470,7 +468,8 @@ const _sfc_main$3 = /* @__PURE__ */ defineComponent({
     }
   },
   emits: ["update:modelValue", "exit"],
-  setup(__props, { emit }) {
+  setup(__props, { emit: __emit }) {
+    const emit = __emit;
     function handleEditorExit() {
       emit("update:modelValue", false);
     }
@@ -494,7 +493,7 @@ const _sfc_main$3 = /* @__PURE__ */ defineComponent({
         "onUpdate:modelValue": handleChange
       }, {
         default: withCtx(() => [
-          _hoisted_1$1,
+          _cache[0] || (_cache[0] = createElementVNode("header", null, null, -1)),
           createVNode(_sfc_main$4, {
             onExit: handleEditorExit,
             savePageSource: __props.savePageSource,
@@ -502,7 +501,8 @@ const _sfc_main$3 = /* @__PURE__ */ defineComponent({
             getPageSource: __props.getPageSource
           }, null, 8, ["savePageSource", "rollbackPageSource", "getPageSource"])
         ]),
-        _: 1
+        _: 1,
+        __: [0]
       }, 8, ["modelValue"]);
     };
   }
@@ -519,8 +519,9 @@ const _sfc_main$2 = /* @__PURE__ */ defineComponent({
     schema: Object
   },
   emits: ["update:schema", "rebuild"],
-  setup(__props, { emit }) {
+  setup(__props, { emit: __emit }) {
     const props = __props;
+    const emit = __emit;
     const schemaVisible = ref(false);
     const schemaData = shallowRef({
       schema: "",
@@ -584,10 +585,11 @@ const _sfc_main$2 = /* @__PURE__ */ defineComponent({
             title: "Schema Json Editor",
             onClick: openSchemaEditor
           }, {
-            default: withCtx(() => [
+            default: withCtx(() => _cache[2] || (_cache[2] = [
               createTextVNode("S")
-            ]),
-            _: 1
+            ])),
+            _: 1,
+            __: [2]
           }),
           __props.path ? (openBlock(), createBlock(unref(ElButton), {
             key: 0,
@@ -597,10 +599,11 @@ const _sfc_main$2 = /* @__PURE__ */ defineComponent({
             danger: "",
             onClick: openXuiPageEditor
           }, {
-            default: withCtx(() => [
+            default: withCtx(() => _cache[3] || (_cache[3] = [
               createTextVNode("V")
-            ]),
-            _: 1
+            ])),
+            _: 1,
+            __: [3]
           })) : createCommentVNode("", true)
         ]),
         createVNode(unref(ElDialog), {

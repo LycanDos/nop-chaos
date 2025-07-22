@@ -3,7 +3,7 @@ import { AxiosRequestConfig } from 'axios';
 import { CancelToken } from 'axios';
 import { Component } from 'vue';
 import { Match } from 'path-to-regexp';
-import type { Options } from 'lru-cache';
+import { Options } from 'lru-cache';
 import { Pinia } from 'pinia';
 import { Ref } from 'vue';
 import { Router } from 'vue-router';
@@ -254,10 +254,10 @@ export declare type BasePage = {
  * 通过xui:import可以引入SystemJs格式的js模块，通过@action:xxx，@fn:(a,b)=>expr这种形式可以调用js模块中的函数
  *
  * 例如 {
- *    "xui:a.lib"
+ *    "xui:import": "a.lib"
  *    "page": {
  *       dialog: {
- *          "xui:b.lib"
+ *          "xui:import": "b.lib"
  *          api: "@action:a.f1"
  *       }
  *    }
@@ -634,7 +634,7 @@ export declare function useAdapter(): {
      * 返回当前的认证token
      */
     useAuthToken(): string;
-    setAuthToken(token?: string | undefined): void;
+    setAuthToken(token?: string): void;
     isUserInRole(role: string): boolean;
     useTenantId(): string;
     useAppId(): string;
@@ -649,13 +649,13 @@ export declare function useAdapter(): {
     processRequest(request: any): any;
     processResponse(response: any): any;
     compileFunction(code: string, page: any): Function;
-    jumpTo(to: string, action?: any, ctx?: object | undefined): void;
+    jumpTo(to: string, action?: any, ctx?: object): void;
     isCurrentUrl: typeof default_isCurrentUrl;
     updateLocation: typeof default_updateLocation;
-    notify(type: ToastLevel, msg: any, conf?: ToastConf | undefined): void;
-    alert(msg: string, title?: string | undefined): Promise<void>;
-    confirm(msg: string, title?: string | undefined): Promise<boolean>;
-    dataMapping(to: any, from?: PlainObject, ignoreFunction?: boolean | ((key: string, value: any) => boolean), convertKeyToPath?: boolean | undefined, ignoreIfNotMatch?: boolean): any;
+    notify(type: ToastLevel, msg: any, conf?: ToastConf): void;
+    alert(msg: string, title?: string): Promise<void>;
+    confirm(msg: string, title?: string): Promise<boolean>;
+    dataMapping(to: any, from?: PlainObject, ignoreFunction?: boolean | ((key: string, value: any) => boolean), convertKeyToPath?: boolean, ignoreIfNotMatch?: boolean): any;
     fetchDict(dictName: string, options: FetcherRequest): Promise<FetcherResult>;
     fetchPageAndTransform(pageName: string, options: FetcherRequest): Promise<FetcherResult>;
     getPage(pageUrl: string): Promise<any>;
@@ -666,8 +666,8 @@ export declare function useAdapter(): {
  * 根据后台返回的SiteMap.supportDebug属性进行初始化
  */
 export declare function useDebug(): {
-    debug: Ref<boolean>;
-    supportDebug: Ref<boolean>;
+    debug: Ref<boolean, boolean>;
+    supportDebug: Ref<boolean, boolean>;
     toggleDebug: typeof toggleDebug;
     setDebug: typeof setDebug;
 };
