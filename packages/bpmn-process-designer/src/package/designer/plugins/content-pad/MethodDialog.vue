@@ -105,7 +105,14 @@
       </template>
     </el-dialog>
     <el-dialog v-model="editDescDialogVisible" title="编辑说明(支持HTML)" width="520px" :close-on-click-modal="false">
-      <quill-editor v-model:content="editingDesc" contentType="html" style="height:220px;" />
+      <QuillEditor
+ v-model:content="editingDesc"
+        contentType="html"
+        style="height:220px;"
+
+ 
+      />
+      <!-- :modules="quillModules" -->
       <template #footer>
         <el-button @click="editDescDialogVisible=false">取消</el-button>
         <el-button type="primary" @click="saveDesc">保存</el-button>
@@ -117,11 +124,17 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { Edit, Plus, Document, Edit as EditIcon, Check, QuestionFilled, Delete, MagicStick } from '@element-plus/icons-vue'
-import { QuillEditor } from 'vue3-quill'
+
+import Quill from 'quill'
+window.Quill = Quill
+import { QuillEditor } from '@vueup/vue-quill'
+import '@vueup/vue-quill/dist/vue-quill.snow.css'
 const props = defineProps({
   visible: Boolean,
   onClose: Function
 })
+
+
 const activeTab = ref('input')
 const inputParams = ref([
   { name: 'user', type: 'Object', desc: '用户对象', severityList: [{ name: '非空校验器', check: '' }], children: [
@@ -221,6 +234,19 @@ function saveDesc() {
     editingDescRow.desc = editingDesc.value
   }
   editDescDialogVisible.value = false
+}
+const quillModules = {
+  toolbar: [
+    [{ 'font': [] }, { 'size': [] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'color': [] }, { 'background': [] }],
+    [{ 'script': 'sub'}, { 'script': 'super' }],
+    [{ 'header': 1 }, { 'header': 2 }, 'blockquote', 'code-block'],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'indent': '-1'}, { 'indent': '+1' }],
+    [{ 'direction': 'rtl' }, { 'align': [] }],
+    ['link', 'image', 'video'],
+    ['clean']
+  ]
 }
 </script>
 

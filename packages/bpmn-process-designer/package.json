@@ -28,6 +28,7 @@
     "@iconify/iconify": "^3.1.1",
     "@microsoft/fetch-event-source": "^2.0.1",
     "@videojs-player/vue": "^1.0.0",
+    "@vueup/vue-quill": "^1.2.0",
     "@vueuse/core": "^10.9.0",
     "@wangeditor/editor": "^5.1.23",
     "@wangeditor/editor-for-vue": "^5.1.10",
@@ -75,8 +76,8 @@
     "xml-js": "^1.6.11"
   },
   "peerDependencies": {
-    "vue": "^3.5.12",
-    "element-plus": "^2.3.14"
+    "element-plus": "^2.3.14",
+    "vue": "^3.5.12"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.0.1",

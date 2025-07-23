@@ -4,6 +4,7 @@ import { resolve } from 'path'
 import type { ConfigEnv, UserConfig } from 'vite'
 import { createVitePlugins } from './buildConf/vite'
 import { exclude, include } from './buildConf/vite/optimize'
+import { fileURLToPath, URL } from 'node:url'
 
 const root = process.cwd()
 function pathResolve(dir: string) {

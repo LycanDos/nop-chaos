@@ -37,6 +37,10 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
     root,
     resolve: {
       alias: [
+        {
+          find: 'vue',
+          replacement: 'vue/dist/vue.esm-bundler.js',
+        },
     //    {
     //      find: "react-json-view",
     //      replacement: "./nop-sdk/fix-react-json-view.js"
@@ -46,7 +50,8 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
      //     replacement: 'vue-i18n/dist/vue-i18n.cjs.js',
      //   },
         // /@/xxxx => src/xxxx
-        {
+
+         {
           find: /\/@\//,
           replacement: pathResolve('src') + '/',
         },
@@ -64,10 +69,10 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
           find: /#\//,
           replacement: pathResolve('types') + '/',
         },
-        {
-          find: 'bpmn-process-designer',
-          replacement: fileURLToPath(new URL('../../bpmn-process-designer/src/index.ts', import.meta.url))
-        }
+        // {
+        //   find: 'bpmn-process-designer',
+        //   replacement: fileURLToPath(new URL('../../bpmn-process-designer/src/index.ts', import.meta.url))
+        // }
       ],
     },
     server: {

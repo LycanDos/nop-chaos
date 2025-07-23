@@ -123,6 +123,7 @@ declare global {
 </script>
 <style lang="scss">
 @import "../../../bpmn-process-designer/src/package/theme/process-designer.scss";
+
 //@import "../../../bpmn-process-designer/src/package/theme/element-variables.scss";
 //@import "../../../bpmn-process-designer/src/package/theme/index.scss";
 //@import "../../../bpmn-process-designer/src/package/theme/process-panel.scss";

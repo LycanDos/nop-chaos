@@ -39,7 +39,7 @@ import 'bpmn-js/dist/assets/diagram-js.css'
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css'
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-codes.css'
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css'
-
+import '@vueup/vue-quill/dist/vue-quill.snow.css'
 // 在本地开发中引入的,以提高浏览器响应速度
 if (import.meta.env.DEV) {
   import('ant-design-vue/dist/antd.less');

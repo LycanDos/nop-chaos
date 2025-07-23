@@ -8,7 +8,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     '__unconfig_vite.config': typeof import('./../../__unconfig_vite.config.ts')['default']
-    'AutoComponents.d': typeof import('./auto-components.d.ts')['default']
+    AmisEditDialog: typeof import('./../package/designer/plugins/content-pad/AmisEditDialog.vue')['default']
     'AutoImports.d': typeof import('./auto-imports.d.ts')['default']
     ChildProcessNode: typeof import('./../components/SimpleProcessDesignerV2/src/nodes/ChildProcessNode.vue')['default']
     ChildProcessNodeConfig: typeof import('./../components/SimpleProcessDesignerV2/src/nodes-config/ChildProcessNodeConfig.vue')['default']

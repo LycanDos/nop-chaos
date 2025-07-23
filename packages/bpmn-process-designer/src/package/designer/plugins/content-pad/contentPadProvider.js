@@ -13,6 +13,7 @@ import { hasPrimaryModifier } from 'diagram-js/lib/util/Mouse'
 import { h, createApp, ref } from 'vue'
 import { ElDialog, ElTabs, ElTabPane, ElTable, ElTableColumn, ElButton, ElTag } from 'element-plus'
 import MethodDialog from './MethodDialog.vue'
+import AmisEditDialog from './AmisEditDialog.vue'
 
 /**
  * A provider for BPMN 2.0 elements context pad
@@ -544,7 +545,7 @@ ContextPadProvider.prototype.getContextPadEntries = function (element) {
   assign(actions, {
     'custom-amis-form': {
       group: 'edit',
-      className: 'bpmn-icon-wrench', // 可换为自定义表单/设置图标class
+      className: 'bpmn-icon-wrench',
       title: 'AMIS配置表单',
       action: {
         click: function(event, element) {
@@ -554,17 +555,30 @@ ContextPadProvider.prototype.getContextPadEntries = function (element) {
             dialogDiv.id = 'bpmn-amis-form-dialog'
             document.body.appendChild(dialogDiv)
           }
-          // 这里假设有 AmisFormDialog 组件（你需实现或引用amis表单弹窗）
-          const app = createApp({
-            template: '<amis-form-dialog :visible="true" @close="onClose" />',
-            methods: {
-              onClose() {
-                app.unmount()
-                dialogDiv.remove()
-              }
+          // 示例：实现 getPageSource/savePageSource/rollbackPageSource
+          const getPageSource = async () => {
+            // 这里可以根据 element.id 或其他业务数据获取 schema
+            return {};
+          };
+          const savePageSource = async (data) => {
+            // 保存 schema 的逻辑
+            return true;
+          };
+          const rollbackPageSource = async () => {
+            // 回滚逻辑
+            return true;
+          };
+          const app = createApp(AmisEditDialog, {
+            visible: true,
+            getPageSource,
+            savePageSource,
+            rollbackPageSource,
+            onClose: () => {
+              app.unmount();
+              dialogDiv.remove();
             }
-          })
-          app.mount(dialogDiv)
+          });
+          app.mount(dialogDiv);
         }
       }
     }
