@@ -24,7 +24,7 @@
 import { ElDialog } from 'element-plus';
 import XuiPageEditor  from './XuiPageEditor.vue';
 
-defineProps({
+const props = defineProps({
     modelValue: Boolean,
     rollbackPageSource: Function,
     getPageSource: {
@@ -37,13 +37,16 @@ defineProps({
     }
 })
 
-const emit = defineEmits(["update:modelValue", "exit"])
+const emit = defineEmits(["update:modelValue", "exit"]);
 
+console.log('[XuiPageEditorDialog] props:', props);
 function handleEditorExit() {
+    console.log('[XuiPageEditorDialog] handleEditorExit called');
     emit("update:modelValue", false)
 }
 
 function handleChange(value: boolean) {
+    console.log('[XuiPageEditorDialog] handleChange called', value);
     emit("update:modelValue", value)
 }
 </script>

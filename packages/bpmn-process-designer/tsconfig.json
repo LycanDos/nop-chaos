@@ -56,7 +56,8 @@
     "src/**/*.vue",
     "src/**/*.json",
     "src/types/auto-imports.d.ts",
-    "src/types/auto-components.d.ts"
+    "src/types/auto-components.d.ts",
+    "../../nop-amis-vue/src/**/*.vue"
   ],
   "exclude": [
     "dist",

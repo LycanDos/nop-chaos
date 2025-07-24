@@ -10,6 +10,15 @@
     :processName="modelName"
   />
   <!-- 流程属性器，负责编辑每个流程节点的属性 -->
+  <!-- 全局AMIS弹窗 -->
+  <AmisEditDialog
+    v-if="showAmisDialog"
+    :visible="showAmisDialog"
+    :getPageSource="amisDialogOptions.getPageSource"
+    :savePageSource="amisDialogOptions.savePageSource"
+    :rollbackPageSource="amisDialogOptions.rollbackPageSource"
+    @close="() => { console.log('AmisEditDialog closed'); showAmisDialog = false; }"
+  />
 </template>
 <script setup lang="ts">
 import { MyProcessDesigner, MyProcessPenal } from "@/package";
@@ -19,6 +28,10 @@ import CustomContentPadProvider from "@/package/designer/plugins/content-pad";
 import CustomPaletteProvider from "@/package/designer/plugins/palette";
 import ReplaceMenuProvider from '@/package/designer/plugins/replaceMenuProvider'
 import CustomRendererModule from '@/src/modules/custom-renderer' // 路径按实际调整
+import { useEmitt } from './hooks/web/useEmitt';
+import AmisEditDialog from './package/designer/plugins/content-pad/AmisEditDialog.vue';
+
+console.log('App.vue setup executed');
 
 const ReplaceMenuModule = {
   __init__: ['replaceMenuProvider'],
@@ -120,6 +133,25 @@ declare global {
     _debugModelerRef: any;
   }
 }
+
+const showAmisDialog = ref(false);
+const amisDialogOptions = reactive({
+  getPageSource: async () => ({}),
+  savePageSource: async () => true,
+  rollbackPageSource: async () => true
+});
+
+useEmitt({
+  name: 'open-amis-dialog',
+  callback: (opts: any) => {
+    console.log('on open-amis-dialog', opts);
+    amisDialogOptions.getPageSource = opts.getPageSource || (async () => ({}));
+    amisDialogOptions.savePageSource = opts.savePageSource || (async () => true);
+    amisDialogOptions.rollbackPageSource = opts.rollbackPageSource || (async () => true);
+    showAmisDialog.value = true;
+    console.log('showAmisDialog.value set to true');
+  }
+});
 </script>
 <style lang="scss">
 .process-panel__container {

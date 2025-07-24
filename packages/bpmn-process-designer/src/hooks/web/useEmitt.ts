@@ -1,11 +1,20 @@
 import mitt from 'mitt'
+import { onBeforeUnmount } from 'vue';
+
+// 全局唯一emitter
+const globalAny = (typeof window !== 'undefined' ? window : global) as any;
+if (!globalAny.__global_emitter__) {
+  globalAny.__global_emitter__ = mitt();
+}
+const emitter = globalAny.__global_emitter__;
+export { emitter };
 
 interface Option {
   name: string // 事件名称
   callback: Fn // 回调
 }
 
-const emitter = mitt()
+type Fn = (...args: any[]) => any;
 
 export const useEmitt = (option?: Option) => {
   if (option) {

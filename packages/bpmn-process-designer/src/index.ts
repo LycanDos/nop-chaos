@@ -4,3 +4,5 @@ export { default as CustomPaletteProvider } from './package/designer/plugins/pal
 export { default as ReplaceMenuProvider } from './package/designer/plugins/replaceMenuProvider.js'
 // 如有 CustomRendererModule 也可加上
 // export { default as CustomRendererModule } from './package/designer/plugins/CustomRendererModule.js'
+export { useEmitt } from './hooks/web/useEmitt';
+export { default as AmisEditDialog } from './package/designer/plugins/content-pad/AmisEditDialog.vue';

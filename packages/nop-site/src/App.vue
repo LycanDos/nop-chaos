@@ -4,6 +4,14 @@
     <AppProvider>
       <RouterView />
     </AppProvider>
+    <AmisEditDialog
+      v-if="showAmisDialog"
+      :visible="showAmisDialog"
+      :getPageSource="amisDialogOptions.getPageSource"
+      :savePageSource="amisDialogOptions.savePageSource"
+      :rollbackPageSource="amisDialogOptions.rollbackPageSource"
+      @close="() => { console.log('AmisEditDialog closed'); showAmisDialog = false; }"
+    />
   </ConfigProvider>
 </template>
 
@@ -20,4 +28,30 @@
   const { getAntdLocale } = useLocale();
 
   useTitle();
+
+  // 集成bpmn-process-designer的AmisEditDialog弹窗和mitt事件监听
+  import { useEmitt } from '../../bpmn-process-designer/src/hooks/web/useEmitt';
+  import AmisEditDialog from '../../bpmn-process-designer/src/package/designer/plugins/content-pad/AmisEditDialog.vue';
+  import { ref, reactive } from 'vue';
+
+  console.log('nop-site App.vue setup executed');
+
+  const showAmisDialog = ref(false);
+  const amisDialogOptions = reactive({
+    getPageSource: async () => ({}),
+    savePageSource: async () => true,
+    rollbackPageSource: async () => true
+  });
+
+  useEmitt({
+    name: 'open-amis-dialog',
+    callback: (opts: any) => {
+      console.log('on open-amis-dialog', opts);
+      amisDialogOptions.getPageSource = opts.getPageSource || (async () => ({}));
+      amisDialogOptions.savePageSource = opts.savePageSource || (async () => true);
+      amisDialogOptions.rollbackPageSource = opts.rollbackPageSource || (async () => true);
+      showAmisDialog.value = true;
+      console.log('showAmisDialog.value set to true');
+    }
+  });
 </script>

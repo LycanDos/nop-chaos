@@ -23,6 +23,7 @@ const props = defineProps({
     }
 });
 
+console.log('[XuiPageEditor] props:', props);
 const { getPageSource} = props;
 
 const {useI18n} = useAdapter()
@@ -38,6 +39,7 @@ const schemaRef = shallowRef()
 
 watchEffect(() => {
     getPageSource(false).then(schema => {
+        console.log('[XuiPageEditor] getPageSource result:', schema);
         if(!schema)
           schema = {}
         schemaRef.value = markRaw(schema)
@@ -45,6 +47,7 @@ watchEffect(() => {
         const schemaTypeName = schema['xui:schema-type']
         if (!schemaTypeName) {
             componentType.value = markRaw(AmisPageEditor)
+            console.log('[XuiPageEditor] use default AmisPageEditor');
         } else {
             const schemaType = getSchemaProcessorType(schemaTypeName)
             if (!schemaType) {
@@ -53,6 +56,7 @@ watchEffect(() => {
                 throw new Error("nop.err.unknown-schema-type")
             }
             componentType.value = markRaw(schemaType.editorComponentType as ReturnType<typeof defineComponent>)
+            console.log('[XuiPageEditor] use schemaType:', schemaTypeName, schemaType);
         }
     })
 })

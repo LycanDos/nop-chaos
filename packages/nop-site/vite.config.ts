@@ -81,7 +81,7 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
       https: false,
       port: VITE_PORT,
       // Load proxy configuration from .env
-      allowedHosts: ['l-nop'],
+      allowedHosts: ['l-nop', 'localhost', '127.0.0.1'],
       proxy: createProxy(VITE_PROXY),
     },
     build: {

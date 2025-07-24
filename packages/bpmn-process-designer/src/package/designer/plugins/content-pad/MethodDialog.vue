@@ -6,7 +6,15 @@
           <el-table-column prop="name" label="参数名" width="120" />
           <el-table-column prop="type" label="类型" width="80">
             <template #default="scope">
-              <el-tag :type="typeColor[scope.row.type] || typeColor.Default" size="small" effect="plain" style="font-size:12px;padding:0 8px;min-width:40px;line-height:20px;height:22px;">{{ scope.row.type }}</el-tag>
+              <el-tag :type="typeColor[scope.row.type] || typeColor.Default" 
+                      :class="{
+                        'tag-blue': scope.row.type === 'String',
+                        'tag-purple': scope.row.type === 'Array',
+                        'tag-gray': scope.row.type === 'Object'
+                      }"
+                      size="small" effect="plain" style="font-size:12px;padding:0 8px;min-width:40px;line-height:20px;height:22px;">
+                {{ scope.row.type }}
+              </el-tag>
             </template>
           </el-table-column>
           <el-table-column prop="desc" label="说明" min-width="120">
@@ -27,10 +35,10 @@
                 <li v-for="(item, idx) in scope.row.severityList || []" :key="item.id || idx" style="margin-bottom:2px;display:flex;align-items:center;gap:4px;">
                   <span style="font-weight:bold;min-width:1.5em;text-align:right;">{{ item.index || idx+1 }}.</span>
                   <el-icon v-if="item.icon"><component :is="item.icon" /></el-icon>
-                  <el-icon v-else-if="item.validatorType==='string'" style="color:#409eff;"><i-ep-Document /></el-icon>
-                  <el-icon v-else-if="item.validatorType==='number'" style="color:#67c23a;"><i-ep-Edit /></el-icon>
-                  <el-icon v-else-if="item.validatorType==='boolean'" style="color:#e6a23c;"><i-ep-Check /></el-icon>
-                  <el-icon v-else style="color:#909399;"><i-ep-QuestionFilled /></el-icon>
+                  <el-icon v-else-if="item.validatorType==='string'" style="color:#409eff;"><Document /></el-icon>
+                  <el-icon v-else-if="item.validatorType==='number'" style="color:#67c23a;"><Edit /></el-icon>
+                  <el-icon v-else-if="item.validatorType==='boolean'" style="color:#e6a23c;"><Check /></el-icon>
+                  <el-icon v-else style="color:#909399;"><QuestionFilled /></el-icon>
                   <span>{{ item.name }}</span>
                   <el-button :icon="Edit" size="small" circle plain style="height:1.4em;width:1.4em;padding:0;min-width:0;" @click="editSeverity(scope.row, item)" />
                   <el-button :icon="Plus" size="small" circle plain style="height:1.4em;width:1.4em;padding:0;min-width:0;" @click="addSeverity(scope.row)" />
@@ -46,7 +54,15 @@
           <el-table-column prop="name" label="参数名" width="120" />
           <el-table-column prop="type" label="类型" width="80">
             <template #default="scope">
-              <el-tag :type="typeColor[scope.row.type] || typeColor.Default" size="small" effect="plain" style="font-size:12px;padding:0 8px;min-width:40px;line-height:20px;height:22px;">{{ scope.row.type }}</el-tag>
+              <el-tag :type="typeColor[scope.row.type] || typeColor.Default"
+                      :class="{
+                        'tag-blue': scope.row.type === 'String',
+                        'tag-purple': scope.row.type === 'Array',
+                        'tag-gray': scope.row.type === 'Object'
+                      }"
+                      size="small" effect="plain" style="font-size:12px;padding:0 8px;min-width:40px;line-height:20px;height:22px;">
+                {{ scope.row.type }}
+              </el-tag>
             </template>
           </el-table-column>
           <el-table-column prop="desc" label="说明" min-width="120">
@@ -158,11 +174,11 @@ const outputParams = ref([
   ] }
 ])
 const typeColor = {
-  String: 'blue',
-  Number: 'green',
-  Boolean: 'orange',
-  Array: 'purple',
-  Object: 'gray',
+  String: 'info', // 蓝色
+  Number: 'success',
+  Boolean: 'warning',
+  Array: 'primary',
+  Object: 'info', // 改为info，避免default
   Default: 'info'
 }
 const editDialogVisible = ref(false)
@@ -251,4 +267,19 @@ const quillModules = {
 </script>
 
 <style scoped>
+.tag-blue {
+  color: #409EFF;
+  border-color: #409EFF;
+  background: #ecf5ff;
+}
+.tag-purple {
+  color: #a259ec;
+  border-color: #a259ec;
+  background: #f3e8ff;
+}
+.tag-gray {
+  color: #909399;
+  border-color: #909399;
+  background: #f4f4f5;
+}
 </style>

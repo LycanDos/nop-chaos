@@ -14,6 +14,8 @@ import { h, createApp, ref } from 'vue'
 import { ElDialog, ElTabs, ElTabPane, ElTable, ElTableColumn, ElButton, ElTag } from 'element-plus'
 import MethodDialog from './MethodDialog.vue'
 import AmisEditDialog from './AmisEditDialog.vue'
+import { emitter } from '../../../../hooks/web/useEmitt';
+console.log('contentPadProvider emitter', emitter);
 
 /**
  * A provider for BPMN 2.0 elements context pad
@@ -106,18 +108,56 @@ if (typeof window !== 'undefined' && !window.__bpmn_custom_io_param_icon__) {
       margin: 0 auto;
       background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="4.5" stroke="%23222" stroke-width="1.5" fill="%23fff"/><path d="M3 11h5" stroke="%23222" stroke-width="1.5" stroke-linecap="round"/><path d="M19 11h-5" stroke="%23222" stroke-width="1.5" stroke-linecap="round"/><path d="M5.5 8.5L3 11l2.5 2.5" stroke="%23222" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.5 13.5L19 11l-2.5-2.5" stroke="%23222" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat center/contain;
     }
-    /* 注入自定义替换图标 */
-    .bpmn-icon-replace::before {
-      content: '';
-      display: block;
-      width: 24px;
-      height: 24px;
-      margin: 0 auto;
-      background: url('data:image/svg+xml;utf8,<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="14" height="14" rx="3" fill="%23fff" stroke="%23222" stroke-width="1.5"/><path d="M7 10h6M10 7v6" stroke="%23222" stroke-width="1.5" stroke-linecap="round"/></svg>') no-repeat center/contain;
-    }
+    
   `
   document.head.appendChild(style)
   window.__bpmn_custom_io_param_icon__ = true
+}
+
+// 注入自定义SVG图标样式（只注入一次）
+if (typeof window !== 'undefined' && !window.__bpmn_custom_icons__) {
+  const style = document.createElement('style')
+  style.innerHTML = `
+    .bpmn-icon-replace::before {
+      content: '';
+      display: block;
+      width: 20px;
+      height: 20px;
+      margin: 0 auto;
+      background: url('/svg/replace2.svg') no-repeat center/contain;
+    }
+    .bpmn-icon-form::before {
+      content: '';
+      display: block;
+      width: 20px;
+      height: 20px;
+      margin: 0 auto;
+      background: url('/svg/form.svg') no-repeat center/contain;
+    }
+    .bpmn-icon-tran::before {
+      content: '';
+      display: block;
+      width: 20px;
+      height: 20px;
+      margin: 0 auto;
+      background: url('/svg/tran.svg') no-repeat center/contain;
+    }
+    
+    /* 如需更多自定义icon, 继续添加对应class和svg路径 */
+  `
+  document.head.appendChild(style)
+  window.__bpmn_custom_icons__ = true
+}
+
+// 全局唯一弹窗Vue实例和div
+if (typeof window !== 'undefined') {
+  if (!window.__bpmn_global_dialog_div__) {
+    const div = document.createElement('div');
+    div.id = 'bpmn-global-dialog';
+    document.body.appendChild(div);
+    window.__bpmn_global_dialog_div__ = div;
+  }
+  window.__bpmn_global_dialog_app__ = null;
 }
 
 ContextPadProvider.prototype.getContextPadEntries = function (element) {
@@ -516,26 +556,39 @@ ContextPadProvider.prototype.getContextPadEntries = function (element) {
   assign(actions, {
     'custom-method': {
       group: 'edit',
-      className: 'bpmn-icon-base bpmn-custom-io-param', // 继承原生icon定位
+      className: 'bpmn-icon-tran bpmn-custom-io-param', // 继承原生icon定位
       title: '方法参数',
       action: {
         click: function(event, element) {
-          // 弹窗挂载到body
-          let dialogDiv = document.getElementById('bpmn-method-dialog')
-          if (!dialogDiv) {
-            dialogDiv = document.createElement('div')
-            dialogDiv.id = 'bpmn-method-dialog'
-            document.body.appendChild(dialogDiv)
+          const dialogDiv = window.__bpmn_global_dialog_div__;
+          // 彻底销毁上一个全局弹窗实例
+          if (window.__bpmn_global_dialog_app__) {
+            try { window.__bpmn_global_dialog_app__.unmount(); } catch(e) {}
+            window.__bpmn_global_dialog_app__ = null;
+            dialogDiv.innerHTML = '';
           }
-          // 挂载Vue弹窗
-          const app = createApp(MethodDialog, {
-            visible: true,
-            onClose: () => {
-              app.unmount()
-              dialogDiv.remove()
-            }
-          })
-          app.mount(dialogDiv)
+          // 清理所有相关DOM
+          document.querySelectorAll('.el-overlay, .el-dialog__wrapper').forEach(el => el.remove());
+          // 延迟200ms后再挂载新弹窗，保留动画
+          setTimeout(() => {
+            // 挂载Vue弹窗
+            const app = createApp(MethodDialog, {
+              visible: true,
+              onClose: () => {
+                app.unmount()
+                dialogDiv.innerHTML = '';
+                window.__bpmn_global_dialog_app__ = null;
+                // 彻底清理 Element Plus 弹窗副作用
+                document.body.classList.remove('el-popup-parent--hidden');
+                document.body.style.overflow = '';
+                document.body.removeAttribute('aria-hidden');
+                document.body.removeAttribute('aria-modal');
+                document.querySelectorAll('.el-overlay, .el-dialog__wrapper').forEach(el => el.remove());
+              }
+            })
+            window.__bpmn_global_dialog_app__ = app;
+            app.mount(dialogDiv)
+          }, 200)
         }
       }
     }
@@ -545,40 +598,21 @@ ContextPadProvider.prototype.getContextPadEntries = function (element) {
   assign(actions, {
     'custom-amis-form': {
       group: 'edit',
-      className: 'bpmn-icon-wrench',
+      className: 'bpmn-icon-form', // 使用用户任务图标，表示表单
       title: 'AMIS配置表单',
       action: {
         click: function(event, element) {
-          let dialogDiv = document.getElementById('bpmn-amis-form-dialog')
-          if (!dialogDiv) {
-            dialogDiv = document.createElement('div')
-            dialogDiv.id = 'bpmn-amis-form-dialog'
-            document.body.appendChild(dialogDiv)
-          }
-          // 示例：实现 getPageSource/savePageSource/rollbackPageSource
-          const getPageSource = async () => {
-            // 这里可以根据 element.id 或其他业务数据获取 schema
-            return {};
-          };
-          const savePageSource = async (data) => {
-            // 保存 schema 的逻辑
-            return true;
-          };
-          const rollbackPageSource = async () => {
-            // 回滚逻辑
-            return true;
-          };
-          const app = createApp(AmisEditDialog, {
-            visible: true,
+          // 通过mitt事件总线触发全局弹窗
+          const getPageSource = async () => ({});
+          const savePageSource = async () => true;
+          const rollbackPageSource = async () => true;
+          console.log('emit open-amis-dialog', { getPageSource, savePageSource, rollbackPageSource });
+          emitter.emit('open-amis-dialog', {
             getPageSource,
             savePageSource,
-            rollbackPageSource,
-            onClose: () => {
-              app.unmount();
-              dialogDiv.remove();
-            }
+            rollbackPageSource
           });
-          app.mount(dialogDiv);
+          console.log('emitted open-amis-dialog');
         }
       }
     }
