@@ -2,7 +2,7 @@ import mitt from 'mitt'
 import { onBeforeUnmount } from 'vue';
 
 // 全局唯一emitter
-const globalAny = (typeof window !== 'undefined' ? window : global) as any;
+const globalAny = window as any;
 if (!globalAny.__global_emitter__) {
   globalAny.__global_emitter__ = mitt();
 }

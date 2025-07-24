@@ -1,94 +1,120 @@
 <template>
-  <el-dialog :model-value="visible" @update:model-value="onDialogClose" title="方法参数" width="700px" :close-on-click-modal="false">
+  <el-dialog :model-value="visible" @update:model-value="onDialogClose" title="方法参数" width="900px" :close-on-click-modal="false" draggable resize>
     <el-tabs v-model="activeTab">
       <el-tab-pane label="入参" name="input">
-        <el-table :data="inputParams" border row-key="name" default-expand-all :tree-props="{ children: 'children' }" size="small" style="width:100%;margin-top:8px;">
-          <el-table-column prop="name" label="参数名" width="120" />
-          <el-table-column prop="type" label="类型" width="80">
-            <template #default="scope">
-              <el-tag :type="typeColor[scope.row.type] || typeColor.Default" 
-                      :class="{
-                        'tag-blue': scope.row.type === 'String',
-                        'tag-purple': scope.row.type === 'Array',
-                        'tag-gray': scope.row.type === 'Object'
-                      }"
-                      size="small" effect="plain" style="font-size:12px;padding:0 8px;min-width:40px;line-height:20px;height:22px;">
-                {{ scope.row.type }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="desc" label="说明" min-width="120">
-            <template #default="scope">
-              <span v-html="scope.row.desc"></span>
-              <el-button :icon="Edit" size="small" circle plain style="height:1.2em;width:1.2em;padding:0;min-width:0;margin-left:4px;" @click="editDesc(scope.row)" />
-            </template>
-          </el-table-column>
-          <el-table-column label="校验器" width="180">
-            <template #header>
-              <span>校验器</span>
-              <el-tooltip content="智能生成校验器" placement="top">
-                <el-button :icon="MagicStick" size="small" circle plain style="margin-left:4px;vertical-align:middle;" @click="generateValidators" />
-              </el-tooltip>
-            </template>
-            <template #default="scope">
-              <ol style="margin:0;padding-left:18px;">
-                <li v-for="(item, idx) in scope.row.severityList || []" :key="item.id || idx" style="margin-bottom:2px;display:flex;align-items:center;gap:4px;">
-                  <span style="font-weight:bold;min-width:1.5em;text-align:right;">{{ item.index || idx+1 }}.</span>
-                  <el-icon v-if="item.icon"><component :is="item.icon" /></el-icon>
-                  <el-icon v-else-if="item.validatorType==='string'" style="color:#409eff;"><Document /></el-icon>
-                  <el-icon v-else-if="item.validatorType==='number'" style="color:#67c23a;"><Edit /></el-icon>
-                  <el-icon v-else-if="item.validatorType==='boolean'" style="color:#e6a23c;"><Check /></el-icon>
-                  <el-icon v-else style="color:#909399;"><QuestionFilled /></el-icon>
-                  <span>{{ item.name }}</span>
-                  <el-button :icon="Edit" size="small" circle plain style="height:1.4em;width:1.4em;padding:0;min-width:0;" @click="editSeverity(scope.row, item)" />
-                  <el-button :icon="Plus" size="small" circle plain style="height:1.4em;width:1.4em;padding:0;min-width:0;" @click="addSeverity(scope.row)" />
-                  <el-button :icon="Delete" size="small" circle plain style="height:1.4em;width:1.4em;padding:0;min-width:0;color:#f56c6c;" @click="removeSeverity(scope.row, idx)" />
-                </li>
-              </ol>
-            </template>
-          </el-table-column>
-        </el-table>
+        <div style="width: 100%">
+          <el-table :data="inputParams" border row-key="name" default-expand-all :tree-props="{ children: 'children' }" size="small" style="width:100%;margin-top:8px;">
+            <el-table-column prop="name" label="参数名" width="120" />
+            <el-table-column prop="type" label="类型" width="80">
+              <template #default="scope">
+                <el-tag :type="typeColor[scope.row.type] || typeColor.Default" 
+                        :class="{
+                          'tag-blue': scope.row.type === 'String',
+                          'tag-purple': scope.row.type === 'Array',
+                          'tag-gray': scope.row.type === 'Object'
+                        }"
+                        size="small" effect="plain" style="font-size:12px;padding:0 8px;min-width:40px;line-height:20px;height:22px;">
+                  {{ scope.row.type }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="desc" label="说明" min-width="120">
+              <template #default="scope">
+                <span v-html="scope.row.desc"></span>
+                <el-button :icon="Edit" size="small" circle plain style="height:1.2em;width:1.2em;padding:0;min-width:0;margin-left:4px;" @click="editDesc(scope.row)" />
+              </template>
+            </el-table-column>
+            <el-table-column label="校验器" width="180">
+              <template #header>
+                <span>校验器</span>
+                <el-tooltip content="智能生成校验器" placement="top">
+                  <el-button :icon="MagicStick" size="small" circle plain style="margin-left:4px;vertical-align:middle;" @click="generateValidators" />
+                </el-tooltip>
+              </template>
+              <template #default="scope">
+                <ol style="margin:0;padding-left:18px;">
+                  <li v-for="(item, idx) in scope.row.severityList || []" :key="item.id || idx" style="margin-bottom:2px;display:flex;align-items:center;gap:4px;">
+                    <span style="font-weight:bold;min-width:1.5em;text-align:right;">{{ item.index || idx+1 }}.</span>
+                    <el-icon v-if="item.icon"><component :is="item.icon" /></el-icon>
+                    <el-icon v-else-if="item.validatorType==='string'" style="color:#409eff;"><Document /></el-icon>
+                    <el-icon v-else-if="item.validatorType==='number'" style="color:#67c23a;"><Edit /></el-icon>
+                    <el-icon v-else-if="item.validatorType==='boolean'" style="color:#e6a23c;"><Check /></el-icon>
+                    <el-icon v-else style="color:#909399;"><QuestionFilled /></el-icon>
+                    <span>{{ item.name }}</span>
+                    <el-button :icon="Edit" size="small" circle plain style="height:1.4em;width:1.4em;padding:0;min-width:0;" @click="editSeverity(scope.row, item)" />
+                    <el-button :icon="Plus" size="small" circle plain style="height:1.4em;width:1.4em;padding:0;min-width:0;" @click="addSeverity(scope.row)" />
+                    <el-button :icon="Delete" size="small" circle plain style="height:1.4em;width:1.4em;padding:0;min-width:0;color:#f56c6c;" @click="removeSeverity(scope.row, idx)" />
+                  </li>
+                </ol>
+              </template>
+            </el-table-column>
+          </el-table>
+          <!-- 联合校验器只在入参tab页展示 -->
+          <div v-if="activeTab === 'input'" style="margin-bottom:8px;min-height:32px;">
+            <div style="font-weight:bold;margin-bottom:4px;">联合校验器列表</div>
+            <ul style="margin:0;padding-left:18px;">
+              <li v-for="(item, idx) in unionValidators" :key="item.id || idx" style="margin-bottom:2px;display:flex;align-items:center;gap:4px;">
+                <span style="font-weight:bold;">{{ idx+1 }}.</span>
+                <span>{{ item.name }}</span>
+                <el-tag size="small" type="info" v-if="item.type">{{ item.type }}</el-tag>
+                <el-button :icon="Edit" size="small" circle plain style="height:1.2em;width:1.2em;padding:0;min-width:0;" @click="editUnionValidator(item)" />
+                <el-button :icon="Delete" size="small" circle plain style="height:1.2em;width:1.2em;padding:0;min-width:0;color:#f56c6c;" @click="removeUnionValidator(idx)" />
+              </li>
+            </ul>
+            <el-button :icon="Plus" size="small" circle plain style="height:1.2em;width:1.2em;padding:0;min-width:0;" @click="addUnionValidator" />
+          </div>
+        </div>
       </el-tab-pane>
       <el-tab-pane label="出参" name="output">
-        <el-table :data="outputParams" border row-key="name" default-expand-all :tree-props="{ children: 'children' }" size="small" style="width:100%;margin-top:8px;">
-          <el-table-column prop="name" label="参数名" width="120" />
-          <el-table-column prop="type" label="类型" width="80">
-            <template #default="scope">
-              <el-tag :type="typeColor[scope.row.type] || typeColor.Default"
-                      :class="{
-                        'tag-blue': scope.row.type === 'String',
-                        'tag-purple': scope.row.type === 'Array',
-                        'tag-gray': scope.row.type === 'Object'
-                      }"
-                      size="small" effect="plain" style="font-size:12px;padding:0 8px;min-width:40px;line-height:20px;height:22px;">
-                {{ scope.row.type }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="desc" label="说明" min-width="120">
-            <template #default="scope">
-              <span v-html="scope.row.desc"></span>
-            </template>
-          </el-table-column>
-        </el-table>
+        <div style="width: 100%">
+          <el-table :data="outputParams" border row-key="name" default-expand-all :tree-props="{ children: 'children' }" size="small" style="width:100%;margin-top:8px;">
+            <el-table-column prop="name" label="参数名" width="120" />
+            <el-table-column prop="type" label="类型" width="80">
+              <template #default="scope">
+                <el-tag :type="typeColor[scope.row.type] || typeColor.Default"
+                        :class="{
+                          'tag-blue': scope.row.type === 'String',
+                          'tag-purple': scope.row.type === 'Array',
+                          'tag-gray': scope.row.type === 'Object'
+                        }"
+                        size="small" effect="plain" style="font-size:12px;padding:0 8px;min-width:40px;line-height:20px;height:22px;">
+                  {{ scope.row.type }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="desc" label="说明" min-width="120">
+              <template #default="scope">
+                <span v-html="scope.row.desc"></span>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
       </el-tab-pane>
     </el-tabs>
     <template #footer>
-      <div style="margin-bottom:8px;min-height:32px;">
-        <div style="font-weight:bold;margin-bottom:4px;">联合校验器列表</div>
-        <ul style="margin:0;padding-left:18px;">
-          <li v-for="(item, idx) in unionValidators" :key="item.id || idx" style="margin-bottom:2px;display:flex;align-items:center;gap:4px;">
-            <span style="font-weight:bold;">{{ idx+1 }}.</span>
-            <span>{{ item.name }}</span>
-            <el-tag size="small" type="info" v-if="item.type">{{ item.type }}</el-tag>
-            <el-button :icon="Edit" size="small" circle plain style="height:1.2em;width:1.2em;padding:0;min-width:0;" @click="editUnionValidator(item)" />
-            <el-button :icon="Delete" size="small" circle plain style="height:1.2em;width:1.2em;padding:0;min-width:0;color:#f56c6c;" @click="removeUnionValidator(idx)" />
-          </li>
-        </ul>
-        <el-button :icon="Plus" size="small" circle plain style="height:1.2em;width:1.2em;padding:0;min-width:0;" @click="addUnionValidator" />
-      </div>
       <el-button type="primary" @click="onDialogClose(false)">关闭</el-button>
     </template>
+    <!-- 联合校验器编辑弹窗 -->
+    <el-dialog v-model="editUnionDialogVisible" title="编辑联合校验器" width="400px" :close-on-click-modal="false" draggable resize>
+      <el-form v-if="editingUnionValidator" :model="editingUnionValidator">
+        <el-form-item label="名称">
+          <el-input v-model="editingUnionValidator.name" />
+        </el-form-item>
+        <el-form-item label="说明">
+          <el-input v-model="editingUnionValidator.desc" />
+        </el-form-item>
+        <el-form-item label="Check">
+          <el-input v-model="editingUnionValidator.check" type="textarea" :rows="2" />
+        </el-form-item>
+        <el-form-item label="序号">
+          <el-input-number v-model="editingUnionValidator.index" :min="1" style="width:100%" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="editUnionDialogVisible=false">取消</el-button>
+        <el-button type="primary" @click="saveUnionValidator">保存</el-button>
+      </template>
+    </el-dialog>
     <el-dialog v-model="editDialogVisible" title="编辑校验器" width="320px" :close-on-click-modal="false">
       <el-form v-if="editingSeverity" :model="editingSeverity">
         <el-form-item label="name">
@@ -226,8 +252,20 @@ const unionValidators = ref([])
 function addUnionValidator() {
   unionValidators.value.push({ name: '新联合校验器', type: '', id: Date.now() })
 }
+const editUnionDialogVisible = ref(false)
+const editingUnionValidator = ref(null)
 function editUnionValidator(item) {
-  // TODO: 实现弹窗编辑逻辑
+  editingUnionValidator.value = { ...item }
+  editUnionDialogVisible.value = true
+}
+function saveUnionValidator() {
+  if (editingUnionValidator.value) {
+    const idx = unionValidators.value.findIndex(i => i.id === editingUnionValidator.value.id)
+    if (idx > -1) {
+      unionValidators.value[idx] = { ...editingUnionValidator.value }
+    }
+  }
+  editUnionDialogVisible.value = false
 }
 function removeUnionValidator(idx) {
   unionValidators.value.splice(idx, 1)
