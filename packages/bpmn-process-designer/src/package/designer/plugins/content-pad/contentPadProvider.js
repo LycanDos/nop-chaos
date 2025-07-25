@@ -12,8 +12,6 @@ import { hasPrimaryModifier } from 'diagram-js/lib/util/Mouse'
 
 import { h, createApp, ref } from 'vue'
 import { ElDialog, ElTabs, ElTabPane, ElTable, ElTableColumn, ElButton, ElTag } from 'element-plus'
-import MethodDialog from './MethodDialog.vue'
-import AmisEditDialog from './AmisEditDialog.vue'
 import { emitter } from '../../../../hooks/web/useEmitt';
 console.log('contentPadProvider emitter', emitter);
 
@@ -560,35 +558,8 @@ ContextPadProvider.prototype.getContextPadEntries = function (element) {
       title: '方法参数',
       action: {
         click: function(event, element) {
-          const dialogDiv = window.__bpmn_global_dialog_div__;
-          // 彻底销毁上一个全局弹窗实例
-          if (window.__bpmn_global_dialog_app__) {
-            try { window.__bpmn_global_dialog_app__.unmount(); } catch(e) {}
-            window.__bpmn_global_dialog_app__ = null;
-            dialogDiv.innerHTML = '';
-          }
-          // 清理所有相关DOM
-          document.querySelectorAll('.el-overlay, .el-dialog__wrapper').forEach(el => el.remove());
-          // 延迟200ms后再挂载新弹窗，保留动画
-          setTimeout(() => {
-            // 挂载Vue弹窗
-            const app = createApp(MethodDialog, {
-              visible: true,
-              onClose: () => {
-                app.unmount()
-                dialogDiv.innerHTML = '';
-                window.__bpmn_global_dialog_app__ = null;
-                // 彻底清理 Element Plus 弹窗副作用
-                document.body.classList.remove('el-popup-parent--hidden');
-                document.body.style.overflow = '';
-                document.body.removeAttribute('aria-hidden');
-                document.body.removeAttribute('aria-modal');
-                document.querySelectorAll('.el-overlay, .el-dialog__wrapper').forEach(el => el.remove());
-              }
-            })
-            window.__bpmn_global_dialog_app__ = app;
-            app.mount(dialogDiv)
-          }, 200)
+          // 通过mitt事件总线通知业务包弹窗
+          emitter.emit('open-method-dialog', { element, event });
         }
       }
     }

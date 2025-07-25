@@ -6,6 +6,7 @@
   import { SimpleMenu } from '/@/components/SimpleMenu';
   import { AppLogo } from '/@/components/Application';
   import { AppstoreOutlined } from '@ant-design/icons-vue';
+  import Icon from '/@/components/Icon';
 
   import { MenuModeEnum, MenuSplitTyeEnum } from '/@/enums/menuEnum';
 
@@ -27,6 +28,27 @@
   const showAllFunctions = ref(false)
   const search = ref('')
   const groups = ref([])
+  const menuRef = ref<HTMLElement | null>(null);
+  const drawerStyle = computed(() => {
+    const menuWidth = menuRef.value?.offsetWidth || 200;
+    return {
+      position: 'fixed',
+      left: `${menuWidth}px`,
+      top: 0,
+      height: '100%',
+      width: `calc(100vw - ${menuWidth}px)` ,
+      zIndex: 30000, // 提升层级
+      background: 'rgba(255,255,255,0.7)', // 半透明白色
+      boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+      padding: '24px',
+      overflow: 'auto',
+      transition: 'left 0.2s,width 0.2s',
+      backdropFilter: 'blur(16px)', // 毛玻璃
+      WebkitBackdropFilter: 'blur(16px)', // 兼容Safari
+      borderRadius: '12px 0 0 12px',
+      border: '1px solid rgba(255,255,255,0.18)',
+    } as React.CSSProperties;
+  });
 
   onMounted(async () => {
     const menus = await getMenus()
@@ -153,6 +175,17 @@
         return false;
       }
 
+      const popupHover = ref(false);
+      function handleMouseEnter() {
+        popupHover.value = true;
+      }
+      function handleMouseLeave() {
+        popupHover.value = false;
+        setTimeout(() => {
+          if (!popupHover.value) showAllFunctions.value = false;
+        }, 120);
+      }
+
       function renderHeader() {
         if (!unref(getIsShowLogo) && !unref(getIsMobile)) return null;
         return (
@@ -161,21 +194,55 @@
             <div style="margin-left: 8px; cursor: pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" title="全部功能" onClick={() => showAllFunctions.value = true}>
               <AppstoreOutlined style="font-size: 20px; color: #fff;" />
             </div>
-            <a-drawer v-model:visible={showAllFunctions.value} width="80vw" title="全部功能" placement="right">
-              <a-input v-model:value={search.value} placeholder="搜索功能名称" style="margin-bottom: 16px;" />
-              <div style="display: flex; flex-wrap: wrap; gap: 32px;">
-                {filteredGroups.value.map(group => (
-                  <div style="min-width: 200px;" key={group.name}>
-                    <div style="font-weight: bold; margin-bottom: 8px;">{group.name}</div>
-                    <ul>
-                      {group.items.map(item => (
-                        <li key={item.path}>{item.meta.title}</li>
+            {showAllFunctions.value && (
+              <>
+                <div
+                  style={{
+                    position: 'fixed',
+                    inset: 0,
+                    zIndex: 29999,
+                    background: 'transparent',
+                  }}
+                  onClick={() => (showAllFunctions.value = false)}
+                />
+                <div
+                  style={drawerStyle.value}
+                  onMouseLeave={() => (showAllFunctions.value = false)}
+                >
+                  <div>
+                    <a-input v-model:value={search.value} placeholder="搜索功能名称" style={{ marginBottom: '16px' }} />
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                        gap: '32px',
+                        alignItems: 'flex-start',
+                      }}
+                    >
+                      {unref(menusRef).map(group => (
+                        <div key={group.path}>
+                          <div style={{ fontWeight: 'bold', marginBottom: '8px', display: 'flex', alignItems: 'center', fontSize: '16px' }}>
+                            {group.icon && <span style={{ marginRight: '6px' }}><Icon icon={group.icon} size={18} /></span>}
+                            {group.name}
+                          </div>
+                          <ul style={{ padding: 0, margin: 0, listStyle: 'none' }}>
+                            {(group.children || []).filter(item => item.meta?.title?.includes(search.value)).map(item => (
+                              <li
+                                key={item.path}
+                                style={{ padding: '2px 0', fontSize: '15px', cursor: 'pointer', textAlign: 'left' }}
+                                onClick={() => handleMenuClick(item.path, item)}
+                              >
+                                {item.meta?.title || item.name}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
-                ))}
-              </div>
-            </a-drawer>
+                </div>
+              </>
+            )}
           </div>
         );
       }
@@ -201,8 +268,10 @@
       return () => {
         return (
           <>
-            {renderHeader()}
-            {unref(getUseScroll) ? <ScrollContainer style={unref(getWrapperStyle)}>{() => renderMenu()}</ScrollContainer> : renderMenu()}
+            <div ref={menuRef} style="display: contents;">
+              {renderHeader()}
+              {unref(getUseScroll) ? <ScrollContainer style={unref(getWrapperStyle)}>{() => renderMenu()}</ScrollContainer> : renderMenu()}
+            </div>
           </>
         );
       };

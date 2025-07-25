@@ -4,14 +4,7 @@
     <AppProvider>
       <RouterView />
     </AppProvider>
-    <AmisEditDialog
-      v-if="showAmisDialog"
-      :visible="showAmisDialog"
-      :getPageSource="amisDialogOptions.getPageSource"
-      :savePageSource="amisDialogOptions.savePageSource"
-      :rollbackPageSource="amisDialogOptions.rollbackPageSource"
-      @close="() => { console.log('AmisEditDialog closed'); showAmisDialog = false; }"
-    />
+    <MethodDialog v-if="showMethodDialog" :visible="showMethodDialog" @update:model-value="showMethodDialog = false" />
   </ConfigProvider>
 </template>
 
@@ -31,8 +24,8 @@
 
   // 集成bpmn-process-designer的AmisEditDialog弹窗和mitt事件监听
   import { useEmitt } from '../../bpmn-process-designer/src/hooks/web/useEmitt';
-  import AmisEditDialog from '../../bpmn-process-designer/src/package/designer/plugins/content-pad/AmisEditDialog.vue';
   import { ref, reactive } from 'vue';
+  import MethodDialog from './components/MethodDialog/MethodDialog.vue';
 
   console.log('nop-site App.vue setup executed');
 
@@ -52,6 +45,15 @@
       amisDialogOptions.rollbackPageSource = opts.rollbackPageSource || (async () => true);
       showAmisDialog.value = true;
       console.log('showAmisDialog.value set to true');
+    }
+  });
+
+  const showMethodDialog = ref(false);
+
+  useEmitt({
+    name: 'open-method-dialog',
+    callback: (opts) => {
+      showMethodDialog.value = true;
     }
   });
 </script>

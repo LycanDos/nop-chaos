@@ -25,7 +25,7 @@
     "amis-ui": "^3.4.2",
     "vue-router": "^4.2.4",
     "pinia": "^2.0.12",
-    "element-plus": "^2.3.14",
+    "element-plus": "^2.10.4",
     "react-json-view":"^1.21.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
