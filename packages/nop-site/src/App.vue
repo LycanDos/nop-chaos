@@ -5,6 +5,14 @@
       <RouterView />
     </AppProvider>
     <MethodDialog v-if="showMethodDialog" :visible="showMethodDialog" @update:model-value="showMethodDialog = false" />
+    <AmisEditDialog 
+      v-if="showAmisDialog" 
+      :visible="showAmisDialog" 
+      :getPageSource="amisDialogOptions.getPageSource"
+      :savePageSource="amisDialogOptions.savePageSource"
+      :rollbackPageSource="amisDialogOptions.rollbackPageSource"
+      @close="showAmisDialog = false"
+    />
   </ConfigProvider>
 </template>
 
@@ -26,6 +34,7 @@
   import { useEmitt } from '../../bpmn-process-designer/src/hooks/web/useEmitt';
   import { ref, reactive } from 'vue';
   import MethodDialog from './components/MethodDialog/MethodDialog.vue';
+  import AmisEditDialog from './components/AmisEditDialog.vue';
 
   console.log('nop-site App.vue setup executed');
 
