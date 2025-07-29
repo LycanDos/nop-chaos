@@ -141,6 +141,16 @@ if (typeof window !== 'undefined' && !window.__bpmn_custom_icons__) {
       background: url('/svg/tran.svg') no-repeat center/contain;
     }
     
+    /* DIY刷子图标样式 */
+    .bpmn-icon-diy-brush::before {
+      content: '';
+      display: block;
+      width: 20px;
+      height: 20px;
+      margin: 0 auto;
+      background: url('/svg/刷子.svg') no-repeat center/contain;
+    }
+    
     /* 如需更多自定义icon, 继续添加对应class和svg路径 */
   `
   document.head.appendChild(style)
@@ -559,6 +569,35 @@ ContextPadProvider.prototype.getContextPadEntries = function (element) {
       action: {
         click: function(event, element) {
           // 通过mitt事件总线通知业务包弹窗
+          const dialogDiv = window.__bpmn_global_dialog_div__;
+          // 彻底销毁上一个全局弹窗实例
+          if (window.__bpmn_global_dialog_app__) {
+            try { window.__bpmn_global_dialog_app__.unmount(); } catch(e) {}
+            window.__bpmn_global_dialog_app__ = null;
+            dialogDiv.innerHTML = '';
+          }
+          // 清理所有相关DOM
+          document.querySelectorAll('.el-overlay, .el-dialog__wrapper').forEach(el => el.remove());
+          // 延迟200ms后再挂载新弹窗，保留动画
+          // setTimeout(() => {
+          //   // 挂载Vue弹窗
+          //   const app = createApp(MethodDialog, {
+          //     visible: true,
+          //     onClose: () => {
+          //       app.unmount()
+          //       dialogDiv.innerHTML = '';
+          //       window.__bpmn_global_dialog_app__ = null;
+          //       // 彻底清理 Element Plus 弹窗副作用
+          //       document.body.classList.remove('el-popup-parent--hidden');
+          //       document.body.style.overflow = '';
+          //       document.body.removeAttribute('aria-hidden');
+          //       document.body.removeAttribute('aria-modal');
+          //       document.querySelectorAll('.el-overlay, .el-dialog__wrapper').forEach(el => el.remove());
+          //     }
+          //   })
+          //   window.__bpmn_global_dialog_app__ = app;
+          //   app.mount(dialogDiv)
+          // }, 200)
           emitter.emit('open-method-dialog', { element, event });
         }
       }
@@ -584,6 +623,22 @@ ContextPadProvider.prototype.getContextPadEntries = function (element) {
             rollbackPageSource
           });
           console.log('emitted open-amis-dialog');
+        }
+      }
+    }
+  })
+
+  // 新增DIY刷子图标 - 通过mitt事件触发nop-site中的DiyStyleDialog
+  assign(actions, {
+    'diy-style': {
+      group: 'edit',
+      className: 'bpmn-icon-diy-brush',
+      title: 'DIY样式编辑',
+      action: {
+        click: function(event, element) {
+          // 通过mitt事件总线触发nop-site中的DIY样式编辑器
+          console.log('触发DIY样式编辑器:', element);
+          emitter.emit('open-diy-style-dialog', { element, event });
         }
       }
     }

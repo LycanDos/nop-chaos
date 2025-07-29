@@ -13,6 +13,14 @@
       :rollbackPageSource="amisDialogOptions.rollbackPageSource"
       @close="showAmisDialog = false"
     />
+    <!-- DIY样式编辑器弹窗 -->
+    <DiyStyleDialog 
+      v-if="showDiyStyleDialog" 
+      :visible="showDiyStyleDialog" 
+      :element="diyStyleElement"
+      @update:visible="showDiyStyleDialog = false"
+      @save="handleDiyStyleSave"
+    />
   </ConfigProvider>
 </template>
 
@@ -35,6 +43,7 @@
   import { ref, reactive } from 'vue';
   import MethodDialog from './components/MethodDialog/MethodDialog.vue';
   import AmisEditDialog from './components/AmisEditDialog.vue';
+  import DiyStyleDialog from './components/DiyStyleDialog.vue';
 
   console.log('nop-site App.vue setup executed');
 
@@ -65,4 +74,24 @@
       showMethodDialog.value = true;
     }
   });
+
+  // DIY样式编辑器相关状态
+  const showDiyStyleDialog = ref(false);
+  const diyStyleElement = ref(null);
+
+  // 监听DIY样式编辑器事件
+  useEmitt({
+    name: 'open-diy-style-dialog',
+    callback: (opts: any) => {
+      console.log('on open-diy-style-dialog', opts);
+      diyStyleElement.value = opts.element;
+      showDiyStyleDialog.value = true;
+    }
+  });
+
+  // 处理DIY样式保存
+  const handleDiyStyleSave = (styleData: any) => {
+    console.log('DIY样式保存:', styleData);
+    // 可以在这里添加额外的保存逻辑
+  };
 </script>
