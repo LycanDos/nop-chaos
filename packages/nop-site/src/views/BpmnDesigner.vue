@@ -25,6 +25,41 @@ const ReplaceMenuModule = {
   replaceMenuProvider: ['type', ReplaceMenuProvider]
 }
 
+// 静态任务数据常量
+const STATIC_ACTIVITIES = [
+  { name: '用户任务', type: 'bpmn:UserTask', icon: 'bpmn-icon-user-task', source: 'static', key: 'bpmn:UserTask' },
+  { name: '服务任务', type: 'bpmn:ServiceTask', icon: 'bpmn-icon-service', source: 'static', key: 'bpmn:ServiceTask' },
+  { name: '发送任务', type: 'bpmn:SendTask', icon: 'bpmn-icon-send', source: 'static', key: 'bpmn:SendTask' },
+  { name: '接收任务', type: 'bpmn:ReceiveTask', icon: 'bpmn-icon-receive', source: 'static', key: 'bpmn:ReceiveTask' },
+  { name: '手工任务', type: 'bpmn:ManualTask', icon: 'bpmn-icon-manual', source: 'static', key: 'bpmn:ManualTask' },
+  { name: '业务规则任务', type: 'bpmn:BusinessRuleTask', icon: 'bpmn-icon-business-rule', source: 'static', key: 'bpmn:BusinessRuleTask' },
+  { name: '脚本任务', type: 'bpmn:ScriptTask', icon: 'bpmn-icon-script', source: 'static', key: 'bpmn:ScriptTask' },
+  { name: '调用活动', type: 'bpmn:CallActivity', icon: 'bpmn-icon-call-activity', source: 'static', key: 'bpmn:CallActivity' },
+  { name: '子流程', type: 'bpmn:SubProcess', icon: 'bpmn-icon-subprocess-expanded', source: 'static', key: 'bpmn:SubProcess' }
+];
+
+// 静态样式数据常量
+const STATIC_STYLES = {
+  'bpmn:UserTask': { name: '用户任务', type: 'bpmn:UserTask', iconColor: '#1890ff', bgColor: '#f0f8ff', iconClass: 'bpmn-icon-user-task', source: 'static' },
+  'bpmn:ServiceTask': { name: '服务任务', type: 'bpmn:ServiceTask', iconColor: '#52c41a', bgColor: '#f6ffed', iconClass: 'bpmn-icon-service', source: 'static' },
+  'bpmn:SendTask': { name: '发送任务', type: 'bpmn:SendTask', iconColor: '#fa8c16', bgColor: '#fff7e6', iconClass: 'bpmn-icon-send', source: 'static' },
+  'bpmn:ReceiveTask': { name: '接收任务', type: 'bpmn:ReceiveTask', iconColor: '#722ed1', bgColor: '#f9f0ff', iconClass: 'bpmn-icon-receive', source: 'static' },
+  'bpmn:ManualTask': { name: '手工任务', type: 'bpmn:ManualTask', iconColor: '#eb2f96', bgColor: '#fff0f6', iconClass: 'bpmn-icon-manual', source: 'static' },
+  'bpmn:BusinessRuleTask': { name: '业务规则任务', type: 'bpmn:BusinessRuleTask', iconColor: '#13c2c2', bgColor: '#e6fffb', iconClass: 'bpmn-icon-business-rule', source: 'static' },
+  'bpmn:ScriptTask': { name: '脚本任务', type: 'bpmn:ScriptTask', iconColor: '#fa541c', bgColor: '#fff2e8', iconClass: 'bpmn-icon-script', source: 'static' },
+  'bpmn:CallActivity': { name: '调用活动', type: 'bpmn:CallActivity', iconColor: '#2f54eb', bgColor: '#f0f5ff', iconClass: 'bpmn-icon-call-activity', source: 'static' },
+  'bpmn:SubProcess': { name: '子流程', type: 'bpmn:SubProcess', iconColor: '#faad14', bgColor: '#fffbe6', iconClass: 'bpmn-icon-subprocess', source: 'static' }
+};
+
+// 创建默认缓存结构
+const createDefaultCache = () => ({
+  apiActivities: [],
+  staticActivities: STATIC_ACTIVITIES,
+  apiStyles: [],
+  staticStyles: STATIC_STYLES,
+  timestamp: Date.now()
+});
+
 console.log("[app] App.vue loaded");
 
 defineProps<{
@@ -69,9 +104,125 @@ const initModeler = (item: any) => {
   if (provider && typeof provider.register === 'function') {
     provider.register();
   }
+  
+  // 预加载菜单数据缓存
+  preloadMenuDataCache();
+  
   nextTick(() => {
     console.log("nextTick modeler.value:", modeler.value);
   });
+};
+
+// 预加载菜单数据缓存
+const preloadMenuDataCache = async () => {
+  try {
+    console.log('[BpmnDesigner] 开始预加载菜单数据缓存...');
+    
+    // 获取API基础URL
+    const getApiBase = () => {
+      return (typeof window !== 'undefined' && (window as any).BPMN_API_BASE) || 
+             (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.VITE_BPMN_API_BASE) || ''
+    }
+    
+    const base = getApiBase();
+    const activitiesUrl = base + '/api/bpmn/activities';
+    
+    console.log('[BpmnDesigner] 加载菜单数据:', activitiesUrl);
+    
+    // 只加载菜单数据
+    const activitiesRes = await fetch(activitiesUrl);
+    
+    if (activitiesRes.ok) {
+      const activitiesData = await activitiesRes.json();
+      
+      console.log('[BpmnDesigner] API返回的菜单数据:', activitiesData);
+      
+      // 创建菜单数据缓存，包含API任务的基本样式信息
+      const menuCache = {
+        // API数据：通过code获取
+        apiActivities: Array.isArray(activitiesData) ? activitiesData.map(item => ({
+          ...item,
+          source: 'api',
+          key: item.code // 使用code作为唯一标识
+        })) : [],
+        // 静态数据：通过type获取
+        staticActivities: STATIC_ACTIVITIES,
+        // 样式数据：从API菜单数据中提取基本样式信息（不包含htmlContent）
+        apiStyles: Array.isArray(activitiesData) ? activitiesData.map(item => {
+          const style = item.itemStyle || {};
+          return {
+            code: item.code,
+            name: item.name,
+            type: item.type,
+            itemStyle: {
+              name: style.name || item.name,
+              type: style.type || item.type,
+              iconColor: style.iconColor || '',
+              bgColor: style.bgColor || '',
+              iconClass: style.iconClass || '',
+              icon: style.icon || '',
+              // 不包含htmlContent，htmlContent只在选择任务时缓存
+              htmlContent: ''
+            },
+            source: 'api',
+            key: item.code
+          };
+        }) : [],
+        staticStyles: STATIC_STYLES,
+        timestamp: Date.now()
+      };
+      
+      // 存储到全局缓存
+      window._bpmnMenuCache = menuCache;
+      
+      console.log('[BpmnDesigner] 菜单数据缓存加载成功:', {
+        apiActivitiesCount: menuCache.apiActivities.length,
+        staticActivitiesCount: menuCache.staticActivities.length,
+        apiStylesCount: menuCache.apiStyles.length,
+        staticStylesCount: Object.keys(menuCache.staticStyles).length,
+        timestamp: menuCache.timestamp
+      });
+      
+      // 打印缓存数据详情
+      console.log('[BpmnDesigner] 缓存数据详情:', {
+        apiActivities: menuCache.apiActivities,
+        staticActivities: menuCache.staticActivities,
+        apiStyles: menuCache.apiStyles,
+        staticStyles: menuCache.staticStyles
+      });
+      
+      // 初始化HTML内容缓存
+      if (!window._bpmnContentHtmlMap) {
+        window._bpmnContentHtmlMap = {};
+      }
+      
+    } else {
+      console.warn('[BpmnDesigner] 菜单数据加载失败:', {
+        activitiesStatus: activitiesRes.status,
+        activitiesOk: activitiesRes.ok
+      });
+      
+      // 如果API不可用，创建只包含静态数据的缓存结构
+      window._bpmnMenuCache = createDefaultCache();
+      
+      console.log('[BpmnDesigner] 使用默认缓存数据:', window._bpmnMenuCache);
+      
+      if (!window._bpmnContentHtmlMap) {
+        window._bpmnContentHtmlMap = {};
+      }
+    }
+  } catch (error) {
+    console.error('[BpmnDesigner] 预加载菜单数据缓存失败:', error);
+    
+    // 出错时也创建只包含静态数据的缓存结构
+    window._bpmnMenuCache = createDefaultCache();
+    
+    console.log('[BpmnDesigner] 使用默认缓存数据:', window._bpmnMenuCache);
+    
+    if (!window._bpmnContentHtmlMap) {
+      window._bpmnContentHtmlMap = {};
+    }
+  }
 };
 /** 添加/修改模型 */
 const save = async (bpmnXml: string) => {
@@ -118,6 +269,8 @@ declare global {
     _debugModeler: any;
     _debugModelerRaw: any;
     _debugModelerRef: any;
+    _bpmnMenuCache: any; // 新增：用于缓存菜单数据
+    _bpmnContentHtmlMap: any; // 新增：用于缓存HTML内容
   }
 }
 </script>

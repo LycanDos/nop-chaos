@@ -7,8 +7,8 @@ import { isAny } from 'bpmn-js/lib/features/modeling/util/ModelingUtil'
 import BpmnReplaceMenuProvider from 'bpmn-js/lib/features/popup-menu/ReplaceMenuProvider'
 import * as replaceOptions from 'bpmn-js/lib/features/replace/ReplaceOptions'
 
-// 静态数据
-const staticActivities = [
+// 静态数据常量
+const STATIC_ACTIVITIES = [
   { name: '用户任务', type: 'bpmn:UserTask', icon: 'bpmn-icon-user-task' },
   { name: '服务任务', type: 'bpmn:ServiceTask', icon: 'bpmn-icon-service' },
   { name: '发送任务', type: 'bpmn:SendTask', icon: 'bpmn-icon-send' },
@@ -23,6 +23,24 @@ const staticActivities = [
 // API获取数据
 async function fetchActivities() {
   try {
+    // 首先尝试从预加载的缓存中获取数据
+    if (window._bpmnMenuCache) {
+      console.log('[replaceMenuProvider] 从预加载缓存获取菜单数据');
+      
+      // 只返回API数据，避免与静态数据重复
+      const apiActivities = window._bpmnMenuCache.apiActivities || [];
+      
+      console.log('[replaceMenuProvider] 从缓存获取的API数据:', {
+        apiCount: apiActivities.length,
+        apiActivities: apiActivities
+      });
+      
+      return apiActivities;
+    }
+    
+    // 如果缓存中没有数据，尝试实时获取
+    console.log('[replaceMenuProvider] 缓存中没有数据，尝试实时获取');
+    
     // 支持全局 window.BPMN_API_BASE 或 VITE_BPMN_API_BASE
     const base = (typeof window !== 'undefined' && window.BPMN_API_BASE) || (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_BPMN_API_BASE) || ''
     const url = base + '/api/bpmn/activities'
@@ -35,6 +53,22 @@ async function fetchActivities() {
     }
     const data = await res.json()
     console.log('[replaceMenuProvider] fetchActivities 数据:', data)
+    
+    // 同时更新缓存
+    if (!window._bpmnMenuCache) {
+      window._bpmnMenuCache = { 
+        apiActivities: [], 
+        staticActivities: [],
+        apiStyles: [], 
+        staticStyles: {} 
+      };
+    }
+    window._bpmnMenuCache.apiActivities = Array.isArray(data) ? data.map(item => ({
+      ...item,
+      source: 'api',
+      key: item.code
+    })) : [];
+    
     return Array.isArray(data) ? data : []
   } catch (e) {
     console.error('[replaceMenuProvider] fetchActivities 异常:', e)
@@ -50,11 +84,13 @@ const ReplaceMenu = {
     const loading = ref(true)
     const apiList = ref([])
     const allList = computed(() => {
-      // 静态和API数据全部保留，不去重，API数据如缺icon自动补全
-      const staticList = staticActivities.map(item => ({ ...item, source: 'static' }))
+      // 静态数据
+      const staticList = STATIC_ACTIVITIES.map(item => ({ ...item, source: 'static' }))
+      
+      // API数据，避免与静态数据重复
       const apiData = apiList.value.map(item => {
         // 支持API自定义icon、iconClass、iconColor、bgColor等样式
-        const match = staticActivities.find(s => s.type === item.type)
+        const match = STATIC_ACTIVITIES.find(s => s.type === item.type)
         const style = item.itemStyle || {}
         return {
           ...item,
@@ -66,8 +102,37 @@ const ReplaceMenu = {
           source: 'api'
         }
       })
-      const arr = staticList.concat(apiData)
-      console.log('[replaceMenuProvider] allList 合并后:', arr)
+      
+      // 去重逻辑：如果API数据中有与静态数据相同type的项目，优先使用API数据
+      const staticTypes = new Set(STATIC_ACTIVITIES.map(item => item.type))
+      const uniqueApiData = apiData.filter(apiItem => {
+        // 如果API项目的type在静态数据中存在，且API项目有自定义内容，则保留API数据
+        if (staticTypes.has(apiItem.type)) {
+          // 检查API数据是否有自定义内容（非默认值）
+          const hasCustomContent = apiItem.name !== apiItem.type || 
+                                 apiItem.iconColor || 
+                                 apiItem.bgColor || 
+                                 apiItem.iconClass ||
+                                 apiItem.icon;
+          return hasCustomContent;
+        }
+        // 如果API项目的type不在静态数据中，则保留
+        return true;
+      })
+      
+      // 过滤掉静态数据中与API数据重复的type
+      const filteredStaticList = staticList.filter(staticItem => {
+        return !uniqueApiData.some(apiItem => apiItem.type === staticItem.type);
+      })
+      
+      const arr = [...filteredStaticList, ...uniqueApiData]
+      console.log('[replaceMenuProvider] allList 合并后:', {
+        staticCount: filteredStaticList.length,
+        apiCount: uniqueApiData.length,
+        totalCount: arr.length,
+        staticItems: filteredStaticList.map(item => item.name),
+        apiItems: uniqueApiData.map(item => item.name)
+      })
       return arr
     })
     const filterStaticOnly = ref(false)
@@ -329,7 +394,10 @@ CustomReplaceMenuProvider.prototype.register = function() {
               const loading = ref(true)
               const apiList = ref([])
               const allList = computed(() => {
-                const staticList = staticActivities.map(item => ({ ...item, source: 'static' }))
+                // 静态数据
+                const staticList = STATIC_ACTIVITIES.map(item => ({ ...item, source: 'static' }))
+                
+                // API数据，避免与静态数据重复
                 const apiData = apiList.value.map(item => {
                   // 支持API自定义icon、iconClass、iconColor、bgColor等样式
                   const style = item.itemStyle || {}
@@ -343,7 +411,36 @@ CustomReplaceMenuProvider.prototype.register = function() {
                     source: 'api'
                   }
                 })
-                return staticList.concat(apiData)
+                
+                // 去重逻辑：如果API数据中有与静态数据相同type的项目，优先使用API数据
+                const staticTypes = new Set(STATIC_ACTIVITIES.map(item => item.type))
+                const uniqueApiData = apiData.filter(apiItem => {
+                  // 如果API项目的type在静态数据中存在，且API项目有自定义内容，则保留API数据
+                  if (staticTypes.has(apiItem.type)) {
+                    // 检查API数据是否有自定义内容（非默认值）
+                    const hasCustomContent = apiItem.name !== apiItem.type || 
+                                           apiItem.iconColor || 
+                                           apiItem.bgColor || 
+                                           apiItem.iconClass ||
+                                           apiItem.icon;
+                    return hasCustomContent;
+                  }
+                  // 如果API项目的type不在静态数据中，则保留
+                  return true;
+                })
+                
+                // 过滤掉静态数据中与API数据重复的type
+                const filteredStaticList = staticList.filter(staticItem => {
+                  return !uniqueApiData.some(apiItem => apiItem.type === staticItem.type);
+                })
+                
+                const arr = [...filteredStaticList, ...uniqueApiData]
+                console.log('[replaceMenuProvider] 弹窗组件 allList 合并后:', {
+                  staticCount: filteredStaticList.length,
+                  apiCount: uniqueApiData.length,
+                  totalCount: arr.length
+                })
+                return arr
               })
               const filteredList = computed(() => {
                 let list = allList.value
@@ -379,6 +476,47 @@ CustomReplaceMenuProvider.prototype.register = function() {
                             console.log('[replaceMenuProvider] fetch activitiesStyle 返回:', data)
                             window._bpmnContentHtmlMap[item.code] = data.contentHtml || ''
                             console.log('[replaceMenuProvider] _bpmnContentHtmlMap 写入:', JSON.stringify(window._bpmnContentHtmlMap))
+                            
+                            // 缓存API样式数据到全局缓存
+                            if (!window._bpmnMenuCache) {
+                              window._bpmnMenuCache = { 
+                                apiActivities: [], 
+                                staticActivities: [],
+                                apiStyles: [], 
+                                staticStyles: {} 
+                              };
+                            }
+                            
+                            // 只缓存htmlContent，其他样式数据已在菜单数据缓存时处理
+                            const existingStyle = window._bpmnMenuCache.apiStyles.find(style => style.code === item.code);
+                            if (existingStyle && data.itemStyle && data.itemStyle.htmlContent) {
+                              // 只更新htmlContent
+                              existingStyle.itemStyle.htmlContent = data.itemStyle.htmlContent;
+                              console.log('[replaceMenuProvider] 更新API样式数据的htmlContent:', item.code, data.itemStyle.htmlContent);
+                            } else if (!existingStyle && data.itemStyle) {
+                              // 如果缓存中没有该样式数据，创建新的样式数据（只包含htmlContent）
+                              const styleData = {
+                                code: item.code,
+                                name: item.name,
+                                type: item.type,
+                                itemStyle: {
+                                  name: data.itemStyle.name || item.name,
+                                  type: data.itemStyle.type || item.type,
+                                  iconColor: data.itemStyle.iconColor || '',
+                                  bgColor: data.itemStyle.bgColor || '',
+                                  iconClass: data.itemStyle.iconClass || '',
+                                  icon: data.itemStyle.icon || '',
+                                  htmlContent: data.itemStyle.htmlContent || ''
+                                },
+                                source: 'api',
+                                key: item.code
+                              };
+                              window._bpmnMenuCache.apiStyles.push(styleData);
+                              console.log('[replaceMenuProvider] 缓存API样式数据（包含htmlContent）:', styleData);
+                            }
+                            
+                            console.log('[replaceMenuProvider] 当前缓存的所有API样式数据:', window._bpmnMenuCache.apiStyles);
+                            
                             // fetch后强制刷新所有节点，彻底触发重绘
                             setTimeout(() => {
                               if (window._debugModeler && window._debugModeler.get) {

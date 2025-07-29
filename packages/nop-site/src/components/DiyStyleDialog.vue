@@ -245,9 +245,17 @@ const loadActivityHtmlContent = async (apiActivityId) => {
     const res = await fetch(url)
     if (res.ok) {
       const data = await res.json()
-      if (data.contentHtml) {
-        styleForm.htmlContent = data.contentHtml
-        console.log('[DiyStyleDialog] 加载到HTML内容:', data.contentHtml)
+      if (data.itemStyle && data.itemStyle.htmlContent) {
+        // 更新_bpmnContentHtmlMap
+        if (!window._bpmnContentHtmlMap) {
+          window._bpmnContentHtmlMap = {};
+        }
+        window._bpmnContentHtmlMap[apiActivityId] = data.itemStyle.htmlContent;
+        
+        // 同时更新表单
+        styleForm.htmlContent = data.itemStyle.htmlContent;
+        
+        console.log('[DiyStyleDialog] 加载到HTML内容并更新缓存:', data.itemStyle.htmlContent)
         ElMessage.success('已加载Activity的HTML内容')
       }
     }
@@ -316,82 +324,295 @@ const getCurrentActivityStyle = (element) => {
     }
   }
   
-  // 如果没有保存的样式，使用默认样式
+  // 如果没有保存的样式，根据Activity来源获取样式
   if (!activityInfo.styles) {
-    // 根据节点类型设置默认样式
-    const defaultStyles = {
-      'bpmn:UserTask': {
-        name: activityInfo.name || '用户任务',
-        type: 'bpmn:UserTask',
-        iconColor: '#1890ff',
-        bgColor: '#f0f8ff',
-        iconClass: 'bpmn-icon-user-task'
-      },
-      'bpmn:ServiceTask': {
-        name: activityInfo.name || '服务任务',
-        type: 'bpmn:ServiceTask',
-        iconColor: '#52c41a',
-        bgColor: '#f6ffed',
-        iconClass: 'bpmn-icon-service'
-      },
-      'bpmn:SendTask': {
-        name: activityInfo.name || '发送任务',
-        type: 'bpmn:SendTask',
-        iconColor: '#fa8c16',
-        bgColor: '#fff7e6',
-        iconClass: 'bpmn-icon-send'
-      },
-      'bpmn:ReceiveTask': {
-        name: activityInfo.name || '接收任务',
-        type: 'bpmn:ReceiveTask',
-        iconColor: '#722ed1',
-        bgColor: '#f9f0ff',
-        iconClass: 'bpmn-icon-receive'
-      },
-      'bpmn:ManualTask': {
-        name: activityInfo.name || '手工任务',
-        type: 'bpmn:ManualTask',
-        iconColor: '#eb2f96',
-        bgColor: '#fff0f6',
-        iconClass: 'bpmn-icon-manual'
-      },
-      'bpmn:BusinessRuleTask': {
-        name: activityInfo.name || '业务规则任务',
-        type: 'bpmn:BusinessRuleTask',
-        iconColor: '#13c2c2',
-        bgColor: '#e6fffb',
-        iconClass: 'bpmn-icon-business-rule'
-      },
-      'bpmn:ScriptTask': {
-        name: activityInfo.name || '脚本任务',
-        type: 'bpmn:ScriptTask',
-        iconColor: '#fa541c',
-        bgColor: '#fff2e8',
-        iconClass: 'bpmn-icon-script'
-      },
-      'bpmn:CallActivity': {
-        name: activityInfo.name || '调用活动',
-        type: 'bpmn:CallActivity',
-        iconColor: '#2f54eb',
-        bgColor: '#f0f5ff',
-        iconClass: 'bpmn-icon-call-activity'
-      },
-      'bpmn:SubProcess': {
-        name: activityInfo.name || '子流程',
-        type: 'bpmn:SubProcess',
-        iconColor: '#faad14',
-        bgColor: '#fffbe6',
-        iconClass: 'bpmn-icon-subprocess'
-      }
+    // 如果有apiActivityId，说明是API获取的Activity，从API缓存获取样式
+    if (activityInfo.apiActivityId) {
+      console.log('[DiyStyleDialog] 检测到API Activity，尝试从API缓存获取样式:', activityInfo.apiActivityId)
+      
+      // 尝试从API缓存获取样式数据
+      getApiStyleFromCache(activityInfo.apiActivityId).then(apiStyle => {
+        if (apiStyle) {
+          // 使用API样式数据
+          Object.assign(styleForm, {
+            name: apiStyle.name || activityInfo.name,
+            type: apiStyle.type || activityInfo.type,
+            iconColor: apiStyle.iconColor || '#333',
+            bgColor: apiStyle.bgColor || '#fff',
+            iconClass: apiStyle.iconClass || 'bpmn-icon-user-task',
+            icon: apiStyle.icon || '',
+            apiActivityId: activityInfo.apiActivityId,
+            htmlContent: apiStyle.htmlContent || ''
+          })
+          activityInfo.styles = apiStyle
+          console.log('[DiyStyleDialog] 从API缓存加载样式:', apiStyle)
+        } else {
+          // API缓存中没有数据，使用默认样式
+          applyDefaultStyle(activityInfo)
+        }
+      }).catch(error => {
+        console.error('[DiyStyleDialog] 从API缓存获取样式失败:', error)
+        // 出错时使用默认样式
+        applyDefaultStyle(activityInfo)
+      })
+    } else {
+      // 默认Activity，使用默认样式
+      applyDefaultStyle(activityInfo)
     }
-    
-    const defaultStyle = defaultStyles[activityInfo.type] || defaultStyles['bpmn:UserTask']
-    Object.assign(styleForm, defaultStyle)
-    activityInfo.styles = defaultStyle
-    console.log('[DiyStyleDialog] 使用默认样式:', defaultStyle)
   }
   
   return activityInfo
+}
+
+// 从API缓存获取样式数据
+const getApiStyleFromCache = async (apiActivityId) => {
+  try {
+    // 首先尝试从预加载的缓存中获取数据
+    if (window._bpmnMenuCache) {
+      console.log('[DiyStyleDialog] 从预加载缓存获取样式数据');
+      
+      // 1. 先尝试从API样式数据中查找（通过code获取）
+      if (window._bpmnMenuCache.apiStyles) {
+        const apiItemStyle = window._bpmnMenuCache.apiStyles.find(item => item.code === apiActivityId);
+        if (apiItemStyle && apiItemStyle.itemStyle) {
+          console.log('[DiyStyleDialog] 从API缓存找到样式数据:', apiItemStyle);
+          
+          // 从_bpmnContentHtmlMap中获取htmlContent
+          let htmlContent = '';
+          if (window._bpmnContentHtmlMap && window._bpmnContentHtmlMap[apiActivityId]) {
+            htmlContent = window._bpmnContentHtmlMap[apiActivityId];
+            console.log('[DiyStyleDialog] 从_bpmnContentHtmlMap获取htmlContent:', htmlContent);
+          } else {
+            console.log('[DiyStyleDialog] _bpmnContentHtmlMap中没有找到htmlContent，尝试实时获取');
+            // 如果_bpmnContentHtmlMap中没有，尝试实时获取
+            const base = getApiBase();
+            const url = base + '/api/bpmn/activitiesStyle?id=' + encodeURIComponent(apiActivityId);
+            try {
+              const res = await fetch(url);
+              if (res.ok) {
+                const data = await res.json();
+                if (data && data.itemStyle && data.itemStyle.htmlContent) {
+                  // 更新_bpmnContentHtmlMap
+                  if (!window._bpmnContentHtmlMap) {
+                    window._bpmnContentHtmlMap = {};
+                  }
+                  window._bpmnContentHtmlMap[apiActivityId] = data.itemStyle.htmlContent;
+                  htmlContent = data.itemStyle.htmlContent;
+                  console.log('[DiyStyleDialog] 实时获取并更新_bpmnContentHtmlMap:', htmlContent);
+                }
+              }
+            } catch (error) {
+              console.error('[DiyStyleDialog] 实时获取htmlContent失败:', error);
+            }
+          }
+          
+          return {
+            name: apiItemStyle.itemStyle.name,
+            type: apiItemStyle.itemStyle.type,
+            iconColor: apiItemStyle.itemStyle.iconColor,
+            bgColor: apiItemStyle.itemStyle.bgColor,
+            iconClass: apiItemStyle.itemStyle.iconClass,
+            icon: apiItemStyle.itemStyle.icon,
+            htmlContent: htmlContent,
+            apiActivityId: apiActivityId,
+            source: 'api'
+          }
+        }
+      }
+      
+      // 2. 如果API数据中没有找到，尝试从静态样式中查找（通过type获取）
+      // 这里需要根据apiActivityId推断出对应的type
+      // 通常API任务的type可以从API数据中获取，或者使用默认的UserTask类型
+      const defaultType = 'bpmn:UserTask'; // 默认类型
+      
+      if (window._bpmnMenuCache.staticStyles && window._bpmnMenuCache.staticStyles[defaultType]) {
+        const staticStyle = window._bpmnMenuCache.staticStyles[defaultType];
+        console.log('[DiyStyleDialog] 从静态缓存找到样式数据:', staticStyle);
+        return {
+          name: staticStyle.name,
+          type: staticStyle.type,
+          iconColor: staticStyle.iconColor,
+          bgColor: staticStyle.bgColor,
+          iconClass: staticStyle.iconClass,
+          icon: staticStyle.icon || '',
+          htmlContent: '', // 静态数据通常没有HTML内容
+          apiActivityId: apiActivityId,
+          source: 'static'
+        }
+      }
+    }
+    
+    // 如果缓存中没有数据，尝试实时获取（作为后备方案）
+    console.log('[DiyStyleDialog] 缓存中没有数据，尝试实时获取:', apiActivityId);
+    
+    const base = getApiBase()
+    const url = base + '/api/bpmn/activitiesStyle?id=' + encodeURIComponent(apiActivityId)
+    console.log('[DiyStyleDialog] 实时获取样式数据:', url)
+    
+    const res = await fetch(url)
+    if (res.ok) {
+      const data = await res.json()
+      console.log('[DiyStyleDialog] 实时获取的样式数据:', data)
+      
+      // 根据apiActivityId查找对应的样式
+      if (data && data.itemStyle) {
+        // 同时更新缓存
+        if (!window._bpmnMenuCache) {
+          window._bpmnMenuCache = { 
+            apiActivities: [], 
+            staticActivities: [],
+            apiStyles: [], 
+            staticStyles: {} 
+          };
+        }
+        
+        // 检查是否已经缓存过该样式数据
+        const existingStyle = window._bpmnMenuCache.apiStyles.find(item => item.code === apiActivityId);
+        if (!existingStyle) {
+          const styleData = {
+            code: apiActivityId,
+            name: data.itemStyle.name,
+            type: data.itemStyle.type,
+            itemStyle: {
+              name: data.itemStyle.name,
+              type: data.itemStyle.type,
+              iconColor: data.itemStyle.iconColor || '',
+              bgColor: data.itemStyle.bgColor || '',
+              iconClass: data.itemStyle.iconClass || '',
+              icon: data.itemStyle.icon || '',
+              htmlContent: '' // 不在这里缓存htmlContent
+            },
+            source: 'api',
+            key: apiActivityId
+          };
+          window._bpmnMenuCache.apiStyles.push(styleData);
+          console.log('[DiyStyleDialog] 实时获取并缓存样式数据:', styleData);
+        }
+        
+        // 更新_bpmnContentHtmlMap
+        if (data.itemStyle.htmlContent) {
+          if (!window._bpmnContentHtmlMap) {
+            window._bpmnContentHtmlMap = {};
+          }
+          window._bpmnContentHtmlMap[apiActivityId] = data.itemStyle.htmlContent;
+          console.log('[DiyStyleDialog] 更新_bpmnContentHtmlMap:', apiActivityId, data.itemStyle.htmlContent);
+        }
+        
+        return {
+          name: data.itemStyle.name,
+          type: data.itemStyle.type,
+          iconColor: data.itemStyle.iconColor,
+          bgColor: data.itemStyle.bgColor,
+          iconClass: data.itemStyle.iconClass,
+          icon: data.itemStyle.icon,
+          htmlContent: data.itemStyle.htmlContent,
+          apiActivityId: apiActivityId,
+          source: 'api'
+        }
+      }
+    }
+    return null
+  } catch (error) {
+    console.error('[DiyStyleDialog] 从API缓存获取样式失败:', error)
+    return null
+  }
+}
+
+// 默认样式数据常量
+const DEFAULT_STYLES = {
+  'bpmn:UserTask': {
+    name: '用户任务',
+    type: 'bpmn:UserTask',
+    iconColor: '#1890ff',
+    bgColor: '#f0f8ff',
+    iconClass: 'bpmn-icon-user-task'
+  },
+  'bpmn:ServiceTask': {
+    name: '服务任务',
+    type: 'bpmn:ServiceTask',
+    iconColor: '#52c41a',
+    bgColor: '#f6ffed',
+    iconClass: 'bpmn-icon-service'
+  },
+  'bpmn:SendTask': {
+    name: '发送任务',
+    type: 'bpmn:SendTask',
+    iconColor: '#fa8c16',
+    bgColor: '#fff7e6',
+    iconClass: 'bpmn-icon-send'
+  },
+  'bpmn:ReceiveTask': {
+    name: '接收任务',
+    type: 'bpmn:ReceiveTask',
+    iconColor: '#722ed1',
+    bgColor: '#f9f0ff',
+    iconClass: 'bpmn-icon-receive'
+  },
+  'bpmn:ManualTask': {
+    name: '手工任务',
+    type: 'bpmn:ManualTask',
+    iconColor: '#eb2f96',
+    bgColor: '#fff0f6',
+    iconClass: 'bpmn-icon-manual'
+  },
+  'bpmn:BusinessRuleTask': {
+    name: '业务规则任务',
+    type: 'bpmn:BusinessRuleTask',
+    iconColor: '#13c2c2',
+    bgColor: '#e6fffb',
+    iconClass: 'bpmn-icon-business-rule'
+  },
+  'bpmn:ScriptTask': {
+    name: '脚本任务',
+    type: 'bpmn:ScriptTask',
+    iconColor: '#fa541c',
+    bgColor: '#fff2e8',
+    iconClass: 'bpmn-icon-script'
+  },
+  'bpmn:CallActivity': {
+    name: '调用活动',
+    type: 'bpmn:CallActivity',
+    iconColor: '#2f54eb',
+    bgColor: '#f0f5ff',
+    iconClass: 'bpmn-icon-call-activity'
+  },
+  'bpmn:SubProcess': {
+    name: '子流程',
+    type: 'bpmn:SubProcess',
+    iconColor: '#faad14',
+    bgColor: '#fffbe6',
+    iconClass: 'bpmn-icon-subprocess'
+  }
+};
+
+// 应用默认样式
+const applyDefaultStyle = (activityInfo) => {
+  // 优先从缓存中获取静态样式
+  if (window._bpmnMenuCache && window._bpmnMenuCache.staticStyles) {
+    const staticStyle = window._bpmnMenuCache.staticStyles[activityInfo.type];
+    if (staticStyle) {
+      console.log('[DiyStyleDialog] 从缓存获取静态样式:', staticStyle);
+      Object.assign(styleForm, {
+        name: activityInfo.name || staticStyle.name,
+        type: staticStyle.type,
+        iconColor: staticStyle.iconColor,
+        bgColor: staticStyle.bgColor,
+        iconClass: staticStyle.iconClass,
+        icon: staticStyle.icon || '',
+        htmlContent: '' // 静态数据通常没有HTML内容
+      });
+      activityInfo.styles = staticStyle;
+      return;
+    }
+  }
+  
+  // 如果缓存中没有数据，使用硬编码的默认样式
+  console.log('[DiyStyleDialog] 使用硬编码默认样式');
+  
+  const defaultStyle = DEFAULT_STYLES[activityInfo.type] || DEFAULT_STYLES['bpmn:UserTask'];
+  Object.assign(styleForm, defaultStyle);
+  activityInfo.styles = defaultStyle;
+  console.log('[DiyStyleDialog] 使用硬编码默认样式:', defaultStyle);
 }
 
 // 从API加载样式数据
