@@ -39,6 +39,18 @@ export const mainOutRoutes: AppRouteModule[] = [
     }
   },
 
+  // CheckEditor演示页面
+  {
+    path: '/check-editor-demo',
+    name: 'CheckEditorDemo',
+    component: () => import('/@/views/CheckEditorDemo.vue'),
+    meta: {
+      title: 'CheckEditor演示',
+      hideMenu: true,
+      hideBreadcrumb: true,
+    },
+  },
+
   // {
   //   path: '/test1',
   //   name: 'test1',

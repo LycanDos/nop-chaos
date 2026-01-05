@@ -96,7 +96,14 @@
     </template>
     
     <!-- 统一的校验器编辑弹窗 -->
-    <el-dialog v-model="editDialogVisible" width="1400px" :close-on-click-modal="false" draggable resize>
+    <el-dialog 
+      v-model="editDialogVisible" 
+      width="1400px"
+      :close-on-click-modal="false" 
+      :draggable="false"
+      :resize="false"
+      class="validator-edit-dialog"
+    >
       <template #title>
         <span v-if="isUnionDialog" style="font-size:18px;font-weight:bold;">高级校验器</span>
         <span v-else v-html="dialogTitleRaw" style="font-size:18px;font-weight:bold;"></span>
@@ -520,6 +527,26 @@ const dialogModel = computed(() => isUnionDialog.value ? editingUnionValidator.v
   padding: 1px 4px;
   border-radius: 2px;
   border: 1px solid #67c23a;
+}
+
+/* 编辑校验器弹窗样式 */
+.validator-edit-dialog {
+  overflow: hidden !important;
+}
+
+.validator-edit-dialog .el-dialog__body {
+  max-height: 70vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 20px !important;
+}
+
+.validator-edit-dialog .el-dialog__header {
+  padding: 20px 20px 0 20px !important;
+}
+
+.validator-edit-dialog .el-dialog__footer {
+  padding: 0 20px 20px 20px !important;
 }
 </style>
 

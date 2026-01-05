@@ -8,14 +8,14 @@
         </el-select>
       </div>
       <div class="form-row">
-        <label>操作值：</label>
+        <label>操作：</label>
         <el-select v-model="operationValue" placeholder="请选择操作值" style="width: 150px;">
           <el-option v-for="val in currentOperationValues" :key="val.value" :label="val.label" :value="val.value" />
         </el-select>
         <button v-if="canRemove" class="remove-btn" @click="$emit('remove')">删除</button>
       </div>
       <div class="form-row">
-        <label>值：</label>
+        <label>定义值：</label>
         <input v-model="localValue.value.value" style="width: 200px;" />
       </div>
     </div>

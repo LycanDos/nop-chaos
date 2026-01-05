@@ -520,69 +520,69 @@ const getApiStyleFromCache = async (apiActivityId) => {
 
 // 默认样式数据常量
 const DEFAULT_STYLES = {
-  'bpmn:UserTask': {
+      'bpmn:UserTask': {
     name: '用户任务',
     type: 'bpmn:UserTask',
-    iconColor: '#1890ff',
-    bgColor: '#f0f8ff',
-    iconClass: 'bpmn-icon-user-task'
-  },
-  'bpmn:ServiceTask': {
+        iconColor: '#1890ff',
+        bgColor: '#f0f8ff',
+        iconClass: 'bpmn-icon-user-task'
+      },
+      'bpmn:ServiceTask': {
     name: '服务任务',
     type: 'bpmn:ServiceTask',
-    iconColor: '#52c41a',
-    bgColor: '#f6ffed',
-    iconClass: 'bpmn-icon-service'
-  },
-  'bpmn:SendTask': {
+        iconColor: '#52c41a',
+        bgColor: '#f6ffed',
+        iconClass: 'bpmn-icon-service'
+      },
+      'bpmn:SendTask': {
     name: '发送任务',
     type: 'bpmn:SendTask',
-    iconColor: '#fa8c16',
-    bgColor: '#fff7e6',
-    iconClass: 'bpmn-icon-send'
-  },
-  'bpmn:ReceiveTask': {
+        iconColor: '#fa8c16',
+        bgColor: '#fff7e6',
+        iconClass: 'bpmn-icon-send'
+      },
+      'bpmn:ReceiveTask': {
     name: '接收任务',
     type: 'bpmn:ReceiveTask',
-    iconColor: '#722ed1',
-    bgColor: '#f9f0ff',
-    iconClass: 'bpmn-icon-receive'
-  },
-  'bpmn:ManualTask': {
+        iconColor: '#722ed1',
+        bgColor: '#f9f0ff',
+        iconClass: 'bpmn-icon-receive'
+      },
+      'bpmn:ManualTask': {
     name: '手工任务',
     type: 'bpmn:ManualTask',
-    iconColor: '#eb2f96',
-    bgColor: '#fff0f6',
-    iconClass: 'bpmn-icon-manual'
-  },
-  'bpmn:BusinessRuleTask': {
+        iconColor: '#eb2f96',
+        bgColor: '#fff0f6',
+        iconClass: 'bpmn-icon-manual'
+      },
+      'bpmn:BusinessRuleTask': {
     name: '业务规则任务',
     type: 'bpmn:BusinessRuleTask',
-    iconColor: '#13c2c2',
-    bgColor: '#e6fffb',
-    iconClass: 'bpmn-icon-business-rule'
-  },
-  'bpmn:ScriptTask': {
+        iconColor: '#13c2c2',
+        bgColor: '#e6fffb',
+        iconClass: 'bpmn-icon-business-rule'
+      },
+      'bpmn:ScriptTask': {
     name: '脚本任务',
     type: 'bpmn:ScriptTask',
-    iconColor: '#fa541c',
-    bgColor: '#fff2e8',
-    iconClass: 'bpmn-icon-script'
-  },
-  'bpmn:CallActivity': {
+        iconColor: '#fa541c',
+        bgColor: '#fff2e8',
+        iconClass: 'bpmn-icon-script'
+      },
+      'bpmn:CallActivity': {
     name: '调用活动',
     type: 'bpmn:CallActivity',
-    iconColor: '#2f54eb',
-    bgColor: '#f0f5ff',
-    iconClass: 'bpmn-icon-call-activity'
-  },
-  'bpmn:SubProcess': {
+        iconColor: '#2f54eb',
+        bgColor: '#f0f5ff',
+        iconClass: 'bpmn-icon-call-activity'
+      },
+      'bpmn:SubProcess': {
     name: '子流程',
     type: 'bpmn:SubProcess',
-    iconColor: '#faad14',
-    bgColor: '#fffbe6',
-    iconClass: 'bpmn-icon-subprocess'
-  }
+        iconColor: '#faad14',
+        bgColor: '#fffbe6',
+        iconClass: 'bpmn-icon-subprocess'
+      }
 };
 
 // 应用默认样式

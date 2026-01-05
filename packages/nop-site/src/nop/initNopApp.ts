@@ -33,6 +33,7 @@ import { getToken, getTenantId } from '/@/utils/auth';
 import { SessionTimeoutProcessingEnum } from '/@/enums/appEnum';
 import projectSetting from '/@/settings/projectSetting';
 import {Store} from 'pinia'
+import { useGlobSetting } from '/@/hooks/setting';
 
 const currentLocale = useLocale().getLocale
 const i18n = useI18n()
@@ -78,8 +79,9 @@ function initAdapter(app: App) {
         },
 
         useSettings() {
+            const globSetting = useGlobSetting();
             return {
-                apiUrl: ''
+                apiUrl: globSetting.apiUrl || ''
             }
         },
 
