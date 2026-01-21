@@ -846,6 +846,7 @@ export type MultiInstanceSetting = {
   sourceType?: ChildProcessMultiInstanceSourceTypeEnum
   source?: string
 }
+
 export enum ChildProcessStartUserTypeEnum {
   /**
    * 同主流程发起人

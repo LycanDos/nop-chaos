@@ -44,12 +44,37 @@
             <el-input v-model="styleForm.apiActivityId" placeholder="请输入API活动ID（用于接口调用）" />
           </el-form-item>
           <el-form-item label="HTML内容">
-            <el-input 
-              v-model="styleForm.htmlContent" 
-              type="textarea" 
-              :rows="8"
-              placeholder="请输入HTML内容（仅对BPMN节点样式生效）" 
-            />
+            <div style="display: flex; gap: 10px; align-items: flex-start;">
+              <ContentDisplay
+                :content="styleForm.htmlContent"
+                v-model:contentType="styleForm.htmlContentType"
+                :editable="true"
+                :showEditor="showHtmlEditor"
+                :height="'300px'"
+                @update:content="styleForm.htmlContent = $event"
+                @change="handleHtmlContentChange"
+              />
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <el-button
+                  type="primary"
+                  @click="toggleHtmlEditor"
+                  size="small"
+                  :title="showHtmlEditor ? '关闭编辑器' : '打开编辑器'"
+                >
+                  <i :class="showHtmlEditor ? 'el-icon-close' : 'el-icon-edit'"></i>
+                  {{ showHtmlEditor ? '关闭' : '编辑' }}
+                </el-button>
+                <el-button
+                  type="info"
+                  @click="previewHtmlContent"
+                  size="small"
+                  title="预览HTML内容"
+                >
+                  <i class="el-icon-view"></i>
+                  预览
+                </el-button>
+              </div>
+            </div>
           </el-form-item>
         </el-form>
       </div>
@@ -61,7 +86,7 @@
           <!-- BPMN节点预览 -->
           <div class="bpmn-preview">
             <h4>BPMN节点样式（长宽比1.25）</h4>
-            <div 
+            <div
               class="bpmn-node-preview"
               :style="{
                 backgroundColor: '#fff',
@@ -82,11 +107,10 @@
                 color: '#333'
               }"
             >
-              <!-- 如果有HTML内容，使用HTML渲染 -->
-              <div 
+              <!-- 使用ContentDisplay组件渲染HTML内容或显示默认样式 -->
+              <div
                 v-if="styleForm.htmlContent"
                 class="bpmn-html-content"
-                v-html="styleForm.htmlContent"
                 :style="{
                   width: '100%',
                   height: '100%',
@@ -95,10 +119,24 @@
                   justifyContent: 'center',
                   overflow: 'hidden'
                 }"
-              ></div>
+              >
+                <ContentDisplay
+                  :content="styleForm.htmlContent"
+                  :contentType="styleForm.htmlContentType"
+                  :height="'100%'"
+                  :is-bpmn-context="true"
+                  :style="{
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }"
+                />
+              </div>
               <!-- 否则使用默认样式 -->
               <div v-else class="bpmn-default-content">
-                <div 
+                <div
                   class="node-icon"
                   :style="{
                     color: '#333',
@@ -193,12 +231,22 @@
         <el-button type="primary" @click="handleSave">保存</el-button>
       </span>
     </template>
+
+    <!-- AMIS编辑器对话框 -->
+    <AmisEditorDialog
+      :visible="showAmisEditor"
+      :initialSchema="getInitialAmisSchema()"
+      @update:visible="showAmisEditor = $event"
+      @save="handleAmisSave"
+    />
   </el-dialog>
 </template>
 
 <script setup>
 import { ref, reactive, watch, onMounted, computed, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
+import AmisEditorDialog from './AmisEditorDialog.vue'
+import { ContentDisplay } from './ContentDisplay'
 
 const props = defineProps({
   visible: {
@@ -221,13 +269,20 @@ const styleForm = reactive({
   iconClass: 'bpmn-icon-user-task',
   icon: '',
   apiActivityId: '',
-  htmlContent: '' // 新增HTML内容字段
+  htmlContent: '', // 新增HTML内容字段
+  htmlContentType: 'html' // 新增内容类型字段
 })
 
 const apiData = ref(null)
 const loadingApi = ref(false)
 const showApiData = ref(false)
 const currentActivityInfo = ref(null)
+
+// AMIS编辑器相关
+const showAmisEditor = ref(false)
+
+// HTML内容编辑器相关
+const showHtmlEditor = ref(false)
 
 // 获取API基础URL
 const getApiBase = () => {
@@ -267,10 +322,10 @@ const loadActivityHtmlContent = async (apiActivityId) => {
 // 从当前Activity获取样式信息
 const getCurrentActivityStyle = (element) => {
   if (!element) return null
-  
+
   const businessObject = element.businessObject
   if (!businessObject) return null
-  
+
   // 获取基本信息
   const activityInfo = {
     id: element.id,
@@ -278,7 +333,7 @@ const getCurrentActivityStyle = (element) => {
     type: businessObject.$type || 'bpmn:UserTask',
     apiActivityId: ''
   }
-  
+
   // 尝试从扩展属性获取样式信息
   if (businessObject.extensionElements && businessObject.extensionElements.values) {
     // 获取样式信息
@@ -297,7 +352,8 @@ const getCurrentActivityStyle = (element) => {
           iconClass: styleData.iconClass || 'bpmn-icon-user-task',
           icon: styleData.icon || '',
           apiActivityId: styleData.apiActivityId || '',
-          htmlContent: styleData.htmlContent || ''
+          htmlContent: styleData.htmlContent || '',
+          htmlContentType: styleData.htmlContentType || 'html' // 加载内容类型
         })
         activityInfo.styles = styleData
         console.log('[DiyStyleDialog] 从扩展属性加载样式:', styleData)
@@ -305,7 +361,7 @@ const getCurrentActivityStyle = (element) => {
         console.warn('解析样式数据失败:', e)
       }
     }
-    
+
     // 获取API活动ID
     const apiDoc = businessObject.extensionElements.values.find(
       e => e.$type === 'bpmn:Documentation' && e.text && e.text.startsWith('apiActivityId:')
@@ -315,7 +371,7 @@ const getCurrentActivityStyle = (element) => {
       styleForm.apiActivityId = apiActivityId
       activityInfo.apiActivityId = apiActivityId
       console.log('[DiyStyleDialog] 从扩展属性加载API活动ID:', apiActivityId)
-      
+
       // 尝试从全局缓存获取HTML内容
       if (window._bpmnContentHtmlMap && window._bpmnContentHtmlMap[apiActivityId]) {
         styleForm.htmlContent = window._bpmnContentHtmlMap[apiActivityId]
@@ -323,13 +379,13 @@ const getCurrentActivityStyle = (element) => {
       }
     }
   }
-  
+
   // 如果没有保存的样式，根据Activity来源获取样式
   if (!activityInfo.styles) {
     // 如果有apiActivityId，说明是API获取的Activity，从API缓存获取样式
     if (activityInfo.apiActivityId) {
       console.log('[DiyStyleDialog] 检测到API Activity，尝试从API缓存获取样式:', activityInfo.apiActivityId)
-      
+
       // 尝试从API缓存获取样式数据
       getApiStyleFromCache(activityInfo.apiActivityId).then(apiStyle => {
         if (apiStyle) {
@@ -342,7 +398,8 @@ const getCurrentActivityStyle = (element) => {
             iconClass: apiStyle.iconClass || 'bpmn-icon-user-task',
             icon: apiStyle.icon || '',
             apiActivityId: activityInfo.apiActivityId,
-            htmlContent: apiStyle.htmlContent || ''
+            htmlContent: apiStyle.htmlContent || '',
+            htmlContentType: apiStyle.htmlContentType || 'html' // 加载内容类型
           })
           activityInfo.styles = apiStyle
           console.log('[DiyStyleDialog] 从API缓存加载样式:', apiStyle)
@@ -360,7 +417,8 @@ const getCurrentActivityStyle = (element) => {
       applyDefaultStyle(activityInfo)
     }
   }
-  
+
+
   return activityInfo
 }
 
@@ -599,7 +657,8 @@ const applyDefaultStyle = (activityInfo) => {
         bgColor: staticStyle.bgColor,
         iconClass: staticStyle.iconClass,
         icon: staticStyle.icon || '',
-        htmlContent: '' // 静态数据通常没有HTML内容
+        htmlContent: '', // 静态数据通常没有HTML内容
+        htmlContentType: 'html' // 默认内容类型为HTML
       });
       activityInfo.styles = staticStyle;
       return;
@@ -636,7 +695,10 @@ const loadFromApi = async () => {
     if (styleForm.apiActivityId) {
       const itemStyle = data.find(item => item.code === styleForm.apiActivityId)
       if (itemStyle && itemStyle.itemStyle) {
-        Object.assign(styleForm, itemStyle.itemStyle)
+        Object.assign(styleForm, {
+          ...itemStyle.itemStyle,
+          htmlContentType: itemStyle.itemStyle.htmlContentType || 'html'
+        })
         ElMessage.success('已从API加载样式数据')
       }
     }
@@ -706,7 +768,8 @@ watch(() => props.visible, (newVal) => {
       iconClass: 'bpmn-icon-user-task',
       icon: '',
       apiActivityId: '',
-      htmlContent: ''
+      htmlContent: '',
+      htmlContentType: 'html'
     })
     
     // 从当前Activity获取样式信息
@@ -731,6 +794,144 @@ watch(() => props.visible, (newVal) => {
   }
 }, { immediate: true })
 
+// 打开AMIS编辑器
+const openAmisEditor = () => {
+  showAmisEditor.value = true
+}
+
+// 预览HTML内容
+const previewHtmlContent = () => {
+  if (!styleForm.htmlContent) {
+    ElMessage.warning('请先输入内容')
+    return
+  }
+
+  let contentToPreview = styleForm.htmlContent;
+
+  // 创建一个新窗口来预览HTML
+  const previewWindow = window.open('', '_blank');
+  previewWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>内容预览</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          padding: 20px;
+          background-color: #f5f5f5;
+          margin: 0;
+        }
+        .preview-container {
+          background: white;
+          padding: 20px;
+          border-radius: 4px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          max-width: 800px;
+          margin: 0 auto;
+        }
+        .preview-header {
+          margin-bottom: 15px;
+          padding-bottom: 10px;
+          border-bottom: 1px solid #eee;
+        }
+        .content-type {
+          color: #666;
+          font-size: 14px;
+          margin-top: 5px;
+        }
+        .error-message {
+          color: #f56c6c;
+          background-color: #fef0f0;
+          padding: 10px;
+          border-radius: 4px;
+          border-left: 4px solid #f56c6c;
+        }
+        .original-content {
+          font-family: monospace;
+          background-color: #f4f4f4;
+          padding: 10px;
+          border-radius: 4px;
+          white-space: pre-wrap;
+          word-break: break-all;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="preview-container">
+        <div class="preview-header">
+          <h3>内容预览</h3>
+          <div class="content-type">类型: ${styleForm.htmlContentType === 'amis' ? 'AMIS Schema' : 'HTML'}</div>
+        </div>
+        <div class="content">
+          ${contentToPreview}
+        </div>
+      </div>
+    </body>
+    </html>
+  `);
+  previewWindow.document.close();
+}
+
+// 获取AMIS编辑器的初始Schema
+const getInitialAmisSchema = () => {
+  // 如果当前是AMIS类型，使用现有的内容
+  if (styleForm.htmlContentType === 'amis' && styleForm.htmlContent) {
+    try {
+      // 尝试解析现有的AMIS schema
+      const parsed = JSON.parse(styleForm.htmlContent);
+      if (parsed && parsed.type) {
+        return parsed;
+      }
+    } catch (e) {
+      console.log("无法解析现有AMIS内容，使用默认值");
+    }
+  }
+
+  // 如果当前不是AMIS类型或解析失败，生成默认的AMIS schema
+  return {
+    type: "page",
+    title: styleForm.name || "AMIS页面",
+    body: [
+      {
+        type: "wrapper",
+        body: [
+          {
+            type: "html",
+            html: `<div style="display: flex; align-items: center; justify-content: center; height: 100%; padding: 10px;">
+                    <span style="font-size: 14px; color: #333;">${styleForm.name || 'BPMN节点'}</span>
+                  </div>`
+          }
+        ],
+        wrapperBody: true,
+        className: "bpmn-node-wrapper"
+      }
+    ]
+  };
+}
+
+// 处理AMIS编辑器保存
+const handleAmisSave = (data) => {
+  if (data && data.schema) {
+    // 保存AMIS schema为JSON字符串
+    styleForm.htmlContent = JSON.stringify(data.schema, null, 2)
+    ElMessage.success('AMIS内容已保存到HTML内容')
+  }
+  showAmisEditor.value = false
+}
+
+// 切换HTML编辑器显示
+const toggleHtmlEditor = () => {
+  showHtmlEditor.value = !showHtmlEditor.value
+}
+
+// 处理HTML内容变更
+const handleHtmlContentChange = (data) => {
+  console.log('[DiyStyleDialog] HTML内容变更:', data)
+  styleForm.htmlContent = data.content
+  styleForm.htmlContentType = data.type
+}
+
 const handleClose = () => {
   emit('update:visible', false)
 }
@@ -748,7 +949,7 @@ const toggleApiData = () => {
 
 const handleSave = async () => {
   try {
-    // 构建样式数据
+    // 构建样式数据 - 添加内容类型
     const styleData = {
       name: styleForm.name,
       type: styleForm.type,
@@ -757,14 +958,15 @@ const handleSave = async () => {
       iconClass: styleForm.iconClass,
       icon: styleForm.icon,
       apiActivityId: styleForm.apiActivityId,
-      htmlContent: styleForm.htmlContent // 包含HTML内容
+      htmlContent: styleForm.htmlContent, // 包含HTML内容
+      htmlContentType: styleForm.htmlContentType // 包含内容类型
     }
 
     // 保存到当前元素
     if (props.element) {
       const modeling = window._debugModeler?.get('modeling')
       const moddle = window._debugModeler?.get('moddle')
-      
+
       if (modeling && moddle) {
         // 更新元素属性
         modeling.updateProperties(props.element, {
@@ -795,13 +997,13 @@ const handleSave = async () => {
           extensionElements.values = extensionElements.values.filter(
             e => !(e.$type === 'bpmn:Documentation' && e.text && e.text.startsWith('apiActivityId:'))
           )
-          
+
           // 添加新的apiActivityId属性
           const apiDoc = moddle.create('bpmn:Documentation', {
             text: 'apiActivityId:' + styleForm.apiActivityId
           })
           extensionElements.get('values').push(apiDoc)
-          
+
           // 更新全局缓存
           if (!window._bpmnContentHtmlMap) {
             window._bpmnContentHtmlMap = {}
@@ -814,7 +1016,7 @@ const handleSave = async () => {
 
         // 强制更新
         modeling.updateProperties(props.element, { extensionElements })
-        
+
         console.log('[DiyStyleDialog] 样式已保存到本地元素:', styleData)
       }
     }
@@ -916,6 +1118,21 @@ onMounted(() => {
   font-weight: 500;
 }
 
+/* 额外的全局样式来处理BPMN节点中的AMIS内容 */
+.bpmn-html-content .amis-content-wrapper,
+.bpmn-html-content .amis-render {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.bpmn-html-content .amis-content-wrapper > div[style*="background"] {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
 .api-data-preview {
   max-height: 150px;
   overflow-y: auto;
@@ -943,4 +1160,4 @@ h4 {
   font-size: 14px;
   color: #606266;
 }
-</style> 
+</style>

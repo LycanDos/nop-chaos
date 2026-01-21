@@ -13,6 +13,89 @@ const ACTIVITY_TYPES = [
   'bpmn:SubProcess'
 ]
 
+/**
+ * 简化的AMIS schema渲染器
+ */
+function renderAmisSchemaSimple(schema) {
+  console.log('[renderAmisSchemaSimple] 输入schema:', schema)
+
+  try {
+    // 处理page类型
+    if (schema.type === 'page' && schema.body) {
+      console.log('[renderAmisSchemaSimple] 处理page类型，body:', schema.body)
+      if (Array.isArray(schema.body)) {
+        return schema.body.map(item => renderAmisItem(item)).join('')
+      } else {
+        return renderAmisItem(schema.body)
+      }
+    } else {
+      return renderAmisItem(schema)
+    }
+  } catch (e) {
+    console.error('[renderAmisSchemaSimple] 渲染错误:', e)
+    return '<div style="color:#f00;">渲染错误</div>'
+  }
+}
+
+/**
+ * 渲染单个AMIS组件
+ */
+function renderAmisItem(item) {
+  console.log('[renderAmisItem] 渲染项:', item)
+
+  if (!item) return ''
+
+  const styleString = extractStyles(item)
+
+  if (item.type === 'html') {
+    console.log('[renderAmisItem] HTML类型，内容:', item.html)
+    return `<div${styleString ? ` style="${styleString}"` : ''}>${item.html || ''}</div>`
+  } else if (item.type === 'tpl') {
+    return `<div${styleString ? ` style="${styleString}"` : ''}>${item.tpl || item.body || ''}</div>`
+  } else if (item.type === 'text' || item.type === 'static') {
+    const textValue = item.value || item.body || item.content || '文本'
+    return `<span${styleString ? ` style="${styleString}"` : ''}>${textValue}</span>`
+  } else if (item.type === 'image') {
+    const imageSrc = item.src || item.url || ''
+    return `<img src="${imageSrc}"${styleString ? ` style="${styleString};max-width:100%;max-height:100%;"` : ' style="max-width:100%;max-height:100%;"'} />`
+  } else if (item.type === 'container' || item.type === 'wrapper') {
+    let bodyContent = ''
+    if (Array.isArray(item.body)) {
+      bodyContent = item.body.map(subItem => renderAmisItem(subItem)).join('')
+    } else if (item.body) {
+      bodyContent = renderAmisItem(item.body)
+    }
+    return `<div${styleString ? ` style="${styleString}"` : ''}>${bodyContent}</div>`
+  } else {
+    const label = item.label || item.title || `[${item.type}]`
+    return `<div${styleString ? ` style="${styleString}"` : ''}>${label}</div>`
+  }
+}
+
+/**
+ * 提取样式
+ */
+function extractStyles(item) {
+  const styles = []
+
+  if (item.style && typeof item.style === 'object') {
+    Object.entries(item.style).forEach(([key, value]) => {
+      styles.push(`${key}:${value}`)
+    })
+  }
+
+  if (item.bgColor || item.bodyBgColor) {
+    styles.push(`background-color:${item.bgColor || item.bodyBgColor}`)
+  }
+
+  if (item.color) {
+    styles.push(`color:${item.color}`)
+  }
+
+  return styles.length > 0 ? styles.join(';') : ''
+}
+
+
 let activityHtmlCache = null // 缓存接口数据
 let contentHtmlMap = {} // id->contentHtml
 async function fetchActivityHtml() {
@@ -87,8 +170,43 @@ function CustomRenderer(config, eventBus, styles, pathMap, canvas, textRenderer)
         _bpmnContentHtmlMap: window._bpmnContentHtmlMap
       })
       if (apiActivityId && window._bpmnContentHtmlMap && window._bpmnContentHtmlMap[apiActivityId]) {
-        console.log('[CustomRenderer] 渲染自定义 contentHtml:', apiActivityId, window._bpmnContentHtmlMap[apiActivityId])
-        htmlDiv.innerHTML = window._bpmnContentHtmlMap[apiActivityId]
+        const contentHtml = window._bpmnContentHtmlMap[apiActivityId]
+        console.log('[CustomRenderer] 渲染自定义 contentHtml:', apiActivityId, contentHtml)
+
+        // 尝试解析JSON并渲染AMIS schema
+        try {
+          let parsedContent = null
+
+          // 如果是字符串，尝试解析为JSON
+          if (typeof contentHtml === 'string') {
+            try {
+              parsedContent = JSON.parse(contentHtml)
+              console.log('[CustomRenderer] JSON解析成功:', parsedContent)
+            } catch (e) {
+              console.log('[CustomRenderer] JSON解析失败，作为HTML显示:', e.message)
+              parsedContent = null
+            }
+          } else {
+            parsedContent = contentHtml
+          }
+
+          // 如果解析成功且是有效的AMIS schema
+          if (parsedContent && typeof parsedContent === 'object' && parsedContent.type) {
+            console.log('[CustomRenderer] 检测到AMIS schema，类型:', parsedContent.type)
+            // 渲染AMIS schema
+            const amisHtml = renderAmisSchemaSimple(parsedContent)
+            htmlDiv.innerHTML = amisHtml
+          } else if (typeof contentHtml === 'string' && (contentHtml.includes('<') || contentHtml.includes('>'))) {
+            // 如果看起来像HTML，直接显示
+            htmlDiv.innerHTML = contentHtml
+          } else {
+            // 否则显示为纯文本
+            htmlDiv.textContent = String(contentHtml)
+          }
+        } catch (e) {
+          console.error('[CustomRenderer] 渲染错误:', e)
+          htmlDiv.innerHTML = "<div style='color:#f00;text-align:center;'>渲染错误</div>"
+        }
       } else {
         htmlDiv.innerHTML = "<div style='color:#aaa;text-align:center;'>无内容</div>"
         while (htmlDiv.childNodes.length > 1) htmlDiv.removeChild(htmlDiv.lastChild)

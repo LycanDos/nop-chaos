@@ -1,6 +1,1 @@
-import CustomRenderer from './CustomRenderer'
-
-export default {
-  __init__: ['customRenderer'],
-  customRenderer: ['type', CustomRenderer]
-}
+export { default } from './CustomRendererModule.js'
