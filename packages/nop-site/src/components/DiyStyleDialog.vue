@@ -50,7 +50,8 @@
                 v-model:contentType="styleForm.htmlContentType"
                 :editable="true"
                 :showEditor="showHtmlEditor"
-                :height="'300px'"
+                :width="'96px'"
+                :height="'76px'"
                 @update:content="styleForm.htmlContent = $event"
                 @change="handleHtmlContentChange"
               />
@@ -123,11 +124,12 @@
                 <ContentDisplay
                   :content="styleForm.htmlContent"
                   :contentType="styleForm.htmlContentType"
-                  :height="'100%'"
+                  :width="'96px'"
+                  :height="'76px'"
                   :is-bpmn-context="true"
                   :style="{
-                    width: '100%',
-                    height: '100%',
+                    width: '96px',
+                    height: '76px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'

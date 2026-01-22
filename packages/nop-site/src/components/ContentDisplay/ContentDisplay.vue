@@ -94,19 +94,14 @@
           <div
             v-else-if="localContentType === 'amis'"
             class="amis-preview"
+            :style="{ width: width, height: height }"
           >
-            <div
+            <SimpleAmisRender
+              v-if="parsedAmisSchema"
+              :schema="parsedAmisSchema"
               class="amis-content-wrapper"
-              v-html="renderAmisSchema(currentContent)"
-              :style="{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'auto'
-              }"
-            ></div>
+            />
+            <div v-else class="amis-error">无法解析 AMIS Schema</div>
           </div>
         </div>
       </div>
@@ -126,19 +121,14 @@
       <div
         v-else-if="contentType === 'amis'"
         class="amis-render"
+        :style="{ width: width, height: height }"
       >
-        <div
+        <SimpleAmisRender
+          v-if="parsedAmisSchema"
+          :schema="parsedAmisSchema"
           class="amis-content-wrapper"
-          v-html="renderAmisSchema(content)"
-          :style="{
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'auto'
-          }"
-        ></div>
+        />
+        <div v-else class="amis-error">无法解析 AMIS Schema</div>
       </div>
     </div>
   </div>
@@ -149,6 +139,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { ElButton, ElInput, ElRadioGroup, ElRadio } from 'element-plus'
 import AmisEditorDialog from '../AmisEditorDialog.vue'
 import BodyOnlyAmisEditor from './BodyOnlyAmisEditor.vue'
+import SimpleAmisRender from './SimpleAmisRender.vue'
 
 // Props
 const props = defineProps({
@@ -173,6 +164,10 @@ const props = defineProps({
     type: String,
     default: '300px'
   },
+  width: {
+    type: String,
+    default: '100%'
+  },
   isBpmnContext: {
     type: Boolean,
     default: false
@@ -193,6 +188,21 @@ const error = ref('')
 
 // 计算属性
 const shouldShowEditor = computed(() => props.editable && props.showEditor)
+
+// 解析 AMIS Schema
+const parsedAmisSchema = computed(() => {
+  try {
+    // 在编辑模式下使用 currentContent，在只读模式下使用 props.content
+    const content = shouldShowEditor.value
+      ? (localContentType.value === 'amis' ? currentContent.value : '')
+      : (props.contentType === 'amis' ? props.content : '')
+    if (!content) return null
+    return JSON.parse(content)
+  } catch (e) {
+    console.error('解析 AMIS Schema 失败:', e)
+    return null
+  }
+})
 
 // 获取当前内容
 const currentContent = computed({
@@ -750,11 +760,14 @@ onMounted(() => {
 .html-preview, .amis-preview, .html-render, .amis-render {
   width: 100%;
   flex: 1;
+  overflow: auto;
+}
+
+.html-preview, .html-render {
   border: 1px solid #ebeef5;
   border-radius: 4px;
   padding: 15px;
   background-color: #fff;
-  overflow: auto;
 }
 
 .html-render.bpmn-html-content {
