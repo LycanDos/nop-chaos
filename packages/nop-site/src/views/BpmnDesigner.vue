@@ -14,13 +14,15 @@
   <!-- 流程属性器，负责编辑每个流程节点的属性 -->
 </template>
 <script setup lang="ts">
-import { ref, shallowRef, provide, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, shallowRef, provide, onMounted, onBeforeUnmount, nextTick, createApp } from 'vue'
 import {  MyProcessDesigner, CustomContentPadProvider, CustomPaletteProvider,  ReplaceMenuProvider,  CustomRendererModule } from 'bpmn-process-designer';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-codes.css';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css';
 // 导入 BpmnRenderer 用于自定义渲染器
 import BpmnRenderer from 'bpmn-js/lib/draw/BpmnRenderer';
+// 导入 SimpleAmisRender 组件
+import SimpleAmisRender from '../components/ContentDisplay/SimpleAmisRender.vue';
 
 // 自定义AMIS渲染器
 function BpmnAmisRenderer(
@@ -331,11 +333,16 @@ function renderAmisVisibleContent(parentGfx, element, htmlContent) {
     if (parsedContent && typeof parsedContent === 'object' && parsedContent.type) {
       console.log('renderAmisVisibleContent - 检测到有效的AMIS schema，类型:', parsedContent.type);
       console.log('renderAmisVisibleContent - AMIS schema内容:', parsedContent);
-      // 使用AMIS schema渲染器
-      const amisHtml = renderAmisSchemaForBpmn(parsedContent);
-      console.log('renderAmisVisibleContent - 渲染后的AMIS HTML:', amisHtml);
-      htmlDiv.innerHTML = amisHtml;
-      console.log('renderAmisVisibleContent - HTML内容已设置到div:', htmlDiv.innerHTML);
+
+      // 使用 SimpleAmisRender 组件渲染 AMIS 内容
+      const vueApp = createApp(SimpleAmisRender, {
+        schema: parsedContent
+      });
+
+      // 挂载到容器
+      vueApp.mount(htmlDiv);
+
+      console.log('renderAmisVisibleContent - 使用 SimpleAmisRender 组件渲染完成');
     } else if (parsedContent && typeof parsedContent === 'object') {
       // 解析成功但不是AMIS schema，可能是其他格式
       console.log('renderAmisVisibleContent - 解析成功但不是AMIS schema，对象内容:', parsedContent);
@@ -366,227 +373,6 @@ function renderAmisVisibleContent(parentGfx, element, htmlContent) {
   }
 
   console.log('renderAmisVisibleContent - 最终innerHTML:', htmlDiv.innerHTML);
-}
-
-/**
- * 为BPMN上下文渲染AMIS Schema
- */
-function renderAmisSchemaForBpmn(schema) {
-  console.log('renderAmisSchemaForBpmn - 输入的schema:', schema);
-  try {
-    // 提取全局样式
-    const globalStyles = extractAmisGlobalStyles(schema);
-    console.log('renderAmisSchemaForBpmn - 提取的全局样式:', globalStyles);
-
-    // 根据schema类型渲染内容
-    let renderedContent = '';
-
-    if (schema.type === 'page') {
-      console.log('renderAmisSchemaForBpmn - 页面类型，body内容:', schema.body);
-      // 页面类型的渲染 - 只处理body内容
-      if (schema.body) {
-        if (Array.isArray(schema.body)) {
-          console.log('renderAmisSchemaForBpmn - body为数组，长度:', schema.body.length);
-          renderedContent = schema.body.map((item, index) => {
-            console.log(`renderAmisSchemaForBpmn - 处理body[${index}] item:`, item);
-            const itemResult = renderAmisItem(item);
-            console.log(`renderAmisSchemaForBpmn - body[${index}] item渲染结果:`, itemResult);
-            return itemResult;
-          }).join('');
-          console.log('renderAmisSchemaForBpmn - 数组渲染完成，总内容长度:', renderedContent.length);
-        } else {
-          console.log('renderAmisSchemaForBpmn - body为单个项目:', schema.body);
-          renderedContent = renderAmisItem(schema.body);
-          console.log('renderAmisSchemaForBpmn - 单项目渲染完成，内容:', renderedContent);
-        }
-      } else {
-        // 没有body的情况，显示默认内容
-        renderedContent = '<div style="color:#999;text-align:center;font-size:9px;padding:4px;">[空页面]</div>';
-      }
-    } else if (schema.type === 'html') {
-      // 直接HTML类型
-      console.log('renderAmisSchemaForBpmn - HTML类型，html内容:', schema.html);
-      renderedContent = schema.html || '<div style="color:#999;text-align:center;font-size:9px;padding:4px;">[空HTML]</div>';
-    } else if (schema.type === 'tpl') {
-      // 模板类型
-      console.log('renderAmisSchemaForBpmn - TPL类型，tpl内容:', schema.tpl);
-      renderedContent = schema.tpl || schema.body || '<div style="color:#999;text-align:center;font-size:9px;padding:4px;">[空模板]</div>';
-    } else {
-      // 其他类型，直接渲染该项
-      console.log('renderAmisSchemaForBpmn - 非页面/HTML/TPL类型，直接渲染:', schema);
-      renderedContent = renderAmisItem(schema);
-      console.log('renderAmisSchemaForBpmn - 非标准类型渲染完成，内容:', renderedContent);
-    }
-
-    // 为BPMN上下文添加特殊的容器样式
-    let styleString = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:10px;';
-
-    if (globalStyles && Object.keys(globalStyles).length > 0) {
-      const globalStyleString = Object.entries(globalStyles).map(([key, value]) => `${key}:${value}`).join(';');
-      styleString = globalStyleString + ';' + styleString;
-      console.log('renderAmisSchemaForBpmn - 合并样式字符串:', styleString);
-    }
-
-    const finalHtml = `<div style="${styleString}">${renderedContent}</div>`;
-    console.log('renderAmisSchemaForBpmn - 最终渲染内容:', finalHtml);
-    return finalHtml;
-  } catch (e) {
-    console.error('渲染AMIS Schema失败:', e);
-    console.error('renderAmisSchemaForBpmn - 错误堆栈:', e.stack);
-    return `<div style="color:#aaa;text-align:center;font-size:10px;">[AMIS Error]</div>`;
-  }
-}
-
-/**
- * 提取AMIS全局样式
- */
-function extractAmisGlobalStyles(schema) {
-  const styles = {};
-
-  // 处理直接的样式属性
-  if (schema.style) {
-    Object.assign(styles, schema.style);
-  }
-
-  // 处理背景色
-  if (schema.bodyBgColor) {
-    styles['background-color'] = schema.bodyBgColor;
-  }
-
-  return styles;
-}
-
-/**
- * 渲染AMIS单项组件
- */
-function renderAmisItem(item) {
-  console.log('renderAmisItem - 输入项:', item);
-  if (!item) {
-    console.log('renderAmisItem - 项为空，返回空字符串');
-    return '';
-  }
-
-  const componentStyles = extractAmisComponentStyles(item);
-  const styleString = componentStyles ? Object.entries(componentStyles).map(([key, value]) => `${key}:${value}`).join(';') : '';
-  console.log('renderAmisItem - 提取的组件样式:', componentStyles, '样式字符串:', styleString);
-
-  if (item.type === 'html') {
-    console.log('renderAmisItem - 处理HTML类型，html内容:', item.html);
-    // 对于HTML类型，直接输出HTML内容
-    const htmlContent = item.html || '<div style="color:#999;font-size:9px;">[空HTML]</div>';
-    // 确保HTML内容安全，过滤潜在的危险标签
-    const safeHtmlContent = sanitizeHtmlContent(htmlContent);
-    const result = `<div${styleString ? ` style="${styleString}"` : ''}>${safeHtmlContent}</div>`;
-    console.log('renderAmisItem - HTML类型渲染结果:', result);
-    return result;
-  } else if (item.type === 'tpl') {
-    console.log('renderAmisItem - 处理TPL类型，tpl内容:', item.tpl, 'body内容:', item.body);
-    const content = item.tpl || item.body || '<div style="color:#999;font-size:9px;">[空模板]</div>';
-    const result = `<div${styleString ? ` style="${styleString}"` : ''}>${content}</div>`;
-    console.log('renderAmisItem - TPL类型渲染结果:', result);
-    return result;
-  } else if (item.type === 'text' || item.type === 'static') {
-    const textValue = item.value || item.body || item.content || '文本';
-    console.log('renderAmisItem - 处理文本类型，文本值:', textValue);
-    const result = `<span${styleString ? ` style="${styleString}"` : ''}>${textValue}</span>`;
-    console.log('renderAmisItem - 文本类型渲染结果:', result);
-    return result;
-  } else if (item.type === 'image') {
-    const imageSrc = item.src || item.url || item.thumbMode || '';
-    console.log('renderAmisItem - 处理图片类型，图片源:', imageSrc);
-    const result = `<img src="${imageSrc}"${styleString ? ` style="${styleString};max-width:100%;max-height:100%;"` : 'style="max-width:100%;max-height:100%;"'} />`;
-    console.log('renderAmisItem - 图片类型渲染结果:', result);
-    return result;
-  } else if (item.type === 'container' || item.type === 'wrapper') {
-    console.log('renderAmisItem - 处理容器类型，body内容:', item.body);
-    let bodyContent = '';
-    if (Array.isArray(item.body)) {
-      console.log('renderAmisItem - 容器的body为数组，长度:', item.body.length);
-      bodyContent = item.body.map((subItem, index) => {
-        console.log(`renderAmisItem - 处理容器[${index}]子项:`, subItem);
-        const subResult = renderAmisItem(subItem);
-        console.log(`renderAmisItem - 容器[${index}]子项渲染结果:`, subResult);
-        return subResult;
-      }).join('');
-    } else {
-      console.log('renderAmisItem - 容器的body为单个项目:', item.body);
-      bodyContent = renderAmisItem(item.body);
-    }
-    const result = `<div${styleString ? ` style="${styleString}"` : ''}>${bodyContent}</div>`;
-    console.log('renderAmisItem - 容器类型渲染结果:', result);
-    return result;
-  } else {
-    // 对于其他类型的组件，显示简化的表示
-    const label = item.label || item.title || `[${item.type}]`;
-    console.log('renderAmisItem - 处理其他类型组件，标签:', label, '类型:', item.type);
-    const result = `<div${styleString ? ` style="${styleString}"` : ''} class="amis-component">${label}</div>`;
-    console.log('renderAmisItem - 其他类型渲染结果:', result);
-    return result;
-  }
-}
-
-/**
- * 提取AMIS组件样式
- */
-function extractAmisComponentStyles(item) {
-  console.log('extractAmisComponentStyles - 输入项:', item);
-  const styles = {};
-
-  // 处理直接的样式属性
-  if (item.style) {
-    console.log('extractAmisComponentStyles - 项包含style属性:', item.style);
-    Object.assign(styles, item.style);
-  }
-
-  // 处理背景色
-  if (item.bodyBgColor) {
-    console.log('extractAmisComponentStyles - 项包含bodyBgColor:', item.bodyBgColor);
-    styles['background-color'] = item.bodyBgColor;
-  }
-
-  if (item.bgColor) {
-    console.log('extractAmisComponentStyles - 项包含bgColor:', item.bgColor);
-    styles['background-color'] = item.bgColor;
-  }
-
-  // 处理文本颜色
-  if (item.color) {
-    console.log('extractAmisComponentStyles - 项包含color:', item.color);
-    styles['color'] = item.color;
-  }
-
-  // 处理边距和内边距
-  if (item.margin !== undefined) {
-    console.log('extractAmisComponentStyles - 项包含margin:', item.margin);
-    styles['margin'] = `${item.margin}px`;
-  }
-
-  if (item.padding !== undefined) {
-    console.log('extractAmisComponentStyles - 项包含padding:', item.padding);
-    styles['padding'] = `${item.padding}px`;
-  }
-
-  console.log('extractAmisComponentStyles - 提取的样式:', styles);
-  return Object.keys(styles).length > 0 ? styles : null;
-}
-
-/**
- * 清理和过滤HTML内容，移除潜在危险的标签和属性
- */
-function sanitizeHtmlContent(html) {
-  // 替换潜在危险的标签和属性
-  let cleanHtml = html;
-
-  // 移除script标签及其内容
-  cleanHtml = cleanHtml.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-
-  // 移除on*事件处理器（如onclick, onload等）
-  cleanHtml = cleanHtml.replace(/\s+on\w+\s*=\s*["'][^"']*["']/gi, '');
-
-  // 移除javascript:伪协议
-  cleanHtml = cleanHtml.replace(/javascript:/gi, 'javascript-not-allowed:');
-
-  return cleanHtml;
 }
 
 /**
@@ -992,7 +778,7 @@ declare global {
 }
 </script>
 <style lang="scss">
-@import "../../../bpmn-process-designer/src/package/theme/process-designer.scss";
+@use "../../../bpmn-process-designer/src/package/theme/process-designer.scss";
 
 //@import "../../../bpmn-process-designer/src/package/theme/element-variables.scss";
 //@import "../../../bpmn-process-designer/src/package/theme/index.scss";

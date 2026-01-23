@@ -1,4 +1,9 @@
 import BpmnRenderer from 'bpmn-js/lib/draw/BpmnRenderer'
+import { createApp } from 'vue'
+// 导入 SimpleAmisRender 组件 - 使用相对路径
+// 从 bpmn-process-designer/src/src/modules/custom-renderer/ 到 nop-site/src/components/ContentDisplay/
+// 需要向上到 packages 目录，然后进入 nop-site
+import SimpleAmisRender from '../../../../../nop-site/src/components/ContentDisplay/SimpleAmisRender.vue'
 
 const ACTIVITY_TYPES = [
   'bpmn:Task',
@@ -236,18 +241,23 @@ function CustomRendererModule(config, eventBus, styles, pathMap, canvas, textRen
             } catch (e) {
               // 如果不是JSON格式，直接作为HTML显示
               console.log('[CustomRendererModule] contentHtml不是JSON格式，直接作为HTML显示');
+              htmlDiv.innerHTML = contentHtml;
             }
           }
 
           if (parsedContent && parsedContent.type) {
-            // 这是一个AMIS schema，需要特殊处理
-            console.log('[CustomRendererModule] 检测到AMIS schema，类型:', parsedContent.type);
-            const amisHtml = renderAmisSchemaForBpmn(parsedContent);
-            htmlDiv.innerHTML = amisHtml;
-          } else {
-            // 直接作为HTML显示
-            console.log('[CustomRendererModule] 未检测到AMIS schema，直接显示内容');
-            htmlDiv.innerHTML = typeof contentHtml === 'string' ? contentHtml : JSON.stringify(contentHtml);
+            // 这是一个AMIS schema，使用 SimpleAmisRender 组件渲染
+            console.log('[CustomRendererModule] 检测到AMIS schema，使用 SimpleAmisRender 组件渲染，类型:', parsedContent.type);
+
+            // 使用 Vue 的 createApp 创建 SimpleAmisRender 实例
+            const vueApp = createApp(SimpleAmisRender, {
+              schema: parsedContent
+            });
+
+            // 挂载到容器
+            vueApp.mount(htmlDiv);
+
+            console.log('[CustomRendererModule] SimpleAmisRender 组件渲染完成');
           }
         } catch (error) {
           console.error('[CustomRendererModule] 渲染自定义内容时发生错误:', error);
@@ -269,159 +279,6 @@ function CustomRendererModule(config, eventBus, styles, pathMap, canvas, textRen
       parentNode.appendChild(fo)
     }
     return shape
-  }
-
-  // 渲染AMIS schema为HTML
-  function renderAmisSchemaForBpmn(schema) {
-    console.log('[CustomRendererModule] renderAmisSchemaForBpmn - 输入的schema:', schema);
-    try {
-      // 提取全局样式
-      const globalStyles = extractAmisGlobalStyles(schema);
-      console.log('[CustomRendererModule] renderAmisSchemaForBpmn - 提取的全局样式:', globalStyles);
-
-      // 渲染内容
-      let renderedContent = '';
-      if (schema.type === 'page' && schema.body) {
-        console.log('[CustomRendererModule] renderAmisSchemaForBpmn - 页面类型，body内容:', schema.body);
-        if (Array.isArray(schema.body)) {
-          console.log('[CustomRendererModule] renderAmisSchemaForBpmn - body为数组，长度:', schema.body.length);
-          renderedContent = schema.body.map((item, index) => {
-            console.log(`[CustomRendererModule] renderAmisSchemaForBpmn - 处理body[${index}] item:`, item);
-            return renderAmisItem(item);
-          }).join('');
-        } else {
-          console.log('[CustomRendererModule] renderAmisSchemaForBpmn - body为单个项目:', schema.body);
-          renderedContent = renderAmisItem(schema.body);
-        }
-      } else {
-        console.log('[CustomRendererModule] renderAmisSchemaForBpmn - 非页面类型，直接渲染:', schema);
-        renderedContent = renderAmisItem(schema);
-      }
-
-      // 为BPMN上下文添加特殊的容器样式
-      let styleString = 'width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:10px;';
-
-      if (globalStyles && Object.keys(globalStyles).length > 0) {
-        const globalStyleString = Object.entries(globalStyles).map(([key, value]) => `${key}:${value}`).join(';');
-        styleString = globalStyleString + ';' + styleString;
-      }
-
-      console.log('[CustomRendererModule] renderAmisSchemaForBpmn - 最终渲染内容:', `<div style="${styleString}">${renderedContent}</div>`);
-      return `<div style="${styleString}">${renderedContent}</div>`;
-    } catch (e) {
-      console.error('渲染AMIS Schema失败:', e);
-      return `<div style="color:#aaa;text-align:center;font-size:10px;">[AMIS Error]</div>`;
-    }
-  }
-
-  // 提取AMIS全局样式
-  function extractAmisGlobalStyles(schema) {
-    const styles = {};
-
-    // 处理直接的样式属性
-    if (schema.style) {
-      Object.assign(styles, schema.style);
-    }
-
-    // 处理背景色
-    if (schema.bodyBgColor) {
-      styles['background-color'] = schema.bodyBgColor;
-    }
-
-    return styles;
-  }
-
-  // 提取AMIS组件样式
-  function extractAmisComponentStyles(item) {
-    console.log('[CustomRendererModule] extractAmisComponentStyles - 输入项:', item);
-    const styles = {};
-
-    // 处理直接的样式属性
-    if (item.style) {
-      console.log('[CustomRendererModule] extractAmisComponentStyles - 项包含style属性:', item.style);
-      Object.assign(styles, item.style);
-    }
-
-    // 处理背景色
-    if (item.bodyBgColor) {
-      console.log('[CustomRendererModule] extractAmisComponentStyles - 项包含bodyBgColor:', item.bodyBgColor);
-      styles['background-color'] = item.bodyBgColor;
-    }
-
-    if (item.bgColor) {
-      console.log('[CustomRendererModule] extractAmisComponentStyles - 项包含bgColor:', item.bgColor);
-      styles['background-color'] = item.bgColor;
-    }
-
-    // 处理文本颜色
-    if (item.color) {
-      console.log('[CustomRendererModule] extractAmisComponentStyles - 项包含color:', item.color);
-      styles['color'] = item.color;
-    }
-
-    // 处理边距和内边距
-    if (item.margin !== undefined) {
-      console.log('[CustomRendererModule] extractAmisComponentStyles - 项包含margin:', item.margin);
-      styles['margin'] = `${item.margin}px`;
-    }
-
-    if (item.padding !== undefined) {
-      console.log('[CustomRendererModule] extractAmisComponentStyles - 项包含padding:', item.padding);
-      styles['padding'] = `${item.padding}px`;
-    }
-
-    console.log('[CustomRendererModule] extractAmisComponentStyles - 提取的样式:', styles);
-    return Object.keys(styles).length > 0 ? styles : null;
-  }
-
-  // 渲染AMIS单项组件
-  function renderAmisItem(item) {
-    console.log('[CustomRendererModule] renderAmisItem - 输入项:', item);
-    if (!item) {
-      console.log('[CustomRendererModule] renderAmisItem - 项为空，返回空字符串');
-      return '';
-    }
-
-    const componentStyles = extractAmisComponentStyles(item);
-    const styleString = componentStyles ? Object.entries(componentStyles).map(([key, value]) => `${key}:${value}`).join(';') : '';
-    console.log('[CustomRendererModule] renderAmisItem - 提取的组件样式:', componentStyles, '样式字符串:', styleString);
-
-    if (item.type === 'html') {
-      console.log('[CustomRendererModule] renderAmisItem - 处理HTML类型，html内容:', item.html);
-      // 对于HTML类型，直接输出HTML内容
-      const htmlContent = item.html || '';
-      return `<div${styleString ? ` style="${styleString}"` : ''}>${htmlContent}</div>`;
-    } else if (item.type === 'tpl') {
-      console.log('[CustomRendererModule] renderAmisItem - 处理TPL类型，tpl内容:', item.tpl, 'body内容:', item.body);
-      return `<div${styleString ? ` style="${styleString}"` : ''}>${item.tpl || item.body || ''}</div>`;
-    } else if (item.type === 'text' || item.type === 'static') {
-      const textValue = item.value || item.body || item.content || '文本';
-      console.log('[CustomRendererModule] renderAmisItem - 处理文本类型，文本值:', textValue);
-      return `<span${styleString ? ` style="${styleString}"` : ''}>${textValue}</span>`;
-    } else if (item.type === 'image') {
-      const imageSrc = item.src || item.url || item.thumbMode || '';
-      console.log('[CustomRendererModule] renderAmisItem - 处理图片类型，图片源:', imageSrc);
-      return `<img src="${imageSrc}"${styleString ? ` style="${styleString};max-width:100%;max-height:100%;"` : 'style="max-width:100%;max-height:100%;"'} />`;
-    } else if (item.type === 'container' || item.type === 'wrapper') {
-      console.log('[CustomRendererModule] renderAmisItem - 处理容器类型，body内容:', item.body);
-      let bodyContent = '';
-      if (Array.isArray(item.body)) {
-        console.log('[CustomRendererModule] renderAmisItem - 容器的body为数组，长度:', item.body.length);
-        bodyContent = item.body.map((subItem, index) => {
-          console.log(`[CustomRendererModule] renderAmisItem - 处理容器[${index}]子项:`, subItem);
-          return renderAmisItem(subItem);
-        }).join('');
-      } else {
-        console.log('[CustomRendererModule] renderAmisItem - 容器的body为单个项目:', item.body);
-        bodyContent = renderAmisItem(item.body);
-      }
-      return `<div${styleString ? ` style="${styleString}"` : ''}>${bodyContent}</div>`;
-    } else {
-      // 对于其他类型的组件，显示简化的表示
-      const label = item.label || item.title || `[${item.type}]`;
-      console.log('[CustomRendererModule] renderAmisItem - 处理其他类型组件，标签:', label, '类型:', item.type);
-      return `<div${styleString ? ` style="${styleString}"` : ''} class="amis-component">${label}</div>`;
-    }
   }
 
   this.handlers['label'] = function () {
