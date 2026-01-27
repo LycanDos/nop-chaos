@@ -1,6 +1,12 @@
 <template>
   <!-- 调试信息 -->
 
+  <!-- 交互提示 -->
+<!--  <div class="interaction-hint" :class="{ active: isCtrlPressed }">-->
+<!--    <span v-if="!isCtrlPressed">按住 Ctrl/⌘ 键可与 AMIS 元素交互</span>-->
+<!--    <span v-else>✓ 交互模式已启用</span>-->
+<!--  </div>-->
+
   <!-- 流程设计器，负责绘制流程等  -->
   <div style="background-color: #fff;">
     <MyProcessDesigner
@@ -15,6 +21,7 @@
 </template>
 <script setup lang="ts">
 import { ref, shallowRef, provide, onMounted, onBeforeUnmount, nextTick, createApp } from 'vue'
+import { useRouter } from 'vue-router'
 import {  MyProcessDesigner, CustomContentPadProvider, CustomPaletteProvider,  ReplaceMenuProvider,  CustomRendererModule } from 'bpmn-process-designer';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-codes.css';
@@ -23,6 +30,16 @@ import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css';
 import BpmnRenderer from 'bpmn-js/lib/draw/BpmnRenderer';
 // 导入 SimpleAmisRender 组件
 import SimpleAmisRender from '../components/ContentDisplay/SimpleAmisRender.vue';
+
+// 获取router实例并暴露到window
+const router = useRouter();
+if (typeof window !== 'undefined') {
+  (window as any).__APP_ROUTER__ = router;
+  console.log('[BpmnDesigner] Router实例已暴露到window');
+}
+
+// 跟踪 Ctrl/Cmd 键状态
+const isCtrlPressed = ref(false);
 
 // 自定义AMIS渲染器
 function BpmnAmisRenderer(
@@ -56,7 +73,11 @@ function BpmnAmisRenderer(
       // 检查是否按下了Ctrl键（Windows）或Cmd键（Mac）
       const isCtrlPressed = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
       if (isCtrlPressed) {
+        // 阻止BPMN的默认点击行为
+        e.preventDefault();
+        e.stopPropagation();
         handleAmisElementClickInternal(e.element, e.originalEvent);
+        return false;
       } else {
         // 显示提示
         console.log('Hold Ctrl/Cmd key to interact with AMIS element');
@@ -64,15 +85,31 @@ function BpmnAmisRenderer(
     }
   });
 
+  // 添加高优先级的点击拦截器
+  eventBus.on('element.click', 2000, function(e) {
+    if (isAmisElement(e.element)) {
+      const isCtrlPressed = e.originalEvent.ctrlKey || e.originalEvent.metaKey;
+      if (isCtrlPressed) {
+        // 在交互模式下，阻止BPMN处理点击事件
+        console.log('[BpmnAmisRenderer] 拦截BPMN点击事件，启用AMIS交互');
+        return false; // 返回false阻止事件继续传播
+      }
+    }
+  });
+
   eventBus.on('element.mouseenter', function(e) {
     if (isAmisElement(e.element)) {
       showInteractionHint(e.gfx);
+      // 如果按下了Ctrl键，启用交互模式
+      updateAmisInteractiveMode(e.element, isCtrlPressed.value);
     }
   });
 
   eventBus.on('element.mouseleave', function(e) {
     if (isAmisElement(e.element)) {
       hideInteractionHint(e.gfx);
+      // 离开元素时禁用交互模式
+      updateAmisInteractiveMode(e.element, false);
     }
   });
 }
@@ -224,6 +261,101 @@ function getAmisCode(element) {
 }
 
 /**
+ * 更新AMIS元素的交互模式
+ */
+function updateAmisInteractiveMode(element, isInteractive) {
+  console.log('[updateAmisInteractiveMode] 调用，element:', element?.id, 'isInteractive:', isInteractive);
+
+  if (!element || !element.id) {
+    console.log('[updateAmisInteractiveMode] 元素无效，返回');
+    return;
+  }
+
+  // 查找该元素的所有foreignObject
+  const canvas = document.querySelector('.djs-container');
+  if (!canvas) {
+    console.log('[updateAmisInteractiveMode] 找不到canvas容器');
+    return;
+  }
+
+  const foreignObjects = canvas.querySelectorAll(`foreignObject[data-element-id="${element.id}"]`);
+  console.log('[updateAmisInteractiveMode] 找到foreignObject数量:', foreignObjects.length);
+
+  foreignObjects.forEach((fo, index) => {
+    const contentDiv = fo.querySelector('.amis-content-div');
+    console.log(`[updateAmisInteractiveMode] foreignObject[${index}]:`, fo);
+    console.log(`[updateAmisInteractiveMode] contentDiv[${index}]:`, contentDiv);
+
+    if (isInteractive) {
+      // 启用交互模式
+      fo.style.pointerEvents = 'auto';
+      fo.style.zIndex = '10000'; // 确保在最上层
+      console.log(`[updateAmisInteractiveMode] 设置 fo.style.pointerEvents = 'auto'`);
+      console.log(`[updateAmisInteractiveMode] fo.style.pointerEvents 实际值:`, fo.style.pointerEvents);
+
+      if (contentDiv) {
+        contentDiv.style.pointerEvents = 'auto';
+        contentDiv.classList.add('amis-interactive');
+
+        // 确保所有子元素也可以交互
+        const allChildren = contentDiv.querySelectorAll('*');
+        allChildren.forEach(child => {
+          child.style.pointerEvents = 'auto';
+        });
+
+        // 添加点击事件监听器来阻止事件冒泡到BPMN
+        const clickHandler = (e) => {
+          console.log('[AMIS交互] 点击事件被捕获:', e.target);
+          e.stopPropagation(); // 阻止事件冒泡到BPMN
+          // 让事件正常处理
+        };
+
+        // 移除旧的监听器（如果存在）
+        if (contentDiv._amisClickHandler) {
+          contentDiv.removeEventListener('click', contentDiv._amisClickHandler, true);
+        }
+
+        // 添加新的监听器（使用捕获阶段）
+        contentDiv.addEventListener('click', clickHandler, true);
+        contentDiv._amisClickHandler = clickHandler;
+
+        console.log(`[updateAmisInteractiveMode] 添加 amis-interactive 类，当前类列表:`, contentDiv.className);
+        console.log(`[updateAmisInteractiveMode] contentDiv.style.pointerEvents 实际值:`, contentDiv.style.pointerEvents);
+        console.log(`[updateAmisInteractiveMode] 设置了 ${allChildren.length} 个子元素的 pointer-events`);
+      }
+
+      // 将foreignObject移到父元素的最后，确保在最上层
+      if (fo.parentNode) {
+        fo.parentNode.appendChild(fo);
+        console.log(`[updateAmisInteractiveMode] 将foreignObject移到最上层`);
+      }
+    } else {
+      // 禁用交互模式
+      fo.style.pointerEvents = 'none';
+      fo.style.zIndex = '';
+      if (contentDiv) {
+        contentDiv.style.pointerEvents = 'none';
+        contentDiv.classList.remove('amis-interactive');
+
+        // 移除点击事件监听器
+        if (contentDiv._amisClickHandler) {
+          contentDiv.removeEventListener('click', contentDiv._amisClickHandler, true);
+          contentDiv._amisClickHandler = null;
+        }
+
+        // 恢复所有子元素的pointer-events
+        const allChildren = contentDiv.querySelectorAll('*');
+        allChildren.forEach(child => {
+          child.style.pointerEvents = '';
+        });
+
+        console.log(`[updateAmisInteractiveMode] 移除 amis-interactive 类`);
+      }
+    }
+  });
+}
+
+/**
  * 判断元素是否为AMIS元素
  */
 function isAmisElement(element) {
@@ -261,13 +393,20 @@ function renderAmisVisibleContent(parentGfx, element, htmlContent) {
   console.log('renderAmisVisibleContent - 开始渲染，htmlContent:', htmlContent);
   console.log('renderAmisVisibleContent - 元素信息:', element);
 
+  // 清理旧的foreignObject（如果存在）
+  const oldForeignObjects = parentGfx.querySelectorAll(`foreignObject[data-element-id="${element.id}"]`);
+  oldForeignObjects.forEach(old => old.remove());
+  console.log('renderAmisVisibleContent - 清理了', oldForeignObjects.length, '个旧的foreignObject');
+
   // 创建 foreignObject 来显示 HTML 内容
   const fo = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
   fo.setAttribute('x', 0);
   fo.setAttribute('y', 0);
   fo.setAttribute('width', element.width);
   fo.setAttribute('height', element.height);
-  fo.style.pointerEvents = 'none'; // 不影响节点交互
+  fo.setAttribute('data-element-id', element.id); // 添加元素ID用于后续查找
+  fo.style.pointerEvents = 'none'; // 默认不影响节点交互
+  fo.classList.add('amis-foreign-object'); // 添加类名用于查找
 
   // 创建内容容器
   const htmlDiv = document.createElement('div');
@@ -275,8 +414,9 @@ function renderAmisVisibleContent(parentGfx, element, htmlContent) {
   htmlDiv.style.height = '100%';
   htmlDiv.style.overflow = 'hidden';
   htmlDiv.style.fontSize = '10px';
-  htmlDiv.style.pointerEvents = 'none';
+  htmlDiv.style.pointerEvents = 'none'; // 默认不影响节点交互
   htmlDiv.style.padding = '4px';
+  htmlDiv.classList.add('amis-content-div'); // 添加类名用于查找
 
   try {
     // 首先尝试解析JSON字符串
@@ -505,11 +645,6 @@ const modelData = ref({});
 
 const modeler = shallowRef(); // BPMN Modeler
 const processDesigner = ref();
-// 自定义AMIS渲染器模块
-const AmisRendererModule = {
-  __init__: ['bpmnAmisRenderer'],
-  bpmnAmisRenderer: ['type', BpmnAmisRenderer]
-};
 
 const controlForm = ref({
   simulation: true,
@@ -517,7 +652,7 @@ const controlForm = ref({
   labelVisible: false,
   prefix: "flowable",
   headerButtonSize: "mini",
-  additionalModel: [CustomContentPadProvider, CustomPaletteProvider, ReplaceMenuModule, CustomRendererModule, AmisRendererModule],
+  additionalModel: [CustomContentPadProvider, CustomPaletteProvider, ReplaceMenuModule, CustomRendererModule],
 });
 // const model = ref<ModelApi.ModelVO>() // 流程模型的信息
 
@@ -759,11 +894,264 @@ onBeforeUnmount(() => {
 
   // 移除事件监听器
   window.removeEventListener('openAmisConfigDialog', handleOpenAmisConfigDialog);
+
+  // 清理键盘事件监听器
+  if (w._bpmnKeyHandlers) {
+    window.removeEventListener('keydown', w._bpmnKeyHandlers.handleKeyDown);
+    window.removeEventListener('keyup', w._bpmnKeyHandlers.handleKeyUp);
+    w._bpmnKeyHandlers = null;
+  }
 });
 
 onMounted(() => {
   console.log("[app] App.vue onMounted");
+
+  // 添加全局点击监听器用于调试
+  document.addEventListener('click', (e) => {
+    if (isCtrlPressed.value) {
+      console.log('[全局点击] 目标:', e.target);
+      console.log('[全局点击] 标签:', e.target.tagName);
+      console.log('[全局点击] 类名:', e.target.className);
+      console.log('[全局点击] pointer-events:', window.getComputedStyle(e.target).pointerEvents);
+    }
+  }, true);
+
+  // 监听键盘事件来更新 Ctrl/Cmd 键状态
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      isCtrlPressed.value = true;
+      // 更新所有AMIS元素的交互模式
+      updateAllAmisElementsInteractiveMode(true);
+    }
+  };
+
+  const handleKeyUp = (e: KeyboardEvent) => {
+    if (!e.ctrlKey && !e.metaKey) {
+      isCtrlPressed.value = false;
+      // 更新所有AMIS元素的交互模式
+      updateAllAmisElementsInteractiveMode(false);
+    }
+  };
+
+  window.addEventListener('keydown', handleKeyDown);
+  window.addEventListener('keyup', handleKeyUp);
+
+  // 存储事件处理器以便清理
+  (window as any)._bpmnKeyHandlers = { handleKeyDown, handleKeyUp };
 });
+
+/**
+ * 更新所有AMIS元素的交互模式
+ */
+function updateAllAmisElementsInteractiveMode(isInteractive: boolean) {
+  console.log('[updateAllAmisElementsInteractiveMode] 调用，isInteractive:', isInteractive);
+
+  // 尝试多种方式查找canvas容器
+  let canvas = document.querySelector('.djs-container');
+  console.log('[updateAllAmisElementsInteractiveMode] .djs-container:', canvas);
+
+  if (!canvas) {
+    canvas = document.querySelector('.bjs-container');
+    console.log('[updateAllAmisElementsInteractiveMode] .bjs-container:', canvas);
+  }
+
+  if (!canvas) {
+    canvas = document.querySelector('#bpmnCanvas');
+    console.log('[updateAllAmisElementsInteractiveMode] #bpmnCanvas:', canvas);
+  }
+
+  if (!canvas) {
+    canvas = document.body;
+    console.log('[updateAllAmisElementsInteractiveMode] 使用 document.body');
+  }
+
+  // 查找所有foreignObject（不限定容器）
+  const allForeignObjects = document.querySelectorAll('foreignObject');
+  console.log('[updateAllAmisElementsInteractiveMode] 所有foreignObject数量:', allForeignObjects.length);
+
+  // 查找带有data-element-id的foreignObject
+  const foreignObjects = document.querySelectorAll('foreignObject[data-element-id]');
+  console.log('[updateAllAmisElementsInteractiveMode] 带data-element-id的foreignObject数量:', foreignObjects.length);
+
+  // 查找带有amis-foreign-object类的foreignObject
+  const amisForeignObjects = document.querySelectorAll('foreignObject.amis-foreign-object');
+  console.log('[updateAllAmisElementsInteractiveMode] 带amis-foreign-object类的foreignObject数量:', amisForeignObjects.length);
+
+  // 如果找不到带data-element-id的，尝试使用带类名的
+  const targetForeignObjects = foreignObjects.length > 0 ? foreignObjects : amisForeignObjects;
+  console.log('[updateAllAmisElementsInteractiveMode] 最终使用的foreignObject数量:', targetForeignObjects.length);
+
+  targetForeignObjects.forEach((fo, index) => {
+    const contentDiv = fo.querySelector('.amis-content-div');
+    const elementId = fo.getAttribute('data-element-id') || `unknown-${index}`;
+    console.log(`[updateAllAmisElementsInteractiveMode] 处理foreignObject[${index}]:`, elementId);
+    console.log(`[updateAllAmisElementsInteractiveMode] foreignObject[${index}] contentDiv:`, contentDiv);
+    console.log(`[updateAllAmisElementsInteractiveMode] foreignObject[${index}] innerHTML:`, fo.innerHTML.substring(0, 200));
+
+    if (isInteractive) {
+      // 启用交互模式
+      fo.style.pointerEvents = 'auto';
+      fo.style.zIndex = '10000';
+      console.log(`[updateAllAmisElementsInteractiveMode] foreignObject[${index}] 设置 pointer-events:`, fo.style.pointerEvents);
+
+      // 找到并禁用BPMN的hit区域
+      // hit区域通常在foreignObject的父元素（g标签）中
+      let hitArea = null;
+      const parentGroup = fo.parentElement;
+
+      if (parentGroup) {
+        // 先在父元素中查找
+        hitArea = parentGroup.querySelector('.djs-hit');
+        console.log(`[updateAllAmisElementsInteractiveMode] 在父元素中查找hit区域:`, hitArea);
+
+        // 如果没找到，在父元素的父元素中查找
+        if (!hitArea && parentGroup.parentElement) {
+          hitArea = parentGroup.parentElement.querySelector('.djs-hit');
+          console.log(`[updateAllAmisElementsInteractiveMode] 在祖父元素中查找hit区域:`, hitArea);
+        }
+
+        if (hitArea) {
+          // 只在第一次时保存原始值
+          if (hitArea._originalPointerEvents === undefined) {
+            hitArea._originalPointerEvents = hitArea.style.pointerEvents || window.getComputedStyle(hitArea).pointerEvents;
+            console.log(`[updateAllAmisElementsInteractiveMode] 首次保存hit区域原始值:`, hitArea._originalPointerEvents);
+          } else {
+            console.log(`[updateAllAmisElementsInteractiveMode] 使用已保存的hit区域原始值:`, hitArea._originalPointerEvents);
+          }
+          hitArea.style.pointerEvents = 'none';
+          console.log(`[updateAllAmisElementsInteractiveMode] hit区域当前pointer-events:`, window.getComputedStyle(hitArea).pointerEvents);
+        } else {
+          console.warn(`[updateAllAmisElementsInteractiveMode] 未找到hit区域`);
+        }
+      }
+
+      if (contentDiv) {
+        contentDiv.style.pointerEvents = 'auto';
+        contentDiv.classList.add('amis-interactive');
+
+        // 使用border代替outline（outline在SVG中可能不显示）
+        contentDiv.style.border = '3px dashed #fa8c16';
+        contentDiv.style.cursor = 'pointer';
+        contentDiv.style.backgroundColor = 'rgba(255, 140, 22, 0.15)';
+        contentDiv.style.boxShadow = '0 0 10px rgba(255, 140, 22, 0.5)';
+        contentDiv.style.animation = 'pulse-border 1s ease-in-out infinite';
+        contentDiv.style.position = 'relative';
+        contentDiv.style.zIndex = '9999';
+        // 调整padding以补偿border
+        contentDiv.style.padding = '1px';
+        contentDiv.style.boxSizing = 'border-box';
+
+        console.log(`[updateAllAmisElementsInteractiveMode] contentDiv[${index}] 类列表:`, contentDiv.className);
+        console.log(`[updateAllAmisElementsInteractiveMode] contentDiv[${index}] pointer-events:`, contentDiv.style.pointerEvents);
+        console.log(`[updateAllAmisElementsInteractiveMode] contentDiv[${index}] border:`, contentDiv.style.border);
+
+        // 确保所有子元素也可以交互
+        const allChildren = contentDiv.querySelectorAll('*');
+        allChildren.forEach(child => {
+          child.style.pointerEvents = 'auto';
+          child.style.cursor = 'pointer';
+        });
+
+        // 在foreignObject上也添加点击监听器
+        const foClickHandler = (e) => {
+          console.log('[AMIS交互-FO] foreignObject点击事件:', e.target);
+          console.log('[AMIS交互-FO] 点击坐标:', e.clientX, e.clientY);
+          // 不阻止传播，让事件继续到contentDiv
+        };
+
+        if (fo._amisClickHandler) {
+          fo.removeEventListener('click', fo._amisClickHandler, true);
+        }
+        fo.addEventListener('click', foClickHandler, true);
+        fo._amisClickHandler = foClickHandler;
+
+        // 在contentDiv上添加点击监听器
+        const clickHandler = (e) => {
+          console.log('[AMIS交互] contentDiv点击事件被捕获:', e.target);
+          console.log('[AMIS交互] 事件类型:', e.type);
+          console.log('[AMIS交互] 事件目标标签:', e.target.tagName);
+          console.log('[AMIS交互] 点击坐标:', e.clientX, e.clientY);
+          // 不阻止传播，让按钮等元素正常工作
+        };
+
+        if (contentDiv._amisClickHandler) {
+          contentDiv.removeEventListener('click', contentDiv._amisClickHandler, true);
+        }
+
+        contentDiv.addEventListener('click', clickHandler, true);
+        contentDiv._amisClickHandler = clickHandler;
+
+        console.log(`[updateAllAmisElementsInteractiveMode] 启用交互，子元素数量: ${allChildren.length}`);
+      } else {
+        console.warn(`[updateAllAmisElementsInteractiveMode] foreignObject[${index}] 没有找到 .amis-content-div`);
+      }
+
+      // 将foreignObject移到最上层
+      if (fo.parentNode) {
+        fo.parentNode.appendChild(fo);
+      }
+    } else {
+      // 禁用交互模式
+      fo.style.pointerEvents = 'none';
+      fo.style.zIndex = '';
+
+      // 恢复BPMN的hit区域
+      let hitArea = null;
+      const parentGroup = fo.parentElement;
+
+      if (parentGroup) {
+        // 先在父元素中查找
+        hitArea = parentGroup.querySelector('.djs-hit');
+
+        // 如果没找到，在父元素的父元素中查找
+        if (!hitArea && parentGroup.parentElement) {
+          hitArea = parentGroup.parentElement.querySelector('.djs-hit');
+        }
+
+        if (hitArea && hitArea._originalPointerEvents !== undefined) {
+          hitArea.style.pointerEvents = hitArea._originalPointerEvents;
+          delete hitArea._originalPointerEvents;
+          console.log(`[updateAllAmisElementsInteractiveMode] 恢复hit区域，恢复值:`, hitArea.style.pointerEvents);
+        }
+      }
+
+      // 清除foreignObject的监听器
+      if (fo._amisClickHandler) {
+        fo.removeEventListener('click', fo._amisClickHandler, true);
+        fo._amisClickHandler = null;
+      }
+
+      if (contentDiv) {
+        contentDiv.style.pointerEvents = 'none';
+        contentDiv.classList.remove('amis-interactive');
+
+        // 清除内联样式
+        contentDiv.style.border = '';
+        contentDiv.style.cursor = '';
+        contentDiv.style.backgroundColor = '';
+        contentDiv.style.boxShadow = '';
+        contentDiv.style.animation = '';
+        contentDiv.style.position = '';
+        contentDiv.style.zIndex = '';
+        contentDiv.style.padding = '4px'; // 恢复原始padding
+        contentDiv.style.boxSizing = '';
+
+        if (contentDiv._amisClickHandler) {
+          contentDiv.removeEventListener('click', contentDiv._amisClickHandler, true);
+          contentDiv._amisClickHandler = null;
+        }
+
+        const allChildren = contentDiv.querySelectorAll('*');
+        allChildren.forEach(child => {
+          child.style.pointerEvents = '';
+          child.style.cursor = '';
+        });
+      }
+    }
+  });
+
+  console.log('[updateAllAmisElementsInteractiveMode] 处理完成');
+}
 
 // 解决 window._debugModeler linter 错误
 declare global {
@@ -774,6 +1162,7 @@ declare global {
     _bpmnMenuCache: any; // 新增：用于缓存菜单数据
     _bpmnContentHtmlMap: any; // 新增：用于缓存HTML内容
     _currentModeler: any; // 存储当前modeler实例以便更新图形
+    __APP_ROUTER__: any; // 暴露router实例给AMIS使用
   }
 }
 </script>
@@ -820,6 +1209,43 @@ body, html, #app {
   cursor: pointer !important;
 }
 
+/* AMIS 交互模式样式 - 使用更高的优先级 */
+foreignObject .amis-interactive,
+.amis-content-div.amis-interactive {
+  outline: 3px dashed #fa8c16 !important;
+  outline-offset: 3px !important;
+  cursor: pointer !important;
+  animation: pulse-border 1s ease-in-out infinite !important;
+  position: relative !important;
+  z-index: 9999 !important;
+  /* 添加背景色变化使动画更明显 */
+  background-color: rgba(255, 140, 22, 0.15) !important;
+  /* 添加阴影使效果更明显 */
+  box-shadow: 0 0 10px rgba(255, 140, 22, 0.5) !important;
+}
+
+/* 确保交互模式下所有内部元素都可点击 */
+foreignObject .amis-interactive *,
+.amis-content-div.amis-interactive * {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+@keyframes pulse-border {
+  0%, 100% {
+    border-color: #fa8c16;
+    border-width: 3px;
+    background-color: rgba(255, 140, 22, 0.15);
+    box-shadow: 0 0 10px rgba(255, 140, 22, 0.5);
+  }
+  50% {
+    border-color: #ffc069;
+    border-width: 4px;
+    background-color: rgba(255, 192, 105, 0.25);
+    box-shadow: 0 0 20px rgba(255, 192, 105, 0.8);
+  }
+}
+
 /* 提示文本样式 */
 .amis-hint-text {
   font-size: 10px !important;
@@ -829,5 +1255,29 @@ body, html, #app {
 .amis-hint-text.highlight {
   fill: #fa8c16 !important;
   font-weight: bold !important;
+}
+
+/* 交互提示样式 */
+.interaction-hint {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 10000;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.interaction-hint.active {
+  background: #52c41a;
+  box-shadow: 0 2px 12px rgba(82, 196, 26, 0.4);
+}
+
+.interaction-hint span {
+  display: inline-block;
 }
 </style>

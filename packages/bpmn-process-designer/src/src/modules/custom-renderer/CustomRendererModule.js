@@ -5,6 +5,8 @@ import { createApp } from 'vue'
 // 需要向上到 packages 目录，然后进入 nop-site
 import SimpleAmisRender from '../../../../../nop-site/src/components/ContentDisplay/SimpleAmisRender.vue'
 
+console.log('[CustomRendererModule] 模块加载');
+
 const ACTIVITY_TYPES = [
   'bpmn:Task',
   'bpmn:UserTask',
@@ -84,6 +86,28 @@ function CustomRendererModule(config, eventBus, styles, pathMap, canvas, textRen
   BpmnRenderer.call(this, config, eventBus, styles, pathMap, canvas, textRenderer, 2000)
   const self = this
 
+  // 添加高优先级的点击事件拦截器
+  eventBus.on('element.click', 5000, function(e) {
+    const element = e.element;
+    if (isAmisElement(element)) {
+      // 检查是否按下了Ctrl键
+      const isCtrlPressed = e.originalEvent && (e.originalEvent.ctrlKey || e.originalEvent.metaKey);
+
+      console.log('[CustomRendererModule] element.click事件:', {
+        elementId: element.id,
+        isCtrlPressed: isCtrlPressed,
+        target: e.originalEvent?.target,
+        tagName: e.originalEvent?.target?.tagName
+      });
+
+      if (isCtrlPressed) {
+        console.log('[CustomRendererModule] Ctrl键按下，阻止BPMN处理点击');
+        // 阻止BPMN处理这个点击事件
+        return false;
+      }
+    }
+  });
+
   // 重写 drawShape
   this.drawShape = function(parentNode, element) {
     // 先画原生节点
@@ -99,7 +123,14 @@ function CustomRendererModule(config, eventBus, styles, pathMap, canvas, textRen
       fo.setAttribute('y', 0)
       fo.setAttribute('width', element.width)
       fo.setAttribute('height', element.height)
-      fo.style.pointerEvents = 'none' // 不影响节点交互
+      fo.setAttribute('data-element-id', element.id) // 添加元素ID用于查找
+      fo.style.pointerEvents = 'none' // 默认不影响节点交互
+      fo.classList.add('amis-foreign-object') // 添加类名用于查找
+
+      console.log('[CustomRendererModule] 创建 foreignObject，元素ID:', element.id);
+
+      // 如果当前 Ctrl/Command 键已按下，立即启用交互（由BpmnDesigner.vue管理）
+      // 这里不需要手动处理，BpmnDesigner.vue会统一管理
 
       // 创建内容容器
       const htmlDiv = document.createElement('div')
@@ -110,8 +141,9 @@ function CustomRendererModule(config, eventBus, styles, pathMap, canvas, textRen
       htmlDiv.style.justifyContent = 'center'
       htmlDiv.style.overflow = 'hidden'
       htmlDiv.style.fontSize = '12px' // 调整字体大小以适应BPMN节点
-      htmlDiv.style.pointerEvents = 'none'
+      htmlDiv.style.pointerEvents = 'none' // 默认禁用交互，按下Ctrl/Cmd时启用
       htmlDiv.style.padding = '4px'
+      htmlDiv.classList.add('amis-content-div') // 添加类名用于查找
 
       // 默认内容
       htmlDiv.innerHTML = "<div style='color:#aaa;text-align:center;font-size:10px;'>[AMIS Content]</div>"
