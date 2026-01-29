@@ -634,7 +634,7 @@ export declare function useAdapter(): {
      * 返回当前的认证token
      */
     useAuthToken(): string;
-    setAuthToken(token?: string): void;
+    setAuthToken(token?: string | undefined): void;
     isUserInRole(role: string): boolean;
     useTenantId(): string;
     useAppId(): string;
@@ -649,13 +649,13 @@ export declare function useAdapter(): {
     processRequest(request: any): any;
     processResponse(response: any): any;
     compileFunction(code: string, page: any): Function;
-    jumpTo(to: string, action?: any, ctx?: object): void;
+    jumpTo(to: string, action?: any, ctx?: object | undefined): void;
     isCurrentUrl: typeof default_isCurrentUrl;
     updateLocation: typeof default_updateLocation;
-    notify(type: ToastLevel, msg: any, conf?: ToastConf): void;
-    alert(msg: string, title?: string): Promise<void>;
-    confirm(msg: string, title?: string): Promise<boolean>;
-    dataMapping(to: any, from?: PlainObject, ignoreFunction?: boolean | ((key: string, value: any) => boolean), convertKeyToPath?: boolean, ignoreIfNotMatch?: boolean): any;
+    notify(type: ToastLevel, msg: any, conf?: ToastConf | undefined): void;
+    alert(msg: string, title?: string | undefined): Promise<void>;
+    confirm(msg: string, title?: string | undefined): Promise<boolean>;
+    dataMapping(to: any, from?: PlainObject, ignoreFunction?: boolean | ((key: string, value: any) => boolean), convertKeyToPath?: boolean | undefined, ignoreIfNotMatch?: boolean): any;
     fetchDict(dictName: string, options: FetcherRequest): Promise<FetcherResult>;
     fetchPageAndTransform(pageName: string, options: FetcherRequest): Promise<FetcherResult>;
     getPage(pageUrl: string): Promise<any>;
@@ -863,6 +863,9 @@ schema: ObjectConstructor;
 onRebuild?: ((...args: any[]) => any) | undefined;
 }>, {}, {}, {}, {}, string, ComponentProvideOptions, true, {}, any>;
 XuiSchemaPage: DefineComponent<ExtractPropTypes<    {
+/**
+* 在AmisSchemaPage的基础上增加AmisDebugger调试功能，以及根据path动态加载schema的功能
+*/
 schema: ObjectConstructor;
 data: ObjectConstructor;
 registerPage: PropType<RegisterPage>;
@@ -894,6 +897,9 @@ registerPage: PropType<RegisterPage>;
 actions: PropType<Record<string, Function>>;
 }>> & Readonly<{}>, {}, {}, {}, {}, string, ComponentProvideOptions, true, {}, any>>>;
 }, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, {}, string, PublicProps, Readonly<ExtractPropTypes<    {
+/**
+* 在AmisSchemaPage的基础上增加AmisDebugger调试功能，以及根据path动态加载schema的功能
+*/
 schema: ObjectConstructor;
 data: ObjectConstructor;
 registerPage: PropType<RegisterPage>;

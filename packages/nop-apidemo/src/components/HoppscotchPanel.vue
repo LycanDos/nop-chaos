@@ -60,8 +60,8 @@
 
           <el-form-item label="Headers">
             <div class="headers-editor">
-              <div 
-                v-for="(value, key) in requestForm.headers" 
+              <div
+                v-for="(_, key) in requestForm.headers"
                 :key="key"
                 class="header-row"
               >
@@ -71,7 +71,7 @@
                   style="width: 40%"
                 />
                 <el-input 
-                  v-model="requestForm.headers[key]" 
+                  v-model="requestForm.headers![key]"
                   placeholder="Header Value"
                   style="width: 40%"
                 />
@@ -93,8 +93,8 @@
             <el-tabs v-model="paramsTab">
               <el-tab-pane label="Query" name="query">
                 <div class="params-editor">
-                  <div 
-                    v-for="(value, key) in requestForm.params" 
+                  <div
+                    v-for="(_, key) in requestForm.params"
                     :key="key"
                     class="param-row"
                   >
@@ -104,7 +104,7 @@
                       style="width: 40%"
                     />
                     <el-input 
-                      v-model="requestForm.params[key]" 
+                      v-model="requestForm.params![key]"
                       placeholder="Param Value"
                       style="width: 40%"
                     />
@@ -299,23 +299,23 @@ const environments = ref<Environment[]>([])
 const addHeader = () => {
   const key = `header_${Date.now()}`
   headerKeys[key] = ''
-  requestForm.headers[key] = ''
+  requestForm.headers![key] = ''
 }
 
 const removeHeader = (key: string) => {
   delete headerKeys[key]
-  delete requestForm.headers[key]
+  delete requestForm.headers![key]
 }
 
 const addParam = () => {
   const key = `param_${Date.now()}`
   paramKeys[key] = ''
-  requestForm.params[key] = ''
+  requestForm.params![key] = ''
 }
 
 const removeParam = (key: string) => {
   delete paramKeys[key]
-  delete requestForm.params[key]
+  delete requestForm.params![key]
 }
 
 const sendRequest = async () => {
@@ -331,14 +331,14 @@ const sendRequest = async () => {
     // 处理动态键值对
     const headers: Record<string, string> = {}
     Object.entries(headerKeys).forEach(([key, headerKey]) => {
-      if (headerKey && requestForm.headers[key]) {
+      if (headerKey && requestForm.headers && requestForm.headers[key]) {
         headers[headerKey] = requestForm.headers[key]
       }
     })
 
     const params: Record<string, any> = {}
     Object.entries(paramKeys).forEach(([key, paramKey]) => {
-      if (paramKey && requestForm.params[key]) {
+      if (paramKey && requestForm.params && requestForm.params[key]) {
         params[paramKey] = requestForm.params[key]
       }
     })
@@ -379,12 +379,12 @@ const createCollection = () => {
   ElMessage.info('创建集合功能待实现')
 }
 
-const viewCollection = (collection: Collection) => {
+const viewCollection = (_collection: Collection) => {
   // 实现查看集合的逻辑
   ElMessage.info('查看集合功能待实现')
 }
 
-const deleteCollection = (id: string) => {
+const deleteCollection = (_id: string) => {
   // 实现删除集合的逻辑
   ElMessage.info('删除集合功能待实现')
 }
@@ -401,7 +401,7 @@ const setEnvironment = (id: string) => {
   }
 }
 
-const deleteEnvironment = (id: string) => {
+const deleteEnvironment = (_id: string) => {
   // 实现删除环境的逻辑
   ElMessage.info('删除环境功能待实现')
 }

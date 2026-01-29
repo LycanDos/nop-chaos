@@ -2,7 +2,7 @@
   <div class="hoppscotch-demo">
     <el-container>
       <el-header>
-        <h1>Nop Hoppscotch 演示</h1>
+        <h1>Nop Apidemo 演示</h1>
       </el-header>
       
       <el-main>

@@ -150,6 +150,9 @@ schema: ObjectConstructor;
 onRebuild?: ((...args: any[]) => any) | undefined;
 }>, {}, {}, {}, {}, string, ComponentProvideOptions, true, {}, any>;
 XuiSchemaPage: DefineComponent<ExtractPropTypes<    {
+/**
+* 在AmisSchemaPage的基础上增加AmisDebugger调试功能，以及根据path动态加载schema的功能
+*/
 schema: ObjectConstructor;
 data: ObjectConstructor;
 registerPage: PropType<RegisterPage>;
@@ -181,6 +184,9 @@ registerPage: PropType<RegisterPage>;
 actions: PropType<Record<string, Function>>;
 }>> & Readonly<{}>, {}, {}, {}, {}, string, ComponentProvideOptions, true, {}, any>>>;
 }, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, {}, string, PublicProps, Readonly<ExtractPropTypes<    {
+/**
+* 在AmisSchemaPage的基础上增加AmisDebugger调试功能，以及根据path动态加载schema的功能
+*/
 schema: ObjectConstructor;
 data: ObjectConstructor;
 registerPage: PropType<RegisterPage>;

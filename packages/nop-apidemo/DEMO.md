@@ -2,7 +2,7 @@
 
 ## 启动开发服务器
 
-在 `nop-hoppscotch` 目录下运行：
+在 `nop-apidemo` 目录下运行：
 
 ```bash
 pnpm run dev
@@ -65,4 +65,4 @@ Header: Authorization: Bearer {{apiKey}}
 - 热重载
 - 源码映射
 - 实时错误提示
-- 浏览器开发者工具调试 
+- 浏览器开发者工具调试

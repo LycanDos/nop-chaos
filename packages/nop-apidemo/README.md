@@ -1,4 +1,4 @@
-# Nop Hoppscotch
+# Nop Apidemo
 
 Nop平台的Hoppscotch API客户端集成包，提供现代化的API测试和调试功能。
 
@@ -33,7 +33,7 @@ pnpm build
 </template>
 
 <script setup>
-import { HoppscotchClient, HoppscotchPanel } from '@nop-chaos/nop-hoppscotch'
+import { HoppscotchClient, HoppscotchPanel } from '@nop-chaos/nop-apidemo'
 
 // 创建客户端实例
 const hoppscotchClient = new HoppscotchClient({
@@ -49,7 +49,7 @@ const hoppscotchClient = new HoppscotchClient({
 ### 环境配置
 
 ```javascript
-import { HoppscotchClient } from '@nop-chaos/nop-hoppscotch'
+import { HoppscotchClient } from '@nop-chaos/nop-apidemo'
 
 const client = new HoppscotchClient({
   environments: [
@@ -220,4 +220,4 @@ pnpm preview
 
 ## 许可证
 
-MIT License 
+MIT License

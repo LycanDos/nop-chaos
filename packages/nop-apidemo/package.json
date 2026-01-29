@@ -1,5 +1,5 @@
 {
-  "name": "@nop-chaos/nop-hoppscotch",
+  "name": "@nop-chaos/nop-apidemo",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -45,4 +45,4 @@
   "peerDependencies": {
     "vue": "^3.3.4"
   }
-} 
+}

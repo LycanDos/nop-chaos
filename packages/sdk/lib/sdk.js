@@ -1,7 +1,7 @@
 import qs, { parse as parse$2 } from "qs";
 import { match as match$2 } from "path-to-regexp";
 import * as Vue from "vue";
-import { ref, shallowRef, toRaw, defineComponent, onUnmounted, markRaw, watchEffect, onBeforeUnmount, h, onMounted, openBlock, createElementBlock, Fragment as Fragment$1, createBlock, resolveDynamicComponent, mergeProps as mergeProps$1, createCommentVNode, unref, withCtx, createElementVNode, createVNode, createTextVNode, createStaticVNode, normalizeProps, guardReactiveProps, resolveComponent } from "vue";
+import { ref, shallowRef, toRaw, defineComponent, onUnmounted, markRaw, watchEffect, onBeforeUnmount, h, onMounted, openBlock, createElementBlock, Fragment as Fragment$1, createBlock, resolveDynamicComponent, mergeProps as mergeProps$1, createCommentVNode, unref, withCtx, createElementVNode, createVNode, createTextVNode, normalizeProps, guardReactiveProps, resolveComponent } from "vue";
 import LRUCache from "lru-cache";
 import { cloneDeep as cloneDeep$1, isNumber, isInteger as isInteger$1, isBoolean as isBoolean$1, omit as omit$1, isString as isString$2 } from "lodash-es";
 import axios from "axios";
@@ -4577,6 +4577,7 @@ var Entity = /* @__PURE__ */ function() {
     _classCallCheck(this, Entity2);
     _defineProperty$2(this, "instanceId", void 0);
     _defineProperty$2(this, "cache", /* @__PURE__ */ new Map());
+    _defineProperty$2(this, "extracted", /* @__PURE__ */ new Set());
     this.instanceId = instanceId;
   }
   _createClass(Entity2, [{
@@ -4854,13 +4855,12 @@ function unit$1(num) {
   return num;
 }
 function toStyleStr(style2, tokenKey, styleId) {
-  var _objectSpread22;
   var customizeAttrs = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : {};
   var plain = arguments.length > 4 && arguments[4] !== void 0 ? arguments[4] : false;
   if (plain) {
     return style2;
   }
-  var attrs = _objectSpread2$2(_objectSpread2$2({}, customizeAttrs), {}, (_objectSpread22 = {}, _defineProperty$2(_objectSpread22, ATTR_TOKEN, tokenKey), _defineProperty$2(_objectSpread22, ATTR_MARK, styleId), _objectSpread22));
+  var attrs = _objectSpread2$2(_objectSpread2$2({}, customizeAttrs), {}, _defineProperty$2(_defineProperty$2({}, ATTR_TOKEN, tokenKey), ATTR_MARK, styleId));
   var attrStr = Object.keys(attrs).map(function(attr) {
     var val = attrs[attr];
     return val ? "".concat(attr, '="').concat(val, '"') : null;
@@ -5070,12 +5070,12 @@ function removeStyleTags(key, instanceId) {
 var TOKEN_THRESHOLD = 0;
 function cleanTokenStyle(tokenKey, instanceId) {
   tokenKeys.set(tokenKey, (tokenKeys.get(tokenKey) || 0) - 1);
-  var tokenKeyList = Array.from(tokenKeys.keys());
-  var cleanableKeyList = tokenKeyList.filter(function(key) {
-    var count2 = tokenKeys.get(key) || 0;
-    return count2 <= 0;
+  var cleanableKeyList = /* @__PURE__ */ new Set();
+  tokenKeys.forEach(function(value, key) {
+    if (value <= 0)
+      cleanableKeyList.add(key);
   });
-  if (tokenKeyList.length - cleanableKeyList.length > TOKEN_THRESHOLD) {
+  if (tokenKeys.size - cleanableKeyList.size > TOKEN_THRESHOLD) {
     cleanableKeyList.forEach(function(key) {
       removeStyleTags(key, instanceId);
       tokenKeys.delete(key);
@@ -5790,7 +5790,8 @@ function useStyleRegister(info, styleFn) {
       var _ref3 = _slicedToArray$1(_ref2, 3), styleId = _ref3[2];
       if ((fromHMR || autoClear) && isClientSide) {
         removeCSS(styleId, {
-          mark: ATTR_MARK
+          mark: ATTR_MARK,
+          attachTo: container
         });
       }
     },
@@ -5843,8 +5844,7 @@ function useStyleRegister(info, styleFn) {
     if (!ssrInline || isMergedClientSide || !defaultCache) {
       styleNode = /* @__PURE__ */ React.createElement(Empty, null);
     } else {
-      var _ref6;
-      styleNode = /* @__PURE__ */ React.createElement("style", _extends$1({}, (_ref6 = {}, _defineProperty$2(_ref6, ATTR_TOKEN, cachedTokenKey), _defineProperty$2(_ref6, ATTR_MARK, cachedStyleId), _ref6), {
+      styleNode = /* @__PURE__ */ React.createElement("style", _extends$1({}, _defineProperty$2(_defineProperty$2({}, ATTR_TOKEN, cachedTokenKey), ATTR_MARK, cachedStyleId), {
         dangerouslySetInnerHTML: {
           __html: cachedStyleStr
         }
@@ -5901,7 +5901,8 @@ var useCSSVarRegister = function useCSSVarRegister2(config2, fn) {
     var _ref2 = _slicedToArray$1(_ref, 3), styleId = _ref2[2];
     if (isClientSide) {
       removeCSS(styleId, {
-        mark: ATTR_MARK
+        mark: ATTR_MARK,
+        attachTo: container
       });
     }
   }, function(_ref3) {
@@ -5934,8 +5935,7 @@ var extract3 = function extract4(cache, effectStyles, options) {
   var styleText = toStyleStr(styleStr, cssVarKey, styleId, sharedAttrs, plain);
   return [order, styleId, styleText];
 };
-var _ExtractStyleFns;
-_ExtractStyleFns = {}, _defineProperty$2(_ExtractStyleFns, STYLE_PREFIX, extract$1), _defineProperty$2(_ExtractStyleFns, TOKEN_PREFIX, extract$2), _defineProperty$2(_ExtractStyleFns, CSS_VAR_PREFIX, extract3), _ExtractStyleFns;
+_defineProperty$2(_defineProperty$2(_defineProperty$2({}, STYLE_PREFIX, extract$1), TOKEN_PREFIX, extract$2), CSS_VAR_PREFIX, extract3);
 var Keyframe = /* @__PURE__ */ function() {
   function Keyframe2(name, style2) {
     _classCallCheck(this, Keyframe2);
@@ -8058,7 +8058,7 @@ function genStyleUtils(config2) {
   };
 }
 const PresetColors = ["blue", "purple", "cyan", "green", "magenta", "pink", "red", "orange", "yellow", "volcano", "geekblue", "lime", "gold"];
-const version$1 = "5.26.3";
+const version$1 = "5.26.6";
 function isStableColor(color) {
   return color >= 0 && color <= 255;
 }
@@ -16296,6 +16296,7 @@ function useClosable(propCloseCollection, contextCloseCollection, fallbackCloseC
     return !mergedFallbackCloseCollection.closable ? false : mergedFallbackCloseCollection;
   }, [propCloseConfig, contextCloseConfig, mergedFallbackCloseCollection]);
   return React__default.useMemo(() => {
+    var _a, _b;
     if (mergedClosableConfig === false) {
       return [false, null, closeBtnIsDisabled, {}];
     }
@@ -16311,9 +16312,9 @@ function useClosable(propCloseCollection, contextCloseCollection, fallbackCloseC
       if (closeIconRender) {
         mergedCloseIcon = closeIconRender(closeIcon);
       }
-      mergedCloseIcon = /* @__PURE__ */ React__default.isValidElement(mergedCloseIcon) ? /* @__PURE__ */ React__default.cloneElement(mergedCloseIcon, Object.assign({
-        "aria-label": contextLocale.close
-      }, ariaOrDataProps)) : /* @__PURE__ */ React__default.createElement("span", Object.assign({
+      mergedCloseIcon = /* @__PURE__ */ React__default.isValidElement(mergedCloseIcon) ? /* @__PURE__ */ React__default.cloneElement(mergedCloseIcon, Object.assign(Object.assign(Object.assign({}, mergedCloseIcon.props), {
+        "aria-label": (_b = (_a = mergedCloseIcon.props) === null || _a === void 0 ? void 0 : _a["aria-label"]) !== null && _b !== void 0 ? _b : contextLocale.close
+      }), ariaOrDataProps)) : /* @__PURE__ */ React__default.createElement("span", Object.assign({
         "aria-label": contextLocale.close
       }, ariaOrDataProps), mergedCloseIcon);
     }
@@ -18058,6 +18059,8 @@ function generateTrigger() {
     if (className) {
       cloneProps.className = classNames(originChildProps.className, className);
     }
+    var renderedRef = React.useRef(false);
+    renderedRef.current || (renderedRef.current = forceRender || mergedOpen || inMotion);
     var mergedChildrenProps = _objectSpread2$2(_objectSpread2$2({}, originChildProps), cloneProps);
     var passedProps = {};
     var passedEventList = ["onContextMenu", "onClick", "onMouseDown", "onTouchStart", "onMouseEnter", "onMouseLeave", "onFocus", "onBlur"];
@@ -18085,7 +18088,7 @@ function generateTrigger() {
       onResize: onTargetResize
     }, /* @__PURE__ */ React.createElement(TriggerWrapper, {
       getTriggerDOMNode
-    }, triggerNode)), /* @__PURE__ */ React.createElement(TriggerContext.Provider, {
+    }, triggerNode)), renderedRef.current && /* @__PURE__ */ React.createElement(TriggerContext.Provider, {
       value: context
     }, /* @__PURE__ */ React.createElement(Popup$1, {
       portal: PortalComponent,
@@ -33508,15 +33511,31 @@ const debuggerSchema = {
     ]
   }
 };
-const _imports_0 = "/resource/img/logo.png";
 const _sfc_main$5 = {};
 const _hoisted_1$1 = { class: "app-loading" };
 function _sfc_render$2(_ctx, _cache) {
   return openBlock(), createElementBlock("div", _hoisted_1$1, _cache[0] || (_cache[0] = [
-    createStaticVNode('<div class="app-loading-wrap" data-v-d34df6c1><img src="' + _imports_0 + '" class="app-loading-logo" alt="Logo" data-v-d34df6c1><div class="app-loading-dots" data-v-d34df6c1><span class="dot dot-spin" data-v-d34df6c1><i data-v-d34df6c1></i><i data-v-d34df6c1></i><i data-v-d34df6c1></i><i data-v-d34df6c1></i></span></div><div class="app-loading-title" data-v-d34df6c1><b data-v-d34df6c1>N</b>op is n<b data-v-d34df6c1>o</b>t <b data-v-d34df6c1>P</b>rogramming </div></div>', 1)
+    createElementVNode("div", { class: "app-loading-wrap" }, [
+      createElementVNode("div", { class: "app-loading-dots" }, [
+        createElementVNode("span", { class: "dot dot-spin" }, [
+          createElementVNode("i"),
+          createElementVNode("i"),
+          createElementVNode("i"),
+          createElementVNode("i")
+        ])
+      ]),
+      createElementVNode("div", { class: "app-loading-title" }, [
+        createElementVNode("b", null, "N"),
+        createTextVNode("op is n"),
+        createElementVNode("b", null, "o"),
+        createTextVNode("t "),
+        createElementVNode("b", null, "P"),
+        createTextVNode("rogramming ")
+      ])
+    ], -1)
   ]));
 }
-const XuiLoading = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["render", _sfc_render$2], ["__scopeId", "data-v-d34df6c1"]]);
+const XuiLoading = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["render", _sfc_render$2], ["__scopeId", "data-v-b50685ed"]]);
 const _sfc_main$4 = /* @__PURE__ */ defineComponent({
   __name: "XuiPageEditor",
   props: {
@@ -33533,6 +33552,7 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
   emits: ["exit"],
   setup(__props, { emit: __emit }) {
     const props = __props;
+    console.log("[XuiPageEditor] props:", props);
     const { getPageSource } = props;
     const { useI18n } = useAdapter();
     const emit = __emit;
@@ -33543,12 +33563,14 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
     const schemaRef = shallowRef();
     watchEffect(() => {
       getPageSource(false).then((schema) => {
+        console.log("[XuiPageEditor] getPageSource result:", schema);
         if (!schema)
           schema = {};
         schemaRef.value = markRaw(schema);
         const schemaTypeName = schema["xui:schema-type"];
         if (!schemaTypeName) {
           componentType.value = markRaw(AmisPageEditor);
+          console.log("[XuiPageEditor] use default AmisPageEditor");
         } else {
           const schemaType = getSchemaProcessorType(schemaTypeName);
           if (!schemaType) {
@@ -33557,6 +33579,7 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
             throw new Error("nop.err.unknown-schema-type");
           }
           componentType.value = markRaw(schemaType.editorComponentType);
+          console.log("[XuiPageEditor] use schemaType:", schemaTypeName, schemaType);
         }
       });
     });
@@ -33587,11 +33610,15 @@ const _sfc_main$3 = /* @__PURE__ */ defineComponent({
   },
   emits: ["update:modelValue", "exit"],
   setup(__props, { emit: __emit }) {
+    const props = __props;
     const emit = __emit;
+    console.log("[XuiPageEditorDialog] props:", props);
     function handleEditorExit() {
+      console.log("[XuiPageEditorDialog] handleEditorExit called");
       emit("update:modelValue", false);
     }
     function handleChange(value) {
+      console.log("[XuiPageEditorDialog] handleChange called", value);
       emit("update:modelValue", value);
     }
     return (_ctx, _cache) => {
@@ -33703,7 +33730,7 @@ const _sfc_main$2 = /* @__PURE__ */ defineComponent({
             onClick: openSchemaEditor
           }, {
             default: withCtx(() => _cache[2] || (_cache[2] = [
-              createTextVNode("S")
+              createTextVNode("S", -1)
             ])),
             _: 1,
             __: [2]
@@ -33717,7 +33744,7 @@ const _sfc_main$2 = /* @__PURE__ */ defineComponent({
             onClick: openXuiPageEditor
           }, {
             default: withCtx(() => _cache[3] || (_cache[3] = [
-              createTextVNode("V")
+              createTextVNode("V", -1)
             ])),
             _: 1,
             __: [3]

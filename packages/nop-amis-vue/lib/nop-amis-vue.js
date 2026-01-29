@@ -1,5 +1,5 @@
 import * as Vue from "vue";
-import { defineComponent, ref, onUnmounted, openBlock, createElementBlock, watchEffect, onBeforeUnmount, h, onMounted, createStaticVNode, shallowRef, markRaw, Fragment as Fragment$1, createBlock, resolveDynamicComponent, mergeProps, createCommentVNode, unref, withCtx, createElementVNode, createVNode, createTextVNode, normalizeProps, guardReactiveProps, resolveComponent } from "vue";
+import { defineComponent, ref, onUnmounted, openBlock, createElementBlock, watchEffect, onBeforeUnmount, h, onMounted, createElementVNode, createTextVNode, shallowRef, markRaw, Fragment as Fragment$1, createBlock, resolveDynamicComponent, mergeProps, createCommentVNode, unref, withCtx, createVNode, normalizeProps, guardReactiveProps, resolveComponent } from "vue";
 import { ajaxFetch, useDebug, useAdapter, providePage, default_jumpTo, isCancel, default_isCurrentUrl, default_updateLocation, createPage, transformPageJson, bindActions, getSchemaProcessorType, deletePageCache, PageApis, registerAdapter, registerModule } from "@nop-chaos/nop-core";
 import { isString, cloneDeep } from "lodash-es";
 import { toast, clearStoresCache, setDefaultLocale, render, ToastComponent, ScopedContext, Renderer, FormItem, dataMapping, alert, confirm } from "amis";
@@ -389,16 +389,32 @@ const debuggerSchema = {
     ]
   }
 };
-const _imports_0 = "/resource/img/logo.png";
-const XuiLoading_vue_vue_type_style_index_0_scoped_d34df6c1_lang = "";
+const XuiLoading_vue_vue_type_style_index_0_scoped_b50685ed_lang = "";
 const _sfc_main$5 = {};
 const _hoisted_1$1 = { class: "app-loading" };
 function _sfc_render$2(_ctx, _cache) {
   return openBlock(), createElementBlock("div", _hoisted_1$1, _cache[0] || (_cache[0] = [
-    createStaticVNode('<div class="app-loading-wrap" data-v-d34df6c1><img src="' + _imports_0 + '" class="app-loading-logo" alt="Logo" data-v-d34df6c1><div class="app-loading-dots" data-v-d34df6c1><span class="dot dot-spin" data-v-d34df6c1><i data-v-d34df6c1></i><i data-v-d34df6c1></i><i data-v-d34df6c1></i><i data-v-d34df6c1></i></span></div><div class="app-loading-title" data-v-d34df6c1><b data-v-d34df6c1>N</b>op is n<b data-v-d34df6c1>o</b>t <b data-v-d34df6c1>P</b>rogramming </div></div>', 1)
+    createElementVNode("div", { class: "app-loading-wrap" }, [
+      createElementVNode("div", { class: "app-loading-dots" }, [
+        createElementVNode("span", { class: "dot dot-spin" }, [
+          createElementVNode("i"),
+          createElementVNode("i"),
+          createElementVNode("i"),
+          createElementVNode("i")
+        ])
+      ]),
+      createElementVNode("div", { class: "app-loading-title" }, [
+        createElementVNode("b", null, "N"),
+        createTextVNode("op is n"),
+        createElementVNode("b", null, "o"),
+        createTextVNode("t "),
+        createElementVNode("b", null, "P"),
+        createTextVNode("rogramming ")
+      ])
+    ], -1)
   ]));
 }
-const XuiLoading = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["render", _sfc_render$2], ["__scopeId", "data-v-d34df6c1"]]);
+const XuiLoading = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["render", _sfc_render$2], ["__scopeId", "data-v-b50685ed"]]);
 const _sfc_main$4 = /* @__PURE__ */ defineComponent({
   __name: "XuiPageEditor",
   props: {
@@ -415,6 +431,7 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
   emits: ["exit"],
   setup(__props, { emit: __emit }) {
     const props = __props;
+    console.log("[XuiPageEditor] props:", props);
     const { getPageSource } = props;
     const { useI18n } = useAdapter();
     const emit = __emit;
@@ -425,12 +442,14 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
     const schemaRef = shallowRef();
     watchEffect(() => {
       getPageSource(false).then((schema) => {
+        console.log("[XuiPageEditor] getPageSource result:", schema);
         if (!schema)
           schema = {};
         schemaRef.value = markRaw(schema);
         const schemaTypeName = schema["xui:schema-type"];
         if (!schemaTypeName) {
           componentType.value = markRaw(AmisPageEditor);
+          console.log("[XuiPageEditor] use default AmisPageEditor");
         } else {
           const schemaType = getSchemaProcessorType(schemaTypeName);
           if (!schemaType) {
@@ -439,6 +458,7 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
             throw new Error("nop.err.unknown-schema-type");
           }
           componentType.value = markRaw(schemaType.editorComponentType);
+          console.log("[XuiPageEditor] use schemaType:", schemaTypeName, schemaType);
         }
       });
     });
@@ -469,11 +489,15 @@ const _sfc_main$3 = /* @__PURE__ */ defineComponent({
   },
   emits: ["update:modelValue", "exit"],
   setup(__props, { emit: __emit }) {
+    const props = __props;
     const emit = __emit;
+    console.log("[XuiPageEditorDialog] props:", props);
     function handleEditorExit() {
+      console.log("[XuiPageEditorDialog] handleEditorExit called");
       emit("update:modelValue", false);
     }
     function handleChange(value) {
+      console.log("[XuiPageEditorDialog] handleChange called", value);
       emit("update:modelValue", value);
     }
     return (_ctx, _cache) => {
@@ -586,7 +610,7 @@ const _sfc_main$2 = /* @__PURE__ */ defineComponent({
             onClick: openSchemaEditor
           }, {
             default: withCtx(() => _cache[2] || (_cache[2] = [
-              createTextVNode("S")
+              createTextVNode("S", -1)
             ])),
             _: 1,
             __: [2]
@@ -600,7 +624,7 @@ const _sfc_main$2 = /* @__PURE__ */ defineComponent({
             onClick: openXuiPageEditor
           }, {
             default: withCtx(() => _cache[3] || (_cache[3] = [
-              createTextVNode("V")
+              createTextVNode("V", -1)
             ])),
             _: 1,
             __: [3]

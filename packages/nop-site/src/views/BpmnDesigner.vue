@@ -694,8 +694,84 @@ const handleAmisElementClickGlobal = (element: any, event: Event) => {
     // 打开Hoppscotch编辑器
     openHoppscotchEditor(element);
   } else {
-    // 其他AMIS元素处理
-    alert(`AMIS Element Clicked: ${element.id}\nType: ${element.type}`);
+    // 尝试获取AMIS代码并获取对应的schema
+    const amisCode = getAmisCode(element);
+    if (amisCode) {
+      // 获取缓存的AMIS内容
+      const amisContent = window._bpmnContentHtmlMap?.[amisCode];
+      if (amisContent) {
+        console.log('Found cached AMIS content, trying to render as dialog:', amisContent);
+        // 如果内容是对象（可能是解析过的AMIS schema），尝试直接作为schema打开
+        try {
+          const parsedContent = typeof amisContent === 'string' && amisContent.trim().startsWith('{')
+            ? JSON.parse(amisContent)
+            : amisContent;
+
+          if (parsedContent && typeof parsedContent === 'object' && parsedContent.type === 'page') {
+            // 这是一个AMIS schema，我们需要在全局上下文中渲染它
+            console.log('Rendering AMIS schema as dialog:', parsedContent);
+
+            // 尝试使用全局AMIS功能创建弹窗
+            const amisDialog = window.amisRequire?.('amis/lib/components/Dialog') ||
+                              window.amisRequire?.('amis/lib/components/Modal') ||
+                              window.amis?.dialog;
+
+            if (amisDialog) {
+              amisDialog.alert({
+                title: 'AMIS元素预览',
+                body: parsedContent,
+                size: 'lg'
+              });
+            } else {
+              // 如果AMIS dialog不可用，使用alert作为后备
+              alert(`AMIS Element Content:\n${JSON.stringify(parsedContent, null, 2)}`);
+            }
+          } else {
+            alert(`AMIS Element Clicked: ${element.id}\nContent: ${amisContent}`);
+          }
+        } catch (e) {
+          console.error('Error parsing AMIS content:', e);
+          alert(`AMIS Element Clicked: ${element.id}\nContent: ${amisContent}`);
+        }
+      } else {
+        // 如果没有缓存，尝试从API获取内容
+        fetchAmisContentHtml(amisCode, element.id).then(content => {
+          try {
+            const parsedContent = typeof content === 'string' && content.trim().startsWith('{')
+              ? JSON.parse(content)
+              : content;
+
+            if (parsedContent && typeof parsedContent === 'object' && parsedContent.type === 'page') {
+              // 这是一个AMIS schema，尝试渲染为弹窗
+              const amisDialog = window.amisRequire?.('amis/lib/components/Dialog') ||
+                                window.amisRequire?.('amis/lib/components/Modal') ||
+                                window.amis?.dialog;
+
+              if (amisDialog) {
+                amisDialog.alert({
+                  title: 'AMIS元素预览',
+                  body: parsedContent,
+                  size: 'lg'
+                });
+              } else {
+                alert(`AMIS Element Content:\n${JSON.stringify(parsedContent, null, 2)}`);
+              }
+            } else {
+              alert(`AMIS Element Clicked: ${element.id}\nContent: ${content}`);
+            }
+          } catch (e) {
+            console.error('Error parsing AMIS content:', e);
+            alert(`AMIS Element Clicked: ${element.id}\nContent: ${content}`);
+          }
+        }).catch(err => {
+          console.error('Failed to fetch AMIS content:', err);
+          alert(`AMIS Element Clicked: ${element.id}\nError fetching content: ${err.message}`);
+        });
+      }
+    } else {
+      // 其他AMIS元素处理
+      alert(`AMIS Element Clicked: ${element.id}\nType: ${element.type}`);
+    }
   }
 };
 
