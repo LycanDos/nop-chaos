@@ -239,8 +239,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, reactive, computed, onMounted, h } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Connection } from '@element-plus/icons-vue'
 import { HoppscotchClient } from '../core/HoppscotchClient'
 import type { ApiRequest, ApiResponse, Environment, Collection } from '../types'
@@ -370,47 +370,306 @@ const sendRequest = async () => {
 }
 
 const saveToCollection = () => {
-  // 实现保存到集合的逻辑
-  ElMessage.info('保存到集合功能待实现')
+  if (!requestForm.url) {
+    ElMessage.warning('请先配置请求')
+    return
+  }
+
+  // 弹出对话框让用户选择或创建集合
+  ElMessageBox.prompt('请输入集合名称', '保存到集合', {
+    confirmButtonText: '保存',
+    cancelButtonText: '取消',
+    inputPattern: /.+/,
+    inputErrorMessage: '集合名称不能为空'
+  }).then(({ value }) => {
+    // 查找或创建集合
+    let collection = collections.value.find(c => c.name === value)
+
+    if (!collection) {
+      collection = {
+        id: `col_${Date.now()}`,
+        name: value,
+        description: '',
+        requests: [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+      collections.value.push(collection)
+
+      if (props.client) {
+        props.client.addCollection(collection)
+      }
+    }
+
+    // 添加请求到集合
+    const headers: Record<string, string> = {}
+    Object.entries(headerKeys).forEach(([key, headerKey]) => {
+      if (headerKey && requestForm.headers && requestForm.headers[key]) {
+        headers[headerKey] = requestForm.headers[key]
+      }
+    })
+
+    const params: Record<string, any> = {}
+    Object.entries(paramKeys).forEach(([key, paramKey]) => {
+      if (paramKey && requestForm.params && requestForm.params[key]) {
+        params[paramKey] = requestForm.params[key]
+      }
+    })
+
+    const request: ApiRequest = {
+      method: requestForm.method,
+      url: requestForm.url,
+      headers,
+      params,
+      data: requestForm.data,
+      timeout: requestForm.timeout
+    }
+
+    collection.requests.push(request)
+    collection.updatedAt = new Date()
+
+    // 保存到localStorage
+    saveCollectionsToStorage()
+
+    ElMessage.success(`已保存到集合: ${value}`)
+  }).catch(() => {
+    // 用户取消
+  })
 }
 
 const createCollection = () => {
-  // 实现创建集合的逻辑
-  ElMessage.info('创建集合功能待实现')
+  ElMessageBox.prompt('请输入集合名称', '新建集合', {
+    confirmButtonText: '创建',
+    cancelButtonText: '取消',
+    inputPattern: /.+/,
+    inputErrorMessage: '集合名称不能为空'
+  }).then(({ value }) => {
+    const collection: Collection = {
+      id: `col_${Date.now()}`,
+      name: value,
+      description: '',
+      requests: [],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+
+    collections.value.push(collection)
+
+    if (props.client) {
+      props.client.addCollection(collection)
+    }
+
+    saveCollectionsToStorage()
+
+    ElMessage.success(`集合 "${value}" 创建成功`)
+  }).catch(() => {
+    // 用户取消
+  })
 }
 
-const viewCollection = (_collection: Collection) => {
-  // 实现查看集合的逻辑
-  ElMessage.info('查看集合功能待实现')
+const viewCollection = (collection: Collection) => {
+  if (collection.requests.length === 0) {
+    ElMessage.info('该集合中没有请求')
+    return
+  }
+
+  // 显示集合中的请求列表
+  ElMessageBox({
+    title: `集合: ${collection.name}`,
+    message: h('div', { style: 'max-height: 400px; overflow-y: auto;' }, [
+      h('ul', { style: 'list-style: none; padding: 0;' },
+        collection.requests.map((req, index) =>
+          h('li', {
+            style: 'padding: 10px; border-bottom: 1px solid #eee; cursor: pointer;',
+            onClick: () => loadRequest(req)
+          }, [
+            h('strong', `${req.method} `),
+            h('span', req.url)
+          ])
+        )
+      )
+    ]),
+    confirmButtonText: '关闭',
+    showCancelButton: false
+  })
 }
 
-const deleteCollection = (_id: string) => {
-  // 实现删除集合的逻辑
-  ElMessage.info('删除集合功能待实现')
+const loadRequest = (request: ApiRequest) => {
+  // 加载请求到表单
+  requestForm.method = request.method
+  requestForm.url = request.url
+  requestForm.data = request.data
+  requestForm.timeout = request.timeout || 10000
+
+  // 清空现有的headers和params
+  Object.keys(headerKeys).forEach(key => {
+    delete headerKeys[key]
+    delete requestForm.headers![key]
+  })
+  Object.keys(paramKeys).forEach(key => {
+    delete paramKeys[key]
+    delete requestForm.params![key]
+  })
+
+  // 加载headers
+  if (request.headers) {
+    Object.entries(request.headers).forEach(([key, value]) => {
+      const internalKey = `header_${Date.now()}_${Math.random()}`
+      headerKeys[internalKey] = key
+      requestForm.headers![internalKey] = value
+    })
+  }
+
+  // 加载params
+  if (request.params) {
+    Object.entries(request.params).forEach(([key, value]) => {
+      const internalKey = `param_${Date.now()}_${Math.random()}`
+      paramKeys[internalKey] = key
+      requestForm.params![internalKey] = value
+    })
+  }
+
+  // 切换到请求面板
+  activeTab.value = 'request'
+
+  ElMessage.success('请求已加载')
+}
+
+const deleteCollection = (id: string) => {
+  ElMessageBox.confirm('确定要删除这个集合吗？', '确认删除', {
+    confirmButtonText: '删除',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    const index = collections.value.findIndex(c => c.id === id)
+    if (index !== -1) {
+      collections.value.splice(index, 1)
+      saveCollectionsToStorage()
+      ElMessage.success('集合已删除')
+    }
+  }).catch(() => {
+    // 用户取消
+  })
 }
 
 const createEnvironment = () => {
-  // 实现创建环境的逻辑
-  ElMessage.info('创建环境功能待实现')
+  ElMessageBox.prompt('请输入环境名称', '新建环境', {
+    confirmButtonText: '创建',
+    cancelButtonText: '取消',
+    inputPattern: /.+/,
+    inputErrorMessage: '环境名称不能为空'
+  }).then(({ value }) => {
+    const environment: Environment = {
+      id: `env_${Date.now()}`,
+      name: value,
+      variables: {},
+      isDefault: environments.value.length === 0
+    }
+
+    environments.value.push(environment)
+
+    if (props.client) {
+      props.client.addEnvironment(environment)
+    }
+
+    saveEnvironmentsToStorage()
+
+    ElMessage.success(`环境 "${value}" 创建成功`)
+  }).catch(() => {
+    // 用户取消
+  })
 }
 
 const setEnvironment = (id: string) => {
   if (props.client) {
     props.client.setEnvironment(id)
+
+    // 更新默认标记
+    environments.value.forEach(env => {
+      env.isDefault = env.id === id
+    })
+
+    saveEnvironmentsToStorage()
+
     ElMessage.success('环境切换成功')
   }
 }
 
-const deleteEnvironment = (_id: string) => {
-  // 实现删除环境的逻辑
-  ElMessage.info('删除环境功能待实现')
+const deleteEnvironment = (id: string) => {
+  ElMessageBox.confirm('确定要删除这个环境吗？', '确认删除', {
+    confirmButtonText: '删除',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    const index = environments.value.findIndex(e => e.id === id)
+    if (index !== -1) {
+      environments.value.splice(index, 1)
+      saveEnvironmentsToStorage()
+      ElMessage.success('环境已删除')
+    }
+  }).catch(() => {
+    // 用户取消
+  })
+}
+
+// 存储管理
+const saveCollectionsToStorage = () => {
+  try {
+    localStorage.setItem('hoppscotch_collections', JSON.stringify(collections.value))
+  } catch (error) {
+    console.error('Failed to save collections:', error)
+  }
+}
+
+const loadCollectionsFromStorage = () => {
+  try {
+    const stored = localStorage.getItem('hoppscotch_collections')
+    if (stored) {
+      collections.value = JSON.parse(stored)
+    }
+  } catch (error) {
+    console.error('Failed to load collections:', error)
+  }
+}
+
+const saveEnvironmentsToStorage = () => {
+  try {
+    localStorage.setItem('hoppscotch_environments', JSON.stringify(environments.value))
+  } catch (error) {
+    console.error('Failed to save environments:', error)
+  }
+}
+
+const loadEnvironmentsFromStorage = () => {
+  try {
+    const stored = localStorage.getItem('hoppscotch_environments')
+    if (stored) {
+      environments.value = JSON.parse(stored)
+    }
+  } catch (error) {
+    console.error('Failed to load environments:', error)
+  }
 }
 
 // 生命周期
 onMounted(() => {
+  // 加载存储的数据
+  loadCollectionsFromStorage()
+  loadEnvironmentsFromStorage()
+
   // 初始化默认数据
   addHeader()
   addParam()
+
+  // 如果有client,同步数据
+  if (props.client) {
+    collections.value.forEach(col => {
+      props.client!.addCollection(col)
+    })
+    environments.value.forEach(env => {
+      props.client!.addEnvironment(env)
+    })
+  }
 })
 </script>
 

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AMIS交互模式测试</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    .test-container {
+      position: relative;
+      width: 600px;
+      height: 400px;
+      border: 1px solid #ccc;
+      margin: 20px 0;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .amis-interactive {
+      outline: 2px dashed #fa8c16 !important;
+      outline-offset: 2px;
+      cursor: pointer !important;
+      animation: pulse-border 1.5s ease-in-out infinite;
+      position: relative !important;
+      z-index: 9999 !important;
+      background-color: rgba(255, 140, 22, 0.1) !important;
+    }
+
+    .amis-interactive * {
+      pointer-events: auto !important;
+      cursor: pointer !important;
+    }
+
+    @keyframes pulse-border {
+      0%, 100% {
+        outline-color: #fa8c16;
+        outline-width: 2px;
+        background-color: rgba(255, 140, 22, 0.1);
+      }
+      50% {
+        outline-color: #ffc069;
+        outline-width: 3px;
+        background-color: rgba(255, 192, 105, 0.2);
+      }
+    }
+
+    .hint {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 8px 16px;
+      background: rgba(0, 0, 0, 0.75);
+      color: #fff;
+      border-radius: 4px;
+      font-size: 12px;
+      z-index: 10000;
+      transition: all 0.3s ease;
+    }
+
+    .hint.active {
+      background: #52c41a;
+    }
+
+    button {
+      padding: 8px 16px;
+      background: #1890ff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background: #40a9ff;
+    }
+
+    .log {
+      margin-top: 20px;
+      padding: 10px;
+      background: #f5f5f5;
+      border-radius: 4px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>AMIS交互模式测试</h1>
+  <p>按住 Ctrl/⌘ 键来启用交互模式，然后点击按钮</p>
+
+  <div class="hint" id="hint">
+    <span id="hintText">按住 Ctrl/⌘ 键可与 AMIS 元素交互</span>
+  </div>
+
+  <div class="test-container">
+    <svg id="testSvg">
+      <rect x="10" y="10" width="200" height="100" fill="#f0f0f0" stroke="#ccc" />
+      <foreignObject id="testFo" x="10" y="10" width="200" height="100" style="pointer-events: none;">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="amis-content-div" style="width: 100%; height: 100%; padding: 10px; pointer-events: none;">
+          <button onclick="handleButtonClick(event)">测试按钮</button>
+          <p>这是AMIS内容</p>
+        </div>
+      </foreignObject>
+    </svg>
+  </div>
+
+  <div class="log" id="log"></div>
+
+  <script>
+    let isCtrlPressed = false;
+    const hint = document.getElementById('hint');
+    const hintText = document.getElementById('hintText');
+    const testFo = document.getElementById('testFo');
+    const contentDiv = testFo.querySelector('.amis-content-div');
+    const logDiv = document.getElementById('log');
+
+    function log(message) {
+      const time = new Date().toLocaleTimeString();
+      logDiv.innerHTML += `[${time}] ${message}<br>`;
+      logDiv.scrollTop = logDiv.scrollHeight;
+      console.log(message);
+    }
+
+    function updateInteractiveMode(isInteractive) {
+      log(`updateInteractiveMode: ${isInteractive}`);
+
+      if (isInteractive) {
+        testFo.style.pointerEvents = 'auto';
+        testFo.style.zIndex = '10000';
+        log(`设置 foreignObject pointer-events: ${testFo.style.pointerEvents}`);
+
+        if (contentDiv) {
+          contentDiv.style.pointerEvents = 'auto';
+          contentDiv.classList.add('amis-interactive');
+
+          const allChildren = contentDiv.querySelectorAll('*');
+          allChildren.forEach(child => {
+            child.style.pointerEvents = 'auto';
+          });
+
+          log(`设置 contentDiv pointer-events: ${contentDiv.style.pointerEvents}`);
+          log(`设置了 ${allChildren.length} 个子元素的 pointer-events`);
+          log(`contentDiv 类列表: ${contentDiv.className}`);
+        }
+
+        // 移到最上层
+        if (testFo.parentNode) {
+          testFo.parentNode.appendChild(testFo);
+          log('将 foreignObject 移到最上层');
+        }
+      } else {
+        testFo.style.pointerEvents = 'none';
+        testFo.style.zIndex = '';
+
+        if (contentDiv) {
+          contentDiv.style.pointerEvents = 'none';
+          contentDiv.classList.remove('amis-interactive');
+
+          const allChildren = contentDiv.querySelectorAll('*');
+          allChildren.forEach(child => {
+            child.style.pointerEvents = '';
+          });
+
+          log('禁用交互模式');
+        }
+      }
+    }
+
+    function handleButtonClick(event) {
+      log('✅ 按钮被点击了！');
+      alert('按钮被点击了！');
+      event.stopPropagation();
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && !isCtrlPressed) {
+        isCtrlPressed = true;
+        hint.classList.add('active');
+        hintText.textContent = '✓ 交互模式已启用';
+        updateInteractiveMode(true);
+        log('🔑 Ctrl/Cmd 键按下');
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (!e.ctrlKey && !e.metaKey && isCtrlPressed) {
+        isCtrlPressed = false;
+        hint.classList.remove('active');
+        hintText.textContent = '按住 Ctrl/⌘ 键可与 AMIS 元素交互';
+        updateInteractiveMode(false);
+        log('🔑 Ctrl/Cmd 键释放');
+      }
+    });
+
+    log('测试页面已加载');
+  </script>
+</body>
+</html>

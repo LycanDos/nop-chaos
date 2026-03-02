@@ -1229,6 +1229,181 @@ function updateAllAmisElementsInteractiveMode(isInteractive: boolean) {
   console.log('[updateAllAmisElementsInteractiveMode] 处理完成');
 }
 
+/**
+ * 判断元素是否为API Activity
+ */
+function isApiActivity(element) {
+  const businessObject = element.businessObject;
+  if (!businessObject) return false;
+
+  // 检查是否为服务任务且名称包含API或HTTP
+  if (element.type === 'bpmn:ServiceTask') {
+    const name = businessObject.name?.toLowerCase() || '';
+    if (name.includes('api') || name.includes('http')) {
+      return true;
+    }
+  }
+
+  // 检查扩展元素中是否包含apiActivityId
+  if (businessObject.extensionElements) {
+    return businessObject.extensionElements.values.some((ext: any) => {
+      if (ext.$type === 'bpmn:Documentation' && ext.text) {
+        return ext.text.startsWith('apiActivityId:');
+      }
+      return false;
+    });
+  }
+
+  return false;
+}
+
+/**
+ * 获取API Activity ID
+ */
+function getApiActivityId(element) {
+  const businessObject = element.businessObject;
+  if (businessObject && businessObject.extensionElements) {
+    const doc = businessObject.extensionElements.values.find((ext: any) =>
+      ext.$type === 'bpmn:Documentation' && ext.text?.startsWith('apiActivityId:')
+    );
+    if (doc) {
+      return doc.text.replace('apiActivityId:', '').trim();
+    }
+  }
+  return null;
+}
+
+/**
+ * 打开API Activity编辑器
+ */
+function openApiActivityEditor(element) {
+  const apiActivityId = getApiActivityId(element);
+
+  if (apiActivityId) {
+    // 如果已有ID,打开编辑器编辑
+    const url = `/api-activity-editor?id=${apiActivityId}`;
+    window.open(url, '_blank', 'width=1200,height=800');
+  } else {
+    // 如果没有ID,创建新的API Activity
+    const url = '/api-activity-editor';
+    const newWindow = window.open(url, '_blank', 'width=1200,height=800');
+
+    // 监听新窗口的消息,获取创建的API Activity ID
+    window.addEventListener('message', function handler(event) {
+      if (event.data.type === 'api-activity-saved' && event.data.id) {
+        // 保存API Activity ID到BPMN元素
+        saveApiActivityIdToElement(element, event.data.id);
+        window.removeEventListener('message', handler);
+      }
+    });
+  }
+}
+
+/**
+ * 保存API Activity ID到BPMN元素
+ */
+function saveApiActivityIdToElement(element, apiActivityId: string) {
+  const modeling = modeler.value?.get('modeling');
+  const moddle = modeler.value?.get('moddle');
+
+  if (!modeling || !moddle) {
+    console.error('无法获取modeling或moddle实例');
+    return;
+  }
+
+  const businessObject = element.businessObject;
+
+  // 创建或更新extensionElements
+  let extensionElements = businessObject.extensionElements;
+  if (!extensionElements) {
+    extensionElements = moddle.create('bpmn:ExtensionElements');
+  }
+
+  // 查找或创建Documentation元素
+  let docElement = extensionElements.values?.find((ext: any) =>
+    ext.$type === 'bpmn:Documentation' && ext.text?.startsWith('apiActivityId:')
+  );
+
+  if (docElement) {
+    // 更新现有的Documentation
+    docElement.text = `apiActivityId:${apiActivityId}`;
+  } else {
+    // 创建新的Documentation
+    docElement = moddle.create('bpmn:Documentation', {
+      text: `apiActivityId:${apiActivityId}`
+    });
+    if (!extensionElements.values) {
+      extensionElements.values = [];
+    }
+    extensionElements.values.push(docElement);
+  }
+
+  // 更新元素
+  modeling.updateProperties(element, {
+    extensionElements: extensionElements
+  });
+
+  console.log(`API Activity ID ${apiActivityId} 已保存到元素 ${element.id}`);
+}
+
+/**
+ * 生成Hoppscotch分享链接
+ */
+async function generateHoppscotchShareLink(element) {
+  const apiActivityId = getApiActivityId(element);
+
+  if (!apiActivityId) {
+    alert('该元素没有关联的API Activity');
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/bpmn/activity/${apiActivityId}/share-link`);
+    const result = await response.json();
+
+    if (result.success) {
+      const shareLink = result.data.shareLink;
+      // 复制到剪贴板
+      await navigator.clipboard.writeText(shareLink);
+      alert('Hoppscotch分享链接已复制到剪贴板:\n' + shareLink);
+    } else {
+      alert('生成分享链接失败: ' + result.message);
+    }
+  } catch (error) {
+    console.error('生成分享链接失败:', error);
+    alert('生成分享链接失败: ' + error);
+  }
+}
+
+/**
+ * 导出Curl命令
+ */
+async function exportCurlCommand(element) {
+  const apiActivityId = getApiActivityId(element);
+
+  if (!apiActivityId) {
+    alert('该元素没有关联的API Activity');
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/bpmn/activity/${apiActivityId}/curl`);
+    const result = await response.json();
+
+    if (result.success) {
+      const curl = result.data.curl;
+      // 复制到剪贴板
+      await navigator.clipboard.writeText(curl);
+      alert('Curl命令已复制到剪贴板');
+    } else {
+      alert('导出Curl命令失败: ' + result.message);
+    }
+  } catch (error) {
+    console.error('导出Curl命令失败:', error);
+    alert('导出Curl命令失败: ' + error);
+  }
+}
+
 // 解决 window._debugModeler linter 错误
 declare global {
   interface Window {

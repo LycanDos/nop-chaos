@@ -1,4 +1,7 @@
-// API请求相关类型
+// 导出完整的API Activity类型定义
+export * from './api-activity'
+
+// API请求相关类型（简化版，用于客户端）
 export interface ApiRequest {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS'
   url: string

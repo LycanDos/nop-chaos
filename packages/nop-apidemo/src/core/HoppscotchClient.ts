@@ -237,4 +237,157 @@ export class HoppscotchClient {
       this.collections = config.collections
     }
   }
+
+  // Hoppscotch分享链接生成
+  generateHoppscotchShareLink(request: ApiRequest, name?: string): string {
+    const shareData = {
+      v: 1,
+      t: 'req',
+      d: {
+        name: name || 'API Request',
+        request: {
+          method: request.method,
+          url: request.url,
+          headers: this.convertHeadersToArray(request.headers || {}),
+          params: this.convertParamsToArray(request.params || {}),
+          body: request.data ? {
+            type: 'raw',
+            rawData: typeof request.data === 'string' ? request.data : JSON.stringify(request.data)
+          } : undefined
+        }
+      }
+    }
+
+    // 转为JSON并Base64编码
+    const json = JSON.stringify(shareData)
+    const encoded = this.base64UrlEncode(json)
+
+    // 生成分享链接
+    return `https://hoppscotch.io/r/${encoded}`
+  }
+
+  // 从Hoppscotch分享链接解析
+  parseHoppscotchShareLink(shareLink: string): ApiRequest | null {
+    try {
+      // 提取Base64编码部分
+      const encoded = shareLink.substring(shareLink.lastIndexOf('/') + 1)
+
+      // Base64解码
+      const json = this.base64UrlDecode(encoded)
+      const shareData = JSON.parse(json)
+
+      if (shareData.t !== 'req') {
+        throw new Error('Invalid share link type')
+      }
+
+      const requestData = shareData.d.request
+
+      return {
+        method: requestData.method || 'GET',
+        url: requestData.url || '',
+        headers: this.convertArrayToHeaders(requestData.headers || []),
+        params: this.convertArrayToParams(requestData.params || []),
+        data: requestData.body?.rawData
+      }
+    } catch (error) {
+      console.error('Failed to parse Hoppscotch share link:', error)
+      return null
+    }
+  }
+
+  // 生成Curl命令
+  generateCurlCommand(request: ApiRequest): string {
+    let curl = `curl -X ${request.method}`
+
+    // 添加URL
+    curl += ` '${request.url}'`
+
+    // 添加Headers
+    if (request.headers) {
+      Object.entries(request.headers).forEach(([key, value]) => {
+        curl += ` \\\n  -H '${key}: ${value}'`
+      })
+    }
+
+    // 添加Query参数
+    if (request.params && Object.keys(request.params).length > 0) {
+      const queryString = Object.entries(request.params)
+        .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+        .join('&')
+      curl += ` \\\n  --url '${request.url}?${queryString}'`
+    }
+
+    // 添加Body
+    if (request.data) {
+      const dataStr = typeof request.data === 'string'
+        ? request.data
+        : JSON.stringify(request.data)
+      curl += ` \\\n  -d '${dataStr.replace(/'/g, "'\\''")}'`
+    }
+
+    return curl
+  }
+
+  // Base64 URL-safe编码
+  private base64UrlEncode(str: string): string {
+    const base64 = btoa(unescape(encodeURIComponent(str)))
+    return base64
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=/g, '')
+  }
+
+  // Base64 URL-safe解码
+  private base64UrlDecode(str: string): string {
+    let base64 = str
+      .replace(/-/g, '+')
+      .replace(/_/g, '/')
+
+    // 补齐padding
+    while (base64.length % 4) {
+      base64 += '='
+    }
+
+    return decodeURIComponent(escape(atob(base64)))
+  }
+
+  // 转换Headers对象为数组格式
+  private convertHeadersToArray(headers: Record<string, string>): Array<{key: string, value: string, enabled: boolean}> {
+    return Object.entries(headers).map(([key, value]) => ({
+      key,
+      value,
+      enabled: true
+    }))
+  }
+
+  // 转换Params对象为数组格式
+  private convertParamsToArray(params: Record<string, any>): Array<{key: string, value: string, enabled: boolean}> {
+    return Object.entries(params).map(([key, value]) => ({
+      key,
+      value: String(value),
+      enabled: true
+    }))
+  }
+
+  // 转换数组格式为Headers对象
+  private convertArrayToHeaders(headers: Array<{key: string, value: string, enabled?: boolean}>): Record<string, string> {
+    const result: Record<string, string> = {}
+    headers.forEach(header => {
+      if (header.enabled !== false) {
+        result[header.key] = header.value
+      }
+    })
+    return result
+  }
+
+  // 转换数组格式为Params对象
+  private convertArrayToParams(params: Array<{key: string, value: string, enabled?: boolean}>): Record<string, any> {
+    const result: Record<string, any> = {}
+    params.forEach(param => {
+      if (param.enabled !== false) {
+        result[param.key] = param.value
+      }
+    })
+    return result
+  }
 } 
