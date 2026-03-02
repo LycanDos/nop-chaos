@@ -16,7 +16,11 @@ export default class VueControl extends React.Component<VueControlProps, any> {
     constructor(props) {
         super(props)
         const {resolveVueComponent} = useAdapter()
-        this.vueComponent = applyPureVueInReact(resolveVueComponent(props.vueComponent))
+        const vueComponent = resolveVueComponent(props.vueComponent)
+        if (!vueComponent) {
+            console.warn(`Vue component "${props.vueComponent}" not found by resolveVueComponent`)
+        }
+        this.vueComponent = vueComponent ? applyPureVueInReact(vueComponent) : null
     }
 
     doAction(action: ActionObject, data: RendererData, throwErrors?: boolean) {
@@ -70,6 +74,9 @@ export default class VueControl extends React.Component<VueControlProps, any> {
             value,
             'onUpdate:value': ((value: any) => this.dispatchChangeEvent(value))
         }
+        if (!this.vueComponent) {
+            return React.createElement('div', { style: { color: 'red', padding: '10px' } }, `Vue component "${this.props.vueComponent}" not found`)
+        }
         return React.createElement(this.vueComponent, mergedProps)
     }
 }
@@ -105,10 +112,13 @@ Renderer({
 // })
 class VueFormItem extends VueControl { }
 
-FormItem({
-  type: 'vue-form-item',
-  autoVar:false
-})(VueFormItem)
+// Guard against FormItem being undefined (e.g., when amis module is not properly loaded)
+if (typeof FormItem !== 'undefined') {
+  FormItem({
+    type: 'vue-form-item',
+    autoVar:false
+  })(VueFormItem)
+}
 
 
 // export default class WebComponent extends React.Component<RendererProps> {

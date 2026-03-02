@@ -33888,7 +33888,11 @@ class VueControl extends React__default.Component {
   constructor(props) {
     super(props);
     const { resolveVueComponent } = useAdapter();
-    this.vueComponent = applyPureVueInReact(resolveVueComponent(props.vueComponent));
+    const vueComponent = resolveVueComponent(props.vueComponent);
+    if (!vueComponent) {
+      console.warn(`Vue component "${props.vueComponent}" not found by resolveVueComponent`);
+    }
+    this.vueComponent = vueComponent ? applyPureVueInReact(vueComponent) : null;
   }
   doAction(action, data, throwErrors) {
     const { resetValue, onChange } = this.props;
@@ -33933,6 +33937,9 @@ class VueControl extends React__default.Component {
       value,
       "onUpdate:value": (value2) => this.dispatchChangeEvent(value2)
     };
+    if (!this.vueComponent) {
+      return React__default.createElement("div", { style: { color: "red", padding: "10px" } }, `Vue component "${this.props.vueComponent}" not found`);
+    }
     return React__default.createElement(this.vueComponent, mergedProps);
   }
 }
@@ -33956,10 +33963,12 @@ Renderer({
 })(VueRenderer);
 class VueFormItem extends VueControl {
 }
-FormItem$1({
-  type: "vue-form-item",
-  autoVar: false
-})(VueFormItem);
+if (typeof FormItem$1 !== "undefined") {
+  FormItem$1({
+    type: "vue-form-item",
+    autoVar: false
+  })(VueFormItem);
+}
 function getPageStore(store) {
   if (!store)
     return;
@@ -34036,6 +34045,13 @@ registerAdapter({
     conf = { closeButton: true, ...conf };
     toast[type4] ? toast[type4](msg, conf) : console.warn("[notify]", type4, msg);
     console.log("[notify]", type4, msg);
+  },
+  resolveVueComponent(name) {
+    const componentMap = {
+      // Add more components as needed
+      // Applications should override this method with their own component registry
+    };
+    return componentMap[name];
   }
 });
 registerModule("vue", Vue);

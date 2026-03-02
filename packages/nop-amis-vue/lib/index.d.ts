@@ -67,7 +67,12 @@ export declare class AmisVueComponent extends default_2.Component<VueControlProp
     constructor(props: any);
     doAction(action: ActionObject, data: RendererData, throwErrors?: boolean): void;
     dispatchChangeEvent(eventData?: any): Promise<void>;
-    render(): default_2.DetailedReactHTMLElement<default_2.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>;
+    render(): default_2.DetailedReactHTMLElement<{
+        style: {
+            color: "red";
+            padding: string;
+        };
+    }, HTMLElement> | default_2.DetailedReactHTMLElement<default_2.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>;
 }
 
 export declare function defineReactPageComponent(builder: (props: {

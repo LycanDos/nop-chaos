@@ -41,6 +41,14 @@ registerAdapter({
         //   : console.warn("[notify]", type, msg);
         console.log("[notify]", type, msg);
     },
+    resolveVueComponent(name: string): any {
+        // Default component registry - applications can override this with registerAdapter
+        const componentMap: Record<string, any> = {
+            // Add more components as needed
+            // Applications should override this method with their own component registry
+        }
+        return componentMap[name]
+    },
 })
 
 registerModule("vue", Vue)
