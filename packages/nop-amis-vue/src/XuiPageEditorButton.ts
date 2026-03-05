@@ -54,10 +54,18 @@ export class XuiPageEditorButton extends React.Component<XuiPageEditorButtonProp
         const store = getPageStore(this.props.store) as IServiceStore
 
         this.getPageSource = () => {
+            if (!this.props.initApi) {
+                console.error('[XuiPageEditorButton] initApi prop is required but not provided')
+                return Promise.reject(new Error('initApi prop is required'))
+            }
             return store.fetchData(this.props.initApi, this.props.data).then(res => res.data)
         }
 
         this.savePageSource = (data: any) => {
+            if (!this.props.api) {
+                console.error('[XuiPageEditorButton] api prop is required but not provided')
+                return Promise.reject(new Error('api prop is required'))
+            }
             return store.fetchData(this.props.api, { ...this.props.data, data }).then(res => res.data)
         }
 
