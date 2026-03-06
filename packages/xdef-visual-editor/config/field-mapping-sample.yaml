@@ -1,0 +1,166 @@
+# Xdef 可视化编辑器 - 示例字段映射配置
+
+# 实体定义
+entities:
+  # 用户实体
+  User:
+    displayName: 用户
+    fields:
+      id:
+        displayName: 用户ID
+        type: long
+        aliases: [用户ID, ID, 编号]
+      username:
+        displayName: 用户名
+        type: string
+        aliases: [用户名, 账号, 登录名]
+      password:
+        displayName: 密码
+        type: string
+        aliases: [密码, 登录密码]
+      email:
+        displayName: 邮箱
+        type: string
+        aliases: [邮箱, 邮件, 电子邮箱]
+      phone:
+        displayName: 手机号
+        type: string
+        aliases: [手机号, 手机, 电话]
+      age:
+        displayName: 年龄
+        type: int
+        aliases: [年龄, 岁数]
+      status:
+        displayName: 状态
+        type: string
+        aliases: [状态, 用户状态]
+      createTime:
+        displayName: 创建时间
+        type: timestamp
+        aliases: [创建时间, 注册时间]
+      updateTime:
+        displayName: 更新时间
+        type: timestamp
+        aliases: [更新时间, 修改时间]
+    relations:
+      orders:
+        displayName: 订单
+        type: to-many
+        targetEntity: Order
+
+  # 订单实体
+  Order:
+    displayName: 订单
+    fields:
+      id:
+        displayName: 订单ID
+        type: long
+        aliases: [订单ID, ID]
+      userId:
+        displayName: 用户ID
+        type: long
+        aliases: [用户ID, 买家ID]
+      total:
+        displayName: 订单总额
+        type: decimal
+        aliases: [总额, 金额, 订单金额]
+      qty:
+        displayName: 数量
+        type: int
+        aliases: [数量, 订单数量]
+      status:
+        displayName: 订单状态
+        type: string
+        aliases: [状态, 订单状态]
+      discount:
+        displayName: 折扣
+        type: decimal
+        aliases: [折扣, 优惠]
+      type:
+        displayName: 订单类型
+        type: string
+        aliases: [类型, 订单类型]
+      createTime:
+        displayName: 创建时间
+        type: timestamp
+        aliases: [创建时间, 下单时间]
+      updateTime:
+        displayName: 更新时间
+        type: timestamp
+        aliases: [更新时间, 修改时间]
+    relations:
+      user:
+        displayName: 用户
+        type: to-one
+        targetEntity: User
+
+  # 产品实体
+  Product:
+    displayName: 产品
+    fields:
+      id:
+        displayName: 产品ID
+        type: long
+        aliases: [产品ID, ID]
+      name:
+        displayName: 产品名称
+        type: string
+        aliases: [产品名称, 名称, 商品名]
+      price:
+        displayName: 价格
+        type: decimal
+        aliases: [价格, 单价]
+      stock:
+        displayName: 库存
+        type: int
+        aliases: [库存, 库存量]
+      category:
+        displayName: 分类
+        type: string
+        aliases: [分类, 产品分类]
+      status:
+        displayName: 状态
+        type: string
+        aliases: [状态, 产品状态]
+      createTime:
+        displayName: 创建时间
+        type: timestamp
+        aliases: [创建时间]
+      updateTime:
+        displayName: 更新时间
+        type: timestamp
+        aliases: [更新时间]
+
+# 路径别名
+pathAliases:
+  user.username:
+    - 用户名
+    - 账号
+  user.email:
+    - 邮箱
+    - 邮件
+  user.phone:
+    - 手机号
+    - 手机
+  user.password:
+    - 密码
+    - 登录密码
+  order.total:
+    - 订单金额
+    - 金额
+  order.qty:
+    - 数量
+    - 订单数量
+  order.status:
+    - 订单状态
+    - 状态
+  product.price:
+    - 价格
+    - 单价
+  product.stock:
+    - 库存
+    - 库存量
+  product.name:
+    - 产品名称
+    - 名称
+    - 商品名
