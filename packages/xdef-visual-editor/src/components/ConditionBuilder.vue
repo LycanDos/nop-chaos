@@ -430,10 +430,20 @@ const handleDelete = () => {
 }
 
 .form-item {
-  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+/* 字段选择器占据更宽空间 */
+.form-row .form-item:first-child {
+  flex: 3;
+  min-width: 0;
+}
+
+/* 运算符选择框缩短 */
+.form-row .form-item:nth-child(2) {
+  flex: 0 0 140px;
 }
 
 .form-item label {
