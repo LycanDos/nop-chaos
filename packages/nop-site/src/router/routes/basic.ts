@@ -71,3 +71,24 @@ export const ERROR_LOG_ROUTE: AppRouteRecordRaw = {
     },
   ],
 };
+
+export const DELTA_THREE_PANE_EDITOR_ROUTE: AppRouteRecordRaw = {
+  path: '/delta-three-pane-editor',
+  name: 'DeltaThreePaneEditorRoot',
+  component: LAYOUT,
+  meta: {
+    title: 'Delta三层编辑器',
+    hideMenu: true,
+  },
+  children: [
+    {
+      path: '',
+      name: 'DeltaThreePaneEditor',
+      component: () => import('/@/views/delta-lab/DeltaThreePaneEditor.vue'),
+      meta: {
+        title: 'Delta三层编辑器',
+        hideMenu: true,
+      },
+    },
+  ],
+};
