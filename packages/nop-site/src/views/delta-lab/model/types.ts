@@ -6,10 +6,18 @@ export type DeltaLayerKind = 'structure' | 'value' | 'process';
 
 export type EmbeddedEditorKind =
   | 'json'
+  | 'array'
+  | 'text'
   | 'image'
+  | 'image-list'
+  | 'link'
+  | 'link-list'
+  | 'color'
+  | 'color-list'
   | 'jsonata'
   | 'jmes'
   | 'java'
+  | 'sql'
   | 'pipeline';
 
 export interface EmbeddedMatchContext {

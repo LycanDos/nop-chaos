@@ -2,11 +2,8 @@
   <div class="delta-three-pane">
     <header class="delta-three-pane__hero">
       <div>
-        <p class="eyebrow">Delta / Value / Pipeline</p>
-        <h1>Delta 三层编辑器</h1>
-        <p class="description">
-          左侧编辑 Base，右侧编辑 Delta 或 `$pipeline` 草稿，中栏负责节点级预览、插件化编辑和整体预览。
-        </p>
+        <p class="eyebrow">Delta Base</p>
+        <h1>达尔塔和贝斯</h1>
       </div>
       <div class="delta-three-pane__hero-actions">
         <button @click="loadStructureSample">结构层示例</button>
@@ -15,113 +12,137 @@
       </div>
     </header>
 
-    <section class="delta-three-pane__meta">
-      <article>
-        <span>活跃侧</span>
-        <strong>{{ activePane }}</strong>
-      </article>
-      <article>
-        <span>当前路径</span>
-        <strong>{{ currentPathText }}</strong>
-      </article>
-      <article>
-        <span>预览模式</span>
-        <strong>{{ previewResult.mode }} / {{ previewResult.source }}</strong>
-      </article>
-      <article>
-        <span>表达式占位数</span>
-        <strong>{{ previewResult.unresolvedExpressions }}</strong>
-      </article>
-    </section>
+    <section ref="layoutRef" class="delta-three-pane__grid">
+      <div class="delta-three-pane__pane" :style="paneStyle(basePaneWidth)">
+        <JsonEditorPane
+          title="Base"
+          side="base"
+          :model-value="baseDocument"
+          :base-document="baseDocument"
+          :delta-document="deltaDocument"
+          @update:model-value="updateDocument('base', $event)"
+          @activate="handleActivate"
+          @selection-change="handleSelectionChange"
+        />
+      </div>
 
-    <section class="delta-three-pane__grid">
-      <JsonEditorPane
-        title="Base 编辑器"
-        description="承载基础 JSON 数据。选中或编辑这里时，中栏聚焦 Base 节点。"
-        side="base"
-        :model-value="baseDocument"
-        :base-document="baseDocument"
-        :delta-document="deltaDocument"
-        @update:model-value="updateDocument('base', $event)"
-        @activate="handleActivate"
-        @selection-change="handleSelectionChange"
-      />
+      <div
+        class="delta-three-pane__splitter"
+        title="拖动调整 Base 宽度"
+        @mousedown="startResize('base', $event)"
+      ></div>
 
-      <WorkbenchPanel
-        :active-pane="activePane"
-        :selected-path="currentSelectionPath"
-        :base-document="baseDocument"
-        :delta-document="deltaDocument"
-        :preview-result="previewResult"
-        @update-selected-value="handleSelectedValueUpdate"
-      />
+      <div class="delta-three-pane__pane" :style="paneStyle(workbenchPaneWidth)">
+        <WorkbenchPanel
+          :active-pane="activePane"
+          :selected-path="currentSelectionPath"
+          :base-document="baseDocument"
+          :delta-document="deltaDocument"
+          @update-selected-value="handleSelectedValueUpdate"
+        />
+      </div>
 
-      <JsonEditorPane
-        title="Delta / Draft 编辑器"
-        description="支持结构层 Delta 草稿，也允许顶层切换成 `$pipeline` 草稿。选中这里时，中栏展示 Delta 预览。"
-        side="delta"
-        :model-value="deltaDocument"
-        :base-document="baseDocument"
-        :delta-document="deltaDocument"
-        @update:model-value="updateDocument('delta', $event)"
-        @activate="handleActivate"
-        @selection-change="handleSelectionChange"
-      />
+      <div
+        class="delta-three-pane__splitter"
+        title="拖动调整工作区宽度"
+        @mousedown="startResize('workbench', $event)"
+      ></div>
+
+      <div class="delta-three-pane__pane" :style="paneStyle(rightPaneWidth)">
+        <JsonEditorPane
+          title="Delta"
+          side="delta"
+          :model-value="deltaDocument"
+          :base-document="baseDocument"
+          :delta-document="deltaDocument"
+          @update:model-value="updateDocument('delta', $event)"
+          @activate="handleActivate"
+          @selection-change="handleSelectionChange"
+        />
+      </div>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
-
-import 'vanilla-jsoneditor/themes/jse-theme-default.css';
+import { computed, onBeforeUnmount, ref } from 'vue';
 
 import JsonEditorPane from './components/JsonEditorPane.vue';
 import WorkbenchPanel from './components/WorkbenchPanel.vue';
-import { setValueAtPath, stringifyJsonPath } from './model/jsonPath';
-import { localPreviewProvider } from './model/previewProvider';
+import { setValueAtPath } from './model/jsonPath';
 import {
   createBaseSample,
   createDeltaSample,
   createPipelineSample,
 } from './model/sampleDocuments';
-import type {
-  DeltaEditorPane,
-  DeltaPreviewResult,
-  JsonPathSegment,
-} from './model/types';
+import type { DeltaEditorPane, JsonPathSegment } from './model/types';
 
 const baseDocument = ref<Record<string, unknown>>(createBaseSample());
 const deltaDocument = ref<Record<string, unknown>>(createDeltaSample());
 const activePane = ref<DeltaEditorPane>('base');
+const layoutRef = ref<HTMLElement | null>(null);
 const selectedPathMap = ref<Record<DeltaEditorPane, JsonPathSegment[]>>({
   base: [],
   delta: [],
 });
-const previewResult = ref<DeltaPreviewResult>({
-  mode: 'delta',
-  source: 'local-simulator',
-  result: {},
-  warnings: [],
-  steps: [],
-  unresolvedExpressions: 0,
-});
+const basePaneWidth = ref(31);
+const workbenchPaneWidth = ref(38);
 
 const currentSelectionPath = computed(() => selectedPathMap.value[activePane.value] ?? []);
-const currentPathText = computed(() => stringifyJsonPath(currentSelectionPath.value));
+const rightPaneWidth = computed(() => 100 - basePaneWidth.value - workbenchPaneWidth.value);
 
-let previewRequestId = 0;
+function paneStyle(width: number) {
+  return {
+    flexBasis: `calc((100% - 24px) * ${width} / 100)`,
+  };
+}
 
-async function refreshPreview() {
-  const requestId = ++previewRequestId;
-  const nextResult = await localPreviewProvider.preview({
-    base: baseDocument.value,
-    draft: deltaDocument.value,
-  });
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
 
-  if (requestId === previewRequestId) {
-    previewResult.value = nextResult;
+let activeResize: 'base' | 'workbench' | null = null;
+
+function startResize(target: 'base' | 'workbench', event: MouseEvent) {
+  if (!layoutRef.value || window.innerWidth <= 1500) {
+    return;
   }
+  event.preventDefault();
+  activeResize = target;
+  window.addEventListener('mousemove', handleResizeMove);
+  window.addEventListener('mouseup', stopResize);
+}
+
+function handleResizeMove(event: MouseEvent) {
+  if (!activeResize || !layoutRef.value) {
+    return;
+  }
+
+  const rect = layoutRef.value.getBoundingClientRect();
+  const widthPercent = ((event.clientX - rect.left) / rect.width) * 100;
+  const minPaneWidth = 22;
+
+  if (activeResize === 'base') {
+    basePaneWidth.value = clamp(
+      widthPercent,
+      minPaneWidth,
+      100 - workbenchPaneWidth.value - minPaneWidth,
+    );
+    return;
+  }
+
+  const nextWorkbenchWidth = clamp(
+    widthPercent - basePaneWidth.value,
+    minPaneWidth,
+    100 - basePaneWidth.value - minPaneWidth,
+  );
+  workbenchPaneWidth.value = nextWorkbenchWidth;
+}
+
+function stopResize() {
+  activeResize = null;
+  window.removeEventListener('mousemove', handleResizeMove);
+  window.removeEventListener('mouseup', stopResize);
 }
 
 function handleActivate(side: DeltaEditorPane) {
@@ -175,13 +196,15 @@ function resetBase() {
   selectedPathMap.value.base = [];
 }
 
-watch([baseDocument, deltaDocument], refreshPreview, { deep: true, immediate: true });
+onBeforeUnmount(() => {
+  stopResize();
+});
 </script>
 
 <style scoped lang="less">
 .delta-three-pane {
   min-height: 100%;
-  padding: 24px;
+  padding: 12px;
   background:
     radial-gradient(circle at top left, rgba(14, 165, 233, 0.14), transparent 28%),
     radial-gradient(circle at top right, rgba(249, 115, 22, 0.16), transparent 24%),
@@ -191,20 +214,20 @@ watch([baseDocument, deltaDocument], refreshPreview, { deep: true, immediate: tr
 .delta-three-pane__hero {
   display: flex;
   justify-content: space-between;
-  gap: 24px;
-  align-items: flex-start;
-  margin-bottom: 18px;
-  padding: 26px 30px;
-  border-radius: 24px;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 12px 14px;
+  border-radius: 16px;
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.94)),
     #fff;
   border: 1px solid rgba(214, 222, 232, 0.92);
-  box-shadow: 0 22px 44px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.06);
 
   h1 {
-    margin: 8px 0 0;
-    font-size: 34px;
+    margin: 3px 0 0;
+    font-size: 24px;
     line-height: 1.1;
     color: #10233d;
   }
@@ -213,31 +236,25 @@ watch([baseDocument, deltaDocument], refreshPreview, { deep: true, immediate: tr
 .eyebrow {
   margin: 0;
   color: #0f766e;
-  font-size: 13px;
+  font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   font-weight: 700;
 }
 
-.description {
-  max-width: 820px;
-  margin: 12px 0 0;
-  color: #5b6982;
-  line-height: 1.7;
-}
-
 .delta-three-pane__hero-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 
   button {
     border: none;
     border-radius: 999px;
-    padding: 10px 14px;
+    padding: 8px 12px;
     background: #111827;
     color: #fff;
     cursor: pointer;
+    font-size: 12px;
   }
 
   .secondary {
@@ -247,53 +264,52 @@ watch([baseDocument, deltaDocument], refreshPreview, { deep: true, immediate: tr
   }
 }
 
-.delta-three-pane__meta {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 18px;
-
-  article {
-    padding: 14px 16px;
-    border-radius: 16px;
-    border: 1px solid #d8e1ec;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(8px);
-  }
-
-  span {
-    display: block;
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #718198;
-  }
-
-  strong {
-    display: block;
-    margin-top: 6px;
-    color: #13243e;
-    word-break: break-word;
-  }
+.delta-three-pane__grid {
+  height: calc(100vh - 134px);
+  min-height: 600px;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
 }
 
-.delta-three-pane__grid {
-  height: calc(100vh - 250px);
-  min-height: 720px;
-  display: grid;
-  grid-template-columns: minmax(320px, 1.04fr) minmax(360px, 0.92fr) minmax(320px, 1.04fr);
-  gap: 18px;
+.delta-three-pane__pane {
+  flex-grow: 0;
+  flex-shrink: 0;
+  min-width: 0;
+  height: 100%;
+}
+
+.delta-three-pane__splitter {
+  flex: 0 0 12px;
+  position: relative;
+  cursor: col-resize;
+}
+
+.delta-three-pane__splitter::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 5px;
+  width: 2px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0.2), rgba(100, 116, 139, 0.7));
 }
 
 @media (max-width: 1500px) {
-  .delta-three-pane__meta {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .delta-three-pane__grid {
-    grid-template-columns: 1fr;
+    flex-direction: column;
     height: auto;
     min-height: auto;
+    gap: 12px;
+  }
+
+  .delta-three-pane__pane {
+    flex-basis: auto !important;
+  }
+
+  .delta-three-pane__splitter {
+    display: none;
   }
 }
 </style>

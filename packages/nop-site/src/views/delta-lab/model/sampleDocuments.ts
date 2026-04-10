@@ -13,23 +13,37 @@ export function createBaseSample(): Record<string, unknown> {
         avatar: svgDataUri('BASE', '#0f766e'),
         displayName: 'Ada',
       },
+      website: 'https://jsonata.org/',
     },
     images: {
       hero: svgDataUri('HERO', '#1d4ed8'),
+      gallery: [svgDataUri('A', '#0ea5e9'), svgDataUri('B', '#f97316')],
+    },
+    appearance: {
+      accentColor: '#2563eb',
+      warningColor: '#f97316',
+      palette: ['#0f766e', '#2563eb', '#7c3aed'],
     },
     fields: [
       { name: 'id', label: 'ID', type: 'string' },
       { name: 'age', label: 'Age', type: 'int', required: false },
       { name: 'gender', label: 'Gender', type: 'string' },
     ],
-    sections: [
-      { title: 'Overview', subtitle: 'Legacy subtitle' },
+    sections: [{ title: 'Overview', subtitle: 'Legacy subtitle' }],
+    items: [{ amount: 10 }, { amount: 20 }, { amount: 35 }],
+    resources: [
+      {
+        title: 'JSONata',
+        url: 'https://docs.jsonata.org/overview.html',
+        color: '#14b8a6',
+      },
+      {
+        title: 'Nop',
+        url: 'https://github.com/entropy-cloud/nop-entropy',
+        color: '#8b5cf6',
+      },
     ],
-    items: [
-      { amount: 10 },
-      { amount: 20 },
-      { amount: 35 },
-    ],
+    links: ['https://jsonata.org/', 'https://docs.jsonata.org/string-functions'],
   };
 }
 
@@ -39,8 +53,8 @@ export function createDeltaSample(): Record<string, unknown> {
       $jina: "$base.user.firstName & ' ' & $base.user.lastName",
     },
     'user.profile.avatar': svgDataUri('DELTA', '#7c2d12'),
-    'fields[name=\'age\'].label': '年龄',
-    'fields+>[name=\'age\']': {
+    "fields[name='age'].label": '年龄',
+    "fields+>[name='age']": {
       name: 'ageUnit',
       label: '年龄单位',
       type: 'string',
@@ -52,6 +66,13 @@ export function createDeltaSample(): Record<string, unknown> {
     'summary.generatedBy': {
       $java: 'com.demo.delta.PreviewFacade#buildSummary',
     },
+    'summary.query': {
+      $sql: 'select id, name from nop_user where status = 1 order by id desc',
+    },
+    'summary.docsUrl': 'https://docs.jsonata.org/string-functions',
+    'summary.referenceLinks': ['https://github.com/jsonata-js/jsonata', 'https://www.json.org/json-en.html'],
+    'summary.palette': ['#f59e0b', '#10b981', '#0ea5e9'],
+    'appearance.accentColor': '#0f766e',
   };
 }
 
@@ -69,6 +90,8 @@ export function createPipelineSample(): Record<string, unknown> {
             $jina: "$base.user.profile.name & ' / pipeline'",
           },
           'summary.heroImage': svgDataUri('PIPE', '#7e22ce'),
+          'summary.primaryLink': 'https://sql-formatter-org.github.io/sql-formatter/',
+          'appearance.warningColor': '#dc2626',
         },
       },
       {
@@ -77,6 +100,11 @@ export function createPipelineSample(): Record<string, unknown> {
             name: 'pipelineNote',
             label: 'Pipeline Note',
             type: 'string',
+          },
+          'resources+[]': {
+            title: 'Preview Gallery',
+            url: 'https://www.example.com/',
+            color: '#0891b2',
           },
         },
       },
