@@ -37,6 +37,18 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
     root,
     resolve: {
       alias: [
+        ...(!isBuild
+          ? [
+              {
+                find: '@nop-chaos/sdk/lib/style.css',
+                replacement: resolve(root, '../sdk/lib/style.css'),
+              },
+              {
+                find: '@nop-chaos/sdk',
+                replacement: resolve(root, '../sdk/lib/sdk.js'),
+              },
+            ]
+          : []),
         {
           find: 'vue',
           replacement: 'vue/dist/vue.esm-bundler.js',
@@ -170,6 +182,9 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
     plugins: createVitePlugins(viteEnv, isBuild),
 
     optimizeDeps: {
+      exclude: [
+        '@nop-chaos/sdk',
+      ],
       esbuildOptions: {
         target: 'es2015',
       },

@@ -28,7 +28,7 @@ export interface PopupEditorProps extends ThemeProps, LocaleProps {
     onChange: (value?: any) => void;
     disabled?: boolean;
     popOverContainer?: any;
-    popup: SchemaNode,
+    popup?: SchemaNode,
     render: (
         region: string,
         node: SchemaNode,
@@ -77,6 +77,9 @@ export class PopupEditor extends React.Component<
         } = this.props;
 
         const props = {...rest, value,onChange}
+
+        if (!popup)
+            return null
 
         return render('popup',popup, props)
     }
@@ -143,10 +146,12 @@ export class PopupEditor extends React.Component<
     }
 }
 
-export default themeable(
+const PopupEditorControl: any = themeable(
     localeable(
         uncontrollable(PopupEditor, {
             value: 'onChange'
         })
     )
 );
+
+export default PopupEditorControl;

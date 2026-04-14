@@ -1,5 +1,3 @@
-import { default as PopupEditor } from './PopupEditor';
-
-export { PopupEditor }
+export declare const PopupEditor: any;
 
 export { }

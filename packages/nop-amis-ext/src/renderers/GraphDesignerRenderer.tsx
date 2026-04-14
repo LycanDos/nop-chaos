@@ -1,4 +1,5 @@
 import { ActionObject, IScopedContext, IServiceStore, Renderer, RendererProps, isEffectiveApi, unRegisterRenderer } from "amis";
+import type { Api } from 'amis-core/lib/types'
 import React, { useCallback, useRef } from 'react'
 import { GraphDesigner, GraphDesignerProps } from '@nop-chaos/nop-graph-designer'
 import { RenderContextKey } from '@nop-chaos/nop-react-core'
@@ -51,10 +52,11 @@ export class GraphDesignerRenderer extends React.Component<GraphDesignerRenderer
 
     amisExecutor(api: ApiObject, data: any, ctx: any): Promise<ApiResponse> | undefined {
         const store = this.props.store as IServiceStore
+        const amisApi = api as unknown as Api
         if (store) {
-            if (!isEffectiveApi(api, data))
+            if (!isEffectiveApi(amisApi, data))
                 return
-            return store.fetchData(api, data).then(res => res.data as ApiResponse)
+            return store.fetchData(amisApi, data).then(res => res.data as ApiResponse)
         }
         return
     }

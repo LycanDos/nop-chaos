@@ -25,6 +25,8 @@ export interface PopupEditorSchema extends FormBaseControl {
      */
     type: 'popup-editor';
 
+    popup?: any;
+
     /**
      * 非内嵌模式时 弹窗触发icon
      */
