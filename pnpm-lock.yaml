@@ -6,6 +6,7 @@ settings:
 
 overrides:
   bin-wrapper: npm:bin-wrapper-china
+  lodash-es: 4.17.21
 
 importers:
 
@@ -127,7 +128,7 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       lodash-es:
-        specifier: ^4.17.21
+        specifier: 4.17.21
         version: 4.17.21
       markdown-it:
         specifier: ^14.1.0
@@ -564,6 +565,9 @@ importers:
       '@nop-chaos/nop-react-core':
         specifier: workspace:*
         version: link:../nop-react-core
+      '@nop-chaos/policy-studio':
+        specifier: workspace:*
+        version: link:../policy-studio
       amis:
         specifier: 6.12.0
         version: 6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-ui@6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -585,6 +589,9 @@ importers:
       tslib:
         specifier: ^2.3.1
         version: 2.8.1
+      veaury:
+        specifier: ^2.6.2
+        version: 2.6.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     devDependencies:
       '@types/react':
         specifier: ^18.2.0
@@ -653,7 +660,7 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       lodash-es:
-        specifier: ^4.17.21
+        specifier: 4.17.21
         version: 4.17.21
       pinia:
         specifier: ^2.0.12
@@ -720,7 +727,7 @@ importers:
         specifier: ^2.2.1
         version: 2.2.1
       lodash-es:
-        specifier: ^4.17.21
+        specifier: 4.17.21
         version: 4.17.21
       mitt:
         specifier: ^3.0.1
@@ -775,7 +782,7 @@ importers:
         specifier: ^0.26.1
         version: 0.26.1
       lodash-es:
-        specifier: ^4.17.21
+        specifier: 4.17.21
         version: 4.17.21
       lru-cache:
         specifier: ^7.14.0
@@ -1025,7 +1032,7 @@ importers:
         specifier: ^1.0.0
         version: 1.0.5
       lodash-es:
-        specifier: ^4.17.21
+        specifier: 4.17.21
         version: 4.17.21
       resize-detector:
         specifier: ^0.3.0
@@ -1333,7 +1340,7 @@ importers:
         specifier: ^2.2.1
         version: 2.2.1
       lodash-es:
-        specifier: ^4.17.21
+        specifier: 4.17.21
         version: 4.17.21
       pinia:
         specifier: ^2.0.12
@@ -1406,7 +1413,7 @@ importers:
         specifier: ^5.4.0
         version: 5.6.0
       lodash-es:
-        specifier: ^4.17.21
+        specifier: 4.17.21
         version: 4.17.21
       rollup:
         specifier: ^2.72.0
@@ -1554,7 +1561,7 @@ importers:
         specifier: ^2.2.1
         version: 2.2.1
       lodash-es:
-        specifier: ^4.17.21
+        specifier: 4.17.21
         version: 4.17.21
       md5:
         specifier: ^2.3.0
@@ -1942,15 +1949,30 @@ importers:
       '@element-plus/icons-vue':
         specifier: ^2.3.0
         version: 2.3.1(vue@3.5.18(typescript@5.3.3))
+      '@nop-chaos/nop-amis-vue':
+        specifier: workspace:*
+        version: link:../nop-amis-vue
       dayjs:
         specifier: ^1.11.13
         version: 1.11.13
       element-plus:
         specifier: ^2.5.0
         version: 2.10.4(vue@3.5.18(typescript@5.3.3))
+      jszip:
+        specifier: ^3.10.1
+        version: 3.10.1
+      monaco-editor:
+        specifier: 0.54.0
+        version: 0.54.0
+      vanilla-jsoneditor:
+        specifier: 3.12.0
+        version: 3.12.0
       vue:
         specifier: ^3.4.0
         version: 3.5.18(typescript@5.3.3)
+      yaml:
+        specifier: ^2.8.0
+        version: 2.8.0
     devDependencies:
       '@types/node':
         specifier: ^20.0.0
@@ -1982,6 +2004,18 @@ importers:
       '@nop-chaos/nop-core':
         specifier: workspace:*
         version: link:../nop-core
+      '@nop-chaos/nop-flow-builder':
+        specifier: workspace:*
+        version: link:../nop-flow-builder
+      '@nop-chaos/nop-graph-designer':
+        specifier: workspace:*
+        version: link:../nop-graph-designer
+      '@nop-chaos/nop-react-core':
+        specifier: workspace:*
+        version: link:../nop-react-core
+      '@nop-chaos/policy-studio':
+        specifier: workspace:*
+        version: link:../policy-studio
       '@vue/shared':
         specifier: ^3.3.4
         version: 3.5.18
@@ -2013,7 +2047,7 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       lodash-es:
-        specifier: ^4.17.21
+        specifier: 4.17.21
         version: 4.17.21
       lru-cache:
         specifier: ^7.14.0
@@ -11509,15 +11543,12 @@ packages:
   lodash-es@4.17.21:
     resolution: {integrity: sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==}
 
-  lodash-es@4.18.0:
-    resolution: {integrity: sha512-koAgswPPA+UTaPN64Etp+PGP+WT6oqOS2NMi5yDkMaiGw9qY4VxQbQF0mtKMyr4BlTznWyzePV5UpECTJQmSUA==}
-
   lodash-unified@1.0.3:
     resolution: {integrity: sha512-WK9qSozxXOD7ZJQlpSqOT+om2ZfcT4yO+03FuzAHD0wF6S0l0090LRPDx3vhTTLZ8cFKpBn+IOcVXK6qOcIlfQ==}
     peerDependencies:
       '@types/lodash-es': '*'
       lodash: '*'
-      lodash-es: '*'
+      lodash-es: 4.17.21
 
   lodash.camelcase@4.3.0:
     resolution: {integrity: sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==}
@@ -26362,8 +26393,8 @@ snapshots:
       dayjs: 1.11.13
       escape-html: 1.0.3
       lodash: 4.17.21
-      lodash-es: 4.18.0
-      lodash-unified: 1.0.3(@types/lodash-es@4.17.12)(lodash-es@4.18.0)(lodash@4.17.21)
+      lodash-es: 4.17.21
+      lodash-unified: 1.0.3(@types/lodash-es@4.17.12)(lodash-es@4.17.21)(lodash@4.17.21)
       memoize-one: 6.0.0
       normalize-wheel-es: 1.2.0
       vue: 3.5.18(typescript@4.9.5)
@@ -26383,8 +26414,8 @@ snapshots:
       dayjs: 1.11.13
       escape-html: 1.0.3
       lodash: 4.17.21
-      lodash-es: 4.18.0
-      lodash-unified: 1.0.3(@types/lodash-es@4.17.12)(lodash-es@4.18.0)(lodash@4.17.21)
+      lodash-es: 4.17.21
+      lodash-unified: 1.0.3(@types/lodash-es@4.17.12)(lodash-es@4.17.21)(lodash@4.17.21)
       memoize-one: 6.0.0
       normalize-wheel-es: 1.2.0
       vue: 3.5.18(typescript@5.3.3)
@@ -30320,13 +30351,11 @@ snapshots:
 
   lodash-es@4.17.21: {}
 
-  lodash-es@4.18.0: {}
-
-  lodash-unified@1.0.3(@types/lodash-es@4.17.12)(lodash-es@4.18.0)(lodash@4.17.21):
+  lodash-unified@1.0.3(@types/lodash-es@4.17.12)(lodash-es@4.17.21)(lodash@4.17.21):
     dependencies:
       '@types/lodash-es': 4.17.12
       lodash: 4.17.21
-      lodash-es: 4.18.0
+      lodash-es: 4.17.21
 
   lodash.camelcase@4.3.0: {}
 
@@ -35948,7 +35977,7 @@ snapshots:
       json-source-map: 0.6.1
       jsonpath-plus: 10.4.0
       jsonrepair: 3.1.0
-      lodash-es: 4.18.0
+      lodash-es: 4.17.21
       memoize-one: 6.0.0
       natural-compare-lite: 1.4.0
       svelte: 5.55.1

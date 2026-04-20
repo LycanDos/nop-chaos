@@ -10,13 +10,15 @@
       @change="handleChange"
       @edit="handleEdit"
     >
-      <template v-for="item in getTabsState" :key="item.query ? item.fullPath : item.path">
-        <TabPane :closable="!(item && item.meta && item.meta.affix)">
-          <template #tab>
-            <TabContent :tabItem="item" />
-          </template>
-        </TabPane>
-      </template>
+      <TabPane
+        v-for="item in getTabsState"
+        :key="getTabKey(item)"
+        :closable="!(item && item.meta && item.meta.affix)"
+      >
+        <template #tab>
+          <TabContent :tabItem="item" />
+        </template>
+      </TabPane>
 
       <template #rightExtra v-if="getShowRedo || getShowQuick">
         <TabRedo v-if="getShowRedo" />
@@ -76,6 +78,10 @@
         return tabStore.getTabList.filter((item) => !item.meta?.hideTab);
       });
 
+      function getTabKey(route: Partial<RouteLocationNormalized>) {
+        return (route.fullPath || route.path || '') as string;
+      }
+
       const unClose = computed(() => unref(getTabsState).length === 1);
 
       const getWrapClass = computed(() => {
@@ -97,7 +103,7 @@
         const { path, fullPath, meta = {} } = route;
         const { currentActiveMenu, hideTab } = meta as RouteMeta;
         const isHide = !hideTab ? null : currentActiveMenu;
-        const p = isHide || fullPath || path;
+        const p = isHide || getTabKey(route) || path;
         if (activeKeyRef.value !== p) {
           activeKeyRef.value = p as string;
         }
@@ -133,6 +139,7 @@
         handleChange,
         activeKeyRef,
         getTabsState,
+        getTabKey,
         getShowQuick,
         getShowRedo,
         getShowFold,

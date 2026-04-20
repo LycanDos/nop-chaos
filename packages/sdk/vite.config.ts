@@ -94,7 +94,9 @@ export default defineConfig({
         'systemjs', 'systemjs/dist/system.js', 'lru-cache', 'lodash-es',
         'axios', 'amis', 'react', 'react-dom', 'react-dom/client', 'amis-ui', 'amis-formula', 'amis-core',
         'element-plus', 'lru-cache', 'urql', 'copy-to-clipboard',
-        'qs', 'path-to-regexp', 'pinia', 'urql', 'veaury', 'js-yaml'],
+        'qs', 'path-to-regexp', 'pinia', 'urql', 'veaury', 'js-yaml',
+        '@nop-chaos/nop-core', '@nop-chaos/nop-amis-vue', '@nop-chaos/nop-amis-ext',
+        '@nop-chaos/nop-react-core', '@nop-chaos/nop-flow-builder', '@nop-chaos/nop-graph-designer'],
     },
   },
 })

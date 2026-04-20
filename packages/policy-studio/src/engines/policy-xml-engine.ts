@@ -61,6 +61,10 @@ export class PolicyXmlEngine {
         xml += ` min="${rule.min}"`
       if (rule.max !== undefined)
         xml += ` max="${rule.max}"`
+      if (rule.min !== undefined)
+        xml += ` minInclusive="${rule.minInclusive !== false}"`
+      if (rule.max !== undefined)
+        xml += ` maxInclusive="${rule.maxInclusive !== false}"`
       xml += '/>\n'
     }
     if (rule.pattern)

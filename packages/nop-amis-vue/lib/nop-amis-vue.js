@@ -1,5 +1,5 @@
 import * as Vue from "vue";
-import { defineComponent, ref, onUnmounted, openBlock, createElementBlock, watchEffect, onBeforeUnmount, h, onMounted, createElementVNode, createTextVNode, shallowRef, markRaw, Fragment as Fragment$1, createBlock, resolveDynamicComponent, mergeProps, createCommentVNode, unref, withCtx, createVNode, normalizeProps, guardReactiveProps, resolveComponent } from "vue";
+import { defineComponent, ref, onUnmounted, openBlock, createElementBlock, watch, onBeforeUnmount, h, onMounted, createElementVNode, createTextVNode, shallowRef, watchEffect, markRaw, Fragment as Fragment$1, createBlock, resolveDynamicComponent, mergeProps, createCommentVNode, unref, withCtx, createVNode, normalizeProps, guardReactiveProps, resolveComponent } from "vue";
 import { ajaxFetch, useDebug, useAdapter, providePage, default_jumpTo, isCancel, default_isCurrentUrl, default_updateLocation, createPage, transformPageJson, bindActions, getSchemaProcessorType, deletePageCache, PageApis, registerAdapter, registerModule } from "@nop-chaos/nop-core";
 import { isString, cloneDeep } from "lodash-es";
 import { toast, clearStoresCache, setDefaultLocale, render, ToastComponent, ScopedContext, Renderer, FormItem, dataMapping, alert, confirm } from "amis";
@@ -199,35 +199,57 @@ function defineReactPageComponent(builder) {
       var _a;
       const domRef = ref();
       let root;
+      let renderToken = 0;
       const options = builder({ actions: props.actions });
       let page = createPage(options);
       (_a = props.registerPage) == null ? void 0 : _a.call(props, page);
+      function scheduleDestroy(targetRoot) {
+        if (!targetRoot) {
+          return;
+        }
+        setTimeout(() => {
+          var _a2;
+          try {
+            targetRoot.unmount();
+          } finally {
+            (_a2 = options.onDestroyPage) == null ? void 0 : _a2.call(options, page);
+          }
+        }, 0);
+      }
       function destroyPage() {
-        var _a2;
-        if (root) {
-          root.unmount();
-          (_a2 = options.onDestroyPage) == null ? void 0 : _a2.call(options, page);
-          root = void 0;
+        const currentRoot = root;
+        root = void 0;
+        renderToken++;
+        scheduleDestroy(currentRoot);
+      }
+      async function renderPage() {
+        const currentToken = ++renderToken;
+        const schema = cloneDeep(props.schema);
+        const currentRoot = createRoot(domRef.value);
+        root = currentRoot;
+        try {
+          const vdom = await Promise.resolve(options.onRenderPage(schema, props.data, page));
+          if (currentToken !== renderToken || root !== currentRoot) {
+            scheduleDestroy(currentRoot);
+            return;
+          }
+          currentRoot.render(vdom);
+        } catch (err) {
+          if (currentToken === renderToken && root === currentRoot) {
+            root = void 0;
+          }
+          scheduleDestroy(currentRoot);
+          throw err;
         }
       }
-      function renderPage() {
-        const schema = cloneDeep(props.schema);
-        root = createRoot(domRef.value);
-        const r = root;
-        const vdom = Promise.resolve(options.onRenderPage(schema, props.data, page));
-        vdom.then((v) => r.render(v));
-      }
-      watchEffect(() => {
+      watch([() => props.schema, () => props.data, domRef], () => {
         destroyPage();
         if (props.schema && domRef.value) {
-          renderPage();
+          void renderPage();
         }
-      });
+      }, { immediate: true, flush: "post" });
       onBeforeUnmount(() => {
         destroyPage();
-        return {
-          domRef
-        };
       });
       return () => h("div", {
         ref: domRef,

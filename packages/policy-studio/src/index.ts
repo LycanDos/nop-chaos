@@ -1,10 +1,21 @@
 export { default as PolicyStudio } from './components/PolicyStudio.vue'
 export { default as ConditionBuilder } from './components/ConditionBuilder.vue'
 export { default as PathSelector } from './components/PathSelector.vue'
+export { default as SchemaDataEditor } from './components/SchemaDataEditor.vue'
+export { default as SchemaFormField } from './components/SchemaFormField.vue'
+export { default as SchemaGeneratedForm } from './components/SchemaGeneratedForm.vue'
+export { default as SchemaJsonEditor } from './components/SchemaJsonEditor.vue'
+export { default as SchemaValueInput } from './components/SchemaValueInput.vue'
+export { default as OperatorSelect } from './components/OperatorSelect.vue'
+export { default as LoadBundleDialog } from './components/LoadBundleDialog.vue'
 
 export { HintEngine } from './engines/hint-engine'
 export { PolicyCompiler } from './engines/policy-compiler'
 export { PolicyXmlEngine } from './engines/policy-xml-engine'
+export * from './utils/schema-utils'
+export * from './utils/policy-bundle'
+export * from './utils/operator-utils'
+export * from './utils/validation-support'
 
 export * from './types'
 

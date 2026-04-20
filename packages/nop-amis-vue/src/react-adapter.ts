@@ -1,6 +1,6 @@
 import { PageOptions, createPage } from "@nop-chaos/nop-core";
 
-import { PropType, defineComponent, onBeforeUnmount, ref, h, watchEffect } from 'vue';
+import { PropType, defineComponent, onBeforeUnmount, ref, h, watch } from 'vue';
 import type { PageObject, RegisterPage } from '@nop-chaos/nop-core';
 import { Root, createRoot } from 'react-dom/client'
 import { cloneDeep } from 'lodash-es'
@@ -22,43 +22,63 @@ export function defineReactPageComponent(builder: (props: {actions?:Record<strin
         setup(props) {
             const domRef = ref<HTMLElement>()
             let root: Root | undefined;
+            let renderToken = 0;
 
             const options = builder({actions: props.actions})
             let page = createPage(options);
 
             props.registerPage?.(page)
 
+            function scheduleDestroy(targetRoot: Root | undefined) {
+                if (!targetRoot) {
+                    return;
+                }
+                setTimeout(() => {
+                    try {
+                        targetRoot.unmount();
+                    } finally {
+                        options.onDestroyPage?.(page);
+                    }
+                }, 0);
+            }
+
             function destroyPage() {
-                if (root) {
-                    // 先卸载root触发销毁操作，然后再执行其他清理函数
-                    root.unmount();
-                    options.onDestroyPage?.(page);
-                    root = undefined
+                const currentRoot = root;
+                root = undefined;
+                renderToken++;
+                scheduleDestroy(currentRoot);
+            }
+
+            async function renderPage() {
+                const currentToken = ++renderToken;
+                const schema = cloneDeep(props.schema as any)
+                const currentRoot = createRoot(domRef.value!);
+                root = currentRoot;
+                try {
+                    const vdom = await Promise.resolve(options.onRenderPage(schema, props.data, page));
+                    if (currentToken !== renderToken || root !== currentRoot) {
+                        scheduleDestroy(currentRoot);
+                        return;
+                    }
+                    currentRoot.render(vdom as any);
+                } catch (err) {
+                    if (currentToken === renderToken && root === currentRoot) {
+                        root = undefined;
+                    }
+                    scheduleDestroy(currentRoot);
+                    throw err;
                 }
             }
 
-            function renderPage() {
-                const schema = cloneDeep(props.schema as any)
-                // render返回undefined
-                root = createRoot(domRef.value!);
-                const r = root
-                const vdom = Promise.resolve(options.onRenderPage(schema, props.data, page))
-                vdom.then(v => r.render(v as any));
-            }
-
-            watchEffect(() => {
+            watch([() => props.schema, () => props.data, domRef], () => {
                 destroyPage()
                 if (props.schema && domRef.value) {
-                    renderPage();
+                    void renderPage();
                 }
-            });
+            }, { immediate: true, flush: 'post' });
 
             onBeforeUnmount(() => {
                 destroyPage()
-
-                return {
-                    domRef,
-                };
             })
 
 

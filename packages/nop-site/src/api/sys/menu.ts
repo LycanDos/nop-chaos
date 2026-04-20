@@ -46,7 +46,7 @@ function transformMenu(resources: any) {
       route: r.routePath ? "1" : "0",
       meta: {
         ...r.meta,
-        keepAlive: r.keepAlive,
+        keepAlive: r.keepAlive ?? (r.component === 'AMIS'),
         icon: r.icon,
         url: r.url,
         title: r.displayName,

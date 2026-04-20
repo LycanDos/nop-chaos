@@ -195,6 +195,14 @@ type EditDialogState =
   | { kind: 'field', item: FieldItem }
   | null
 
+type PolicyStudioNavigationPayload = {
+  executorDefId?: string
+  executorReleaseId?: string
+  methodId: string
+  schemaRole: 'INPUT' | 'OUTPUT'
+  fieldPath?: string
+}
+
 const SNAPSHOT_SELECTION = [
   'executorDefId',
   'executorReleaseId',
@@ -276,6 +284,9 @@ const EMPTY_PARAM_FILTER: SearchFilter<ParamSearchScope> = {
   scope: 'all',
   keyword: '',
 }
+
+const POLICY_STUDIO_NAV_STATE_KEY = 'nop:policy-studio:navigation'
+const POLICY_STUDIO_NAV_EVENT = 'nop-policy-studio:navigate'
 
 const INPUT_STYLE: React.CSSProperties = {
   width: '100%',
@@ -379,11 +390,10 @@ const SECTION_DESC_STYLE: React.CSSProperties = {
 
 const SEARCH_TOOLBAR_STYLE: React.CSSProperties = {
   display: 'flex',
-  alignItems: 'center',
+  alignItems: 'stretch',
   gap: 8,
-  flexWrap: 'nowrap',
+  flexWrap: 'wrap',
   minWidth: 0,
-  overflowX: 'auto',
 }
 
 const SEARCH_GROUP_STYLE: React.CSSProperties = {
@@ -391,10 +401,11 @@ const SEARCH_GROUP_STYLE: React.CSSProperties = {
   alignItems: 'stretch',
   flex: '1 1 320px',
   minWidth: 260,
-  height: 30,
-  border: '1px solid #d1d5db',
-  borderRadius: 2,
-  background: '#fff',
+  minHeight: 38,
+  border: '1px solid #d8e3ef',
+  borderRadius: 14,
+  background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)',
+  boxShadow: '0 10px 24px rgba(15, 23, 42, 0.05)',
   overflow: 'hidden',
 }
 
@@ -402,22 +413,24 @@ const SEARCH_PREFIX_STYLE: React.CSSProperties = {
   flex: '0 0 auto',
   display: 'inline-flex',
   alignItems: 'center',
-  padding: '0 8px',
+  justifyContent: 'center',
+  minWidth: 60,
+  padding: '0 12px',
   borderRight: '1px solid #e5e7eb',
-  background: '#f8fafc',
+  background: '#e8f1ff',
   fontSize: 12,
-  fontWeight: 600,
-  color: '#475569',
+  fontWeight: 700,
+  color: '#1d4ed8',
   whiteSpace: 'nowrap',
 }
 
 const SEARCH_INPUT_STYLE: React.CSSProperties = {
   flex: '1 1 260px',
   minWidth: 160,
-  height: 30,
+  minHeight: 38,
   border: 0,
   borderRadius: 0,
-  padding: '0 8px',
+  padding: '0 12px',
   outline: 'none',
   background: 'transparent',
   fontSize: 12,
@@ -437,12 +450,15 @@ const SOURCE_SELECT_TRIGGER_STYLE: React.CSSProperties = {
 const SOURCE_FIELD_LABEL_STYLE: React.CSSProperties = {
   flex: '0 0 auto',
   fontSize: 12,
-  fontWeight: 600,
-  color: '#64748b',
+  fontWeight: 700,
+  color: '#1d4ed8',
   lineHeight: '18px',
   whiteSpace: 'nowrap',
-  minWidth: 42,
-  textAlign: 'right',
+  minWidth: 58,
+  padding: '0 12px',
+  borderRadius: 10,
+  background: '#e8f1ff',
+  textAlign: 'center',
 }
 
 const SECTION_HEAD_MAIN_STYLE: React.CSSProperties = {
@@ -458,6 +474,9 @@ const TABLE_SCROLL_STYLE: React.CSSProperties = {
 
 const CHOOSER_ROOT_STYLE: React.CSSProperties = {
   position: 'relative',
+  minHeight: 38,
+  display: 'flex',
+  alignItems: 'center',
 }
 
 const CHOOSER_PANEL_STYLE: React.CSSProperties = {
@@ -610,53 +629,66 @@ const LPROCESS_V2_CSS = `
   }
   .nop-lprocess-v2__source-row {
     display: flex;
-    align-items: center;
-    gap: 6px;
+    align-items: stretch;
+    gap: 8px;
     flex-wrap: wrap;
     min-width: 0;
     width: 100%;
+    padding: 8px;
+    border: 1px solid #d8e3ef;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fbff 58%, #f1f5f9 100%);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
   }
   .nop-lprocess-v2__source-mode {
     flex: 0 0 auto;
+    display: flex;
   }
   .nop-lprocess-v2__source-field {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 8px;
     min-width: 0;
-    min-height: 30px;
-    padding: 0 6px;
-    border: 1px solid #cbd5e1;
-    border-radius: 2px;
-    background: #fff;
+    min-height: 42px;
+    padding: 4px;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
   }
   .nop-lprocess-v2__source-field--executor {
-    flex: 1 1 360px;
-    min-width: 300px;
+    flex: 1 1 420px;
+    min-width: 320px;
   }
   .nop-lprocess-v2__source-field--release {
-    flex: 0 1 220px;
-    min-width: 200px;
+    flex: 0 1 260px;
+    min-width: 220px;
   }
   .nop-lprocess-v2__source-field--upload {
-    flex: 1 1 360px;
-    min-width: 280px;
+    flex: 1 1 420px;
+    min-width: 300px;
   }
   .nop-lprocess-v2__source-field-control {
     flex: 1 1 auto;
     min-width: 0;
+    display: flex;
+    align-items: center;
+    min-height: 34px;
+    padding: 0 8px;
+    border-radius: 10px;
+    background: transparent;
   }
   .nop-lprocess-v2__rich-select,
   .nop-lprocess-v2__rich-select .cxd-Select {
     width: 100%;
   }
   .nop-lprocess-v2__rich-select .cxd-Select {
-    min-height: 28px;
+    min-height: 34px;
     background: transparent;
   }
   .nop-lprocess-v2__rich-select .cxd-Select-valueWrap {
-    min-height: 28px;
-    padding-left: 0;
+    min-height: 34px;
+    padding-left: 2px;
   }
   .nop-lprocess-v2__rich-select .cxd-Select-input {
     margin: 0;
@@ -668,14 +700,18 @@ const LPROCESS_V2_CSS = `
   }
   .nop-lprocess-v2__rich-select .cxd-Select-arrow,
   .nop-lprocess-v2__rich-select .cxd-Select-clear {
-    right: 0;
+    right: 2px;
+    top: 50%;
+    transform: translateY(-50%);
   }
   .nop-lprocess-v2__source-field:focus-within {
     border-color: #2563eb;
-    box-shadow: inset 0 0 0 1px #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.82);
   }
   .nop-lprocess-v2__source-action {
     flex: 0 0 auto;
+    display: flex;
+    align-items: stretch;
   }
   .nop-lprocess-v2__source-field .cxd-Form-item,
   .nop-lprocess-v2__source-field .cxd-Form-control,
@@ -701,8 +737,8 @@ const LPROCESS_V2_CSS = `
   .nop-lprocess-v2__source-action .cxd-Button,
   .nop-lprocess-v2__source-action .cxd-SelectControl,
   .nop-lprocess-v2__source-action .cxd-InputFile-control {
-    min-height: 28px;
-    border-radius: 2px;
+    min-height: 34px;
+    border-radius: 10px;
   }
   .nop-lprocess-v2__source-field .cxd-PopOver,
   .nop-lprocess-v2__source-field .cxd-PopOverAble-popover,
@@ -714,29 +750,34 @@ const LPROCESS_V2_CSS = `
   }
   .nop-lprocess-v2__mode-switch {
     display: inline-flex;
-    border: 1px solid #cbd5e1;
-    border-radius: 2px;
+    padding: 3px;
+    border: 1px solid #d8e3ef;
+    border-radius: 14px;
     overflow: hidden;
-    background: #fff;
+    background: rgba(241, 245, 249, 0.9);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
   }
   .nop-lprocess-v2__mode-switch button {
     border: 0;
     background: transparent;
     color: #475569;
-    min-height: 30px;
-    padding: 0 10px;
+    min-height: 34px;
+    padding: 0 14px;
     font-size: 12px;
     line-height: 16px;
     white-space: nowrap;
     cursor: pointer;
+    border-radius: 10px;
+    transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
   }
   .nop-lprocess-v2__mode-switch button + button {
-    border-left: 1px solid #e2e8f0;
+    margin-left: 2px;
   }
   .nop-lprocess-v2__mode-switch button.is-active {
-    background: #e8f1ff;
+    background: #ffffff;
     color: #1d4ed8;
     font-weight: 600;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.12);
   }
   .nop-lprocess-v2__sticky-meta {
     display: flex;
@@ -1690,13 +1731,22 @@ function ColumnChooser<T extends string>(props: {
         <ColumnsIcon />
       </IconButton>
       {open && typeof document !== 'undefined' && panelStyle && ReactDOM.createPortal(
-        <div
-          ref={popupRef}
-          style={{
-            ...panelStyle,
-            ...CHOOSER_PANEL_STYLE,
-          }}
-        >
+        <>
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 3999,
+            }}
+            onClick={() => setOpen(false)}
+          />
+          <div
+            ref={popupRef}
+            style={{
+              ...panelStyle,
+              ...CHOOSER_PANEL_STYLE,
+            }}
+          >
           <div style={CHOOSER_HEADER_STYLE}>
             <div style={CHOOSER_TITLE_STYLE}>{props.title}</div>
             <div style={CHOOSER_DENSITY_ROW_STYLE}>
@@ -1747,7 +1797,8 @@ function ColumnChooser<T extends string>(props: {
               重置
             </button>
           </div>
-        </div>,
+        </div>
+        </>,
         document.body,
       )}
     </div>
@@ -2612,6 +2663,32 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
     setError('当前版本尚未接入配置项/方法项/参数项保存接口，请先补充对应 mutation。')
   }
 
+  function openPolicyStudioView(methodId?: string | null, schemaRole?: 'INPUT' | 'OUTPUT' | null, fieldPath?: string | null) {
+    if (!methodId || !schemaRole)
+      return
+
+    const routePath = '/PolicyStudio-main-console'
+    const payload: PolicyStudioNavigationPayload = {
+      executorDefId: activeExecutorDefId || undefined,
+      executorReleaseId: activeExecutorReleaseId || undefined,
+      methodId,
+      schemaRole,
+      fieldPath: fieldPath || undefined,
+    }
+
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem(POLICY_STUDIO_NAV_STATE_KEY, JSON.stringify(payload))
+      window.dispatchEvent(new CustomEvent(POLICY_STUDIO_NAV_EVENT, { detail: payload }))
+    }
+
+    if (props.env?.jumpTo) {
+      props.env.jumpTo(routePath)
+      return
+    }
+    if (typeof window !== 'undefined')
+      window.location.hash = routePath
+  }
+
   function setSourceMode(nextMode: ConsoleSourceMode) {
     if (nextMode === sourceMode)
       return
@@ -3039,7 +3116,18 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
                                   </td>
                                 ))}
                                 <td style={{ ...densityMetrics().td, ...operationCellStyle() }}>
-                                  <TextActionButton label="编辑" title="编辑方法" onClick={() => openMethodEditor(item)} />
+                                  <div style={{ display: 'grid', gap: 4 }}>
+                                    <TextActionButton
+                                      label="入参Clar"
+                                      title="查看方法入参 Clar"
+                                      onClick={() => openPolicyStudioView(item.methodId, 'INPUT')}
+                                    />
+                                    <TextActionButton
+                                      label="出参Clar"
+                                      title="查看方法出参 Clar"
+                                      onClick={() => openPolicyStudioView(item.methodId, 'OUTPUT')}
+                                    />
+                                  </div>
                                 </td>
                               </tr>
                             ))
@@ -3182,7 +3270,14 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
                                           }}
                                           rowSpan={roleGroup.rows.length}
                                         >
-                                          {roleTag(highlightText(roleGroup.role === 'INPUT' ? '入参' : '出参', paramFilter.keyword), roleGroup.role)}
+                                          <div style={{ display: 'grid', gap: 6 }}>
+                                            {roleTag(highlightText(roleGroup.role === 'INPUT' ? '入参' : '出参', paramFilter.keyword), roleGroup.role)}
+                                            <TextActionButton
+                                              label="Policy"
+                                              title="查看当前分组 Policy"
+                                              onClick={() => openPolicyStudioView(group.method.methodId, roleGroup.role)}
+                                            />
+                                          </div>
                                         </td>
                                       )
                                     }
@@ -3231,7 +3326,11 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
                                     )
                                   })}
                                   <td style={{ ...densityMetrics().td, ...operationCellStyle(), ...highlightedCellStyle(highlightRow) }}>
-                                    <TextActionButton label="编辑" title="编辑参数" onClick={() => openFieldEditor(field)} />
+                                    <TextActionButton
+                                      label="Clar"
+                                      title="查看当前字段 Clar"
+                                      onClick={() => openPolicyStudioView(field.methodId, field.schemaRole as 'INPUT' | 'OUTPUT', field.fieldPath)}
+                                    />
                                   </td>
                                 </tr>
                                 )

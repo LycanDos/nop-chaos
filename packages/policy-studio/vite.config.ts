@@ -32,7 +32,7 @@ export default defineConfig(({ command }) => {
         fileName: (format) => `index.${format === 'es' ? 'esm' : 'umd'}.js`
       },
       rollupOptions: {
-        external: ['vue', 'element-plus'],
+        external: ['vue', 'element-plus', '@nop-chaos/nop-amis-vue'],
         output: {
           globals: {
             vue: 'Vue',

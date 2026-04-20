@@ -23,13 +23,25 @@
                 <Folder />
               </el-icon>
               <div class="node-names">
-                <span v-if="node.isLeaf" class="node-field-name">{{ data.name }}</span>
-                <span class="node-display-name">{{ data.displayName || data.label }}</span>
+                <span class="node-display-name" v-html="highlightMatch(data.displayName || data.label)" />
+                <span
+                  v-if="data.techName && data.techName !== data.displayName"
+                  class="node-tech-name"
+                  v-html="highlightMatch(data.techName)"
+                />
               </div>
             </div>
             <el-tag v-if="data.type" size="small" :type="getTypeTagColor(data.type)" class="node-type">
               {{ data.type }}
             </el-tag>
+          </div>
+          <div v-if="data.path" class="node-path-line">
+            <span v-if="data.aliases?.length" class="node-aliases" v-html="highlightMatch(`Alias: ${data.aliases.join(' / ')}`)" />
+            <span class="node-path">
+              <span v-if="pathPrefix(data.path)" v-html="highlightMatch(pathPrefix(data.path))" />
+              <strong v-html="highlightMatch(pathLeaf(data.path))" />
+            </span>
+            <span v-if="data.type" class="node-inline-type">{{ data.type }}</span>
           </div>
         </div>
       </template>
@@ -47,9 +59,11 @@ interface TreeNode {
   label: string
   value: string
   name: string
+  techName?: string
   path: string
   type?: string
   displayName?: string
+  aliases?: string[]
   children?: TreeNode[]
 }
 
@@ -82,6 +96,7 @@ const treeSelectRef = ref()
 const inputValue = ref(props.modelValue)
 const selectedField = ref<FieldInfo | null>(null)
 const treeData = ref<TreeNode[]>([])
+const searchKeyword = ref('')
 
 const treeProps = {
   label: 'label',
@@ -116,13 +131,49 @@ const getTypeTagColor = (type: string): 'success' | 'warning' | 'info' | 'danger
 
 // 树节点过滤方法
 const filterNode = (value: string, data: TreeNode) => {
+  searchKeyword.value = value.trim()
   if (!value) return true
   const lowerValue = value.toLowerCase()
   
   // 支持多属性搜索：搜索属性名、中文名、路径
   return data.name.toLowerCase().includes(lowerValue) ||
+         (data.techName && data.techName.toLowerCase().includes(lowerValue)) ||
          (data.displayName && data.displayName.toLowerCase().includes(lowerValue)) ||
+         (data.aliases || []).some(alias => alias.toLowerCase().includes(lowerValue)) ||
          data.path.toLowerCase().includes(lowerValue)
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function highlightMatch(value?: string) {
+  const text = value || ''
+  const keyword = searchKeyword.value.trim()
+  if (!keyword)
+    return escapeHtml(text)
+
+  const pattern = new RegExp(`(${escapeRegExp(keyword)})`, 'ig')
+  return escapeHtml(text).replace(pattern, '<mark>$1</mark>')
+}
+
+function pathPrefix(path?: string) {
+  if (!path || !path.includes('.'))
+    return ''
+  return `${path.split('.').slice(0, -1).join('.')}.`
+}
+
+function pathLeaf(path?: string) {
+  if (!path)
+    return ''
+  return path.split('.').pop() || path
 }
 
 // 将字段列表转换为树形结构
@@ -146,29 +197,35 @@ const buildTreeData = (fields: FieldInfo[]): TreeNode[] => {
         let nodeLabel: string
         let nodeDisplayName: string
         let nodeType: string | undefined
+        let nodeTechName: string | undefined
 
         if (isLeaf) {
-          // 叶子节点：字段 - label 显示 "路径(中文名) 类型"
-          nodeLabel = `${field.path}(${field.displayName || part}) [${field.type}]`
-          nodeDisplayName = field.displayName || part
+          const displayName = field.displayName || part
+          nodeLabel = displayName === field.name ? displayName : `${displayName} / ${field.name}`
+          nodeDisplayName = displayName
           nodeType = field.type
+          nodeTechName = field.name
         } else if (isRoot) {
           // 根节点：实体
           nodeDisplayName = part
           nodeLabel = part
+          nodeTechName = part
         } else {
           // 中间节点
           nodeDisplayName = part
           nodeLabel = part
+          nodeTechName = part
         }
 
         const node: TreeNode = {
           label: nodeLabel,
           value: nodeValue,
           name: part,
+          techName: nodeTechName,
           path: currentPath,
           type: nodeType,
           displayName: nodeDisplayName,
+          aliases: isLeaf ? (field.aliases || []) : undefined,
           children: isLeaf ? undefined : []
         }
         treeMap.set(nodeValue, node)
@@ -226,6 +283,10 @@ watch(() => props.modelValue, (newVal) => {
   if (newVal !== inputValue.value) {
     inputValue.value = newVal || ''
   }
+})
+
+watch(() => props.hintEngine, () => {
+  loadTreeData()
 })
 
 // 初始化
@@ -304,18 +365,6 @@ defineExpose({
   min-width: 0;
 }
 
-/* 属性名 */
-.node-field-name {
-  font-size: 11px;
-  color: #909399;
-  font-family: 'Monaco', 'Menlo', 'Courier New', 'Consolas', monospace;
-  background-color: #f5f7fa;
-  padding: 1px 4px;
-  border-radius: 2px;
-  flex-shrink: 0;
-  line-height: 1.3;
-}
-
 /* 中文名称 */
 .node-display-name {
   font-weight: 500;
@@ -323,6 +372,35 @@ defineExpose({
   color: #303133;
   flex-shrink: 0;
   line-height: 1.3;
+}
+
+.node-tech-name {
+  color: #606266;
+  font-size: 11px;
+  font-family: Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  line-height: 1.3;
+}
+
+.node-path-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding-left: 20px;
+  flex-wrap: wrap;
+}
+
+.node-aliases,
+.node-inline-type {
+  color: #909399;
+  font-size: 10px;
+}
+
+.node-path {
+  color: #606266;
+  font-size: 10px;
+  font-family: Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  line-height: 1.3;
+  word-break: break-all;
 }
 
 /* 类型标签 */
@@ -390,5 +468,12 @@ defineExpose({
 
 .path-selector :deep(.el-scrollbar__bar:hover) {
   opacity: 0.8;
+}
+
+.path-selector :deep(mark) {
+  padding: 0 2px;
+  border-radius: 3px;
+  background: #fff1b8;
+  color: inherit;
 }
 </style>

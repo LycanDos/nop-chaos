@@ -17,10 +17,15 @@
     "type-check": "vue-tsc --noEmit"
   },
   "dependencies": {
+    "@nop-chaos/nop-amis-vue": "workspace:*",
     "@element-plus/icons-vue": "^2.3.0",
     "dayjs": "^1.11.13",
     "element-plus": "^2.5.0",
-    "vue": "^3.4.0"
+    "jszip": "^3.10.1",
+    "monaco-editor": "0.54.0",
+    "vanilla-jsoneditor": "3.12.0",
+    "vue": "^3.4.0",
+    "yaml": "^2.8.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

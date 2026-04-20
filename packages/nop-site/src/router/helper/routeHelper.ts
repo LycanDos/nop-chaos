@@ -3,6 +3,7 @@ import type { AppRouteModule, AppRouteRecordRaw } from '/@/router/types';
 
 import { cloneDeep, omit } from 'lodash-es';
 import { createRouter, createWebHashHistory } from 'vue-router';
+import { defineComponent, h, markRaw } from 'vue';
 import { getParentLayout, LAYOUT } from '/@/router/constant';
 import { URL_HASH_TAB } from '/@/utils';
 import { getTenantId, getToken } from '/@/utils/auth';
@@ -24,6 +25,17 @@ LayoutMap.set('LayoutsContent', LayoutContent);
 
 const AMIS = XuiPage // () => import("/@/nop/amis/AmisPage.vue")
 LayoutMap.set("AMIS", AMIS)
+
+function createNamedAmisRoute(name: string, path: string) {
+  return markRaw(
+    defineComponent({
+      name,
+      setup() {
+        return () => h(XuiPage, { path });
+      },
+    })
+  );
+}
 
 let dynamicViewsModules: Record<string, () => Promise<Recordable>>;
 
@@ -91,28 +103,30 @@ function asyncImportRoute(routes: AppRouteRecordRaw[] | undefined) {
 
     // // update-begin--author:canonical---date:20221003---for:增加Amis适配
     if(item.component == 'AMIS'){
-      item.props = {
-        path: item.meta.url
-      }
+      item.component = createNamedAmisRoute(String(item.name || item.path || 'AmisPage'), item.meta.url);
     }
     // update-end--author:canonical---date:20221003---for:增加Amis适配
 
     let { component, name } = item;
     const { children } = item;
     if (component) {
-      const layoutFound = LayoutMap.get(component.toUpperCase());
-      if (layoutFound) {
-        item.component = layoutFound;
+      if (typeof component !== 'string') {
+        item.component = component;
       } else {
-        // update-end--author:zyf---date:20220307--for:VUEN-219兼容后台返回动态首页,目的适配跟v2版本配置一致 --------
-        if (component.indexOf('dashboard/') > -1) {
-          //当数据标sys_permission中component没有拼接index时前端需要拼接
-          if (component.indexOf('/index') < 0) {
-            component = component + '/index';
+        const layoutFound = LayoutMap.get(component.toUpperCase());
+        if (layoutFound) {
+          item.component = layoutFound;
+        } else {
+          // update-end--author:zyf---date:20220307--for:VUEN-219兼容后台返回动态首页,目的适配跟v2版本配置一致 --------
+          if (component.indexOf('dashboard/') > -1) {
+            //当数据标sys_permission中component没有拼接index时前端需要拼接
+            if (component.indexOf('/index') < 0) {
+              component = component + '/index';
+            }
           }
+          // update-end--author:zyf---date:20220307---for:VUEN-219兼容后台返回动态首页,目的适配跟v2版本配置一致 --------
+          item.component = dynamicImport(dynamicViewsModules, component as string);
         }
-        // update-end--author:zyf---date:20220307---for:VUEN-219兼容后台返回动态首页,目的适配跟v2版本配置一致 --------
-        item.component = dynamicImport(dynamicViewsModules, component as string);
       }
     } else if (name) {
       item.component = getParentLayout();

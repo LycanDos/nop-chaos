@@ -18,6 +18,9 @@ export interface FieldInfo {
   path: string
   aliases: string[]
   searchable: boolean
+  format?: string
+  required?: boolean
+  options?: PolicySchemaOption[]
 }
 
 export interface RelationInfo {
@@ -99,18 +102,101 @@ export interface ConditionNode {
   severity?: number
 }
 
-export type PolicyLayerType = 'BASE' | 'PARTNER' | 'NODE' | 'INSTANCE'
+export interface PolicySchemaOption {
+  label: string
+  value: any
+}
+
+export type PolicySchemaFormat =
+  | 'date'
+  | 'time'
+  | 'datetime'
+  | 'email'
+  | 'phone'
+  | 'textarea'
+  | 'json'
+
+export type PolicySchemaFieldType =
+  | 'object'
+  | 'array'
+  | 'string'
+  | 'number'
+  | 'integer'
+  | 'boolean'
+
+export interface PolicySchemaField {
+  name: string
+  label: string
+  path: string
+  type: PolicySchemaFieldType
+  description?: string
+  format?: PolicySchemaFormat
+  required?: boolean
+  aliases?: string[]
+  searchable?: boolean
+  options?: PolicySchemaOption[]
+  defaultValue?: any
+  min?: number
+  max?: number
+  minLength?: number
+  maxLength?: number
+  pattern?: string
+  fields?: PolicySchemaField[]
+  item?: PolicySchemaField
+}
+
+export interface PolicySchema {
+  id: string
+  name: string
+  description?: string
+  rootLabel?: string
+  fields: PolicySchemaField[]
+  sampleData?: Record<string, any>
+}
+
+export interface PolicyBundleMeta {
+  format: 'policy-bundle/v1'
+  bundleId: string
+  bundleName: string
+  version: string
+  schemaFormat: 'json' | 'yaml'
+}
+
+export interface PolicyBundle {
+  meta: PolicyBundleMeta
+  schema: PolicySchema
+  document: PolicyDocument
+  sampleData?: Record<string, any>
+  sourceType?: 'sample' | 'markdown' | 'zip' | 'url'
+}
+
+export type PolicyLayerType = 'BASE' | 'PARTNER' | 'NODE' | 'INSTANCE' | (string & {})
 
 export type PolicyRuleFamily =
   | 'required'
   | 'range'
-  | 'exact'
-  | 'set'
+  | 'eq'
+  | 'ne'
+  | 'in'
+  | 'notIn'
+  | 'betweenNot'
   | 'regex'
   | 'contains'
+  | 'notContains'
+  | 'containsSpecialChars'
+  | 'notContainsSpecialChars'
+  | 'startsWith'
+  | 'notStartsWith'
+  | 'endsWith'
+  | 'notEndsWith'
+  | 'isNull'
+  | 'notNull'
+  | 'isBlank'
+  | 'notBlank'
   | 'default'
   | 'locked'
   | 'readonly'
+  | (string & {})
 
 export type PolicyOperator =
   | 'required'
@@ -119,14 +205,29 @@ export type PolicyOperator =
   | 'lt'
   | 'le'
   | 'eq'
+  | 'ne'
   | 'in'
+  | 'notIn'
   | 'between'
+  | 'notBetween'
   | 'contains'
+  | 'notContains'
+  | 'containsSpecialChars'
+  | 'notContainsSpecialChars'
+  | 'startsWith'
+  | 'notStartsWith'
+  | 'endsWith'
+  | 'notEndsWith'
+  | 'isNull'
+  | 'notNull'
+  | 'isBlank'
+  | 'notBlank'
   | 'regex'
   | 'default'
   | 'locked'
   | 'readonly'
   | 'clear'
+  | (string & {})
 
 export type LockMode = 'LOCKED' | 'MUST_EQUAL_PREFILL'
 
@@ -139,8 +240,10 @@ export interface PolicyRule {
   family?: PolicyRuleFamily
   value?: any
   values?: any[]
-  min?: number
-  max?: number
+  min?: any
+  max?: any
+  minInclusive?: boolean
+  maxInclusive?: boolean
   pattern?: string
   defaultValue?: any
   lockedValue?: any
@@ -151,6 +254,21 @@ export interface PolicyRule {
   errorDescription?: string
   severity?: number
   note?: string
+}
+
+export type ValidationSupportLevel =
+  | 'frontend-supported'
+  | 'partial-supported'
+  | 'backend-only'
+
+export interface ValidationSupportItem {
+  ruleId: string
+  layerId: string
+  layerName: string
+  path: string
+  operator: PolicyOperator
+  level: ValidationSupportLevel
+  reason: string
 }
 
 export interface PolicyLayer {
@@ -177,6 +295,48 @@ export type CompiledRuleStatus =
   | 'overridden'
   | 'rejected'
   | 'cleared'
+
+export interface FieldValidationRuleItem {
+  key: string
+  ruleId: string
+  layerId: string
+  layerName: string
+  layerType: PolicyLayerType
+  operator: PolicyOperator
+  operatorTitle: string
+  operatorMeaning: string
+  summary: string
+  status: CompiledRuleStatus
+  reason?: string
+  supportLevel: ValidationSupportLevel
+}
+
+export interface FieldValidationHint {
+  path: string
+  rules: FieldValidationRuleItem[]
+  hasServerValidation: boolean
+}
+
+export interface FieldValidationRuleItem {
+  key: string
+  ruleId: string
+  layerId: string
+  layerName: string
+  layerType: PolicyLayerType
+  operator: PolicyOperator
+  operatorTitle: string
+  operatorMeaning: string
+  summary: string
+  status: CompiledRuleStatus
+  reason?: string
+  supportLevel: ValidationSupportLevel
+}
+
+export interface FieldValidationHint {
+  path: string
+  rules: FieldValidationRuleItem[]
+  hasServerValidation: boolean
+}
 
 export interface CompiledRuleView {
   ruleId: string
@@ -207,4 +367,19 @@ export interface EffectivePathView {
 
 export interface PolicyCompileResult {
   paths: EffectivePathView[]
+}
+
+export interface PolicyPreviewTreeNode {
+  key: string
+  type: 'group' | 'field'
+  label: string
+  path?: string
+  aliases?: string[]
+  description?: string
+  meta?: string
+  fieldCount: number
+  finalFamilies: EffectiveFamilyView[]
+  effectiveSummaries: string[]
+  compiledRules: CompiledRuleView[]
+  children: PolicyPreviewTreeNode[]
 }

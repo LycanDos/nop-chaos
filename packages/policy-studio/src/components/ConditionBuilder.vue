@@ -5,13 +5,13 @@
         v-model="condition.type"
         placeholder="选择条件类型"
         size="small"
+        filterable
+        :filter-method="filterTypeOption"
         @change="handleTypeChange"
       >
-        <el-option label="简单条件" value="simple" />
-        <el-option label="AND (且)" value="and" />
-        <el-option label="OR (或)" value="or" />
-        <el-option label="NOT (非)" value="not" />
-        <el-option label="条件判断 (if)" value="if" />
+        <el-option v-for="option in filteredConditionTypeOptions" :key="option.value" :label="option.label" :value="option.value">
+          <span v-html="highlightText(option.label, typeSearchKeyword)" />
+        </el-option>
       </el-select>
       
       <el-button
@@ -51,14 +51,18 @@
           <el-select
             v-model="condition.operator"
             placeholder="运算符"
+            filterable
+            :filter-method="filterOperatorOption"
             @change="handleOperatorChange"
           >
             <el-option
-              v-for="op in operatorOptions"
+              v-for="op in filteredOperatorOptions"
               :key="op.value"
               :label="op.label"
               :value="op.value"
-            />
+            >
+              <span v-html="highlightText(op.label, operatorSearchKeyword)" />
+            </el-option>
           </el-select>
         </div>
       </div>
@@ -223,10 +227,31 @@ const emit = defineEmits<{
 }>()
 
 const condition = ref<ConditionNode>({ ...props.modelValue })
+const typeSearchKeyword = ref('')
+const operatorSearchKeyword = ref('')
+const conditionTypeOptions = [
+  { label: '简单条件', value: 'simple' },
+  { label: 'AND (且)', value: 'and' },
+  { label: 'OR (或)', value: 'or' },
+  { label: 'NOT (非)', value: 'not' },
+  { label: '条件判断 (if)', value: 'if' }
+]
+const filteredConditionTypeOptions = computed(() => {
+  const keyword = typeSearchKeyword.value.trim().toLowerCase()
+  if (!keyword)
+    return conditionTypeOptions
+  return conditionTypeOptions.filter(option => option.label.toLowerCase().includes(keyword))
+})
 
 // 运算符选项
 const operatorOptions = computed(() => {
   return props.hintEngine.getOperatorSuggestions(condition.value.field ? getFieldType(condition.value.field) : undefined)
+})
+const filteredOperatorOptions = computed(() => {
+  const keyword = operatorSearchKeyword.value.trim().toLowerCase()
+  if (!keyword)
+    return operatorOptions.value
+  return operatorOptions.value.filter(option => option.label.toLowerCase().includes(keyword))
 })
 
 // 是否显示值输入
@@ -399,6 +424,34 @@ const addElseCondition = () => {
 const handleDelete = () => {
   emit('delete')
 }
+
+function filterTypeOption(keyword: string) {
+  typeSearchKeyword.value = keyword.trim()
+}
+
+function filterOperatorOption(keyword: string) {
+  operatorSearchKeyword.value = keyword.trim()
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function highlightText(value: string, keyword: string) {
+  const normalizedKeyword = keyword.trim()
+  if (!normalizedKeyword)
+    return escapeHtml(value)
+
+  const pattern = new RegExp(`(${escapeRegExp(normalizedKeyword)})`, 'ig')
+  return escapeHtml(value).replace(pattern, '<mark>$1</mark>')
+}
 </script>
 
 <style scoped>
@@ -507,5 +560,12 @@ const handleDelete = () => {
 .condition-builder :deep(.el-popper) {
   position: fixed !important;
   z-index: 9999 !important;
+}
+
+:deep(mark) {
+  padding: 0 2px;
+  border-radius: 3px;
+  background: #fff1b8;
+  color: inherit;
 }
 </style>

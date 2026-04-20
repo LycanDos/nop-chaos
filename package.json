@@ -38,7 +38,8 @@
   "//": "use bin-wrapper-china to install gifslice package when network issue occurs",
   "pnpm": {
     "overrides": {
-      "bin-wrapper": "npm:bin-wrapper-china"
+      "bin-wrapper": "npm:bin-wrapper-china",
+      "lodash-es": "4.17.21"
     }
   },
   "volta": {
