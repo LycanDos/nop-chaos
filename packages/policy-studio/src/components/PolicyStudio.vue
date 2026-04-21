@@ -31,7 +31,6 @@
               <el-radio-button value="top">横向</el-radio-button>
               <el-radio-button value="left">纵向</el-radio-button>
             </el-radio-group>
-            <el-button size="small" type="primary" @click="addRule">添加校验</el-button>
           </div>
         </div>
 

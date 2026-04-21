@@ -77,7 +77,7 @@ export const DELTA_THREE_PANE_EDITOR_ROUTE: AppRouteRecordRaw = {
   name: 'DeltaThreePaneEditorRoot',
   component: LAYOUT,
   meta: {
-    title: 'Delta三层编辑器',
+    title: 'Delta Lab',
     hideMenu: true,
   },
   children: [
@@ -86,7 +86,7 @@ export const DELTA_THREE_PANE_EDITOR_ROUTE: AppRouteRecordRaw = {
       name: 'DeltaThreePaneEditor',
       component: () => import('/@/views/delta-lab/DeltaThreePaneEditor.vue'),
       meta: {
-        title: 'Delta三层编辑器',
+        title: 'Delta Lab',
         hideMenu: true,
       },
     },

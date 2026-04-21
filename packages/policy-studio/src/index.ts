@@ -1,5 +1,9 @@
 export { default as PolicyStudio } from './components/PolicyStudio.vue'
 export { default as ConditionBuilder } from './components/ConditionBuilder.vue'
+
+// Responsive CSS for rule-card (runtime injection)
+import { injectRuleCardResponsiveCSS } from './components/rule-card-responsive'
+injectRuleCardResponsiveCSS()
 export { default as PathSelector } from './components/PathSelector.vue'
 export { default as SchemaDataEditor } from './components/SchemaDataEditor.vue'
 export { default as SchemaFormField } from './components/SchemaFormField.vue'

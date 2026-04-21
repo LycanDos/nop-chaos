@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -oP 'label:\".{0,20}\"' /Volumes/Doc/Git/Nop/Nop_Chaos/packages/nop-amis-ext/lib/index-639189d5.js)",
+      "Bash(pnpm -F @nop-chaos/nop-amis-ext build)",
+      "Bash(pnpm -F sdk build)",
+      "Bash(timeout 30 pnpm -F nop-site dev)"
+    ]
+  }
+}

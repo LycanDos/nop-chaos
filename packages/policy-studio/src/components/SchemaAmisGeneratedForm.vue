@@ -46,12 +46,15 @@ const effectiveRules = computed(() => {
 })
 
 const amisSchema = computed(() => ({
-  type: 'form',
-  title: false,
-  wrapWithPanel: false,
-  mode: 'normal',
-  actions: [],
-  body: buildAmisBody(props.schema.fields, effectiveRules.value),
+  type: 'page',
+  body: {
+    type: 'form',
+    title: false,
+    wrapWithPanel: false,
+    mode: 'normal',
+    actions: [],
+    body: buildAmisBody(props.schema.fields, effectiveRules.value),
+  },
 }))
 
 const amisSchemaPlain = computed(() => safeStructuredClone(amisSchema.value))

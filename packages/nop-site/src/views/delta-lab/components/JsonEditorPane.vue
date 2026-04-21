@@ -1,20 +1,9 @@
 <template>
   <section class="delta-pane">
-    <header class="delta-pane__header">
-      <h3 class="delta-pane__title">
-        <span v-if="side === 'base'" class="delta-pane__title-icon" aria-hidden="true">
-          <img :src="BASE_ICON" alt="" />
-        </span>
-        <span v-else class="delta-pane__title-icon" aria-hidden="true">
-          <img :src="DELTA_ICON" alt="" />
-        </span>
-        <span>{{ title }}</span>
-      </h3>
-      <div v-if="supportsSourceMode" class="delta-pane__mode-switch">
-        <button :class="{ 'is-active': editorMode === 'tree' }" type="button" @click="editorMode = 'tree'"> 结构 </button>
-        <button :class="{ 'is-active': editorMode === 'source' }" type="button" @click="editorMode = 'source'"> 源码 </button>
-      </div>
-    </header>
+    <div v-if="supportsSourceMode" class="delta-pane__mode-bar">
+      <button :class="['delta-pane__mode-btn', { 'is-active': editorMode === 'tree' }]" type="button" @click="editorMode = 'tree'">结构</button>
+      <button :class="['delta-pane__mode-btn', { 'is-active': editorMode === 'source' }]" type="button" @click="editorMode = 'source'">源码</button>
+    </div>
     <div v-if="editorMode === 'tree' || !supportsSourceMode" ref="containerRef" class="delta-pane__editor"></div>
     <div v-if="supportsSourceMode" v-show="editorMode === 'source'" class="delta-pane__source">
       <MonacoSurface v-model="sourceText" language="json" syntax-profile="delta-json" @focus="handleSourceFocus" />
@@ -474,55 +463,46 @@
     flex-direction: column;
     min-height: 0;
     height: 100%;
-    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-    border: 1px solid #d7dee8;
-    border-radius: 16px;
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+    background: #fff;
     overflow: visible;
   }
 
-  .delta-pane__header {
+  .delta-pane__mode-bar {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 12px 14px 10px;
-    border-bottom: 1px solid #e5eaf1;
-    min-height: 48px;
-
-    h3 {
-      margin: 0;
-    }
+    gap: 0;
+    padding: 0 8px;
+    border-bottom: 1px solid #eef2f7;
+    background: #f8fafc;
+    flex-shrink: 0;
   }
 
-  .delta-pane__title {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 15px;
-    font-weight: 700;
-    color: #11203a;
+  .delta-pane__mode-btn {
+    padding: 5px 10px;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    line-height: 1;
   }
 
-  .delta-pane__title-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
+  .delta-pane__mode-btn:hover {
+    color: #1e40af;
+    background: rgba(37, 99, 235, 0.04);
+  }
 
-    img {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
+  .delta-pane__mode-btn.is-active {
+    color: #1d4ed8;
+    border-bottom-color: #2563eb;
+    background: rgba(37, 99, 235, 0.06);
   }
 
   .delta-pane__editor {
     flex: 1;
     min-height: 0;
     overflow: visible;
-    border-radius: 0 0 16px 16px;
     position: relative;
     z-index: 1;
   }
@@ -538,9 +518,9 @@
 
   .delta-pane__source-status {
     margin: 0;
-    padding: 8px 10px;
-    border-radius: 10px;
-    font-size: 12px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 11px;
     line-height: 1.4;
   }
 
@@ -554,55 +534,8 @@
     color: #be123c;
   }
 
-  .delta-pane__mode-switch {
-    display: inline-flex;
-    gap: 4px;
-    padding: 3px;
-    border: 1px solid #d8e0ea;
-    border-radius: 999px;
-    background: #fff;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.9),
-      0 1px 2px rgba(15, 23, 42, 0.04);
-
-    button {
-      border: 1px solid transparent;
-      border-radius: 999px;
-      padding: 6px 10px;
-      background: transparent;
-      color: #475569;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .is-active {
-      background: #eaf2fb;
-      color: #0f3a68;
-      border-color: #cadcf1;
-    }
-  }
-
-  :deep(.delta-pane__menu-focus-button) {
-    position: relative;
-    min-width: 28px;
-    justify-content: center;
-    color: transparent;
-  }
-
-  :deep(.delta-pane__menu-focus-button::before) {
-    content: '';
-    width: 14px;
-    height: 14px;
-    display: block;
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231f3a5f' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='3.2'/%3E%3Cpath d='M12 2.75v3.1M12 18.15v3.1M21.25 12h-3.1M5.85 12h-3.1'/%3E%3C/svg%3E");
-  }
-
   :deep(.jse-main) {
-    border-radius: 0 0 16px 16px;
+    border-radius: 0;
     overflow: visible;
   }
 

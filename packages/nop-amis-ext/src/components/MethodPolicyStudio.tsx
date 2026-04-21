@@ -190,6 +190,34 @@ function flattenLeafPaths(fields?: any[]): string[] {
   return results
 }
 
+function applyDescriptionAsLabel(schema: any): any {
+  if (!schema || typeof schema !== 'object')
+    return schema
+
+  const result = { ...schema }
+  if (Array.isArray(result.fields)) {
+    result.fields = result.fields.map((field: any) => applyDescriptionAsLabelField(field))
+  }
+  return result
+}
+
+function applyDescriptionAsLabelField(field: any): any {
+  if (!field || typeof field !== 'object')
+    return field
+
+  const result = { ...field }
+  if (result.description)
+    result.label = result.description
+
+  if (Array.isArray(result.fields))
+    result.fields = result.fields.map((child: any) => applyDescriptionAsLabelField(child))
+
+  if (result.item && typeof result.item === 'object')
+    result.item = applyDescriptionAsLabelField(result.item)
+
+  return result
+}
+
 function SearchableSelect(props: {
   value: string
   options: SimpleOption[]
@@ -470,7 +498,7 @@ function MethodPolicyStudioView(props: MethodPolicyStudioProps) {
         return
 
       const normalizedPayload = (nextPayload || {}) as PolicyPayload
-      const nextSchema = parseJson(normalizedPayload.schemaJson)
+      const nextSchema = applyDescriptionAsLabel(parseJson(normalizedPayload.schemaJson))
       setPayload(normalizedPayload)
       setSchema(nextSchema)
       setDocumentValue(parseJson(normalizedPayload.documentJson))
@@ -526,7 +554,7 @@ function MethodPolicyStudioView(props: MethodPolicyStudioProps) {
 
       const normalizedPayload = (nextPayload || {}) as PolicyPayload
       setPayload(normalizedPayload)
-      setSchema(parseJson(normalizedPayload.schemaJson))
+      setSchema(applyDescriptionAsLabel(parseJson(normalizedPayload.schemaJson)))
       setDocumentValue(parseJson(normalizedPayload.documentJson))
       setSampleData(parseJson(normalizedPayload.sampleDataJson))
       setNotice('Policy 已保存。')
@@ -666,18 +694,18 @@ const PAGE_STYLE: React.CSSProperties = {
 
 const HEADER_CARD_STYLE: React.CSSProperties = {
   border: '1px solid #dbe2ea',
-  borderRadius: 8,
+  borderRadius: 4,
   background: '#fff',
-  padding: 16,
+  padding: 10,
   display: 'grid',
-  gap: 14,
+  gap: 8,
 }
 
 const STUDIO_CARD_STYLE: React.CSSProperties = {
   border: '1px solid #dbe2ea',
-  borderRadius: 8,
+  borderRadius: 4,
   background: '#fff',
-  padding: 12,
+  padding: 8,
   minHeight: 640,
 }
 
@@ -722,7 +750,7 @@ const META_STYLE: React.CSSProperties = {
 
 const ERROR_STYLE: React.CSSProperties = {
   border: '1px solid #fecaca',
-  borderRadius: 8,
+  borderRadius: 4,
   background: '#fef2f2',
   color: '#b91c1c',
   padding: '10px 12px',
@@ -730,7 +758,7 @@ const ERROR_STYLE: React.CSSProperties = {
 
 const NOTICE_STYLE: React.CSSProperties = {
   border: '1px solid #bbf7d0',
-  borderRadius: 8,
+  borderRadius: 4,
   background: '#f0fdf4',
   color: '#166534',
   padding: '10px 12px',
@@ -738,7 +766,7 @@ const NOTICE_STYLE: React.CSSProperties = {
 
 const EMPTY_STYLE: React.CSSProperties = {
   border: '1px dashed #cbd5e1',
-  borderRadius: 8,
+  borderRadius: 4,
   background: '#fff',
   color: '#64748b',
   padding: '32px 20px',
@@ -747,7 +775,7 @@ const EMPTY_STYLE: React.CSSProperties = {
 
 const PRIMARY_BUTTON_STYLE: React.CSSProperties = {
   border: '1px solid #2563eb',
-  borderRadius: 6,
+  borderRadius: 4,
   background: '#2563eb',
   color: '#fff',
   padding: '8px 14px',
@@ -759,7 +787,7 @@ const PRIMARY_BUTTON_STYLE: React.CSSProperties = {
 function ROLE_BUTTON_STYLE(active: boolean): React.CSSProperties {
   return {
     border: `1px solid ${active ? '#2563eb' : '#cbd5e1'}`,
-    borderRadius: 6,
+    borderRadius: 4,
     background: active ? '#eff6ff' : '#fff',
     color: active ? '#1d4ed8' : '#334155',
     padding: '8px 14px',
@@ -773,39 +801,37 @@ const POLICY_STUDIO_PAGE_CSS = `
   .nop-method-policy__filters {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 12px;
+    gap: 6px;
   }
   .nop-method-policy__field {
     display: flex;
     align-items: stretch;
     min-width: 0;
-    min-height: 50px;
-    padding: 4px;
+    height: 32px;
+    padding: 0;
     border: 1px solid #d8e3ef;
-    border-radius: 16px;
-    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
-    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+    border-radius: 4px;
+    background: #fff;
+    overflow: hidden;
+    transition: border-color 0.18s ease;
   }
   .nop-method-policy__field--wide {
     grid-column: span 2;
   }
   .nop-method-policy__field:focus-within {
     border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12), 0 12px 28px rgba(37, 99, 235, 0.12);
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.3);
   }
   .nop-method-policy__field.is-disabled {
-    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-    box-shadow: none;
+    background: #f8fafc;
   }
   .nop-method-policy__label {
     flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 78px;
-    padding: 0 14px;
-    border-radius: 12px;
+    min-width: 48px;
+    padding: 0 8px;
     background: #e8f1ff;
     color: #1d4ed8;
     font-size: 12px;
@@ -817,21 +843,23 @@ const POLICY_STUDIO_PAGE_CSS = `
     min-width: 0;
     display: flex;
     align-items: center;
-    padding: 0 10px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.92);
+    padding: 0 4px 0 6px;
+    background: transparent;
   }
   .nop-method-policy__select,
   .nop-method-policy__select .cxd-Select {
     width: 100%;
   }
   .nop-method-policy__select .cxd-Select {
-    min-height: 40px;
+    min-height: 28px;
     background: transparent;
+    position: relative;
   }
   .nop-method-policy__select .cxd-Select-valueWrap {
-    min-height: 40px;
-    padding-left: 0;
+    min-height: 28px;
+    padding-left: 2px;
+    display: flex;
+    align-items: center;
   }
   .nop-method-policy__select .cxd-Select-input {
     margin: 0;
@@ -839,8 +867,9 @@ const POLICY_STUDIO_PAGE_CSS = `
   .nop-method-policy__select .cxd-Select-placeholder,
   .nop-method-policy__select .cxd-Select-valueLabel,
   .nop-method-policy__select .cxd-Select-input input {
-    font-size: 13px;
+    font-size: 12px;
     color: #0f172a;
+    line-height: 28px;
   }
   .nop-method-policy__select .cxd-Select-placeholder,
   .nop-method-policy__select .cxd-Select.is-disabled .cxd-Select-valueLabel {
@@ -848,7 +877,8 @@ const POLICY_STUDIO_PAGE_CSS = `
   }
   .nop-method-policy__select .cxd-Select-arrow,
   .nop-method-policy__select .cxd-Select-clear {
-    right: 2px;
+    position: absolute;
+    right: 4px;
     top: 50%;
     transform: translateY(-50%);
   }
@@ -860,11 +890,11 @@ const POLICY_STUDIO_PAGE_CSS = `
       grid-column: span 1;
     }
     .nop-method-policy__field {
-      min-height: 48px;
+      height: 32px;
     }
     .nop-method-policy__label {
-      min-width: 72px;
-      padding: 0 12px;
+      min-width: 42px;
+      padding: 0 6px;
     }
   }
 `

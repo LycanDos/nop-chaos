@@ -292,7 +292,7 @@ const INPUT_STYLE: React.CSSProperties = {
   width: '100%',
   minWidth: 0,
   border: '1px solid #d1d5db',
-  borderRadius: 2,
+  borderRadius: 4,
   padding: '4px 6px',
   fontSize: 12,
   lineHeight: '16px',
@@ -302,7 +302,7 @@ const INPUT_STYLE: React.CSSProperties = {
 
 const SECTION_CARD_STYLE: React.CSSProperties = {
   border: '1px solid #dbe1ea',
-  borderRadius: 2,
+  borderRadius: 4,
   background: '#fff',
   boxShadow: 'none',
   overflow: 'hidden',
@@ -371,7 +371,7 @@ const ERROR_ALERT_STYLE: React.CSSProperties = {
   border: '1px solid #fecaca',
   background: '#fef2f2',
   color: '#b91c1c',
-  borderRadius: 6,
+  borderRadius: 4,
   padding: '10px 12px',
 }
 
@@ -391,7 +391,7 @@ const SECTION_DESC_STYLE: React.CSSProperties = {
 const SEARCH_TOOLBAR_STYLE: React.CSSProperties = {
   display: 'flex',
   alignItems: 'stretch',
-  gap: 8,
+  gap: 4,
   flexWrap: 'wrap',
   minWidth: 0,
 }
@@ -401,11 +401,10 @@ const SEARCH_GROUP_STYLE: React.CSSProperties = {
   alignItems: 'stretch',
   flex: '1 1 320px',
   minWidth: 260,
-  minHeight: 38,
+  height: 32,
   border: '1px solid #d8e3ef',
-  borderRadius: 14,
-  background: 'linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)',
-  boxShadow: '0 10px 24px rgba(15, 23, 42, 0.05)',
+  borderRadius: 4,
+  background: '#fff',
   overflow: 'hidden',
 }
 
@@ -414,8 +413,8 @@ const SEARCH_PREFIX_STYLE: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  minWidth: 60,
-  padding: '0 12px',
+  minWidth: 48,
+  padding: '0 8px',
   borderRight: '1px solid #e5e7eb',
   background: '#e8f1ff',
   fontSize: 12,
@@ -427,10 +426,10 @@ const SEARCH_PREFIX_STYLE: React.CSSProperties = {
 const SEARCH_INPUT_STYLE: React.CSSProperties = {
   flex: '1 1 260px',
   minWidth: 160,
-  minHeight: 38,
+  height: '100%',
   border: 0,
   borderRadius: 0,
-  padding: '0 12px',
+  padding: '0 8px',
   outline: 'none',
   background: 'transparent',
   fontSize: 12,
@@ -438,8 +437,8 @@ const SEARCH_INPUT_STYLE: React.CSSProperties = {
 }
 
 const SEARCH_SCOPE_TRIGGER_STYLE: React.CSSProperties = {
-  width: 132,
-  minWidth: 132,
+  width: 120,
+  minWidth: 120,
   borderRight: '1px solid #e5e7eb',
 }
 
@@ -449,16 +448,17 @@ const SOURCE_SELECT_TRIGGER_STYLE: React.CSSProperties = {
 
 const SOURCE_FIELD_LABEL_STYLE: React.CSSProperties = {
   flex: '0 0 auto',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
   fontSize: 12,
   fontWeight: 700,
   color: '#1d4ed8',
-  lineHeight: '18px',
+  lineHeight: '28px',
   whiteSpace: 'nowrap',
-  minWidth: 58,
-  padding: '0 12px',
-  borderRadius: 10,
+  minWidth: 48,
+  padding: '0 8px',
   background: '#e8f1ff',
-  textAlign: 'center',
 }
 
 const SECTION_HEAD_MAIN_STYLE: React.CSSProperties = {
@@ -474,7 +474,7 @@ const TABLE_SCROLL_STYLE: React.CSSProperties = {
 
 const CHOOSER_ROOT_STYLE: React.CSSProperties = {
   position: 'relative',
-  minHeight: 38,
+  height: 32,
   display: 'flex',
   alignItems: 'center',
 }
@@ -482,9 +482,9 @@ const CHOOSER_ROOT_STYLE: React.CSSProperties = {
 const CHOOSER_PANEL_STYLE: React.CSSProperties = {
   background: '#fff',
   border: '1px solid #cbd5e1',
-  borderRadius: 6,
+  borderRadius: 4,
   boxShadow: '0 18px 48px rgba(15, 23, 42, 0.16)',
-  padding: 14,
+  padding: 10,
 }
 
 const CHOOSER_HEADER_STYLE: React.CSSProperties = {
@@ -629,16 +629,15 @@ const LPROCESS_V2_CSS = `
   }
   .nop-lprocess-v2__source-row {
     display: flex;
-    align-items: stretch;
-    gap: 8px;
+    align-items: center;
+    gap: 4px;
     flex-wrap: wrap;
     min-width: 0;
     width: 100%;
-    padding: 8px;
+    padding: 4px;
     border: 1px solid #d8e3ef;
-    border-radius: 18px;
-    background: linear-gradient(135deg, #ffffff 0%, #f8fbff 58%, #f1f5f9 100%);
-    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
+    border-radius: 4px;
+    background: #fff;
   }
   .nop-lprocess-v2__source-mode {
     flex: 0 0 auto;
@@ -646,15 +645,15 @@ const LPROCESS_V2_CSS = `
   }
   .nop-lprocess-v2__source-field {
     display: inline-flex;
-    align-items: center;
-    gap: 8px;
+    align-items: stretch;
     min-width: 0;
-    min-height: 42px;
-    padding: 4px;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.92);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
+    height: 32px;
+    padding: 0;
+    border: 1px solid #d8e3ef;
+    border-radius: 4px;
+    background: #fff;
+    overflow: hidden;
+    transition: border-color 0.18s ease;
   }
   .nop-lprocess-v2__source-field--executor {
     flex: 1 1 420px;
@@ -673,9 +672,8 @@ const LPROCESS_V2_CSS = `
     min-width: 0;
     display: flex;
     align-items: center;
-    min-height: 34px;
-    padding: 0 8px;
-    border-radius: 10px;
+    min-height: 28px;
+    padding: 0 4px 0 6px;
     background: transparent;
   }
   .nop-lprocess-v2__rich-select,
@@ -683,12 +681,15 @@ const LPROCESS_V2_CSS = `
     width: 100%;
   }
   .nop-lprocess-v2__rich-select .cxd-Select {
-    min-height: 34px;
+    min-height: 28px;
     background: transparent;
+    position: relative;
   }
   .nop-lprocess-v2__rich-select .cxd-Select-valueWrap {
-    min-height: 34px;
+    min-height: 28px;
     padding-left: 2px;
+    display: flex;
+    align-items: center;
   }
   .nop-lprocess-v2__rich-select .cxd-Select-input {
     margin: 0;
@@ -697,16 +698,18 @@ const LPROCESS_V2_CSS = `
   .nop-lprocess-v2__rich-select .cxd-Select-valueLabel,
   .nop-lprocess-v2__rich-select .cxd-Select-input input {
     font-size: 12px;
+    line-height: 28px;
   }
   .nop-lprocess-v2__rich-select .cxd-Select-arrow,
   .nop-lprocess-v2__rich-select .cxd-Select-clear {
-    right: 2px;
+    position: absolute;
+    right: 4px;
     top: 50%;
     transform: translateY(-50%);
   }
   .nop-lprocess-v2__source-field:focus-within {
     border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.3);
   }
   .nop-lprocess-v2__source-action {
     flex: 0 0 auto;
@@ -737,8 +740,8 @@ const LPROCESS_V2_CSS = `
   .nop-lprocess-v2__source-action .cxd-Button,
   .nop-lprocess-v2__source-action .cxd-SelectControl,
   .nop-lprocess-v2__source-action .cxd-InputFile-control {
-    min-height: 34px;
-    border-radius: 10px;
+    min-height: 28px;
+    border-radius: 4px;
   }
   .nop-lprocess-v2__source-field .cxd-PopOver,
   .nop-lprocess-v2__source-field .cxd-PopOverAble-popover,
@@ -750,25 +753,26 @@ const LPROCESS_V2_CSS = `
   }
   .nop-lprocess-v2__mode-switch {
     display: inline-flex;
-    padding: 3px;
+    align-items: center;
+    height: 32px;
+    padding: 2px;
     border: 1px solid #d8e3ef;
-    border-radius: 14px;
+    border-radius: 4px;
     overflow: hidden;
-    background: rgba(241, 245, 249, 0.9);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+    background: #f1f5f9;
   }
   .nop-lprocess-v2__mode-switch button {
     border: 0;
     background: transparent;
     color: #475569;
-    min-height: 34px;
-    padding: 0 14px;
+    min-height: 28px;
+    padding: 0 10px;
     font-size: 12px;
     line-height: 16px;
     white-space: nowrap;
     cursor: pointer;
-    border-radius: 10px;
-    transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+    border-radius: 4px;
+    transition: background 0.18s ease, color 0.18s ease;
   }
   .nop-lprocess-v2__mode-switch button + button {
     margin-left: 2px;
@@ -777,7 +781,6 @@ const LPROCESS_V2_CSS = `
     background: #ffffff;
     color: #1d4ed8;
     font-weight: 600;
-    box-shadow: 0 8px 20px rgba(37, 99, 235, 0.12);
   }
   .nop-lprocess-v2__sticky-meta {
     display: flex;
@@ -818,7 +821,7 @@ const LPROCESS_V2_CSS = `
   .nop-lprocess-v2__hint-box {
     padding: 6px 8px;
     border: 1px dashed #cbd5e1;
-    border-radius: 2px;
+    border-radius: 4px;
     background: #fff;
     color: #64748b;
     text-align: center;
@@ -847,7 +850,7 @@ const LPROCESS_V2_CSS = `
     background: #fff3bf;
     color: inherit;
     padding: 0 1px;
-    border-radius: 2px;
+    border-radius: 4px;
   }
   .nop-lprocess-v2__chooser-panel-label {
     font-size: 12px;
@@ -906,8 +909,26 @@ const LPROCESS_V2_CSS = `
   .nop-lprocess-v2__search-scope {
     display: inline-flex;
     align-items: stretch;
-    min-width: 132px;
+    min-width: 120px;
     height: 100%;
+  }
+  .nop-lprocess-v2__search-scope .cxd-Select {
+    height: 100%;
+    min-height: 0;
+    position: relative;
+  }
+  .nop-lprocess-v2__search-scope .cxd-Select-valueWrap {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+  }
+  .nop-lprocess-v2__search-scope .cxd-Select-arrow,
+  .nop-lprocess-v2__search-scope .cxd-Select-clear {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
   }
   .nop-lprocess-v2__compact-select {
     position: relative;
@@ -964,7 +985,7 @@ const LPROCESS_V2_CSS = `
   .nop-lprocess-v2__select-option {
     width: 100%;
     border: 0;
-    border-radius: 2px;
+    border-radius: 4px;
     background: transparent;
     color: #0f172a;
     padding: 6px 8px;
@@ -1037,7 +1058,7 @@ const EXECUTOR_HEADER_MODAL_STYLE: React.CSSProperties = {
   maxHeight: '85vh',
   overflow: 'auto',
   background: '#fff',
-  borderRadius: 8,
+  borderRadius: 4,
   boxShadow: '0 24px 60px rgba(15, 23, 42, 0.18)',
   border: '1px solid #dbe2ea',
 }
@@ -1559,7 +1580,7 @@ function densityOptionStyle(active: boolean): React.CSSProperties {
     border: `1px solid ${active ? '#14b8a6' : '#d1d5db'}`,
     background: active ? '#f0fdfa' : '#fff',
     color: active ? '#0f766e' : '#475569',
-    borderRadius: 2,
+    borderRadius: 4,
     padding: '3px 8px',
     fontSize: 12,
     cursor: 'pointer',
@@ -1697,6 +1718,7 @@ function ColumnChooser<T extends string>(props: {
         width: 320,
         minWidth: 320,
         matchTriggerWidth: false,
+        maxHeight: 560,
       }))
     }
 
@@ -1737,6 +1759,7 @@ function ColumnChooser<T extends string>(props: {
               position: 'fixed',
               inset: 0,
               zIndex: 3999,
+              background: 'rgba(15, 23, 42, 0.08)',
             }}
             onClick={() => setOpen(false)}
           />
@@ -1745,6 +1768,7 @@ function ColumnChooser<T extends string>(props: {
             style={{
               ...panelStyle,
               ...CHOOSER_PANEL_STYLE,
+              overflow: 'auto',
             }}
           >
           <div style={CHOOSER_HEADER_STYLE}>
@@ -1893,10 +1917,10 @@ function RichSelect(props: {
 
 function chooserIconButtonStyle(disabled = false, active = false): React.CSSProperties {
   return {
-    width: 32,
-    height: 32,
+    width: 28,
+    height: 28,
     border: `1px solid ${active ? '#14b8a6' : '#d1d5db'}`,
-    borderRadius: 2,
+    borderRadius: 4,
     background: active ? '#f0fdfa' : '#fff',
     color: disabled ? '#cbd5e1' : active ? '#0f766e' : '#64748b',
     display: 'inline-flex',
@@ -1922,7 +1946,7 @@ function IconButton(props: {
       style={{
         width: 32,
         height: 32,
-        borderRadius: 2,
+        borderRadius: 4,
         border: `1px solid ${props.danger ? '#fecaca' : props.active ? '#93c5fd' : '#cbd5e1'}`,
         background: props.danger ? '#fff1f2' : props.active ? '#eff6ff' : '#fff',
         color: props.danger ? '#b91c1c' : props.active ? '#2563eb' : '#334155',
@@ -3273,8 +3297,8 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
                                           <div style={{ display: 'grid', gap: 6 }}>
                                             {roleTag(highlightText(roleGroup.role === 'INPUT' ? '入参' : '出参', paramFilter.keyword), roleGroup.role)}
                                             <TextActionButton
-                                              label="Policy"
-                                              title="查看当前分组 Policy"
+                                              label="Clar"
+                                              title="查看当前 Clar"
                                               onClick={() => openPolicyStudioView(group.method.methodId, roleGroup.role)}
                                             />
                                           </div>
@@ -3537,7 +3561,7 @@ function primaryButtonStyle(): React.CSSProperties {
     border: '1px solid #2563eb',
     background: '#2563eb',
     color: '#fff',
-    borderRadius: 6,
+    borderRadius: 4,
     padding: '7px 12px',
     fontSize: 12,
     fontWeight: 600,
@@ -3550,7 +3574,7 @@ function secondaryButtonStyle(): React.CSSProperties {
     border: '1px solid #cbd5e1',
     background: '#fff',
     color: '#334155',
-    borderRadius: 6,
+    borderRadius: 4,
     padding: '7px 12px',
     fontSize: 12,
     fontWeight: 600,

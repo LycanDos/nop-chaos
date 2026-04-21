@@ -9,9 +9,10 @@
   "description": "Nop Platform Frontend",
   "scripts": {
     "all": "pnpm -r all",
-    "dev": "pnpm -F nop-site dev",
+    "dev": "pnpm run build-deps && pnpm -F sdk build && pnpm -F nop-site dev",
     "build": "pnpm -r build",
-    "build-sdk": "pnpm -F nop-core build & pnpm -F nop-react-core build & pnpm -F nop-graph-designer build & pnpm -F nop-flow-builder build & pnpm -F nop-amis-ext build & pnpm -F nop-amis-vue build & pnpm -F sdk build",
+    "build-deps": "pnpm -F nop-core build & pnpm -F nop-react-core build & pnpm -F nop-graph-designer build & pnpm -F nop-flow-builder build & pnpm -F nop-amis-ext build & pnpm -F nop-amis-vue build & wait",
+    "build-sdk": "pnpm run build-deps && pnpm -F sdk build",
     "build-designer": "pnpm -F nop-graph-designer build & pnpm -F nop-flow-builder build & pnpm -F nop-amis-ext build",
     "build-hoppscotch": "pnpm -F nop-apidemo build",
     "lint": "eslint .",

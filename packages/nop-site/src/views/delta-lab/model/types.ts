@@ -4,6 +4,26 @@ export type DeltaEditorPane = 'base' | 'delta';
 
 export type DeltaLayerKind = 'structure' | 'value' | 'process';
 
+/** 左侧 Source tab 类型 */
+export type SourceTabKind = 'source';
+
+/** 右侧 Delta tab 类型 */
+export type DeltaTabKind = 'delta' | 'reverse' | 'pipeline-step';
+
+export interface SourceTab {
+  id: string;
+  name: string;
+  isTarget: boolean;
+  data: Record<string, unknown>;
+}
+
+export interface DeltaTab {
+  id: string;
+  kind: DeltaTabKind;
+  label: string;
+  data: Record<string, unknown>;
+}
+
 export type EmbeddedEditorKind =
   | 'json'
   | 'array'

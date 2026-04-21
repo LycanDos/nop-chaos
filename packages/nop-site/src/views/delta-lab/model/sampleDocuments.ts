@@ -3,49 +3,106 @@ function svgDataUri(label: string, fill: string) {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
-export function createBaseSample(): Record<string, unknown> {
+// ─── Source 文档 ─────────────────────────────────────────────────────────────
+
+export interface SourceDocument {
+  name: string;
+  data: Record<string, unknown>;
+}
+
+export function createMainSourceSample(): SourceDocument {
   return {
-    user: {
-      firstName: 'Ada',
-      lastName: 'Lovelace',
-      profile: {
-        name: 'Ada',
-        avatar: svgDataUri('BASE', '#0f766e'),
-        displayName: 'Ada',
+    name: 'main',
+    data: {
+      user: {
+        firstName: 'Ada',
+        lastName: 'Lovelace',
+        profile: {
+          name: 'Ada',
+          avatar: svgDataUri('BASE', '#0f766e'),
+          displayName: 'Ada',
+        },
+        website: 'https://jsonata.org/',
       },
-      website: 'https://jsonata.org/',
-    },
-    images: {
-      hero: svgDataUri('HERO', '#1d4ed8'),
-      gallery: [svgDataUri('A', '#0ea5e9'), svgDataUri('B', '#f97316')],
-    },
-    appearance: {
-      accentColor: '#2563eb',
-      warningColor: '#f97316',
-      palette: ['#0f766e', '#2563eb', '#7c3aed'],
-    },
-    fields: [
-      { name: 'id', label: 'ID', type: 'string' },
-      { name: 'age', label: 'Age', type: 'int', required: false },
-      { name: 'gender', label: 'Gender', type: 'string' },
-    ],
-    sections: [{ title: 'Overview', subtitle: 'Legacy subtitle' }],
-    items: [{ amount: 10 }, { amount: 20 }, { amount: 35 }],
-    resources: [
-      {
-        title: 'JSONata',
-        url: 'https://docs.jsonata.org/overview.html',
-        color: '#14b8a6',
+      images: {
+        hero: svgDataUri('HERO', '#1d4ed8'),
+        gallery: [svgDataUri('A', '#0ea5e9'), svgDataUri('B', '#f97316')],
       },
-      {
-        title: 'Nop',
-        url: 'https://github.com/entropy-cloud/nop-entropy',
-        color: '#8b5cf6',
+      appearance: {
+        accentColor: '#2563eb',
+        warningColor: '#f97316',
+        palette: ['#0f766e', '#2563eb', '#7c3aed'],
       },
-    ],
-    links: ['https://jsonata.org/', 'https://docs.jsonata.org/string-functions'],
+      fields: [
+        { name: 'id', label: 'ID', type: 'string' },
+        { name: 'age', label: 'Age', type: 'int', required: false },
+        { name: 'gender', label: 'Gender', type: 'string' },
+      ],
+      sections: [{ title: 'Overview', subtitle: 'Legacy subtitle' }],
+      items: [{ amount: 10 }, { amount: 20 }, { amount: 35 }],
+      resources: [
+        {
+          title: 'JSONata',
+          url: 'https://docs.jsonata.org/overview.html',
+          color: '#14b8a6',
+        },
+        {
+          title: 'Nop',
+          url: 'https://github.com/entropy-cloud/nop-entropy',
+          color: '#8b5cf6',
+        },
+      ],
+      links: ['https://jsonata.org/', 'https://docs.jsonata.org/string-functions'],
+    },
   };
 }
+
+export function createUserSourceSample(): SourceDocument {
+  return {
+    name: 'user',
+    data: {
+      preferences: {
+        theme: 'dark',
+        language: 'zh-CN',
+        fontSize: 14,
+      },
+      overrides: {
+        displayName: '用户自定义名称',
+        accentColor: '#8b5cf6',
+      },
+      customFields: [
+        { name: 'nickname', label: '昵称', type: 'string' },
+        { name: 'department', label: '部门', type: 'string' },
+      ],
+    },
+  };
+}
+
+export function createTenantSourceSample(): SourceDocument {
+  return {
+    name: 'tenant',
+    data: {
+      branding: {
+        logo: svgDataUri('TENANT', '#dc2626'),
+        primaryColor: '#dc2626',
+        companyName: 'Acme Corp',
+      },
+      policies: {
+        maxFields: 20,
+        allowCustomTheme: true,
+        requiredFields: ['id', 'name'],
+      },
+    },
+  };
+}
+
+// ─── 向后兼容：单 source 模式 ────────────────────────────────────────────────
+
+export function createBaseSample(): Record<string, unknown> {
+  return createMainSourceSample().data;
+}
+
+// ─── Delta 文档 ──────────────────────────────────────────────────────────────
 
 export function createDeltaSample(): Record<string, unknown> {
   return {
@@ -75,6 +132,37 @@ export function createDeltaSample(): Record<string, unknown> {
     'appearance.accentColor': '#0f766e',
   };
 }
+
+/**
+ * 多 Source Delta 示例：表达式中引用多个 source。
+ */
+export function createMultiSourceDeltaSample(): Record<string, unknown> {
+  return {
+    'user.profile.displayName': {
+      $jina: "$user.overrides.displayName != null ? $user.overrides.displayName : (firstName & ' ' & lastName)",
+    },
+    'appearance.accentColor': {
+      $jina: '$user.overrides.accentColor',
+    },
+    'appearance.logo': {
+      $jina: '$tenant.branding.logo',
+    },
+    'user.profile.theme': {
+      $jina: '$user.preferences.theme',
+    },
+    "fields+[]": {
+      $jina: '$user.customFields',
+    },
+    'branding.companyName': {
+      $jina: '$tenant.branding.companyName',
+    },
+    'branding.primaryColor': {
+      $jina: '$tenant.branding.primaryColor',
+    },
+  };
+}
+
+// ─── Pipeline 文档 ───────────────────────────────────────────────────────────
 
 export function createPipelineSample(): Record<string, unknown> {
   return {
@@ -107,6 +195,50 @@ export function createPipelineSample(): Record<string, unknown> {
             color: '#0891b2',
           },
         },
+      },
+    ],
+  };
+}
+
+/**
+ * 多 Source Pipeline 示例：每个 step 可以引用不同 source。
+ */
+export function createMultiSourcePipelineSample(): Record<string, unknown> {
+  return {
+    $pipeline: [
+      {
+        $delta: {
+          'user.profile.displayName': {
+            $jina: '$user.overrides.displayName',
+          },
+          'user.profile.theme': {
+            $jina: '$user.preferences.theme',
+          },
+        },
+        $comment: 'Step 1: 应用用户偏好覆盖',
+      },
+      {
+        $delta: {
+          'branding.logo': {
+            $jina: '$tenant.branding.logo',
+          },
+          'branding.companyName': {
+            $jina: '$tenant.branding.companyName',
+          },
+          'appearance.accentColor': {
+            $jina: '$tenant.branding.primaryColor',
+          },
+        },
+        $comment: 'Step 2: 应用租户品牌配置',
+      },
+      {
+        $delta: {
+          'fields+[]': {
+            $jina: '$user.customFields',
+          },
+          'summary.mergedBy': 'multi-source-pipeline',
+        },
+        $comment: 'Step 3: 合并自定义字段',
       },
     ],
   };

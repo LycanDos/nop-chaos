@@ -54,9 +54,9 @@
       :title="validationMessage"
     />
 
-      <el-form label-position="left" label-width="66px" size="small" class="rule-form">
+      <el-form label-position="left" label-width="auto" size="small" class="rule-form">
       <el-row :gutter="12">
-        <el-col :span="10">
+        <el-col :span="9">
           <el-form-item label="字段路径">
             <PathSelector
               v-model="rule.path"
@@ -67,7 +67,7 @@
             />
           </el-form-item>
         </el-col>
-        <el-col :span="10">
+        <el-col :span="9">
           <el-form-item label="操作符">
             <OperatorSelect
               v-model="rule.operator"
@@ -76,7 +76,7 @@
             />
           </el-form-item>
         </el-col>
-        <el-col :span="4">
+        <el-col :span="6">
           <el-form-item label="顺序">
             <el-input-number v-model="rule.orderNo" :min="0" :step="10" />
           </el-form-item>
@@ -170,7 +170,7 @@
             <el-input v-model="rule.errorCode" placeholder="可选" />
           </el-form-item>
         </el-col>
-        <el-col :span="4">
+        <el-col :span="6">
           <el-form-item label="严重度">
             <el-input-number v-model="rule.severity" :min="0" :max="10" />
           </el-form-item>
@@ -447,4 +447,6 @@ function singleValuePlaceholder(operator?: PolicyOperator) {
     border-color: #409eff;
   }
 }
+
+/* Responsive rules in rule-card-responsive.css */
 </style>

@@ -21,37 +21,19 @@
       :filter-method="filterOperator"
       @change="handleChange"
     >
-      <template #suggestion-item="{ item }">
-        <div class="operator-select__suggestion">
-          <div
-            v-if="item.data?.groupLabel"
-            class="operator-select__suggestion-group"
-            v-html="highlightMatch(item.data.groupLabel)"
-          />
-          <div
-            class="operator-select__suggestion-title"
-            v-html="highlightMatch(item.data?.displayLabel || item.text)"
-          />
-          <div class="operator-select__suggestion-meta">
-            <span
-              v-if="item.data?.code"
-              class="operator-select__suggestion-code"
-              v-html="highlightMatch(item.data.code)"
-            />
-            <span
-              v-if="item.data?.meaning"
-              class="operator-select__suggestion-meaning"
-              v-html="highlightMatch(item.data.meaning)"
-            />
-          </div>
+      <template #default="{ data, node }">
+        <div v-if="node.isLeaf" class="operator-select__node">
+          <span class="operator-select__node-label">{{ data.displayLabel || data.label }}</span>
+          <span v-if="data.meaning" class="operator-select__node-meaning">{{ data.meaning }}</span>
         </div>
+        <span v-else>{{ data.label }}</span>
       </template>
     </el-cascader>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { getOperatorGroups, getOperatorMeta, isOperatorCompatible } from '../utils/operator-utils'
 import type { PolicyOperator, PolicySchemaField } from '../types'
 
@@ -68,7 +50,6 @@ const emit = defineEmits<{
 const operatorGroups = computed(() => getOperatorGroups(props.field))
 const showIncompatible = computed(() => !!props.modelValue && !isOperatorCompatible(props.modelValue, props.field))
 const currentMeta = computed(() => getOperatorMeta(props.modelValue))
-const searchKeyword = ref('')
 
 const cascaderProps = {
   expandTrigger: 'click' as const,
@@ -82,10 +63,9 @@ const cascaderOptions = computed(() => operatorGroups.value.map(group => ({
   children: group.options.map(option => ({
     value: option.value,
     label: formatOptionLabel(option.title, option.code, option.meaning),
+    displayLabel: option.title,
     code: option.code,
     meaning: option.meaning,
-    displayLabel: formatOptionLabel(option.title, option.code, option.meaning),
-    groupLabel: group.recommended ? `${group.label} · 优先` : group.label,
     searchText: [
       group.label,
       option.title,
@@ -116,7 +96,6 @@ function handleChange(value: unknown) {
 
 function filterOperator(node: any, keyword: string) {
   const normalizedKeyword = keyword.trim().toLowerCase()
-  searchKeyword.value = keyword.trim()
   if (!normalizedKeyword)
     return true
 
@@ -135,41 +114,6 @@ function filterOperator(node: any, keyword: string) {
 
   return searchable.includes(normalizedKeyword)
 }
-
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-}
-
-function escapeRegExp(value: string) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
-function highlightMatch(value?: string) {
-  const text = value || ''
-  const keyword = searchKeyword.value.trim()
-  if (!keyword)
-    return escapeHtml(text)
-
-  const pattern = new RegExp(escapeRegExp(keyword), 'ig')
-  let lastIndex = 0
-  let result = ''
-
-  for (const match of text.matchAll(pattern)) {
-    const index = match.index ?? 0
-    result += escapeHtml(text.slice(lastIndex, index))
-    result += `<mark>${escapeHtml(match[0])}</mark>`
-    lastIndex = index + match[0].length
-  }
-
-  if (lastIndex === 0)
-    return escapeHtml(text)
-
-  result += escapeHtml(text.slice(lastIndex))
-  return result
-}
 </script>
 
 <style scoped>
@@ -187,44 +131,53 @@ function highlightMatch(value?: string) {
   width: 100%;
 }
 
-.operator-select__suggestion {
+.operator-select__node {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 2px 0;
+  align-items: baseline;
+  gap: 6px;
+  line-height: 1.4;
 }
 
-.operator-select__suggestion-group {
+.operator-select__node-label {
+  color: #303133;
+  font-size: 13px;
+}
+
+.operator-select__node-meaning {
   color: #909399;
   font-size: 11px;
-}
-
-.operator-select__suggestion-title {
-  color: #303133;
-  font-size: 12px;
-  line-height: 1.3;
-}
-
-.operator-select__suggestion-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  color: #606266;
-  font-size: 11px;
-}
-
-.operator-select__suggestion-code {
-  font-family: Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
 }
 
 :global(.operator-select-popper .el-cascader-menu) {
   min-width: 280px;
 }
 
-:global(.operator-select-popper mark) {
-  padding: 0 2px;
-  border-radius: 3px;
-  background: #fff1b8;
-  color: inherit;
+/* Suggestion list styling when filtering */
+:global(.operator-select-popper .el-cascader__suggestion-panel) {
+  max-height: 340px;
+}
+
+:global(.operator-select-popper .el-cascader__suggestion-list) {
+  padding: 4px 0;
+}
+
+:global(.operator-select-popper .el-cascader__suggestion-item) {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #303133;
+  cursor: pointer;
+}
+
+:global(.operator-select-popper .el-cascader__suggestion-item:hover) {
+  background: #f5f7fa;
+}
+
+:global(.operator-select-popper .el-cascader__suggestion-item.is-checked) {
+  color: #409eff;
+  font-weight: 700;
 }
 </style>

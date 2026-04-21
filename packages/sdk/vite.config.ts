@@ -61,7 +61,7 @@ export default defineConfig({
   plugins: [
     vue(),
     dts({
-      rollupTypes: true,
+      rollupTypes: false,
       outDir: "lib",
       async afterBuild(){
         // 将所有的d.ts文件合并到sdk.d.ts中

@@ -13,7 +13,7 @@
       </div>
     </header>
 
-    <div class="workbench__toolbar">
+    <div v-if="!readOnly" class="workbench__toolbar">
       <div class="workbench__controls">
         <div v-if="supportsPreview" class="workbench__layout-actions">
           <button :class="{ 'is-active': splitMode === 'vertical' }" title="上下布局" @click="splitMode = 'vertical'"> 上下 </button>
@@ -138,12 +138,12 @@
         ></div>
 
         <section class="workbench__editor" :style="editorPaneStyle">
-          <MonacoSurface v-model="editorSource" :language="currentMatch.language" :read-only="!currentMatch.canEditSource" />
+          <MonacoSurface v-model="editorSource" :language="currentMatch.language" :read-only="readOnly || !currentMatch.canEditSource" />
         </section>
       </div>
 
       <div v-else class="workbench__editor workbench__editor--full">
-        <MonacoSurface v-model="editorSource" :language="currentMatch.language" :read-only="!currentMatch.canEditSource" />
+        <MonacoSurface v-model="editorSource" :language="currentMatch.language" :read-only="readOnly || !currentMatch.canEditSource" />
       </div>
     </div>
   </section>
@@ -165,6 +165,7 @@
     selectedPath: JsonPathSegment[];
     baseDocument: Record<string, unknown>;
     deltaDocument: Record<string, unknown>;
+    readOnly?: boolean;
   }>();
 
   const emit = defineEmits<{
@@ -483,10 +484,7 @@
     flex-direction: column;
     min-height: 0;
     height: 100%;
-    background: linear-gradient(180deg, #fffdf8 0%, #f8fafc 100%);
-    border: 1px solid #d7dee8;
-    border-radius: 16px;
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+    background: #fff;
     overflow: hidden;
   }
 
@@ -494,18 +492,19 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    padding: 12px 14px 10px;
-    border-bottom: 1px solid #e4ebf2;
+    gap: 8px;
+    padding: 4px 8px;
+    border-bottom: 1px solid #eef2f7;
+    background: #f8fafc;
   }
 
   .workbench__path {
     margin: 0;
-    padding: 5px 8px;
-    border-radius: 10px;
+    padding: 3px 6px;
+    border-radius: 4px;
     background: #f1f5f9;
     color: #0f172a;
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1.2;
     word-break: break-all;
   }
@@ -518,8 +517,8 @@
   }
 
   .workbench__tag {
-    padding: 4px 9px;
-    border-radius: 999px;
+    padding: 2px 6px;
+    border-radius: 3px;
     background: #eff6ff;
     color: #1d4ed8;
     font-size: 11px;
@@ -545,10 +544,10 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 8px;
-    padding: 8px 10px;
-    border-bottom: 1px solid #e8edf4;
-    background: linear-gradient(180deg, #f8fbff, #f2f6fb);
+    gap: 6px;
+    padding: 3px 8px;
+    border-bottom: 1px solid #eef2f7;
+    background: #f8fafc;
   }
 
   .workbench__controls {
@@ -565,20 +564,13 @@
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
-    padding: 3px;
-    border: 1px solid #d8e0ea;
-    border-radius: 10px;
-    background: #fff;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.9),
-      0 1px 2px rgba(15, 23, 42, 0.04);
 
     button {
-      border: 1px solid transparent;
-      background: transparent;
+      border: 1px solid #d8e0ea;
+      background: #fff;
       color: #334155;
-      border-radius: 8px;
-      padding: 6px 9px;
+      border-radius: 4px;
+      padding: 4px 8px;
       font-size: 11px;
       font-weight: 600;
       line-height: 1;
@@ -591,16 +583,16 @@
 
     .is-active,
     .primary {
-      background: #eaf2fb;
-      color: #0f3a68;
-      border-color: #cadcf1;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-color: #bfdbfe;
     }
   }
 
   .workbench__body {
     flex: 1;
     min-height: 0;
-    padding: 12px;
+    padding: 8px;
   }
 
   .workbench__split {
@@ -643,7 +635,7 @@
 
   .workbench__preview {
     border: 1px solid #e3e9f1;
-    border-radius: 14px;
+    border-radius: 4px;
     background: rgba(255, 255, 255, 0.92);
     overflow: hidden;
   }
@@ -913,7 +905,7 @@
     width: 220px;
     padding: 12px;
     border: 1px solid #d8e0ea;
-    border-radius: 16px;
+    border-radius: 4px;
     background: rgba(255, 255, 255, 0.97);
     box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
     backdrop-filter: blur(12px);
