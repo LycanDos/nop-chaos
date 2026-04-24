@@ -5,7 +5,7 @@
   import { BasicMenu } from '/@/components/Menu';
   import { SimpleMenu } from '/@/components/SimpleMenu';
   import { AppLogo } from '/@/components/Application';
-  import { AppstoreOutlined } from '@ant-design/icons-vue';
+  import { AppstoreOutlined, SearchOutlined, CloseOutlined } from '@ant-design/icons-vue';
   import Icon from '/@/components/Icon';
 
   import { MenuModeEnum, MenuSplitTyeEnum } from '/@/enums/menuEnum';
@@ -29,26 +29,46 @@
   const search = ref('')
   const groups = ref([])
   const menuRef = ref<HTMLElement | null>(null);
-  const drawerStyle = computed(() => {
+  const searchInputRef = ref<HTMLElement | null>(null);
+
+  // 弹出面板样式：毛玻璃 + 菜单右侧
+  const panelStyle = computed(() => {
     const menuWidth = menuRef.value?.offsetWidth || 200;
     return {
       position: 'fixed',
       left: `${menuWidth}px`,
       top: 0,
-      height: '100%',
-      width: `calc(100vw - ${menuWidth}px)` ,
-      zIndex: 30000, // 提升层级
-      background: 'rgba(255,255,255,0.7)', // 半透明白色
-      boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
-      padding: '24px',
-      overflow: 'auto',
-      transition: 'left 0.2s,width 0.2s',
-      backdropFilter: 'blur(16px)', // 毛玻璃
-      WebkitBackdropFilter: 'blur(16px)', // 兼容Safari
-      borderRadius: '12px 0 0 12px',
-      border: '1px solid rgba(255,255,255,0.18)',
-    } as React.CSSProperties;
+      height: '100vh',
+      width: '420px',
+      maxWidth: `calc(100vw - ${menuWidth}px)`,
+      zIndex: 30000,
+      background: 'rgba(255, 255, 255, 0.82)',
+      backdropFilter: 'blur(20px) saturate(1.4)',
+      WebkitBackdropFilter: 'blur(20px) saturate(1.4)',
+      boxShadow: '4px 0 32px rgba(0, 0, 0, 0.10)',
+      borderLeft: '1px solid rgba(255,255,255,0.5)',
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column',
+      animation: 'nop-panel-slide-in 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+    } as CSSProperties;
   });
+
+  // 搜索高亮：将匹配文本包裹在 <mark> 中
+  function highlightMatch(text: string, keyword: string) {
+    if (!keyword || !text) return text;
+    const idx = text.indexOf(keyword);
+    if (idx === -1) return text;
+    return (
+      <>
+        {text.slice(0, idx)}
+        <mark style={{ background: '#fde68a', color: '#92400e', borderRadius: '2px', padding: '0 1px' }}>
+          {text.slice(idx, idx + keyword.length)}
+        </mark>
+        {text.slice(idx + keyword.length)}
+      </>
+    );
+  }
 
   onMounted(async () => {
     const menus = await getMenus()
@@ -175,70 +195,189 @@
         return false;
       }
 
-      const popupHover = ref(false);
-      function handleMouseEnter() {
-        popupHover.value = true;
-      }
-      function handleMouseLeave() {
-        popupHover.value = false;
-        setTimeout(() => {
-          if (!popupHover.value) showAllFunctions.value = false;
-        }, 120);
-      }
-
       function renderHeader() {
         if (!unref(getIsShowLogo) && !unref(getIsMobile)) return null;
+        const isOpen = showAllFunctions.value;
+        const isCollapsed = unref(getCollapsed);
         return (
-          <div style="display: flex; align-items: center;">
-            <AppLogo showTitle={!unref(getCollapsed)} class={unref(getLogoClass)} theme={unref(getComputedMenuTheme)} />
-            <div style="margin-left: 8px; cursor: pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" title="全部功能" onClick={() => showAllFunctions.value = true}>
-              <AppstoreOutlined style="font-size: 20px; color: #fff;" />
+          <div style="display: flex; align-items: center; position: relative;">
+            <AppLogo showTitle={!isCollapsed} class={unref(getLogoClass)} theme={unref(getComputedMenuTheme)} />
+
+            {/* 按钮区域：点击切换图标 + 展开搜索框（平滑过渡） */}
+            <div
+              style={{
+                marginLeft: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                height: '32px',
+                borderRadius: '16px',
+                background: isOpen ? 'rgba(255,255,255,0.15)' : 'transparent',
+                flexShrink: 0,
+                transition: 'background 0.35s ease, box-shadow 0.35s ease',
+                boxShadow: isOpen ? '0 0 0 1px rgba(255,255,255,0.1)' : 'none',
+              }}
+            >
+              <div
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)',
+                }}
+                title={isOpen ? '关闭' : '全部功能'}
+                onClick={() => {
+                  showAllFunctions.value = !showAllFunctions.value;
+                  search.value = '';
+                  if (!showAllFunctions.value) return;
+                  setTimeout(() => searchInputRef.value?.focus?.(), 150);
+                }}
+              >
+                {isOpen
+                  ? <CloseOutlined style="font-size: 16px; color: #fff;" />
+                  : <AppstoreOutlined style="font-size: 18px; color: #fff;" />
+                }
+              </div>
+              {/* 内联搜索框 — 始终渲染，用 CSS 过渡宽度和透明度 */}
+              {!isCollapsed && (
+                <div
+                  style={{
+                    overflow: 'hidden',
+                    transition: 'width 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease',
+                    width: isOpen ? '88px' : '0px',
+                    opacity: isOpen ? 1 : 0,
+                  }}
+                >
+                  <input
+                    ref={searchInputRef}
+                    value={search.value}
+                    onInput={(e: any) => { search.value = e.target.value }}
+                    placeholder="搜索..."
+                    style={{
+                      width: '88px',
+                      border: 'none',
+                      outline: 'none',
+                      background: 'transparent',
+                      color: '#fff',
+                      fontSize: '12px',
+                      height: '28px',
+                      padding: '0 8px 0 2px',
+                    }}
+                  />
+                </div>
+              )}
             </div>
-            {showAllFunctions.value && (
+
+            {/* 右侧弹出面板 */}
+            {isOpen && (
               <>
+                {/* 遮罩层 */}
                 <div
                   style={{
                     position: 'fixed',
                     inset: 0,
                     zIndex: 29999,
-                    background: 'transparent',
+                    background: 'rgba(0,0,0,0.08)',
+                    animation: 'nop-overlay-fade-in 0.2s ease',
                   }}
-                  onClick={() => (showAllFunctions.value = false)}
+                  onClick={() => { showAllFunctions.value = false; search.value = ''; }}
                 />
-                <div
-                  style={drawerStyle.value}
-                  onMouseLeave={() => (showAllFunctions.value = false)}
-                >
-                  <div>
-                    <a-input v-model:value={search.value} placeholder="搜索功能名称" style={{ marginBottom: '16px' }} />
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                        gap: '32px',
-                        alignItems: 'flex-start',
-                      }}
-                    >
-                      {unref(menusRef).map(group => (
-                        <div key={group.path}>
-                          <div style={{ fontWeight: 'bold', marginBottom: '8px', display: 'flex', alignItems: 'center', fontSize: '16px' }}>
-                            {group.icon && <span style={{ marginRight: '6px' }}><Icon icon={group.icon} size={18} /></span>}
+                {/* 面板 */}
+                <div style={panelStyle.value}>
+                  {/* 面板头部搜索（窄菜单时用这个搜索） */}
+                  {isCollapsed && (
+                    <div style={{ padding: '16px 16px 0', flexShrink: 0 }}>
+                      <input
+                        ref={searchInputRef}
+                        value={search.value}
+                        onInput={(e: any) => { search.value = e.target.value }}
+                        placeholder="搜索功能名称..."
+                        style={{
+                          width: '100%',
+                          height: '36px',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          padding: '0 12px',
+                          fontSize: '13px',
+                          outline: 'none',
+                          background: '#f9fafb',
+                          color: '#111827',
+                          transition: 'border-color 0.2s',
+                        }}
+                        onFocus={(e: any) => { e.target.style.borderColor = '#3b82f6'; }}
+                        onBlur={(e: any) => { e.target.style.borderColor = '#e5e7eb'; }}
+                      />
+                    </div>
+                  )}
+                  {/* 面板内容 */}
+                  <div style={{ flex: 1, overflow: 'auto', padding: '16px' }}>
+                    {unref(menusRef).map(group => {
+                      const children = (group.children || []).filter(
+                        item => !search.value || item.meta?.title?.includes(search.value)
+                      );
+                      if (children.length === 0) return null;
+                      return (
+                        <div key={group.path} style={{ marginBottom: '20px' }}>
+                          <div style={{
+                            fontWeight: 600,
+                            fontSize: '13px',
+                            color: '#6b7280',
+                            marginBottom: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                          }}>
+                            {group.icon && <Icon icon={group.icon} size={14} />}
                             {group.name}
                           </div>
-                          <ul style={{ padding: 0, margin: 0, listStyle: 'none' }}>
-                            {(group.children || []).filter(item => item.meta?.title?.includes(search.value)).map(item => (
-                              <li
+                          <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(2, 1fr)',
+                            gap: '4px',
+                          }}>
+                            {children.map(item => (
+                              <div
                                 key={item.path}
-                                style={{ padding: '2px 0', fontSize: '15px', cursor: 'pointer', textAlign: 'left' }}
-                                onClick={() => handleMenuClick(item.path, item)}
+                                style={{
+                                  padding: '8px 10px',
+                                  fontSize: '13px',
+                                  color: '#374151',
+                                  cursor: 'pointer',
+                                  borderRadius: '6px',
+                                  transition: 'background 0.15s',
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                }}
+                                onMouseenter={(e: any) => { e.currentTarget.style.background = '#f3f4f6'; }}
+                                onMouseleave={(e: any) => { e.currentTarget.style.background = 'transparent'; }}
+                                onClick={() => {
+                                  handleMenuClick(item.path, item);
+                                  showAllFunctions.value = false;
+                                  search.value = '';
+                                }}
                               >
-                                {item.meta?.title || item.name}
-                              </li>
+                                {highlightMatch(item.meta?.title || item.name || '', search.value)}
+                              </div>
                             ))}
-                          </ul>
+                          </div>
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })}
+                    {/* 无结果提示 */}
+                    {search.value && unref(menusRef).every(g =>
+                      !(g.children || []).some(item => item.meta?.title?.includes(search.value))
+                    ) && (
+                      <div style={{ textAlign: 'center', color: '#9ca3af', padding: '40px 0', fontSize: '13px' }}>
+                        未找到匹配的功能
+                      </div>
+                    )}
                   </div>
                 </div>
               </>
@@ -281,6 +420,22 @@
 <style lang="less">
   @prefix-cls: ~'@{namespace}-layout-menu';
   @logo-prefix-cls: ~'@{namespace}-app-logo';
+
+  @keyframes nop-panel-slide-in {
+    from {
+      opacity: 0;
+      transform: translateX(-12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes nop-overlay-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
 
   .@{prefix-cls} {
     &-logo {

@@ -5,6 +5,30 @@ import { ajaxRequest } from '@nop-chaos/nop-core'
 import { Select } from 'amis-ui'
 import React, { useEffect, useRef, useState } from 'react'
 import ReactDOM from 'react-dom'
+import {
+  sortVersionsDesc,
+  computeDiffSummary,
+  CHANGE_TYPE_LABELS,
+} from './LProcessConsoleV2.version-utils'
+import type {
+  VersionItem,
+  VersionDiffResult,
+  FieldDiffItem,
+  MetadataDiffItem,
+} from './LProcessConsoleV2.version-utils'
+
+// Re-export for backward compatibility
+export {
+  sortVersionsDesc,
+  computeDiffSummary,
+  CHANGE_TYPE_LABELS,
+}
+export type {
+  VersionItem,
+  VersionDiffResult,
+  FieldDiffItem,
+  MetadataDiffItem,
+}
 
 type ConsoleSourceMode = 'existing' | 'upload'
 
@@ -54,6 +78,8 @@ type MethodItem = {
   inputCount?: number
   outputCount?: number
   remark?: string
+  rollbackType?: string
+  compensationMethodName?: string
 }
 
 type FieldItem = {
@@ -78,6 +104,7 @@ type FieldItem = {
 type SimpleOption = {
   value: string
   label: string
+  disabled?: boolean
 }
 
 type ExecutorDraft = {
@@ -108,6 +135,8 @@ type MethodSearchScope =
   | 'returnJavaType'
   | 'invokeMode'
   | 'idempotentFlag'
+  | 'rollbackType'
+  | 'compensationMethodName'
   | 'description'
   | 'remark'
 
@@ -170,6 +199,8 @@ type MethodColumnKey =
   | 'idempotentFlag'
   | 'inputCount'
   | 'outputCount'
+  | 'rollbackType'
+  | 'compensationMethodName'
   | 'remark'
 
 type ColumnVisibility<T extends string> = Record<T, boolean>
@@ -203,6 +234,39 @@ type PolicyStudioNavigationPayload = {
   fieldPath?: string
 }
 
+type CompatReportItem = {
+  reportId: string
+  executorDefId: string
+  methodCode: string
+  oldMethodId: string
+  newMethodId: string
+  oldVersion: string
+  newVersion: string
+  overallLevel: 'BREAKING' | 'POTENTIALLY_BREAKING' | 'COMPATIBLE' | 'METADATA_CHANGE'
+  diffJson: string
+  affectedBindingsJson: string
+  createTime: string
+  createdBy: string
+}
+
+type SwitchResult = {
+  bindingId: string
+  previousVersion: string
+  newVersion: string
+  resolvedMethodId: string
+  switchDirection: string
+  compatibilityReportId: string | null
+  overallCompatibilityLevel: string
+}
+
+type DeprecateResult = {
+  methodId: string
+  versionStatus: string
+  hasRunningInstances: boolean
+  affectedInstanceIds: string[]
+  warningMessage: string | null
+}
+
 const SNAPSHOT_SELECTION = [
   'executorDefId',
   'executorReleaseId',
@@ -221,7 +285,7 @@ const SNAPSHOT_SELECTION = [
   'inputFieldCount',
   'outputFieldCount',
   'configs{configSpecId,configKey,configName,configType,required,secretFlag,defaultValue,description,remark}',
-  'methods{methodId,methodCode,methodName,methodSignature,description,returnJavaType,invokeMode,idempotentFlag,inputCount,outputCount,remark}',
+  'methods{methodId,methodCode,methodName,methodSignature,description,returnJavaType,invokeMode,idempotentFlag,inputCount,outputCount,remark,rollbackType,compensationMethodName}',
   'fields{fieldId,methodId,methodCode,methodName,schemaRole,fieldName,fieldPath,dataType,javaType,required,defaultValue,description,parentFieldId,sortNo,schemaJson,remark}',
 ].join(',')
 
@@ -243,6 +307,8 @@ const METHOD_COLUMNS: ColumnDef<MethodColumnKey>[] = [
   { key: 'idempotentFlag', label: '幂等', width: 74 },
   { key: 'inputCount', label: '入参', width: 72 },
   { key: 'outputCount', label: '出参', width: 72 },
+  { key: 'rollbackType', label: '回退类型', width: 110 },
+  { key: 'compensationMethodName', label: '补偿方法', width: 160 },
   { key: 'remark', label: '备注', width: 160 },
 ]
 
@@ -570,6 +636,20 @@ const FULL_WIDTH_TEXTAREA_STYLE: React.CSSProperties = {
   gridColumn: '1 / -1',
 }
 
+const CHANGE_TYPE_THEMES: Record<string, { background: string; color: string }> = {
+  ADDED:           { background: '#dcfce7', color: '#166534' },
+  REMOVED:         { background: '#fee2e2', color: '#b91c1c' },
+  TYPE_CHANGED:    { background: '#fff7ed', color: '#c2410c' },
+  DEFAULT_CHANGED: { background: '#dbeafe', color: '#1d4ed8' },
+}
+
+const COMPAT_LEVEL_THEMES: Record<string, { background: string; color: string }> = {
+  BREAKING:             { background: '#fee2e2', color: '#b91c1c' },
+  POTENTIALLY_BREAKING: { background: '#fff7ed', color: '#c2410c' },
+  COMPATIBLE:           { background: '#dcfce7', color: '#166534' },
+  METADATA_CHANGE:      { background: '#dbeafe', color: '#1d4ed8' },
+}
+
 const LPROCESS_V2_CSS = `
   .nop-lprocess-v2-page > .cxd-Page-header {
     display: none !important;
@@ -666,6 +746,77 @@ const LPROCESS_V2_CSS = `
   .nop-lprocess-v2__source-field--upload {
     flex: 1 1 420px;
     min-width: 300px;
+    height: 32px;
+    overflow: hidden;
+  }
+  .nop-lprocess-v2__source-field--upload .cxd-FileControl {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: nowrap;
+    width: 100%;
+    min-width: 0;
+  }
+  .nop-lprocess-v2__source-field--upload .cxd-File,
+  .nop-lprocess-v2__source-field--upload .cxd-FileControl > .cxd-File {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    overflow: hidden;
+    min-width: 0;
+    width: 100%;
+  }
+  .nop-lprocess-v2__source-field--upload .cxd-File .cxd-File-ctrl,
+  .nop-lprocess-v2__source-field--upload .cxd-FileControl .cxd-File-ctrl {
+    flex: 0 0 auto;
+  }
+  .nop-lprocess-v2__source-field--upload .cxd-File-ctrl .cxd-Button,
+  .nop-lprocess-v2__source-field--upload .cxd-File-ctrl .cxd-Button--sm,
+  .nop-lprocess-v2__source-field--upload .cxd-File-ctrl button {
+    height: 24px;
+    line-height: 22px;
+    padding: 0 8px;
+    font-size: 12px;
+  }
+  .nop-lprocess-v2__source-field--upload .cxd-File .cxd-File-list,
+  .nop-lprocess-v2__source-field--upload .cxd-FileControl .cxd-File-list {
+    flex: 1 1 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+  }
+  .nop-lprocess-v2__source-field--upload .cxd-File-list .cxd-File-itemInfo,
+  .nop-lprocess-v2__source-field--upload .cxd-FileControl .cxd-File-itemInfo {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .nop-lprocess-v2__source-field--upload .cxd-File-itemInfoText {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 260px;
+  }
+  .nop-lprocess-v2__source-field--upload .cxd-File-list .cxd-File-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    min-width: 0;
   }
   .nop-lprocess-v2__source-field-control {
     flex: 1 1 auto;
@@ -1101,6 +1252,8 @@ const METHOD_SEARCH_OPTIONS: ScopeOption<MethodSearchScope>[] = [
   { label: '返回类型', value: 'returnJavaType' },
   { label: '调用方式', value: 'invokeMode' },
   { label: '幂等', value: 'idempotentFlag' },
+  { label: '回退类型', value: 'rollbackType' },
+  { label: '补偿方法', value: 'compensationMethodName' },
   { label: '描述', value: 'description' },
   { label: '备注', value: 'remark' },
 ]
@@ -2099,6 +2252,95 @@ function detectStickyTopOffset() {
   return Math.max(0, Math.min(120, Math.ceil(maxBottom)))
 }
 
+async function fetchVersionList(props: LProcessConsoleV2Props, methodCode: string, executorDefId: string) {
+  // 先查该执行器下所有 release
+  const releases = await callApi(props, {
+    url: '@query:ExecutorRelease__findList',
+    'gql:selection': 'executorReleaseId,releaseVersion',
+  }, {
+    filter_executorDefId: executorDefId,
+    limit: 500,
+  })
+  const releaseList = Array.isArray(releases) ? releases : []
+  if (releaseList.length === 0) return []
+
+  // 并发查所有 release 下该 methodCode 的版本
+  const results = await Promise.all(
+    releaseList.map((r: any) =>
+      callApi(props, {
+        url: '@query:ExecutorMethod__findList',
+        'gql:selection': 'methodId,methodCode,methodVersion,versionStatus,executorReleaseId',
+      }, {
+        filter_executorReleaseId: r.executorReleaseId,
+        filter_methodCode: methodCode,
+        limit: 500,
+      })
+    )
+  )
+
+  // 合并结果，用 releaseVersion 填充
+  const releaseVersionMap: Record<string, string> = {}
+  for (const r of releaseList) {
+    if (r.executorReleaseId) {
+      releaseVersionMap[r.executorReleaseId] = r.releaseVersion || r.executorReleaseId
+    }
+  }
+  const allVersions = results.flatMap(r => Array.isArray(r) ? r : [])
+  return allVersions.map((item: any) => ({
+    ...item,
+    releaseVersion: releaseVersionMap[item.executorReleaseId] || item.methodVersion || '',
+  }))
+}
+
+async function fetchDiff(props: LProcessConsoleV2Props, methodIdA: string, methodIdB: string) {
+  return callApi(props, {
+    url: '@query:LProcessConsole__diffMethodVersions',
+    'gql:selection': 'methodCode,versionA,versionB,inputDiffs{fieldPath,changeType,oldValue,newValue},outputDiffs{fieldPath,changeType,oldValue,newValue},metadataDiffs{fieldName,oldValue,newValue}',
+  }, { methodIdA, methodIdB })
+}
+
+async function deprecateVersion(props: LProcessConsoleV2Props, methodId: string) {
+  return callApi(props, {
+    url: '@mutation:LProcessConsole__deprecateMethodVersion',
+    'gql:selection': 'methodId,versionStatus,hasRunningInstances,affectedInstanceIds,warningMessage',
+  }, { methodId })
+}
+
+async function activateVersion(props: LProcessConsoleV2Props, methodId: string) {
+  return callApi(props, {
+    url: '@mutation:LProcessConsole__activateMethodVersion',
+    'gql:selection': 'methodId,versionStatus',
+  }, { methodId })
+}
+
+async function switchVersion(props: LProcessConsoleV2Props, bindingId: string, targetVersion: string) {
+  return callApi(props, {
+    url: '@mutation:LProcessConsole__switchBindingVersion',
+    'gql:selection': 'bindingId,previousVersion,newVersion,resolvedMethodId,switchDirection,compatibilityReportId,overallCompatibilityLevel',
+  }, { bindingId, targetVersion })
+}
+
+async function fetchCompatReports(props: LProcessConsoleV2Props, methodCode: string, executorDefId: string) {
+  try {
+    return await callApi(props, {
+      url: '@query:CompatibilityReport__findPage',
+      'gql:selection': 'items{reportId,executorDefId,methodCode,oldMethodId,newMethodId,oldVersion,newVersion,overallLevel,diffJson,affectedBindingsJson,createTime,createdBy},total',
+    }, {
+      filter: {
+        $type: 'and',
+        $body: [
+          { $type: 'eq', name: 'methodCode', value: methodCode },
+          { $type: 'eq', name: 'executorDefId', value: executorDefId },
+        ],
+      },
+      orderBy: [{ name: 'createTime', desc: true }],
+    })
+  } catch {
+    // CompatibilityReport 对象可能未定义，静默返回空
+    return { items: [], total: 0 }
+  }
+}
+
 function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
   const data = props.data || {}
   const sourceMode = (data.sourceMode || 'existing') as ConsoleSourceMode
@@ -2165,6 +2407,37 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
     roleKey: string
     rowKey: string
   }>(null)
+
+  // 版本管理 Tab 状态
+  const [activeTab, setActiveTab] = useState<'overview' | 'versions'>('overview')
+  const [versionMethodCode, setVersionMethodCode] = useState<string | null>(null)
+  const [versionList, setVersionList] = useState<VersionItem[]>([])
+  const [versionLoading, setVersionLoading] = useState(false)
+  const [versionError, setVersionError] = useState<string | null>(null)
+
+  // 版本对比状态
+  const [diffVersionA, setDiffVersionA] = useState<string | null>(null)
+  const [diffVersionB, setDiffVersionB] = useState<string | null>(null)
+  const [diffResult, setDiffResult] = useState<VersionDiffResult | null>(null)
+  const [diffLoading, setDiffLoading] = useState(false)
+  const [diffError, setDiffError] = useState<string | null>(null)
+  const [showDiffDialog, setShowDiffDialog] = useState(false)
+
+  // 兼容性报告状态
+  const [compatReports, setCompatReports] = useState<CompatReportItem[]>([])
+  const [showCompatPanel, setShowCompatPanel] = useState(false)
+  const [expandedReportId, setExpandedReportId] = useState<string | null>(null)
+
+  // 废弃确认状态
+  const [deprecateConfirm, setDeprecateConfirm] = useState<DeprecateResult | null>(null)
+
+  // 版本切换状态
+  const [showSwitchDialog, setShowSwitchDialog] = useState(false)
+  const [switchTargetVersion, setSwitchTargetVersion] = useState('')
+  const [switchBindingId, setSwitchBindingId] = useState('')
+  const [switchResult, setSwitchResult] = useState<SwitchResult | null>(null)
+  const [switchLoading, setSwitchLoading] = useState(false)
+  const [switchError, setSwitchError] = useState<string | null>(null)
 
   const requestRef = useRef(0)
   const snapshot = sourceReady && visibleSnapshotKey === activeSourceKey ? snapshotCache[activeSourceKey] || null : null
@@ -2475,6 +2748,8 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
       returnJavaType: lower(item.returnJavaType),
       invokeMode: lower(item.invokeMode),
       idempotentFlag: boolSearchText(item.idempotentFlag),
+      rollbackType: lower(item.rollbackType),
+      compensationMethodName: lower(item.compensationMethodName),
       description: lower(item.description),
       remark: lower(item.remark),
     })
@@ -2523,6 +2798,42 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
     }
     finally {
       setLoading(false)
+    }
+  }
+
+  async function reloadVersionList() {
+    if (!versionMethodCode || !activeExecutorDefId) return
+    setVersionLoading(true)
+    setVersionError(null)
+    try {
+      const list = arrayValue<VersionItem>(await fetchVersionList(props, versionMethodCode, activeExecutorDefId))
+      setVersionList(sortVersionsDesc(list))
+    } catch (err: any) {
+      setVersionError(err?.message || '加载版本列表失败')
+    } finally {
+      setVersionLoading(false)
+    }
+  }
+
+  async function handleDeprecate(methodId: string) {
+    try {
+      const result = await deprecateVersion(props, methodId) as DeprecateResult
+      if (result?.hasRunningInstances) {
+        setDeprecateConfirm(result)
+      } else {
+        await reloadVersionList()
+      }
+    } catch (err: any) {
+      setVersionError(err?.message || '废弃操作失败')
+    }
+  }
+
+  async function handleActivate(methodId: string) {
+    try {
+      await activateVersion(props, methodId)
+      await reloadVersionList()
+    } catch (err: any) {
+      setVersionError(err?.message || '激活操作失败')
     }
   }
 
@@ -2605,6 +2916,19 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
         return item.inputCount ?? 0
       case 'outputCount':
         return item.outputCount ?? 0
+      case 'rollbackType': {
+        const rt = item.rollbackType || 'REVERSIBLE'
+        const colors: Record<string, { background: string, color: string }> = {
+          REVERSIBLE: { background: '#dcfce7', color: '#166534' },
+          COMPENSABLE: { background: '#fef9c3', color: '#854d0e' },
+          IRREVERSIBLE: { background: '#fee2e2', color: '#991b1b' },
+        }
+        return tagPill(highlightText(rt, keyword), colors[rt] || { background: '#f1f5f9', color: '#475569' })
+      }
+      case 'compensationMethodName':
+        return item.compensationMethodName
+          ? tagPill(highlightText(item.compensationMethodName, keyword), { background: '#fef3c7', color: '#92400e' })
+          : <span style={{ color: '#94a3b8' }}>-</span>
       case 'remark':
         return highlightText(item.remark || '-', keyword)
     }
@@ -2821,6 +3145,8 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
                     receiver: '/f/upload?bizObjName=LProcessConsole&fieldName=packageFile',
                     useChunk: false,
                     accept: '.zip,.jar',
+                    drag: false,
+                    btnLabel: '选择文件',
                   })}
                 </div>
               </div>
@@ -2946,6 +3272,42 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
 
         {snapshot && (
           <>
+            <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid #e5e7eb', marginBottom: 8 }}>
+              <button
+                type="button"
+                onClick={() => setActiveTab('overview')}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: 13,
+                  fontWeight: activeTab === 'overview' ? 700 : 400,
+                  color: activeTab === 'overview' ? '#1d4ed8' : '#64748b',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: activeTab === 'overview' ? '2px solid #1d4ed8' : '2px solid transparent',
+                  cursor: 'pointer',
+                }}
+              >
+                概览
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('versions')}
+                style={{
+                  padding: '8px 16px',
+                  fontSize: 13,
+                  fontWeight: activeTab === 'versions' ? 700 : 400,
+                  color: activeTab === 'versions' ? '#1d4ed8' : '#64748b',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: activeTab === 'versions' ? '2px solid #1d4ed8' : '2px solid transparent',
+                  cursor: 'pointer',
+                }}
+              >
+                版本管理
+              </button>
+            </div>
+
+            {activeTab === 'overview' && (<>
             <section style={SECTION_CARD_STYLE}>
               <div style={SECTION_HEADER_STYLE}>
                 <div style={SECTION_HEAD_MAIN_STYLE}>
@@ -3151,6 +3513,44 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
                                       title="查看方法出参 Clar"
                                       onClick={() => openPolicyStudioView(item.methodId, 'OUTPUT')}
                                     />
+                                    <TextActionButton
+                                      label="版本管理"
+                                      title="查看方法版本管理"
+                                      onClick={async () => {
+                                        const code = item.methodCode || null
+                                        setVersionMethodCode(code)
+                                        setActiveTab('versions')
+                                        setDiffResult(null)
+                                        setVersionError(null)
+                                        if (code && activeExecutorDefId) {
+                                          setVersionLoading(true)
+                                          try {
+                                            const list = arrayValue<VersionItem>(await fetchVersionList(props, code, activeExecutorDefId))
+                                            setVersionList(sortVersionsDesc(list))
+                                            const newReleaseIds = new Set(list.map(v => String(v.executorReleaseId || '')).filter(Boolean))
+                                            setDiffVersionA(prev => {
+                                              if (prev && newReleaseIds.has(prev)) return prev
+                                              return currentReleaseId && newReleaseIds.has(currentReleaseId) ? currentReleaseId : null
+                                            })
+                                            setDiffVersionB(prev => prev && newReleaseIds.has(prev) ? prev : null)
+                                          } catch (err: any) {
+                                            setVersionError(err?.message || '加载版本列表失败')
+                                            setVersionList([])
+                                          } finally {
+                                            setVersionLoading(false)
+                                          }
+                                        } else {
+                                          setVersionList([])
+                                        }
+                                      }}
+                                    />
+                                    {item.methodId && (
+                                      <TextActionButton
+                                        label="废弃"
+                                        title="废弃当前版本的该方法"
+                                        onClick={() => handleDeprecate(item.methodId!)}
+                                      />
+                                    )}
                                   </div>
                                 </td>
                               </tr>
@@ -3373,6 +3773,303 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
                 </div>
               )}
             </section>
+            </>)}
+
+            {activeTab === 'versions' && (
+              <section style={SECTION_CARD_STYLE}>
+                <div style={SECTION_HEADER_STYLE}>
+                  <div style={SECTION_HEAD_MAIN_STYLE}>
+                    <div style={SECTION_TITLE_STYLE}>版本管理</div>
+                    <div style={SECTION_DESC_STYLE}>查看方法版本列表、对比版本差异、管理版本状态</div>
+                  </div>
+                </div>
+                <div style={PANEL_BODY_STYLE}>
+                  {/* 第一行：方法选择 */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', padding: 4, border: '1px solid #d8e3ef', borderRadius: 4, background: '#fff' }}>
+                    {/* 方法选择器 */}
+                    <div className="nop-lprocess-v2__source-field" style={{ flex: '1 1 420px', minWidth: 320 }}>
+                      <span style={SOURCE_FIELD_LABEL_STYLE}>方法</span>
+                      <div style={{ flex: '1 1 0%', minWidth: 0, display: 'flex', alignItems: 'stretch' }}>
+                        <RichSelect
+                          value={versionMethodCode || ''}
+                          options={arrayValue(snapshot?.methods).map(m => ({
+                            label: (m.methodCode || '') + (m.methodName ? ` | ${m.methodName}` : ''),
+                            value: m.methodCode || '',
+                          })).filter(o => o.value)}
+                          placeholder="选择方法"
+                          clearable
+                          searchable
+                          controlStyle={SOURCE_SELECT_TRIGGER_STYLE}
+                          onChange={async (value) => {
+                            const code = value || null
+                            setVersionMethodCode(code)
+                            // 切换方法时只清空对比结果，保留已选版本
+                            setDiffResult(null)
+                            setDiffError(null)
+                            setVersionError(null)
+                            if (code && activeExecutorDefId) {
+                              setVersionLoading(true)
+                              try {
+                                const list = arrayValue<VersionItem>(await fetchVersionList(props, code, activeExecutorDefId))
+                                setVersionList(sortVersionsDesc(list))
+                                // 已选版本不在新列表中时才清除；若都为空则自动设 A 为当前版本
+                                const newReleaseIds = new Set(list.map(v => String(v.executorReleaseId || '')).filter(Boolean))
+                                setDiffVersionA(prev => {
+                                  if (prev && newReleaseIds.has(prev)) return prev
+                                  return currentReleaseId && newReleaseIds.has(currentReleaseId) ? currentReleaseId : null
+                                })
+                                setDiffVersionB(prev => prev && newReleaseIds.has(prev) ? prev : null)
+                              } catch (err: any) {
+                                setVersionError(err?.message || '加载版本列表失败')
+                                setVersionList([])
+                              } finally {
+                                setVersionLoading(false)
+                              }
+                            } else {
+                              setVersionList([])
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 第二行：版本 A + 交换 + 版本 B + 对比按钮（仅选择方法后显示） */}
+                  {versionMethodCode && versionList.length > 0 && (() => {
+                    // 从 versionList 中提取该方法实际存在的 release 版本选项
+                    const methodReleaseOptions: SimpleOption[] = versionList
+                      .filter(v => v.executorReleaseId)
+                      .map(v => ({
+                        value: String(v.executorReleaseId || ''),
+                        label: v.releaseVersion || String(v.executorReleaseId || ''),
+                      }))
+                      .filter((item, idx, arr) => arr.findIndex(x => x.value === item.value) === idx)
+
+                    // 当前版本是否在该方法的 release 列表中
+                    const currentInList = methodReleaseOptions.some(o => o.value === currentReleaseId)
+                    // 确定哪个选择器锁定为当前版本：A 或 B 中必须有一个是当前版本
+                    const aIsLocked = currentInList && (diffVersionA === currentReleaseId || !diffVersionB || diffVersionB !== currentReleaseId)
+                    const bIsLocked = currentInList && !aIsLocked && diffVersionB === currentReleaseId
+
+                    // 版本 A 的选项：如果 B 已选，则 B 的值置灰
+                    const optionsA: SimpleOption[] = aIsLocked
+                      ? methodReleaseOptions.filter(o => o.value === currentReleaseId)
+                      : methodReleaseOptions.map(o => ({
+                          ...o,
+                          label: o.value === diffVersionB ? `${o.label}（已选为版本B）` : o.label,
+                          disabled: o.value === diffVersionB,
+                        } as SimpleOption))
+
+                    // 版本 B 的选项：如果 A 已选，则 A 的值置灰
+                    const optionsB: SimpleOption[] = bIsLocked
+                      ? methodReleaseOptions.filter(o => o.value === currentReleaseId)
+                      : methodReleaseOptions.map(o => ({
+                          ...o,
+                          label: o.value === diffVersionA ? `${o.label}（已选为版本A）` : o.label,
+                          disabled: o.value === diffVersionA,
+                        } as SimpleOption))
+
+                    return (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap', padding: 4, border: '1px solid #d8e3ef', borderRadius: 4, background: '#fff' }}>
+                    {/* 版本 A */}
+                    <div className="nop-lprocess-v2__source-field" style={{ flex: '0 1 300px', minWidth: 240 }}>
+                      <span style={SOURCE_FIELD_LABEL_STYLE}>版本 A{aIsLocked ? '（当前）' : ''}</span>
+                      <div style={{ flex: '1 1 0%', minWidth: 0, display: 'flex', alignItems: 'stretch' }}>
+                        <RichSelect
+                          value={diffVersionA || ''}
+                          options={optionsA}
+                          placeholder="选择版本"
+                          clearable={!aIsLocked}
+                          searchable
+                          controlStyle={SOURCE_SELECT_TRIGGER_STYLE}
+                          disabled={aIsLocked || methodReleaseOptions.length <= 1}
+                          onChange={(value) => { setDiffVersionA(value || null); setDiffResult(null); setDiffError(null) }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* 交换按钮 */}
+                    <button type="button" onClick={() => {
+                      const t = diffVersionA; setDiffVersionA(diffVersionB); setDiffVersionB(t); setDiffResult(null); setDiffError(null)
+                    }}
+                      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, border: '1px solid #d8e3ef', borderRadius: 4, background: '#f8fafc', color: '#475569', fontSize: 16, fontWeight: 600, cursor: 'pointer', padding: 0, lineHeight: 1, flexShrink: 0 }}
+                      title="交换版本 A 和版本 B">⇄</button>
+
+                    {/* 版本 B */}
+                    <div className="nop-lprocess-v2__source-field" style={{ flex: '0 1 300px', minWidth: 240 }}>
+                      <span style={SOURCE_FIELD_LABEL_STYLE}>版本 B{bIsLocked ? '（当前）' : ''}</span>
+                      <div style={{ flex: '1 1 0%', minWidth: 0, display: 'flex', alignItems: 'stretch' }}>
+                        <RichSelect
+                          value={diffVersionB || ''}
+                          options={optionsB}
+                          placeholder="选择版本"
+                          clearable={!bIsLocked}
+                          searchable
+                          controlStyle={SOURCE_SELECT_TRIGGER_STYLE}
+                          disabled={bIsLocked || methodReleaseOptions.length <= 1}
+                          onChange={(value) => { setDiffVersionB(value || null); setDiffResult(null); setDiffError(null) }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* 对比按钮 — 需要选方法 + 两个不同版本 */}
+                    {(() => {
+                      const canDiff = !!versionMethodCode && !!diffVersionA && !!diffVersionB && diffVersionA !== diffVersionB && !diffLoading
+                      return (
+                        <button type="button" disabled={!canDiff}
+                          onClick={async () => {
+                            if (!versionMethodCode || !diffVersionA || !diffVersionB || diffVersionA === diffVersionB) return
+                            setDiffLoading(true); setDiffError(null); setDiffResult(null)
+                            try {
+                              // diffVersionA/B 是 executorReleaseId，需要解析出 methodId
+                              const [rA, rB] = await Promise.all([
+                                callApi(props, { url: '@query:ExecutorMethod__findList', 'gql:selection': 'methodId' }, {
+                                  filter_executorReleaseId: diffVersionA,
+                                  filter_methodCode: versionMethodCode,
+                                  limit: 1,
+                                }),
+                                callApi(props, { url: '@query:ExecutorMethod__findList', 'gql:selection': 'methodId' }, {
+                                  filter_executorReleaseId: diffVersionB,
+                                  filter_methodCode: versionMethodCode,
+                                  limit: 1,
+                                }),
+                              ])
+                              const midA = Array.isArray(rA) && rA[0]?.methodId
+                              const midB = Array.isArray(rB) && rB[0]?.methodId
+                              if (!midA || !midB) { setDiffError('所选版本中未找到该方法'); return }
+                              setDiffResult(await fetchDiff(props, midA, midB) as VersionDiffResult)
+                            } catch (err: any) { setDiffError(err?.message || '版本对比失败') }
+                            finally { setDiffLoading(false) }
+                          }}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            height: 32, padding: '0 16px', borderRadius: 4, fontSize: 13, fontWeight: 600, flexShrink: 0,
+                            border: '1px solid #2563eb',
+                            background: canDiff ? '#2563eb' : '#94a3b8', color: '#fff',
+                            cursor: canDiff ? 'pointer' : 'not-allowed', opacity: canDiff ? 1 : 0.6,
+                          }}>
+                          {diffLoading ? '对比中...' : '开始对比'}
+                        </button>
+                      )
+                    })()}
+
+                    {diffVersionA && diffVersionB && diffVersionA === diffVersionB && (
+                      <span style={{ fontSize: 12, color: '#b91c1c', padding: '4px 8px' }}>请选择两个不同的版本</span>
+                    )}
+                    {methodReleaseOptions.length === 1 && (
+                      <span style={{ fontSize: 12, color: '#92400e', background: '#fef3c7', padding: '4px 8px', borderRadius: 4 }}>该方法仅有一个版本，无法对比</span>
+                    )}
+                  </div>
+                    )
+                  })()}
+
+                  {versionLoading && (
+                    <div style={{ padding: '12px 0', color: '#64748b', fontSize: 13 }}>正在加载版本列表...</div>
+                  )}
+                  {versionError && <div style={ERROR_ALERT_STYLE}>{versionError}</div>}
+                  {diffError && <div style={ERROR_ALERT_STYLE}>{diffError}</div>}
+
+                  {!versionMethodCode && (
+                    <div style={{ padding: '12px 0', color: '#94a3b8', fontSize: 13 }}>请先选择一个方法以查看版本对比。</div>
+                  )}
+
+                  {/* 对比结果内联展示（与 VersionDiffPage 一致） */}
+                  {diffLoading && (
+                    <div style={{ textAlign: 'center', padding: '24px 0', color: '#64748b', fontSize: 14 }}>加载对比结果中...</div>
+                  )}
+                  {!diffLoading && diffResult && (() => {
+                    const summary = computeDiffSummary(diffResult)
+                    return (
+                      <>
+                        <div style={SECTION_CARD_STYLE}>
+                          <div style={SECTION_HEADER_STYLE}>
+                            <span style={SECTION_TITLE_STYLE}>
+                              对比结果: {diffResult.methodCode}  {diffResult.versionA} → {diffResult.versionB}
+                            </span>
+                            <span style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                              {Object.keys(CHANGE_TYPE_LABELS).map(key => (
+                                <span key={key}>{countTag(`${CHANGE_TYPE_LABELS[key]}`, summary[key] ?? 0)}</span>
+                              ))}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* 输入参数差异 */}
+                        <div style={SECTION_CARD_STYLE}>
+                          <div style={SECTION_HEADER_STYLE}><span style={SECTION_TITLE_STYLE}>输入参数差异</span></div>
+                          {diffResult.inputDiffs && diffResult.inputDiffs.length > 0 ? (
+                            <table style={TABLE_STYLE}>
+                              <thead><tr>
+                                <th style={TH_STYLE}>字段路径</th><th style={TH_STYLE}>变更类型</th><th style={TH_STYLE}>旧值</th><th style={TH_STYLE}>新值</th>
+                              </tr></thead>
+                              <tbody>
+                                {diffResult.inputDiffs.map((item, idx) => (
+                                  <tr key={idx}>
+                                    <td style={TD_STYLE}>{item.fieldPath}</td>
+                                    <td style={TD_STYLE}>{tagPill(CHANGE_TYPE_LABELS[item.changeType] || item.changeType, CHANGE_TYPE_THEMES[item.changeType] || { background: '#f1f5f9', color: '#334155' })}</td>
+                                    <td style={TD_STYLE}>{item.oldValue ?? ''}</td>
+                                    <td style={TD_STYLE}>{item.newValue ?? ''}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          ) : (
+                            <div style={{ padding: '12px 16px', color: '#64748b', fontSize: 13 }}>无差异</div>
+                          )}
+                        </div>
+
+                        {/* 输出参数差异 */}
+                        <div style={SECTION_CARD_STYLE}>
+                          <div style={SECTION_HEADER_STYLE}><span style={SECTION_TITLE_STYLE}>输出参数差异</span></div>
+                          {diffResult.outputDiffs && diffResult.outputDiffs.length > 0 ? (
+                            <table style={TABLE_STYLE}>
+                              <thead><tr>
+                                <th style={TH_STYLE}>字段路径</th><th style={TH_STYLE}>变更类型</th><th style={TH_STYLE}>旧值</th><th style={TH_STYLE}>新值</th>
+                              </tr></thead>
+                              <tbody>
+                                {diffResult.outputDiffs.map((item, idx) => (
+                                  <tr key={idx}>
+                                    <td style={TD_STYLE}>{item.fieldPath}</td>
+                                    <td style={TD_STYLE}>{tagPill(CHANGE_TYPE_LABELS[item.changeType] || item.changeType, CHANGE_TYPE_THEMES[item.changeType] || { background: '#f1f5f9', color: '#334155' })}</td>
+                                    <td style={TD_STYLE}>{item.oldValue ?? ''}</td>
+                                    <td style={TD_STYLE}>{item.newValue ?? ''}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          ) : (
+                            <div style={{ padding: '12px 16px', color: '#64748b', fontSize: 13 }}>无差异</div>
+                          )}
+                        </div>
+
+                        {/* 元数据差异 */}
+                        <div style={SECTION_CARD_STYLE}>
+                          <div style={SECTION_HEADER_STYLE}><span style={SECTION_TITLE_STYLE}>元数据差异</span></div>
+                          {diffResult.metadataDiffs && diffResult.metadataDiffs.length > 0 ? (
+                            <table style={TABLE_STYLE}>
+                              <thead><tr>
+                                <th style={TH_STYLE}>字段名称</th><th style={TH_STYLE}>旧值</th><th style={TH_STYLE}>新值</th>
+                              </tr></thead>
+                              <tbody>
+                                {diffResult.metadataDiffs.map((item, idx) => (
+                                  <tr key={idx}>
+                                    <td style={TD_STYLE}>{item.fieldName}</td>
+                                    <td style={TD_STYLE}>{item.oldValue ?? ''}</td>
+                                    <td style={TD_STYLE}>{item.newValue ?? ''}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          ) : (
+                            <div style={{ padding: '12px 16px', color: '#64748b', fontSize: 13 }}>无差异</div>
+                          )}
+                        </div>
+                      </>
+                    )
+                  })()}
+                </div>
+              </section>
+            )}
           </>
         )}
 
@@ -3541,6 +4238,435 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
               </div>
             </div>
           </div>
+        )}
+
+        {deprecateConfirm && ReactDOM.createPortal(
+          <div style={MODAL_OVERLAY_STYLE}>
+            <div style={{ ...SECTION_CARD_STYLE, maxWidth: 520, width: '100%', maxHeight: '80vh', overflow: 'auto' }}>
+              <div style={MODAL_HEADER_STYLE}>
+                <div>
+                  <div style={SECTION_TITLE_STYLE}>确认废弃版本</div>
+                </div>
+                <IconButton title="关闭" onClick={() => setDeprecateConfirm(null)} danger>
+                  <CloseIcon />
+                </IconButton>
+              </div>
+              <div style={MODAL_BODY_STYLE}>
+                {deprecateConfirm.warningMessage && (
+                  <div style={{ ...ERROR_ALERT_STYLE, marginBottom: 12 }}>
+                    {deprecateConfirm.warningMessage}
+                  </div>
+                )}
+                {deprecateConfirm.affectedInstanceIds.length > 0 && (
+                  <div style={{ marginBottom: 12 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 6 }}>受影响的运行实例：</div>
+                    <ul style={{ margin: 0, paddingLeft: 20, fontSize: 12, color: '#64748b' }}>
+                      {deprecateConfirm.affectedInstanceIds.map(id => (
+                        <li key={id}>{id}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+              <div style={MODAL_FOOTER_STYLE}>
+                <button type="button" onClick={() => setDeprecateConfirm(null)} style={secondaryButtonStyle()}>
+                  取消
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setDeprecateConfirm(null)
+                    await reloadVersionList()
+                  }}
+                  style={{ ...primaryButtonStyle(), background: '#dc2626', borderColor: '#dc2626' }}
+                >
+                  确认废弃
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+        {showDiffDialog && diffResult && ReactDOM.createPortal(
+          <div style={MODAL_OVERLAY_STYLE}>
+            <div style={{ ...SECTION_CARD_STYLE, maxWidth: 900, width: '100%', maxHeight: '90vh', overflow: 'auto' }}>
+              <div style={MODAL_HEADER_STYLE}>
+                <div>
+                  <div style={SECTION_TITLE_STYLE}>
+                    版本对比：{diffResult.methodCode} — {diffResult.versionA} → {diffResult.versionB}
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                    {Object.entries(computeDiffSummary(diffResult)).map(([type, count]) => (
+                      <span key={type}>
+                        {tagPill(`${CHANGE_TYPE_LABELS[type] || type} ${count} 项`, CHANGE_TYPE_THEMES[type] || { background: '#f1f5f9', color: '#475569' })}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <IconButton title="关闭" onClick={() => setShowDiffDialog(false)} danger>
+                  <CloseIcon />
+                </IconButton>
+              </div>
+              <div style={{ ...MODAL_BODY_STYLE, display: 'grid', gap: 16 }}>
+                {/* Input Diffs */}
+                <section style={SECTION_CARD_STYLE}>
+                  <div style={SECTION_HEADER_STYLE}>
+                    <div style={SECTION_TITLE_STYLE}>输入参数差异</div>
+                  </div>
+                  {diffResult.inputDiffs.length > 0 ? (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={TABLE_STYLE}>
+                        <thead>
+                          <tr>
+                            <th style={TH_STYLE}>字段路径</th>
+                            <th style={TH_STYLE}>变更类型</th>
+                            <th style={TH_STYLE}>旧值</th>
+                            <th style={TH_STYLE}>新值</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {diffResult.inputDiffs.map((d, i) => (
+                            <tr key={i}>
+                              <td style={TD_STYLE}><strong>{d.fieldPath}</strong></td>
+                              <td style={TD_STYLE}>{tagPill(CHANGE_TYPE_LABELS[d.changeType] || d.changeType, CHANGE_TYPE_THEMES[d.changeType] || { background: '#f1f5f9', color: '#475569' })}</td>
+                              <td style={TD_STYLE}>{d.oldValue ?? '-'}</td>
+                              <td style={TD_STYLE}>{d.newValue ?? '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div style={{ padding: '12px 16px', color: '#94a3b8', fontSize: 13 }}>无差异</div>
+                  )}
+                </section>
+
+                {/* Output Diffs */}
+                <section style={SECTION_CARD_STYLE}>
+                  <div style={SECTION_HEADER_STYLE}>
+                    <div style={SECTION_TITLE_STYLE}>输出参数差异</div>
+                  </div>
+                  {diffResult.outputDiffs.length > 0 ? (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={TABLE_STYLE}>
+                        <thead>
+                          <tr>
+                            <th style={TH_STYLE}>字段路径</th>
+                            <th style={TH_STYLE}>变更类型</th>
+                            <th style={TH_STYLE}>旧值</th>
+                            <th style={TH_STYLE}>新值</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {diffResult.outputDiffs.map((d, i) => (
+                            <tr key={i}>
+                              <td style={TD_STYLE}><strong>{d.fieldPath}</strong></td>
+                              <td style={TD_STYLE}>{tagPill(CHANGE_TYPE_LABELS[d.changeType] || d.changeType, CHANGE_TYPE_THEMES[d.changeType] || { background: '#f1f5f9', color: '#475569' })}</td>
+                              <td style={TD_STYLE}>{d.oldValue ?? '-'}</td>
+                              <td style={TD_STYLE}>{d.newValue ?? '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div style={{ padding: '12px 16px', color: '#94a3b8', fontSize: 13 }}>无差异</div>
+                  )}
+                </section>
+
+                {/* Metadata Diffs */}
+                <section style={SECTION_CARD_STYLE}>
+                  <div style={SECTION_HEADER_STYLE}>
+                    <div style={SECTION_TITLE_STYLE}>元数据差异</div>
+                  </div>
+                  {diffResult.metadataDiffs.length > 0 ? (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={TABLE_STYLE}>
+                        <thead>
+                          <tr>
+                            <th style={TH_STYLE}>字段名称</th>
+                            <th style={TH_STYLE}>旧值</th>
+                            <th style={TH_STYLE}>新值</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {diffResult.metadataDiffs.map((d, i) => (
+                            <tr key={i}>
+                              <td style={TD_STYLE}><strong>{d.fieldName}</strong></td>
+                              <td style={TD_STYLE}>{d.oldValue ?? '-'}</td>
+                              <td style={TD_STYLE}>{d.newValue ?? '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div style={{ padding: '12px 16px', color: '#94a3b8', fontSize: 13 }}>无差异</div>
+                  )}
+                </section>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+        {showCompatPanel && ReactDOM.createPortal(
+          <div style={MODAL_OVERLAY_STYLE}>
+            <div style={{ ...SECTION_CARD_STYLE, maxWidth: 900, width: '100%', maxHeight: '90vh', overflow: 'auto' }}>
+              <div style={MODAL_HEADER_STYLE}>
+                <div>
+                  <div style={SECTION_TITLE_STYLE}>兼容性报告</div>
+                  <div style={SECTION_DESC_STYLE}>方法 {versionMethodCode} 的版本兼容性分析报告</div>
+                </div>
+                <IconButton title="关闭" onClick={() => setShowCompatPanel(false)} danger>
+                  <CloseIcon />
+                </IconButton>
+              </div>
+              <div style={MODAL_BODY_STYLE}>
+                {compatReports.length > 0 ? (
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={TABLE_STYLE}>
+                      <thead>
+                        <tr>
+                          <th style={TH_STYLE}>旧版本</th>
+                          <th style={TH_STYLE}>新版本</th>
+                          <th style={TH_STYLE}>兼容级别</th>
+                          <th style={TH_STYLE}>创建时间</th>
+                          <th style={{ ...TH_STYLE, textAlign: 'center' }}>操作</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {compatReports.map(report => (
+                          <React.Fragment key={report.reportId}>
+                            <tr
+                              style={{ cursor: 'pointer' }}
+                              onClick={() => setExpandedReportId(prev => prev === report.reportId ? null : report.reportId)}
+                            >
+                              <td style={TD_STYLE}>{report.oldVersion}</td>
+                              <td style={TD_STYLE}>{report.newVersion}</td>
+                              <td style={TD_STYLE}>
+                                {tagPill(
+                                  report.overallLevel,
+                                  COMPAT_LEVEL_THEMES[report.overallLevel] || { background: '#f1f5f9', color: '#475569' }
+                                )}
+                              </td>
+                              <td style={TD_STYLE}>{report.createTime || '-'}</td>
+                              <td style={{ ...TD_STYLE, textAlign: 'center' }}>
+                                <span onClick={(e) => e.stopPropagation()}>
+                                  <TextActionButton
+                                    label="查看对比"
+                                    title="跳转到版本对比"
+                                    onClick={async () => {
+                                      try {
+                                        setDiffLoading(true)
+                                        setDiffError(null)
+                                        const result = await fetchDiff(props, report.oldMethodId, report.newMethodId) as VersionDiffResult
+                                        setDiffResult(result)
+                                        setShowDiffDialog(true)
+                                        setShowCompatPanel(false)
+                                      } catch (err: any) {
+                                        setDiffError(err?.message || '版本对比失败')
+                                      } finally {
+                                        setDiffLoading(false)
+                                      }
+                                    }}
+                                  />
+                                </span>
+                              </td>
+                            </tr>
+                            {expandedReportId === report.reportId && (
+                              <tr>
+                                <td style={{ ...TD_STYLE, background: '#f8fafc' }} colSpan={5}>
+                                  <div style={{ display: 'grid', gap: 12, padding: '8px 0' }}>
+                                    <div>
+                                      <div style={{ fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 6 }}>差异详情：</div>
+                                      {(() => {
+                                        try {
+                                          const diffs = JSON.parse(report.diffJson || '[]')
+                                          if (!Array.isArray(diffs) || diffs.length === 0) {
+                                            return <div style={{ fontSize: 12, color: '#94a3b8' }}>无差异数据</div>
+                                          }
+                                          return (
+                                            <table style={{ ...TABLE_STYLE, fontSize: 12 }}>
+                                              <thead>
+                                                <tr>
+                                                  <th style={{ ...TH_STYLE, fontSize: 12 }}>字段</th>
+                                                  <th style={{ ...TH_STYLE, fontSize: 12 }}>变更类型</th>
+                                                  <th style={{ ...TH_STYLE, fontSize: 12 }}>旧值</th>
+                                                  <th style={{ ...TH_STYLE, fontSize: 12 }}>新值</th>
+                                                </tr>
+                                              </thead>
+                                              <tbody>
+                                                {diffs.map((d: any, i: number) => (
+                                                  <tr key={i}>
+                                                    <td style={{ ...TD_STYLE, fontSize: 12 }}>{d.fieldPath || d.fieldName || '-'}</td>
+                                                    <td style={{ ...TD_STYLE, fontSize: 12 }}>
+                                                      {d.changeType
+                                                        ? tagPill(CHANGE_TYPE_LABELS[d.changeType] || d.changeType, CHANGE_TYPE_THEMES[d.changeType] || { background: '#f1f5f9', color: '#475569' })
+                                                        : '-'}
+                                                    </td>
+                                                    <td style={{ ...TD_STYLE, fontSize: 12 }}>{d.oldValue ?? '-'}</td>
+                                                    <td style={{ ...TD_STYLE, fontSize: 12 }}>{d.newValue ?? '-'}</td>
+                                                  </tr>
+                                                ))}
+                                              </tbody>
+                                            </table>
+                                          )
+                                        } catch {
+                                          return <div style={{ fontSize: 12, color: '#dc2626' }}>数据格式异常</div>
+                                        }
+                                      })()}
+                                    </div>
+                                    <div>
+                                      <div style={{ fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 6 }}>受影响绑定：</div>
+                                      {(() => {
+                                        try {
+                                          const bindings = JSON.parse(report.affectedBindingsJson || '[]')
+                                          if (!Array.isArray(bindings) || bindings.length === 0) {
+                                            return <div style={{ fontSize: 12, color: '#94a3b8' }}>无受影响绑定</div>
+                                          }
+                                          return (
+                                            <ul style={{ margin: 0, paddingLeft: 20, fontSize: 12, color: '#64748b' }}>
+                                              {bindings.map((b: any, i: number) => (
+                                                <li key={i}>{b.bindingId || b}{b.processDefName ? ` — ${b.processDefName}` : ''}</li>
+                                              ))}
+                                            </ul>
+                                          )
+                                        } catch {
+                                          return <div style={{ fontSize: 12, color: '#dc2626' }}>数据格式异常</div>
+                                        }
+                                      })()}
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div style={{ padding: '12px 0', color: '#94a3b8', fontSize: 13 }}>暂无兼容性报告。</div>
+                )}
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+        {showSwitchDialog && ReactDOM.createPortal(
+          <div style={MODAL_OVERLAY_STYLE}>
+            <div style={{ ...SECTION_CARD_STYLE, maxWidth: 560, width: '100%', maxHeight: '80vh', overflow: 'auto' }}>
+              <div style={MODAL_HEADER_STYLE}>
+                <div>
+                  <div style={SECTION_TITLE_STYLE}>版本切换</div>
+                  <div style={SECTION_DESC_STYLE}>将节点绑定切换到目标方法版本</div>
+                </div>
+                <IconButton title="关闭" onClick={() => setShowSwitchDialog(false)} danger>
+                  <CloseIcon />
+                </IconButton>
+              </div>
+              <div style={MODAL_BODY_STYLE}>
+                <div style={{ display: 'grid', gap: 12 }}>
+                  <label style={{ display: 'grid', gap: 4 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>目标版本：</span>
+                    <select
+                      value={switchTargetVersion}
+                      onChange={e => setSwitchTargetVersion(e.target.value)}
+                      style={INPUT_STYLE}
+                    >
+                      <option value="">选择目标版本</option>
+                      {versionList.map(v => (
+                        <option key={v.methodId} value={v.methodVersion}>{v.methodVersion}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label style={{ display: 'grid', gap: 4 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#475569' }}>绑定 ID（bindingId）：</span>
+                    <input
+                      value={switchBindingId}
+                      onChange={e => setSwitchBindingId(e.target.value)}
+                      placeholder="输入 ActivityMethodBinding 的 bindingId"
+                      style={INPUT_STYLE}
+                    />
+                  </label>
+                </div>
+
+                {switchError && (
+                  <div style={{ ...ERROR_ALERT_STYLE, marginTop: 12 }}>{switchError}</div>
+                )}
+
+                {switchResult && (
+                  <div style={{ ...SECTION_CARD_STYLE, marginTop: 12 }}>
+                    <div style={SECTION_HEADER_STYLE}>
+                      <div style={SECTION_TITLE_STYLE}>切换结果</div>
+                    </div>
+                    <div style={{ padding: 12, display: 'grid', gap: 8, fontSize: 13 }}>
+                      <div><span style={{ color: '#475569', fontWeight: 600 }}>切换方向：</span>{switchResult.switchDirection}</div>
+                      <div><span style={{ color: '#475569', fontWeight: 600 }}>解析方法 ID：</span>{switchResult.resolvedMethodId}</div>
+                      <div>
+                        <span style={{ color: '#475569', fontWeight: 600 }}>兼容级别：</span>
+                        {tagPill(
+                          switchResult.overallCompatibilityLevel,
+                          COMPAT_LEVEL_THEMES[switchResult.overallCompatibilityLevel] || { background: '#f1f5f9', color: '#475569' }
+                        )}
+                      </div>
+                      <div><span style={{ color: '#475569', fontWeight: 600 }}>版本变化：</span>{switchResult.previousVersion} → {switchResult.newVersion}</div>
+                      {switchResult.compatibilityReportId && (
+                        <div>
+                          <TextActionButton
+                            label="查看兼容性报告"
+                            title="查看此次切换的兼容性报告"
+                            onClick={async () => {
+                              if (!versionMethodCode || !activeExecutorDefId) return
+                              try {
+                                const result = await fetchCompatReports(props, versionMethodCode, activeExecutorDefId) as any
+                                setCompatReports(arrayValue<CompatReportItem>(result?.items || result))
+                                setShowCompatPanel(true)
+                                setExpandedReportId(null)
+                                setShowSwitchDialog(false)
+                              } catch (err: any) {
+                                setSwitchError(err?.message || '加载兼容性报告失败')
+                              }
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div style={MODAL_FOOTER_STYLE}>
+                <button type="button" onClick={() => setShowSwitchDialog(false)} style={secondaryButtonStyle()}>
+                  关闭
+                </button>
+                <button
+                  type="button"
+                  disabled={!switchTargetVersion || !switchBindingId || switchLoading}
+                  onClick={async () => {
+                    if (!switchTargetVersion || !switchBindingId) return
+                    setSwitchLoading(true)
+                    setSwitchError(null)
+                    setSwitchResult(null)
+                    try {
+                      const result = await switchVersion(props, switchBindingId, switchTargetVersion) as SwitchResult
+                      setSwitchResult(result)
+                    } catch (err: any) {
+                      setSwitchError(err?.message || '版本切换失败')
+                    } finally {
+                      setSwitchLoading(false)
+                    }
+                  }}
+                  style={switchTargetVersion && switchBindingId && !switchLoading ? primaryButtonStyle() : { ...primaryButtonStyle(), opacity: 0.5, cursor: 'not-allowed' }}
+                >
+                  {switchLoading ? '切换中...' : '执行切换'}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
         )}
       </div>
     </div>

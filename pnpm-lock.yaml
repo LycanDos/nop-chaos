@@ -397,7 +397,7 @@ importers:
         version: link:../nop-graph-designer
       amis:
         specifier: 6.12.0
-        version: 6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-ui@6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.5.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-ui@6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       amis-core:
         specifier: 6.12.0
         version: 6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1)
@@ -570,7 +570,7 @@ importers:
         version: link:../policy-studio
       amis:
         specifier: 6.12.0
-        version: 6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-ui@6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-ui@6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.5.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       amis-core:
         specifier: 6.12.0
         version: 6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1)
@@ -580,6 +580,9 @@ importers:
       amis-ui:
         specifier: 6.12.0
         version: 6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      element-plus:
+        specifier: ^2.10.4
+        version: 2.10.4(vue@3.5.18(typescript@5.3.3))
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -617,6 +620,9 @@ importers:
       eslint-plugin-react-refresh:
         specifier: ^0.4.1
         version: 0.4.20(eslint@8.57.1)
+      fast-check:
+        specifier: ^4.7.0
+        version: 4.7.0
       typescript:
         specifier: ^5.0.2
         version: 5.3.3
@@ -626,6 +632,9 @@ importers:
       vite-plugin-dts:
         specifier: ^3.6.0
         version: 3.9.1(@types/node@20.19.9)(rollup@4.45.1)(typescript@5.3.3)(vite@4.5.14(@types/node@20.19.9)(less@4.4.0)(sass@1.89.2)(terser@5.43.1))
+      vitest:
+        specifier: ^1.6.1
+        version: 1.6.1(@types/node@20.19.9)(jsdom@16.7.0(canvas@2.11.2(encoding@0.1.13)))(less@4.4.0)(sass@1.89.2)(terser@5.43.1)
 
   packages/nop-amis-vue:
     dependencies:
@@ -1311,7 +1320,7 @@ importers:
         version: link:../sdk
       amis:
         specifier: ^3.4.2
-        version: 3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.4.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       amis-core:
         specifier: ^3.4.2
         version: 3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -2021,7 +2030,7 @@ importers:
         version: 3.5.18
       amis:
         specifier: ^3.4.0
-        version: 3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(office-viewer@0.3.14(echarts@5.4.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       amis-core:
         specifier: ^3.4.0
         version: 3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -4667,6 +4676,9 @@ packages:
   '@jridgewell/sourcemap-codec@1.5.4':
     resolution: {integrity: sha512-VT2+G1VQs/9oz078bLrYbecdZKs912zQlkelYpuf+SXF+QvZDYJlbx/LSx+meSAwdDFnF8FVXW92AVjjkVmgFw==}
 
+  '@jridgewell/sourcemap-codec@1.5.5':
+    resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
+
   '@jridgewell/trace-mapping@0.3.29':
     resolution: {integrity: sha512-uw6guiW/gcAGPDhLmd77/6lW8QLeiV5RUTsAX46Db6oLhGaVj4lhnPwb184s1bkc8kdVg/+h988dro8GRDpmYQ==}
 
@@ -6110,6 +6122,21 @@ packages:
       vite: ^5.0.0 || ^6.0.0 || ^7.0.0
       vue: ^3.2.25
 
+  '@vitest/expect@1.6.1':
+    resolution: {integrity: sha512-jXL+9+ZNIJKruofqXuuTClf44eSpcHlgj3CiuNihUF3Ioujtmc0zIa3UJOW5RjDK1YLBJZnWBlPuqhYycLioog==}
+
+  '@vitest/runner@1.6.1':
+    resolution: {integrity: sha512-3nSnYXkVkf3mXFfE7vVyPmi3Sazhb/2cfZGGs0JRzFsPFvAMBEcrweV1V1GsrstdXeKCTXlJbvnQwGWgEIHmOA==}
+
+  '@vitest/snapshot@1.6.1':
+    resolution: {integrity: sha512-WvidQuWAzU2p95u8GAKlRMqMyN1yOJkGHnx3M1PL9Raf7AQ1kwLKg04ADlCa3+OXUZE7BceOhVZiuWAbzCKcUQ==}
+
+  '@vitest/spy@1.6.1':
+    resolution: {integrity: sha512-MGcMmpGkZebsMZhbQKkAf9CX5zGvjkBTqf8Zx3ApYWXr3wG+QvEu2eXWfnIIWYSJExIp4V9FCKDEeygzkYrXMw==}
+
+  '@vitest/utils@1.6.1':
+    resolution: {integrity: sha512-jOrrUvXM4Av9ZWiG1EajNto0u96kWAhJ1LmPmJhXXQx/32MecEKd10pOLYgS2BQx1TgkGhloPU1ArDW2vvaY6g==}
+
   '@volar/language-core@1.11.1':
     resolution: {integrity: sha512-dOcNn3i9GgZAcJt43wuaEykSluAuOkQgzni1cuxLxTV0nJKanQztp7FxyswdRILaKH+P2XZMPRp2S4MV/pElCw==}
 
@@ -6805,6 +6832,9 @@ packages:
   assert@1.5.1:
     resolution: {integrity: sha512-zzw1uCAgLbsKwBfFc8CX78DDg+xZeBksSO3vwVIDDN5i94eOrPsSSyiVhmsSABFDM/OcpE2aagCat9dnWQLG1A==}
 
+  assertion-error@1.1.0:
+    resolution: {integrity: sha512-jgsaNduz+ndvGyFt3uSuWqvy4lCnIJiovtouQN5JZHOKCS2QuhEdbcQHFhVksz2N2U9hXJo8odG7ETyWlEeuDw==}
+
   assign-symbols@1.0.0:
     resolution: {integrity: sha512-Q+JC7Whu8HhmTdBph/Tq59IoRtoy6KAm5zzPv00WdujX82lbAL8K7WVjne7vdCsAmbF4AYaDOPyO3k0kl8qIrw==}
     engines: {node: '>=0.10.0'}
@@ -7344,6 +7374,10 @@ packages:
     resolution: {integrity: sha512-KfdUZsSOw19/ObEWasvBP/Ac4reZvAGauZhs6S/gqNhXhI7cKwvlH7ulj+dOEYnca4bm4SGo8C1bTAQvnTjgQA==}
     engines: {node: '>=0.8'}
 
+  chai@4.5.0:
+    resolution: {integrity: sha512-RITGBfijLkBddZvnn8jdqoTypxvqbOLYQkGGxXzeFjVHvudaPw0HNFD9x928/eUwYWd2dPCugVqspGALTZZQKw==}
+    engines: {node: '>=4'}
+
   chainsaw@0.1.0:
     resolution: {integrity: sha512-75kWfWt6MEKNC8xYXIdRpDehRYY/tNSgwKaJq+dbbDcxORuVrrQ+SEHoWsniVn9XPYfP4gmdWIeDk/4YNp1rNQ==}
 
@@ -7398,6 +7432,9 @@ packages:
 
   charenc@0.0.2:
     resolution: {integrity: sha512-yrLQ/yVUFXkzg7EDQsPieE/53+0RlaWTs+wBrvW36cyilJ2SaDWfl4Yj7MtLTXleV9uEKefbAGUPv2/iWSooRA==}
+
+  check-error@1.0.3:
+    resolution: {integrity: sha512-iKEoDYaRmd1mxM90a2OEfWhjsjPpYPuQ+lMYsoxB126+t8fw7ySEO48nmDg5COTjxDI65/Y2OWpeEHk3ZOe8zg==}
 
   check-more-types@2.24.0:
     resolution: {integrity: sha512-Pj779qHxV2tuapviy1bSZNEL1maXr13bPYpsvSDB68HlYcYuhlDrmGd63i0JHMCLKzc7rUSNIrpdJlhVlNwrxA==}
@@ -8377,6 +8414,10 @@ packages:
 
   deep-diff@1.0.2:
     resolution: {integrity: sha512-aWS3UIVH+NPGCD1kki+DCU9Dua032iSsO43LqQpcs4R3+dVv7tX0qBGjiVHJHjplsoUM2XRO/KB92glqc68awg==}
+
+  deep-eql@4.1.4:
+    resolution: {integrity: sha512-SUwdGfqdKOwxCPeVYjwSyRpJ7Z+fhpwIAtmCUdZIWZ/YP5R9WAsyuSgpLVDi9bjWoN2LXHNss/dk3urXtdQxGg==}
+    engines: {node: '>=6'}
 
   deep-equal@1.1.2:
     resolution: {integrity: sha512-5tdhKF6DbU7iIzrIOa1AOUt39ZRm13cmL1cGEh//aqR8x9+tNfbywRf0n5FD/18OKMdo7DNEtrX2t22ZAkI+eg==}
@@ -9476,6 +9517,10 @@ packages:
     resolution: {integrity: sha512-11Ndz7Nv+mvAC1j0ktTa7fAb0vLyGGX+rMHNBYQviQDGU0Hw7lhctJANqbPhu9nV9/izT/IntTgZ7Im/9LJs9g==}
     engines: {'0': node >=0.6.0}
 
+  fast-check@4.7.0:
+    resolution: {integrity: sha512-NsZRtqvSSoCP0HbNjUD+r1JH8zqZalyp6gLY9e7OYs7NK9b6AHOs2baBFeBG7bVNsuoukh89x2Yg3rPsul8ziQ==}
+    engines: {node: '>=12.17.0'}
+
   fast-csv@4.3.6:
     resolution: {integrity: sha512-2RNSpuwwsJGP0frGsOmTb9oUF+VkFSM4SyLTDgwf2ciHWTarN0lQTC+F2f/t5J9QjW+c65VFIAAu85GsvMIusw==}
     engines: {node: '>=10.0.0'}
@@ -9857,6 +9902,9 @@ packages:
   get-east-asian-width@1.3.0:
     resolution: {integrity: sha512-vpeMIQKxczTD/0s2CdEWHcb0eeJe6TFjxb+J5xgX7hScxqrGuyjmv4c1D4A/gelKfyox0gJJwIHF+fLjeaM8kQ==}
     engines: {node: '>=18'}
+
+  get-func-name@2.0.2:
+    resolution: {integrity: sha512-8vXOvuE167CtIc3OyItco7N/dpRtBbYOsPsXCz7X/PMnlGjYjSGuZJgM1Y7mmew7BKf9BqvLX2tnOVy1BBUsxQ==}
 
   get-intrinsic@1.3.0:
     resolution: {integrity: sha512-9fSjSaos/fRIVIp+xSJlE6lfwhES7LNtKaCBIamHsjr2na1BiABJPo0mOjjz8GJDURarmCPGqaiVg5mfjb98CQ==}
@@ -11689,6 +11737,9 @@ packages:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==}
     hasBin: true
 
+  loupe@2.3.7:
+    resolution: {integrity: sha512-zSMINGVYkdpYSOBmLi0D1Uo7JU9nVdQKrHxC8eYlV+9YKK9WePqAlL7lSlorG/U2Fw1w0hTBmaa/jrQ3UbPHtA==}
+
   lower-case-first@1.0.2:
     resolution: {integrity: sha512-UuxaYakO7XeONbKrZf5FEgkantPf5DUqDayzP5VXZrtRPdH86s4kN47I8B3TW10S4QKiE3ziHNf3kRN//okHjA==}
 
@@ -11739,6 +11790,9 @@ packages:
 
   magic-string@0.30.17:
     resolution: {integrity: sha512-sNPKHvyjVf7gyjwS4xGTaW/mCnF8wnjtifKBEhxfZ7E/S8tQ0rssrwGNn6q8JH/ohItJfSQp9mBtQYuTlH5QnA==}
+
+  magic-string@0.30.21:
+    resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
   make-cancellable-promise@1.3.2:
     resolution: {integrity: sha512-GCXh3bq/WuMbS+Ky4JBPW1hYTOU+znU+Q5m9Pu+pI8EoUqIHk9+tviOKC6/qhHh8C4/As3tzJ69IF32kdz85ww==}
@@ -12631,6 +12685,10 @@ packages:
     resolution: {integrity: sha512-5b0R4txpzjPWVw/cXXUResoD4hb6U/x9BH08L7nw+GN1sezDzPdxeRvpc9c433fZhBan/wusjbCsqwqm4EIBIQ==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
+  p-limit@5.0.0:
+    resolution: {integrity: sha512-/Eaoq+QyLSiXQ4lyYV23f14mZRQcXnxfHrN0vCai+ak9G0pp9iEQukIIZq5NccEvwRB8PUnZT0KsOoDCINS1qQ==}
+    engines: {node: '>=18'}
+
   p-locate@2.0.0:
     resolution: {integrity: sha512-nQja7m7gSKuewoVRen45CtVfODR3crN3goVQ0DDZ9N3yHxgpkuBhZqsaiotSQRrADUrne346peY7kT3TSACykg==}
     engines: {node: '>=4'}
@@ -12856,6 +12914,9 @@ packages:
 
   pathe@2.0.3:
     resolution: {integrity: sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w==}
+
+  pathval@1.1.1:
+    resolution: {integrity: sha512-Dp6zGqpTdETdR63lehJYPeIOqpiNBNtc7BpWSLrOje7UaIsE5aY92r/AunQA7rsXvet3lrJ3JnZX29UPTKXyKQ==}
 
   pause-stream@0.0.11:
     resolution: {integrity: sha512-e3FBlXLmN/D1S+zHzanP4E/4Z60oFAa3O051qt1pxa7DEJWKAyil6upYVXCWadEnuoqa4Pkc9oUx9zsxYeRv8A==}
@@ -13260,6 +13321,9 @@ packages:
 
   pure-rand@6.1.0:
     resolution: {integrity: sha512-bVWawvoZoBYpp6yIoQtQXHZjmz35RSVHnUOTefl8Vcjr8snTPY1wnpSPMWekcFwbxI6gtmT7rSYPFvz71ldiOA==}
+
+  pure-rand@8.4.0:
+    resolution: {integrity: sha512-IoM8YF/jY0hiugFo/wOWqfmarlE6J0wc6fDK1PhftMk7MGhVZl88sZimmqBBFomLOCSmcCCpsfj7wXASCpvK9A==}
 
   qrcode-react-next@0.0.4:
     resolution: {integrity: sha512-m29i2Oru64mH/s1GF2evAvsN/KNPVTjx4icOrl6lDkS1Uj13uJsGqfaP+GMuHIRqyziOfFbEYRp/z2HUNbJVtA==}
@@ -14603,6 +14667,9 @@ packages:
     resolution: {integrity: sha512-ZX99e6tRweoUXqR+VBrslhda51Nh5MTQwou5tnUDgbtyM0dBgmhEDtWGP/xbKn6hqfPRHujUNwz5fy/wbbhnpw==}
     engines: {node: '>= 0.4'}
 
+  siginfo@2.0.0:
+    resolution: {integrity: sha512-ybx0WO1/8bSBLEWXZvEd7gMW3Sn3JFlW3TvX1nREbDLRNQNaeNN8WK0meBwPdAaOI7TtRRRJn/Es1zhrrCHu7g==}
+
   signal-exit@3.0.7:
     resolution: {integrity: sha512-wnD2ZE+l+SPC/uoS0vXeE9L1+0wuaMqKlfz9AMUo38JsyLSBWSFcHR1Rri62LZc12vLr1gb3jl7iwQhgwpAbGQ==}
 
@@ -14820,6 +14887,9 @@ packages:
     resolution: {integrity: sha512-XlkWvfIm6RmsWtNJx+uqtKLS8eqFbxUg0ZzLXqY0caEy9l7hruX8IpiDnjsLavoBgqCCR71TqWO8MaXYheJ3RQ==}
     engines: {node: '>=10'}
 
+  stackback@0.0.2:
+    resolution: {integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==}
+
   start-server-and-test@1.15.5:
     resolution: {integrity: sha512-o3EmkX0++GV+qsvIJ/OKWm3w91fD8uS/bPQVPrh/7loaxkpXSuAIHdnmN/P/regQK9eNAK76aBJcHt+OSTk+nA==}
     engines: {node: '>=6'}
@@ -14836,6 +14906,9 @@ packages:
   statuses@1.5.0:
     resolution: {integrity: sha512-OpZ3zP+jT1PI7I8nemJX4AKmAX070ZkYPVWV/AaKTJl+tXCTGyVdC1a4SL8RUQYEwk/f34ZX8UTykN68FwrqAA==}
     engines: {node: '>= 0.6'}
+
+  std-env@3.10.0:
+    resolution: {integrity: sha512-5GS12FdOZNliM5mAOxFRg7Ir0pWz8MdpYm6AY6VPkGpbA7ZzmbzNcBJQ0GPvvyWgcY7QAhCgf9Uy89I03faLkg==}
 
   steady-xml@0.1.0:
     resolution: {integrity: sha512-5sk17qO2wWRtonTNoBhoKAB35OSsGJOa3+NEa6D+1GS+de+ujDWxnflMkXBrviOfkNrPTUqduAdXhrMJs89nAw==}
@@ -15295,6 +15368,9 @@ packages:
   tiny-warning@1.0.3:
     resolution: {integrity: sha512-lBN9zLN/oAf68o3zNXYrdCt1kP8WsiGW8Oo2ka41b2IM5JL/S1CTyX1rW0mb/zSuJun0ZUrDxx4sqvYS2FWzPA==}
 
+  tinybench@2.9.0:
+    resolution: {integrity: sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg==}
+
   tinycolor2@1.6.0:
     resolution: {integrity: sha512-XPaBkWQJdsf3pLKJV9p4qN/S+fm2Oj8AIPo1BTUhg5oxkvm9+SVEGFdhyOz7tTdUTfvxMiAs4sp6/eZO2Ew+pw==}
 
@@ -15307,6 +15383,14 @@ packages:
 
   tinymce@6.8.6:
     resolution: {integrity: sha512-++XYEs8lKWvZxDCjrr8Baiw7KiikraZ5JkLMg6EdnUVNKJui0IsrAADj5MsyUeFkcEryfn2jd3p09H7REvewyg==}
+
+  tinypool@0.8.4:
+    resolution: {integrity: sha512-i11VH5gS6IFeLY3gMBQ00/MmLncVP7JLXOw1vlgkytLmJK7QnEr7NXf0LBdxfmNPAeyetukOk0bOYrJrFGjYJQ==}
+    engines: {node: '>=14.0.0'}
+
+  tinyspy@2.2.1:
+    resolution: {integrity: sha512-KYad6Vy5VDWV4GH3fjpseMQ/XU2BhIYP7Vzd0LG44qRWm/Yt2WCOTicFdvmgo6gWaqooMQCawTtILVQJupKu7A==}
+    engines: {node: '>=14.0.0'}
 
   title-case@2.1.1:
     resolution: {integrity: sha512-EkJoZ2O3zdCz3zJsYCsxyq2OC5hrxR9mfdd5I+w8h/tmFfeOxJ+vvkxsKxdmN0WtS9zLdHEgfgVOiMVgv+Po4Q==}
@@ -15479,6 +15563,10 @@ packages:
 
   type-detect@4.0.8:
     resolution: {integrity: sha512-0fr/mIH1dlO+x7TlcMy+bIDqKPsw/70tVyeHW787goQjhmqaZe10uwLujubK9q9Lg6Fiho1KUKDYz0Z7k7g5/g==}
+    engines: {node: '>=4'}
+
+  type-detect@4.1.0:
+    resolution: {integrity: sha512-Acylog8/luQ8L7il+geoSxhEkazvkslg7PSNKOX59mbB9cOveP5aq9h74Y7YU8yDpJwetzQQrfIwtf4Wp4LKcw==}
     engines: {node: '>=4'}
 
   type-fest@0.18.1:
@@ -15974,6 +16062,11 @@ packages:
   videojs-vtt.js@0.15.5:
     resolution: {integrity: sha512-yZbBxvA7QMYn15Lr/ZfhhLPrNpI/RmCSCqgIff57GC2gIrV5YfyzLfLyZMj0NnZSAz8syB4N0nHXpZg9MyrMOQ==}
 
+  vite-node@1.6.1:
+    resolution: {integrity: sha512-YAXkfvGtuTzwWbDSACdJSg4A4DZiAqckWe90Zapc/sEX3XvHcw1NdurM/6od8J207tSDqNbSsgdCacBgvJKFuA==}
+    engines: {node: ^18.0.0 || >=20.0.0}
+    hasBin: true
+
   vite-plugin-compression@0.5.1:
     resolution: {integrity: sha512-5QJKBDc+gNYVqL/skgFAP81Yuzo9R+EAf19d+EtsMF/i8kFUpNi3J/H01QD3Oo8zBQn+NzoCIFkpPLynoOzaJg==}
     peerDependencies:
@@ -16159,6 +16252,31 @@ packages:
       yaml:
         optional: true
 
+  vitest@1.6.1:
+    resolution: {integrity: sha512-Ljb1cnSJSivGN0LqXd/zmDbWEM0RNNg2t1QW/XUhYl/qPqyu7CsqeWtqQXHVaJsecLPuDoak2oJcZN2QoRIOag==}
+    engines: {node: ^18.0.0 || >=20.0.0}
+    hasBin: true
+    peerDependencies:
+      '@edge-runtime/vm': '*'
+      '@types/node': ^18.0.0 || >=20.0.0
+      '@vitest/browser': 1.6.1
+      '@vitest/ui': 1.6.1
+      happy-dom: '*'
+      jsdom: '*'
+    peerDependenciesMeta:
+      '@edge-runtime/vm':
+        optional: true
+      '@types/node':
+        optional: true
+      '@vitest/browser':
+        optional: true
+      '@vitest/ui':
+        optional: true
+      happy-dom:
+        optional: true
+      jsdom:
+        optional: true
+
   vm-browserify@1.1.2:
     resolution: {integrity: sha512-2ham8XPWTONajOR0ohOKOHXkm3+gaBmGut3SRuu75xLd/RRaY6vqgh8NBYYk7+RW3u5AtzPQZG8F10LHkl0lAQ==}
 
@@ -16204,6 +16322,7 @@ packages:
   vue-i18n@9.10.2:
     resolution: {integrity: sha512-ECJ8RIFd+3c1d3m1pctQ6ywG5Yj8Efy1oYoAKQ9neRdkLbuKLVeW4gaY5HPkD/9ssf1pOnUrmIFjx2/gkGxmEw==}
     engines: {node: '>= 16'}
+    deprecated: v9 and v10 no longer supported. please migrate to v11. about maintenance status, see https://vue-i18n.intlify.dev/guide/maintenance.html
     peerDependencies:
       vue: ^3.0.0
 
@@ -16384,6 +16503,11 @@ packages:
   which@2.0.2:
     resolution: {integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==}
     engines: {node: '>= 8'}
+    hasBin: true
+
+  why-is-node-running@2.3.0:
+    resolution: {integrity: sha512-hUrmaWBdVDcxvYqnyh09zunKzROWjbZTiNy8dBEjkS7ehEDQibXJ7XvlmtbwuTclUiIyN+CyXQD4Vmko8fNm8w==}
+    engines: {node: '>=8'}
     hasBin: true
 
   wide-align@1.1.5:
@@ -20342,7 +20466,7 @@ snapshots:
 
   '@jridgewell/gen-mapping@0.3.12':
     dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.4
+      '@jridgewell/sourcemap-codec': 1.5.5
       '@jridgewell/trace-mapping': 0.3.29
 
   '@jridgewell/remapping@2.3.5':
@@ -20359,15 +20483,17 @@ snapshots:
 
   '@jridgewell/sourcemap-codec@1.5.4': {}
 
+  '@jridgewell/sourcemap-codec@1.5.5': {}
+
   '@jridgewell/trace-mapping@0.3.29':
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
-      '@jridgewell/sourcemap-codec': 1.5.4
+      '@jridgewell/sourcemap-codec': 1.5.5
 
   '@jridgewell/trace-mapping@0.3.9':
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
-      '@jridgewell/sourcemap-codec': 1.5.4
+      '@jridgewell/sourcemap-codec': 1.5.5
 
   '@jsep-plugin/assignment@1.3.0(jsep@1.4.0)':
     dependencies:
@@ -22031,7 +22157,7 @@ snapshots:
       colorette: 2.0.20
       consola: 3.4.2
       fast-glob: 3.3.3
-      magic-string: 0.30.17
+      magic-string: 0.30.21
       pathe: 1.1.2
       perfect-debounce: 1.0.0
     transitivePeerDependencies:
@@ -22049,7 +22175,7 @@ snapshots:
       colorette: 2.0.20
       consola: 3.4.2
       fast-glob: 3.3.3
-      magic-string: 0.30.17
+      magic-string: 0.30.21
       pathe: 1.1.2
       perfect-debounce: 1.0.0
     transitivePeerDependencies:
@@ -22127,7 +22253,7 @@ snapshots:
       '@unocss/rule-utils': 0.58.9
       css-tree: 2.3.1
       fast-glob: 3.3.3
-      magic-string: 0.30.17
+      magic-string: 0.30.21
       postcss: 8.5.6
 
   '@unocss/preset-attributify@0.58.9':
@@ -22180,12 +22306,12 @@ snapshots:
   '@unocss/rule-utils@0.58.9':
     dependencies:
       '@unocss/core': 0.58.9
-      magic-string: 0.30.17
+      magic-string: 0.30.21
 
   '@unocss/rule-utils@66.1.0-beta.5':
     dependencies:
       '@unocss/core': 66.1.0-beta.5
-      magic-string: 0.30.17
+      magic-string: 0.30.21
 
   '@unocss/scope@0.58.9': {}
 
@@ -22227,7 +22353,7 @@ snapshots:
       '@unocss/transformer-directives': 0.58.9
       chokidar: 3.6.0
       fast-glob: 3.3.3
-      magic-string: 0.30.17
+      magic-string: 0.30.21
       vite: 4.5.14(@types/node@20.19.9)(less@4.4.0)(sass@1.89.2)(terser@5.43.1)
     transitivePeerDependencies:
       - rollup
@@ -22243,7 +22369,7 @@ snapshots:
       '@unocss/transformer-directives': 0.58.9
       chokidar: 3.6.0
       fast-glob: 3.3.3
-      magic-string: 0.30.17
+      magic-string: 0.30.21
       vite: 5.1.4(@types/node@20.19.9)(less@4.4.0)(sass@1.89.2)(terser@5.43.1)
     transitivePeerDependencies:
       - rollup
@@ -22419,6 +22545,35 @@ snapshots:
       '@rolldown/pluginutils': 1.0.0-beta.19
       vite: 6.3.5(@types/node@20.19.9)(jiti@2.4.2)(less@4.4.0)(sass@1.89.2)(terser@5.43.1)(yaml@2.8.0)
       vue: 3.5.18(typescript@4.9.5)
+
+  '@vitest/expect@1.6.1':
+    dependencies:
+      '@vitest/spy': 1.6.1
+      '@vitest/utils': 1.6.1
+      chai: 4.5.0
+
+  '@vitest/runner@1.6.1':
+    dependencies:
+      '@vitest/utils': 1.6.1
+      p-limit: 5.0.0
+      pathe: 1.1.2
+
+  '@vitest/snapshot@1.6.1':
+    dependencies:
+      magic-string: 0.30.21
+      pathe: 1.1.2
+      pretty-format: 29.7.0
+
+  '@vitest/spy@1.6.1':
+    dependencies:
+      tinyspy: 2.2.1
+
+  '@vitest/utils@1.6.1':
+    dependencies:
+      diff-sequences: 29.6.3
+      estree-walker: 3.0.3
+      loupe: 2.3.7
+      pretty-format: 29.7.0
 
   '@volar/language-core@1.11.1':
     dependencies:
@@ -23315,7 +23470,7 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  amis@3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.4.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  amis@3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       amis-core: 3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       amis-ui: 3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -23342,7 +23497,7 @@ snapshots:
       moment: 2.30.1
       moment-timezone: 0.5.48
       mpegts.js: 1.8.0
-      office-viewer: 0.3.14(echarts@5.4.0)
+      office-viewer: 0.3.14(echarts@5.6.0)
       prop-types: 15.8.1
       qrcode.react: 3.2.0(react@18.3.1)
       react: 18.3.1
@@ -23361,7 +23516,7 @@ snapshots:
       - encoding
       - react-native
 
-  amis@3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  amis@3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(office-viewer@0.3.14(echarts@5.4.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       amis-core: 3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       amis-ui: 3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -23388,7 +23543,7 @@ snapshots:
       moment: 2.30.1
       moment-timezone: 0.5.48
       mpegts.js: 1.8.0
-      office-viewer: 0.3.14(echarts@5.6.0)
+      office-viewer: 0.3.14(echarts@5.4.0)
       prop-types: 15.8.1
       qrcode.react: 3.2.0(react@18.3.1)
       react: 18.3.1
@@ -24003,6 +24158,8 @@ snapshots:
     dependencies:
       object.assign: 4.1.7
       util: 0.10.4
+
+  assertion-error@1.1.0: {}
 
   assign-symbols@1.0.0: {}
 
@@ -24746,6 +24903,16 @@ snapshots:
       adler-32: 1.3.1
       crc-32: 1.2.2
 
+  chai@4.5.0:
+    dependencies:
+      assertion-error: 1.1.0
+      check-error: 1.0.3
+      deep-eql: 4.1.4
+      get-func-name: 2.0.2
+      loupe: 2.3.7
+      pathval: 1.1.1
+      type-detect: 4.1.0
+
   chainsaw@0.1.0:
     dependencies:
       traverse: 0.3.9
@@ -24827,6 +24994,10 @@ snapshots:
   chardet@0.7.0: {}
 
   charenc@0.0.2: {}
+
+  check-error@1.0.3:
+    dependencies:
+      get-func-name: 2.0.2
 
   check-more-types@2.24.0:
     optional: true
@@ -25986,6 +26157,10 @@ snapshots:
   dedent@1.6.0: {}
 
   deep-diff@1.0.2: {}
+
+  deep-eql@4.1.4:
+    dependencies:
+      type-detect: 4.1.0
 
   deep-equal@1.1.2:
     dependencies:
@@ -27274,7 +27449,7 @@ snapshots:
 
   esrap@2.2.4:
     dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.4
+      '@jridgewell/sourcemap-codec': 1.5.5
       '@typescript-eslint/types': 8.38.0
 
   esrecurse@4.3.0:
@@ -27512,6 +27687,10 @@ snapshots:
 
   extsprintf@1.3.0:
     optional: true
+
+  fast-check@4.7.0:
+    dependencies:
+      pure-rand: 8.4.0
 
   fast-csv@4.3.6:
     dependencies:
@@ -27969,6 +28148,8 @@ snapshots:
   get-caller-file@2.0.5: {}
 
   get-east-asian-width@1.3.0: {}
+
+  get-func-name@2.0.2: {}
 
   get-intrinsic@1.3.0:
     dependencies:
@@ -30472,6 +30653,10 @@ snapshots:
     dependencies:
       js-tokens: 4.0.0
 
+  loupe@2.3.7:
+    dependencies:
+      get-func-name: 2.0.2
+
   lower-case-first@1.0.2:
     dependencies:
       lower-case: 1.1.4
@@ -30522,6 +30707,10 @@ snapshots:
   magic-string@0.30.17:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.4
+
+  magic-string@0.30.21:
+    dependencies:
+      '@jridgewell/sourcemap-codec': 1.5.5
 
   make-cancellable-promise@1.3.2: {}
 
@@ -31564,6 +31753,10 @@ snapshots:
     dependencies:
       yocto-queue: 1.2.1
 
+  p-limit@5.0.0:
+    dependencies:
+      yocto-queue: 1.2.1
+
   p-locate@2.0.0:
     dependencies:
       p-limit: 1.3.0
@@ -31805,6 +31998,8 @@ snapshots:
   pathe@1.1.2: {}
 
   pathe@2.0.3: {}
+
+  pathval@1.1.1: {}
 
   pause-stream@0.0.11:
     dependencies:
@@ -32217,6 +32412,8 @@ snapshots:
   pure-color@1.3.0: {}
 
   pure-rand@6.1.0: {}
+
+  pure-rand@8.4.0: {}
 
   qrcode-react-next@0.0.4(react@18.3.1):
     dependencies:
@@ -34271,6 +34468,8 @@ snapshots:
       side-channel-map: 1.0.1
       side-channel-weakmap: 1.0.2
 
+  siginfo@2.0.0: {}
+
   signal-exit@3.0.7: {}
 
   signal-exit@4.1.0: {}
@@ -34529,6 +34728,8 @@ snapshots:
     dependencies:
       escape-string-regexp: 2.0.0
 
+  stackback@0.0.2: {}
+
   start-server-and-test@1.15.5:
     dependencies:
       arg: 5.0.2
@@ -34551,6 +34752,8 @@ snapshots:
       object-copy: 0.1.0
 
   statuses@1.5.0: {}
+
+  std-env@3.10.0: {}
 
   steady-xml@0.1.0: {}
 
@@ -34946,7 +35149,7 @@ snapshots:
       esrap: 2.2.4
       is-reference: 3.0.3
       locate-character: 3.0.0
-      magic-string: 0.30.17
+      magic-string: 0.30.21
       zimmerframe: 1.1.4
 
   svg-baker@1.7.0:
@@ -35174,6 +35377,8 @@ snapshots:
 
   tiny-warning@1.0.3: {}
 
+  tinybench@2.9.0: {}
+
   tinycolor2@1.6.0: {}
 
   tinyexec@1.0.1: {}
@@ -35184,6 +35389,10 @@ snapshots:
       picomatch: 4.0.3
 
   tinymce@6.8.6: {}
+
+  tinypool@0.8.4: {}
+
+  tinyspy@2.2.1: {}
 
   title-case@2.1.1:
     dependencies:
@@ -35411,6 +35620,8 @@ snapshots:
 
   type-detect@4.0.8: {}
 
+  type-detect@4.1.0: {}
+
   type-fest@0.18.1: {}
 
   type-fest@0.20.2: {}
@@ -35547,7 +35758,7 @@ snapshots:
       estree-walker: 3.0.3
       fast-glob: 3.3.3
       local-pkg: 1.1.1
-      magic-string: 0.30.17
+      magic-string: 0.30.21
       mlly: 1.7.4
       pathe: 2.0.3
       picomatch: 4.0.3
@@ -36037,6 +36248,23 @@ snapshots:
     dependencies:
       global: 4.4.0
 
+  vite-node@1.6.1(@types/node@20.19.9)(less@4.4.0)(sass@1.89.2)(terser@5.43.1):
+    dependencies:
+      cac: 6.7.14
+      debug: 4.4.1(supports-color@8.1.1)
+      pathe: 1.1.2
+      picocolors: 1.1.1
+      vite: 5.1.4(@types/node@20.19.9)(less@4.4.0)(sass@1.89.2)(terser@5.43.1)
+    transitivePeerDependencies:
+      - '@types/node'
+      - less
+      - lightningcss
+      - sass
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
+
   vite-plugin-compression@0.5.1(vite@4.5.14(@types/node@16.18.126)(less@4.4.0)(sass@1.89.2)(terser@5.43.1)):
     dependencies:
       chalk: 4.1.2
@@ -36348,6 +36576,40 @@ snapshots:
       sass: 1.89.2
       terser: 5.43.1
       yaml: 2.8.0
+
+  vitest@1.6.1(@types/node@20.19.9)(jsdom@16.7.0(canvas@2.11.2(encoding@0.1.13)))(less@4.4.0)(sass@1.89.2)(terser@5.43.1):
+    dependencies:
+      '@vitest/expect': 1.6.1
+      '@vitest/runner': 1.6.1
+      '@vitest/snapshot': 1.6.1
+      '@vitest/spy': 1.6.1
+      '@vitest/utils': 1.6.1
+      acorn-walk: 8.3.4
+      chai: 4.5.0
+      debug: 4.4.1(supports-color@8.1.1)
+      execa: 8.0.1
+      local-pkg: 0.5.1
+      magic-string: 0.30.21
+      pathe: 1.1.2
+      picocolors: 1.1.1
+      std-env: 3.10.0
+      strip-literal: 2.1.1
+      tinybench: 2.9.0
+      tinypool: 0.8.4
+      vite: 5.1.4(@types/node@20.19.9)(less@4.4.0)(sass@1.89.2)(terser@5.43.1)
+      vite-node: 1.6.1(@types/node@20.19.9)(less@4.4.0)(sass@1.89.2)(terser@5.43.1)
+      why-is-node-running: 2.3.0
+    optionalDependencies:
+      '@types/node': 20.19.9
+      jsdom: 16.7.0(canvas@2.11.2(encoding@0.1.13))
+    transitivePeerDependencies:
+      - less
+      - lightningcss
+      - sass
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
 
   vm-browserify@1.1.2: {}
 
@@ -36686,6 +36948,11 @@ snapshots:
   which@2.0.2:
     dependencies:
       isexe: 2.0.0
+
+  why-is-node-running@2.3.0:
+    dependencies:
+      siginfo: 2.0.0
+      stackback: 0.0.2
 
   wide-align@1.1.5:
     dependencies:
