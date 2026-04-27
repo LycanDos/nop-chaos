@@ -40,6 +40,10 @@ export default defineConfig(({ command }) => {
           }
         }
       }
+    },
+    test: {
+      root: resolve(__dirname),
+      include: ['src/**/*.{test,spec}.{ts,tsx}']
     }
   }
 })

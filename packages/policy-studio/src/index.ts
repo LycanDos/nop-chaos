@@ -12,6 +12,12 @@ export { default as SchemaJsonEditor } from './components/SchemaJsonEditor.vue'
 export { default as SchemaValueInput } from './components/SchemaValueInput.vue'
 export { default as OperatorSelect } from './components/OperatorSelect.vue'
 export { default as LoadBundleDialog } from './components/LoadBundleDialog.vue'
+export { default as BatchSubmitButton } from './components/BatchSubmitButton.vue'
+export { default as ApproverSelectDialog } from './components/ApproverSelectDialog.vue'
+
+export { useBatchChanges } from './composables/useBatchChanges'
+export type { RuleChange, ChangeType, BatchSubmitResult } from './composables/useBatchChanges'
+export type { EligibleApprover, ConflictRule, ApproverSelection } from './components/ApproverSelectDialog.vue'
 
 export { HintEngine } from './engines/hint-engine'
 export { PolicyCompiler } from './engines/policy-compiler'

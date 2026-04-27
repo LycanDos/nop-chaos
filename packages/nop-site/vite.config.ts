@@ -83,7 +83,7 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
         },
         // {
         //   find: 'bpmn-process-designer',
-        //   replacement: fileURLToPath(new URL('../../bpmn-process-designer/src/index.ts', import.meta.url))
+        //   replacement: fileURLToPath(new URL('../bpmn-process-designer/src/index.ts', import.meta.url)),
         // }
       ],
     },

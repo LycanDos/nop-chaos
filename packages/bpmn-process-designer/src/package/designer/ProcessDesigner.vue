@@ -58,77 +58,34 @@
         </ElButtonGroup>
         <ElButtonGroup key="align-control">
           <el-tooltip effect="light" content="向左对齐">
-            <!-- <el-button
-              class="align align-left"
-              icon="el-icon-s-data"
-              @click="elementsAlign('left')"
-            /> -->
-            <XButton
-              preIcon="fa:align-left"
-              class="align align-bottom"
-              @click="elementsAlign('left')"
-            />
+            <el-button @click="elementsAlign('left')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M4 22V2h2v20zM22 7H8V4h14zm-6 6H8v-3h8zm6 6H8v-3h14z"/></svg>
+            </el-button>
           </el-tooltip>
           <el-tooltip effect="light" content="向右对齐">
-            <!-- <el-button
-              class="align align-right"
-              icon="el-icon-s-data"
-              @click="elementsAlign('right')"
-            /> -->
-            <XButton
-              preIcon="fa:align-left"
-              class="align align-top"
-              @click="elementsAlign('right')"
-            />
+            <el-button @click="elementsAlign('right')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M18 22V2h2v20zM2 7h14V4H2zm6 6h8v-3h-8zM2 19h14v-3H2z"/></svg>
+            </el-button>
           </el-tooltip>
           <el-tooltip effect="light" content="向上对齐">
-            <!-- <el-button
-              class="align align-top"
-              icon="el-icon-s-data"
-              @click="elementsAlign('top')"
-            /> -->
-            <XButton
-              preIcon="fa:align-left"
-              class="align align-left"
-              @click="elementsAlign('top')"
-            />
+            <el-button @click="elementsAlign('top')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M2 4V2h20v2zM7 22V8h3v14zm5-6V8h3v8zm5 6V8h3v14z"/></svg>
+            </el-button>
           </el-tooltip>
           <el-tooltip effect="light" content="向下对齐">
-            <!-- <el-button
-              class="align align-bottom"
-              icon="el-icon-s-data"
-              @click="elementsAlign('bottom')"
-            /> -->
-            <XButton
-              preIcon="fa:align-left"
-              class="align align-right"
-              @click="elementsAlign('bottom')"
-            />
+            <el-button @click="elementsAlign('bottom')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M2 22v-2h20v2zM7 18V4h3v14zm5 0v-8h3v8zm5 0V4h3v14z"/></svg>
+            </el-button>
           </el-tooltip>
           <el-tooltip effect="light" content="水平居中">
-            <!-- <el-button
-              class="align align-center"
-              icon="el-icon-s-data"
-              @click="elementsAlign('center')"
-            /> -->
-            <!-- class="align align-center" -->
-            <XButton
-              preIcon="fa:align-left"
-              class="align align-center"
-              @click="elementsAlign('center')"
-            />
+            <el-button @click="elementsAlign('center')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M11 2h2v5h5v3H8V7h3zm0 10h6v3h-5v5h-2v-5H4v-3h7z"/></svg>
+            </el-button>
           </el-tooltip>
           <el-tooltip effect="light" content="垂直居中">
-            <!-- <el-button
-              class="align align-middle"
-              icon="el-icon-s-data"
-              @click="elementsAlign('middle')"
-            /> -->
-            <XButton
-              preIcon="fa:align-left"
-              class="align align-middle"
-              @click="elementsAlign('middle')"
-            />
+            <el-button @click="elementsAlign('middle')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path fill="currentColor" d="M2 11v2h5v5h3V8H7v3zm10 0v6h3v-5h5v-2h-5V4h-3v7z"/></svg>
+            </el-button>
           </el-tooltip>
         </ElButtonGroup>
         <ElButtonGroup key="scale-control">

@@ -254,6 +254,8 @@ export interface PolicyRule {
   errorDescription?: string
   severity?: number
   note?: string
+  priority?: number
+  sourceId?: string
 }
 
 export type ValidationSupportLevel =
@@ -348,6 +350,8 @@ export interface CompiledRuleView {
   summary: string
   status: CompiledRuleStatus
   reason?: string
+  priority?: number
+  sourceId?: string
 }
 
 export interface EffectiveFamilyView {

@@ -217,7 +217,9 @@ function buildCompiledRule(
     family,
     summary: summarize(rule),
     status,
-    reason
+    reason,
+    priority: rule.priority,
+    sourceId: rule.sourceId
   }
 }
 
@@ -532,6 +534,17 @@ function validateCandidateAgainstState(state: FamilyState, rule: PolicyRule): st
   return null
 }
 
+function findHigherPriorityConflict(states: Map<FamilyKey, FamilyState>, candidateRule: PolicyRule, candidateFamily: FamilyKey | null): FamilyState | null {
+  const candidatePriority = candidateRule.priority ?? 9999
+  for (const [family, state] of states.entries()) {
+    const existingPriority = state.rule.priority ?? 9999
+    if (existingPriority < candidatePriority) {
+      return state
+    }
+  }
+  return null
+}
+
 function validateCandidateAgainstStates(states: Map<FamilyKey, FamilyState>, rule: PolicyRule) {
   for (const state of states.values()) {
     const reason = validateCandidateAgainstState(state, rule)
@@ -648,7 +661,11 @@ export class PolicyCompiler {
     for (const layer of sortedLayers) {
       const sortedRules = [...layer.rules]
         .filter(rule => rule.enabled)
-        .sort((a, b) => a.orderNo - b.orderNo)
+        .sort((a, b) => {
+          const pDiff = (a.priority ?? 9999) - (b.priority ?? 9999)
+          if (pDiff !== 0) return pDiff
+          return a.orderNo - b.orderNo
+        })
 
       for (const rule of sortedRules) {
         const compiled = pathCompiled.get(rule.path) || []
@@ -688,7 +705,15 @@ export class PolicyCompiler {
 
         const narrowingReason = validateCandidateAgainstStates(states, rule)
         if (narrowingReason) {
-          compiled.push(buildCompiledRule(layer, rule, 'rejected', narrowingReason, family))
+          const existingState = findHigherPriorityConflict(states, rule, family)
+          if (existingState) {
+            const existingPriority = existingState.rule.priority ?? 9999
+            const candidatePriority = rule.priority ?? 9999
+            compiled.push(buildCompiledRule(layer, rule, 'rejected',
+              `优先级冲突：低权限规则（优先级 ${candidatePriority}）不能放松高权限规则（优先级 ${existingPriority}）— ${narrowingReason}`, family))
+          } else {
+            compiled.push(buildCompiledRule(layer, rule, 'rejected', narrowingReason, family))
+          }
           continue
         }
 
