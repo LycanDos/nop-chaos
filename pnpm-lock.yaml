@@ -272,6 +272,9 @@ importers:
       bpmn-js-properties-panel:
         specifier: ^5.38.0
         version: 5.38.1(@bpmn-io/properties-panel@3.30.2)(bpmn-js@18.6.2)(camunda-bpmn-js-behaviors@1.10.2(bpmn-js@18.6.2)(camunda-bpmn-moddle@7.0.1)(zeebe-bpmn-moddle@1.9.0))(diagram-js@12.8.1)
+      bpmn-moddle:
+        specifier: ^10.0.0
+        version: 10.0.0
       consola:
         specifier: ^3.2.3
         version: 3.4.2
@@ -374,6 +377,9 @@ importers:
       vite-plugin-top-level-await:
         specifier: ^1.4.4
         version: 1.6.0(rollup@4.45.1)(vite@5.1.4(@types/node@20.19.9)(less@4.4.0)(sass@1.89.2)(terser@5.43.1))
+      vitest:
+        specifier: ^1.6.1
+        version: 1.6.1(@types/node@20.19.9)(jsdom@16.7.0(canvas@2.11.2(encoding@0.1.13)))(less@4.4.0)(sass@1.89.2)(terser@5.43.1)
       vue-eslint-parser:
         specifier: ^9.3.2
         version: 9.4.3(eslint@8.57.1)
@@ -7150,6 +7156,10 @@ packages:
   bpmn-js@18.6.2:
     resolution: {integrity: sha512-3C+ktypiJKTco5U6GmZ3FTqcy2o7KwWY0W1KlNon39tW3RInPqJ3W48impd8cFkZ/9QmvITN99NoZjSBu4JFgw==}
 
+  bpmn-moddle@10.0.0:
+    resolution: {integrity: sha512-vXePD5jkatcILmM3zwJG/m6IIHIghTGB7WvgcdEraEw8E8VdJHrTgrvBUhbzqaXJpnsGQz15QS936xeBY6l9aA==}
+    engines: {node: '>= 20.12'}
+
   bpmn-moddle@9.0.2:
     resolution: {integrity: sha512-HXWMJ+UZSm2PeBS9FuY713AB6Pjwbzp6l2ncWdUpuPrQVGdtcsS/FIK5P3CVQKR8LYrf0BUaM+ID+0Xu7PdsIw==}
     engines: {node: '>= 18'}
@@ -7832,6 +7842,7 @@ packages:
   conventional-changelog-cli@3.0.0:
     resolution: {integrity: sha512-3zMYi0IrfNd6AAHdPMrcgCg5DbcffiqNaEBf8cYrlntXPbBIXaELTbnRmUy5TQAe0Hkgi0J6+/VmRCkkJQflcQ==}
     engines: {node: '>=14'}
+    deprecated: This package is no longer maintained. Please use the conventional-changelog package instead.
     hasBin: true
 
   conventional-changelog-codemirror@3.0.0:
@@ -12055,6 +12066,9 @@ packages:
   min-dash@4.2.3:
     resolution: {integrity: sha512-VLMYQI5+FcD9Ad24VcB08uA83B07OhueAlZ88jBK6PyupTvEJwllTMUqMy0wPGYs7pZUEtEEMWdHB63m3LtEcg==}
 
+  min-dash@5.0.0:
+    resolution: {integrity: sha512-EGuoBnVL7/Fnv2sqakpX5WGmZehZ3YMmLayT7sM8E9DRU74kkeyMg4Rik1lsOkR2GbFNeBca4/L+UfU6gF0Edw==}
+
   min-document@2.19.0:
     resolution: {integrity: sha512-9Wy1B3m3f66bPPmU5hdA4DR4PB2OfDU/+GS3yAB7IQozE3tqXaVv2zOjgla7MEGSRv95+ILmOuvhLkOK6wJtCQ==}
 
@@ -12254,8 +12268,17 @@ packages:
     peerDependencies:
       moddle: '>= 6.2.0'
 
+  moddle-xml@12.0.0:
+    resolution: {integrity: sha512-NJc2+sCe4tvuGlaUBcoZcYf6j9f+z+qxHOyGm/LB3ZrlJXVPPHoBTg/KXgDRCufdBJhJ3AheFs3QU/abABNzRg==}
+    engines: {node: '>= 18'}
+    peerDependencies:
+      moddle: '>= 6.2.0'
+
   moddle@7.2.0:
     resolution: {integrity: sha512-x1+JREThy7JBOBR3g2hbOnOfrlC/YAWXX9RzrSZS5HhqeuBly9H/PCtOBtcQs+Y2sjRAXF+WTNSgHvn8Uq+6Yw==}
+
+  moddle@8.1.0:
+    resolution: {integrity: sha512-dBddc1CNuZHgro8nQWwfPZ2BkyLWdnxoNpPu9d+XKPN96DAiiBOeBw527ft++ebDuFez5PMdaR3pgUgoOaUGrA==}
 
   modify-values@1.0.1:
     resolution: {integrity: sha512-xV2bxeN6F7oYjZWTe/YPAy6MN2M+sL4u/Rlm2AHCIVGfo2p1yGmBHQ6vHehl4bRTZBdHu3TSkWdYgkwpYzAGSw==}
@@ -14522,6 +14545,10 @@ packages:
   saxen@10.0.0:
     resolution: {integrity: sha512-RXsmWok/SAWqOG/f5ADEz51DN9WtZEzqih3e08ranldcaXekxjx8NBKjGh/y5hlowjo0JH/LekBu6gtPFD1G6g==}
     engines: {node: '>= 18'}
+
+  saxen@11.0.2:
+    resolution: {integrity: sha512-WDb4gqac8uiJzOdOdVpr9NWh9NrJMm7Brn5GX2Poj+mjE/QTXqYQENr8T/mom54dDDgbd3QjwTg23TRHYiWXRA==}
+    engines: {node: '>= 20.12'}
 
   saxes@5.0.1:
     resolution: {integrity: sha512-5LBh1Tls8c9xgGjw3QrMwETmTMVk0oFgvrFSvWx62llR2hcEInrKNZ2GZCCuuy2lvWrdl5jhbpeqc5hRYKFOcw==}
@@ -24583,6 +24610,12 @@ snapshots:
       min-dom: 4.2.1
       tiny-svg: 3.1.3
 
+  bpmn-moddle@10.0.0:
+    dependencies:
+      min-dash: 5.0.0
+      moddle: 8.1.0
+      moddle-xml: 12.0.0(moddle@8.1.0)
+
   bpmn-moddle@9.0.2:
     dependencies:
       min-dash: 4.2.3
@@ -31032,6 +31065,8 @@ snapshots:
 
   min-dash@4.2.3: {}
 
+  min-dash@5.0.0: {}
+
   min-document@2.19.0:
     dependencies:
       dom-walk: 0.1.2
@@ -31253,9 +31288,19 @@ snapshots:
       moddle: 7.2.0
       saxen: 10.0.0
 
+  moddle-xml@12.0.0(moddle@8.1.0):
+    dependencies:
+      min-dash: 5.0.0
+      moddle: 8.1.0
+      saxen: 11.0.2
+
   moddle@7.2.0:
     dependencies:
       min-dash: 4.2.3
+
+  moddle@8.1.0:
+    dependencies:
+      min-dash: 5.0.0
 
   modify-values@1.0.1: {}
 
@@ -34299,6 +34344,8 @@ snapshots:
   sax@1.4.1: {}
 
   saxen@10.0.0: {}
+
+  saxen@11.0.2: {}
 
   saxes@5.0.1:
     dependencies:

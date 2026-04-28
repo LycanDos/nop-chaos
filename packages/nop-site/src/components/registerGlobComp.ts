@@ -2,6 +2,7 @@ import type { App } from 'vue';
 import { Icon } from './Icon';
 import AIcon from '/@/components/jeecg/AIcon.vue';
 import { Button } from './Button';
+import ContentWrap from '/@/components/ContentWrap/index.vue';
 import {
   // Need
   Button as AntButton,
@@ -54,7 +55,7 @@ import {
   Rate,
 } from 'ant-design-vue';
 
-const compList = [AntButton.Group, Icon, AIcon];//, JUploadButton];
+const compList = [AntButton.Group, Icon, AIcon, ContentWrap];//, JUploadButton];
 
 export function registerGlobComp(app: App) {
   compList.forEach((comp) => {

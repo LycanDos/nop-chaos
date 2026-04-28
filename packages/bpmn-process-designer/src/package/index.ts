@@ -6,6 +6,7 @@ import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css'
 
 // export { MyProcessDesigner, MyProcessPenal }
 export { default as MyProcessDesigner } from './designer/ProcessDesigner.vue'
+export { default as MyProcessPenal } from './penal/PropertiesPanel.vue'
 
 export { default as CustomContentPadProvider } from './designer/plugins/content-pad'
 export { default as CustomPaletteProvider } from './designer/plugins/palette'

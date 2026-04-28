@@ -1422,7 +1422,6 @@ declare global {
 
 //@import "../../../bpmn-process-designer/src/package/theme/element-variables.scss";
 //@import "../../../bpmn-process-designer/src/package/theme/index.scss";
-//@import "../../../bpmn-process-designer/src/package/theme/process-panel.scss";
 .process-panel__container {
   position: absolute;
   top: 172px;

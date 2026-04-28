@@ -163,8 +163,15 @@
         id="bpmnCanvas"
         style="width: 1680px; height: 800px"
       ></div>
-      <!-- <div id="js-properties-panel" class="panel"></div> -->
-      <!-- <div class="my-process-designer__canvas" ref="bpmn-canvas"></div> -->
+      <!-- 方法绑定属性面板：仅在选中任务类节点时显示 -->
+      <MethodBindingPanel
+        v-if="selectedElement && isTaskElement(selectedElement)"
+        :element="selectedElement"
+        :modeler="bpmnModeler"
+        :collapsed="panelCollapsed"
+        @collapse="panelCollapsed = true"
+        @expand="panelCollapsed = false"
+      />
     </div>
     <Dialog
       title="预览"
@@ -184,6 +191,8 @@
 import XButton from "@/components/XButton/src/XButton.vue";
 import XTextButton from "@/components/XButton/src/XTextButton.vue";
 import Dialog from "@/components/Dialog/src/Dialog.vue";
+// 方法绑定属性面板组件
+import MethodBindingPanel from "./components/MethodBindingPanel.vue";
 
 // import 'bpmn-js/dist/assets/diagram-js.css'
 // import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css'
@@ -206,6 +215,8 @@ import tokenSimulation from "bpmn-js-token-simulation";
 import camundaModdleDescriptor from "./plugins/descriptor/camundaDescriptor.json";
 import activitiModdleDescriptor from "./plugins/descriptor/activitiDescriptor.json";
 import flowableModdleDescriptor from "./plugins/descriptor/flowableDescriptor.json";
+// l-process 自定义 Moddle 描述符（方法绑定扩展）
+import lProcessModdleDescriptor from "./plugins/descriptor/lProcessDescriptor.json";
 // 标签解析 Extension
 import camundaModdleExtension from "./plugins/extension-moddle/camunda";
 import activitiModdleExtension from "./plugins/extension-moddle/activiti";
@@ -224,6 +235,8 @@ import { XmlNode, XmlNodeType, parseXmlString } from "steady-xml";
 // })
 import hljs from "highlight.js"; // 导入代码高亮文件
 import "highlight.js/styles/github.css"; // 导入代码高亮样式
+// 绑定指示器样式
+import "./styles/binding-overlay.css";
 
 defineOptions({ name: "MyProcessDesigner" });
 
@@ -322,6 +335,91 @@ const previewResult = ref("");
 const previewType = ref("xml");
 const recoverable = ref(false);
 const revocable = ref(false);
+
+// 当前选中的 BPMN 元素（用于方法绑定面板）
+const selectedElement = ref<any>(null);
+// 方法绑定面板折叠状态
+const panelCollapsed = ref(false);
+
+/**
+ * 判断元素是否为任务类节点（可绑定方法的节点类型）
+ * 与 lProcessDescriptor.json 中 meta.allowedIn 保持一致
+ */
+const TASK_ELEMENT_TYPES = new Set([
+  'bpmn:Task',
+  'bpmn:ServiceTask',
+  'bpmn:UserTask',
+  'bpmn:ScriptTask',
+  'bpmn:SendTask',
+  'bpmn:ReceiveTask',
+  'bpmn:ManualTask',
+  'bpmn:BusinessRuleTask',
+  'bpmn:CallActivity',
+  'bpmn:SubProcess',
+]);
+
+function isTaskElement(element: any): boolean {
+  const type = element?.businessObject?.$type || element?.type || '';
+  return TASK_ELEMENT_TYPES.has(type);
+}
+
+/**
+ * 检查元素是否已绑定方法（extensionElements 中包含 l:MethodBinding）
+ */
+function getMethodBinding(element: any): any | null {
+  const bo = element?.businessObject || element;
+  const extensionElements = bo?.extensionElements;
+  if (!extensionElements || !extensionElements.values) return null;
+  return extensionElements.values.find(
+    (ext: any) => ext.$type === 'l:MethodBinding'
+  ) || null;
+}
+
+/**
+ * 构建绑定摘要的 tooltip HTML
+ */
+function buildBindingTooltipHtml(binding: any): string {
+  const executor = binding.executorDefId || '未知';
+  const method = binding.methodCode || '未知';
+  const versionType = binding.versionConstraintType || 'LATEST';
+  return `<div class="binding-indicator-wrapper">`
+    + `<div class="binding-indicator">⚡</div>`
+    + `<div class="binding-tooltip">`
+    + `执行器: ${executor}<br/>`
+    + `方法: ${method}<br/>`
+    + `版本: ${versionType}`
+    + `</div></div>`;
+}
+
+/**
+ * 扫描所有任务节点，更新绑定指示器 overlay
+ * 在 commandStack.changed 和 importXML 后调用
+ */
+function updateBindingOverlays() {
+  if (!bpmnModeler) return;
+  try {
+    const overlays = bpmnModeler.get('overlays');
+    const elementRegistry = bpmnModeler.get('elementRegistry');
+
+    // 先移除所有已有的 method-binding 类型 overlay
+    overlays.remove({ type: 'method-binding' });
+
+    // 遍历所有元素，为已绑定方法的任务节点添加指示器
+    elementRegistry.forEach((element: any) => {
+      if (!isTaskElement(element)) return;
+      const binding = getMethodBinding(element);
+      if (!binding) return;
+
+      overlays.add(element.id, 'method-binding', {
+        position: { top: -8, right: -8 },
+        html: buildBindingTooltipHtml(binding),
+      });
+    });
+  } catch (e: any) {
+    console.error(`[BindingOverlay] 更新绑定指示器失败: ${e.message || e}`);
+  }
+}
+
 const additionalModules = computed(() => {
   console.log(props.additionalModel, "additionalModel");
   const Modules: any[] = [];
@@ -399,6 +497,10 @@ const moddleExtensions = computed(() => {
   if (props.prefix === "camunda") {
     Extensions.camunda = camundaModdleDescriptor;
   }
+
+  // 始终包含 l-process 描述符，使 bpmn-js 能解析 <l:methodBinding> 扩展元素
+  Extensions.l = lProcessModdleDescriptor;
+
   return Extensions;
 });
 console.log(additionalModules, "additionalModules()");
@@ -444,6 +546,17 @@ const initModelListeners = () => {
       let element = eventObj ? eventObj.element : null;
       console.log(eventName, "eventName");
       console.log(element, "element");
+
+      // 更新选中元素状态（用于方法绑定面板）
+      if (event === 'element.click') {
+        // 点击画布空白区域时 element.type 为 'bpmn:Process' 或 'bpmn:Collaboration'，此时清空选中
+        if (element && element.type !== 'bpmn:Process' && element.type !== 'bpmn:Collaboration') {
+          selectedElement.value = element;
+        } else {
+          selectedElement.value = null;
+        }
+      }
+
       emit("element-click", element, eventObj);
       // emit(eventName, element, eventObj)
     });
@@ -458,6 +571,8 @@ const initModelListeners = () => {
       emit("input", xml);
       emit("change", xml);
       emit("save", xml);
+      // 更新绑定指示器（扫描任务节点的方法绑定状态）
+      updateBindingOverlays();
     } catch (e: any) {
       console.error(`[Process Designer Warn]: ${e.message || e}`);
     }
@@ -484,6 +599,8 @@ const createNewDiagram = async (xml) => {
     if (warnings && warnings.length) {
       warnings.forEach((warn) => console.warn(warn));
     }
+    // 导入完成后更新绑定指示器
+    updateBindingOverlays();
   } catch (e: any) {
     console.error(`[Process Designer Warn]: ${e.message || e}`);
   }

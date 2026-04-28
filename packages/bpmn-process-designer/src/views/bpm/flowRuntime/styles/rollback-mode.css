@@ -1,0 +1,111 @@
+/**
+ * 回退模式样式
+ * 定义可逆性图标、回退模式下的节点交互效果、开关按钮样式
+ */
+
+/* ========== 可逆性图标 overlay ========== */
+
+/* 可逆节点 — 绿色 ↩ 图标 */
+.rollback-icon--reversible {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #52c41a;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* 可补偿节点 — 黄色 ⚠↩ 图标 */
+.rollback-icon--compensable {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #faad14;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* 不可逆节点 — 红色 🚫 图标 */
+.rollback-icon--irreversible {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #f5222d;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ========== 回退模式下已执行节点的 hover 效果 ========== */
+
+/* 回退模式下已执行节点鼠标变为 pointer */
+.rollback-mode-active .djs-element.rollback-clickable .djs-outline {
+  cursor: pointer !important;
+}
+
+.rollback-mode-active .djs-element.rollback-clickable .djs-hit {
+  cursor: pointer !important;
+}
+
+/* 回退模式下已执行节点 hover 高亮 */
+.rollback-clickable:hover .djs-visual > :nth-child(1) {
+  stroke: #722ed1 !important;
+  stroke-width: 3px !important;
+  filter: drop-shadow(0 0 4px rgba(114, 46, 209, 0.4));
+  transition: stroke 0.2s, stroke-width 0.2s;
+}
+
+/* ========== 回退模式开关按钮样式 ========== */
+
+/* 回退模式开关容器 */
+.rollback-switch-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 16px;
+  background: #f5f7fa;
+  border: 1px solid #dcdfe6;
+  transition: all 0.3s;
+}
+
+/* 回退模式激活时的开关容器 */
+.rollback-switch-wrapper.is-active {
+  background: #fff1f0;
+  border-color: #ffa39e;
+}
+
+/* 回退模式开关标签 */
+.rollback-switch-label {
+  font-size: 13px;
+  color: #606266;
+  user-select: none;
+}
+
+.rollback-switch-wrapper.is-active .rollback-switch-label {
+  color: #f5222d;
+  font-weight: 500;
+}

@@ -1,6 +1,6 @@
 import type { AppRouteRecordRaw, AppRouteModule } from '/@/router/types';
 
-import { DELTA_THREE_PANE_EDITOR_ROUTE, PAGE_NOT_FOUND_ROUTE, REDIRECT_ROUTE } from '/@/router/routes/basic';
+import { DELTA_THREE_PANE_EDITOR_ROUTE, METHOD_BINDING_DESIGNER_ROUTE, FLOW_RUNTIME_VIEWER_ROUTE, PAGE_NOT_FOUND_ROUTE, REDIRECT_ROUTE } from '/@/router/routes/basic';
 
 import { mainOutRoutes } from './mainOut';
 import { PageEnum } from '/@/enums/pageEnum';
@@ -67,6 +67,8 @@ export const basicRoutes = [
   RootRoute,
   ...mainOutRoutes,
   DELTA_THREE_PANE_EDITOR_ROUTE,
+  METHOD_BINDING_DESIGNER_ROUTE,
+  FLOW_RUNTIME_VIEWER_ROUTE,
   REDIRECT_ROUTE,
   PAGE_NOT_FOUND_ROUTE,
   TokenLoginRoute,

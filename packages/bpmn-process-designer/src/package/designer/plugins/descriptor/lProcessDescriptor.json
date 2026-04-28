@@ -1,0 +1,37 @@
+{
+  "name": "LProcess",
+  "uri": "http://lycan.com/schema/l-process/1.0",
+  "prefix": "l",
+  "xml": {
+    "tagAlias": "lowerCase"
+  },
+  "associations": [],
+  "types": [
+    {
+      "name": "MethodBinding",
+      "superClass": ["Element"],
+      "meta": {
+        "allowedIn": [
+          "bpmn:Task",
+          "bpmn:ServiceTask",
+          "bpmn:UserTask",
+          "bpmn:ScriptTask",
+          "bpmn:SendTask",
+          "bpmn:ReceiveTask",
+          "bpmn:ManualTask",
+          "bpmn:BusinessRuleTask",
+          "bpmn:CallActivity",
+          "bpmn:SubProcess"
+        ]
+      },
+      "properties": [
+        { "name": "executorDefId", "isAttr": true, "type": "String" },
+        { "name": "methodCode", "isAttr": true, "type": "String" },
+        { "name": "versionConstraintType", "isAttr": true, "type": "String" },
+        { "name": "versionConstraintExpr", "isAttr": true, "type": "String" },
+        { "name": "timeoutMs", "isAttr": true, "type": "Integer" },
+        { "name": "asyncFlag", "isAttr": true, "type": "Boolean" }
+      ]
+    }
+  ]
+}

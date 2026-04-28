@@ -79,6 +79,7 @@ export default defineConfig(({ command, mode }: ConfigEnv): UserConfig => {
         external: (id) => {
           if (id === 'vue' || id === 'element-plus') return true;
           if (/App\.vue$/.test(id) || /main\.ts$/.test(id)) return true;
+          if (id === '@purge-icons/generated') return true;
           return false;
         },
         output: {

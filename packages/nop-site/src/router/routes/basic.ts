@@ -92,3 +92,45 @@ export const DELTA_THREE_PANE_EDITOR_ROUTE: AppRouteRecordRaw = {
     },
   ],
 };
+
+export const METHOD_BINDING_DESIGNER_ROUTE: AppRouteRecordRaw = {
+  path: '/method-binding-designer',
+  name: 'MethodBindingDesignerRoot',
+  component: LAYOUT,
+  meta: {
+    title: '方法绑定设计器',
+    hideMenu: true,
+  },
+  children: [
+    {
+      path: '',
+      name: 'MethodBindingDesigner',
+      component: () => import('/@/views/BpmnDesigner.vue'),
+      meta: {
+        title: '方法绑定设计器',
+        hideMenu: true,
+      },
+    },
+  ],
+};
+
+export const FLOW_RUNTIME_VIEWER_ROUTE: AppRouteRecordRaw = {
+  path: '/flow-runtime-viewer',
+  name: 'FlowRuntimeViewerRoot',
+  component: LAYOUT,
+  meta: {
+    title: '流程运行展示器',
+    hideMenu: true,
+  },
+  children: [
+    {
+      path: '',
+      name: 'FlowRuntimeViewer',
+      component: () => import('/@/views/FlowRuntimeViewer.vue'),
+      meta: {
+        title: '流程运行展示器',
+        hideMenu: true,
+      },
+    },
+  ],
+};

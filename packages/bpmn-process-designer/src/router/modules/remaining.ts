@@ -52,6 +52,50 @@ const remainingRouter: any[] = [
     ]
   },
   {
+    path: '/process-center',
+    component: Layout,
+    name: 'ProcessCenter',
+    meta: {
+      title: '流程编排中心',
+      icon: 'ep:cpu',
+      alwaysShow: true
+    },
+    children: [
+      {
+        path: 'method-binding-test',
+        component: () => import('@/views/bpm/test/MethodBindingTest.vue'),
+        name: 'MethodBindingTest',
+        meta: {
+          title: '方法绑定设计器',
+          icon: 'ep:connection',
+          noCache: true
+        }
+      },
+      {
+        path: 'flow-runtime',
+        component: () => import('@/views/bpm/flowRuntime/FlowInstanceList.vue'),
+        name: 'FlowRuntimeListMenu',
+        meta: {
+          title: '流程运行展示器',
+          icon: 'ep:monitor',
+          noCache: true
+        }
+      },
+      {
+        path: 'flow-runtime/:processInstanceId',
+        component: () => import('@/views/bpm/flowRuntime/ProcessRuntimeViewer.vue'),
+        name: 'FlowRuntimeViewerMenu',
+        meta: {
+          noCache: true,
+          hidden: true,
+          canTo: true,
+          title: '流程运行时视图',
+          activeMenu: '/process-center/flow-runtime'
+        }
+      }
+    ]
+  },
+  {
     path: '/bpm',
     component: Layout,
     name: 'bpm',
@@ -158,6 +202,28 @@ const remainingRouter: any[] = [
           canTo: true,
           title: '修改流程',
           activeMenu: '/bpm/manager/model'
+        }
+      },
+      {
+        path: 'flow-runtime',
+        component: () => import('@/views/bpm/flowRuntime/FlowInstanceList.vue'),
+        name: 'FlowRuntimeList',
+        meta: {
+          noCache: true,
+          canTo: true,
+          title: '流程运行展示器',
+        }
+      },
+      {
+        path: 'flow-runtime/:processInstanceId',
+        component: () => import('@/views/bpm/flowRuntime/ProcessRuntimeViewer.vue'),
+        name: 'FlowRuntimeViewer',
+        meta: {
+          noCache: true,
+          hidden: true,
+          canTo: true,
+          title: '流程运行时视图',
+          activeMenu: '/bpm/flow-runtime'
         }
       }
     ]

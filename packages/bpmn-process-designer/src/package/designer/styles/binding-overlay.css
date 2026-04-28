@@ -1,0 +1,68 @@
+/**
+ * 绑定指示器样式
+ * 用于在 BPMN 画布上标识已配置方法绑定的任务节点
+ */
+
+/* 绑定指示器容器 */
+.binding-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #409eff;
+  color: #fff;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+  z-index: 10;
+}
+
+.binding-indicator:hover {
+  transform: scale(1.2);
+  box-shadow: 0 2px 8px rgba(64, 158, 255, 0.5);
+}
+
+/* 绑定摘要 tooltip */
+.binding-tooltip {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #303133;
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 6px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 20;
+}
+
+/* tooltip 箭头 */
+.binding-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #303133;
+}
+
+/* 鼠标悬停时显示 tooltip */
+.binding-indicator-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.binding-indicator-wrapper:hover .binding-tooltip {
+  opacity: 1;
+}
