@@ -8,13 +8,11 @@
 <!--  </div>-->
 
   <!-- 流程设计器，负责绘制流程等  -->
-  <div style="background-color: #fff;">
-    <MyProcessDesigner
+  <div class="bpmn-designer-wrapper">
+    <ProcessDesigner
       ref="processDesigner"
-      @init-finished="initModeler"
-      :additionalModel="controlForm.additionalModel"
-      :processId="modelKey"
-      :processName="modelName"
+      :id="modelKey"
+      :name="modelName"
     />
   </div>
   <!-- 流程属性器，负责编辑每个流程节点的属性 -->
@@ -22,10 +20,18 @@
 <script setup lang="ts">
 import { ref, shallowRef, provide, onMounted, onBeforeUnmount, nextTick, createApp } from 'vue'
 import { useRouter } from 'vue-router'
-import {  MyProcessDesigner, CustomContentPadProvider, CustomPaletteProvider,  ReplaceMenuProvider,  CustomRendererModule } from 'bpmn-process-designer';
-import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css';
-import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-codes.css';
-import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css';
+import { ProcessDesigner } from 'bpmn-process-designer';
+// 导入 bpmn-process-designer 的组件样式（scoped CSS）
+import 'bpmn-process-designer/dist/bpmn-process-designer.css';
+// BPMN 相关 CSS（字体和样式必须从 node_modules 直接导入以确保路径正确）
+import 'bpmn-js/dist/assets/diagram-js.css'
+import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css'
+import 'bpmn-js/dist/assets/bpmn-js.css'
+import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css'
+import 'diagram-js-minimap/assets/diagram-js-minimap.css'
+import 'bpmn-js-token-simulation/assets/css/bpmn-js-token-simulation.css'
+import 'bpmn-js-bpmnlint/dist/assets/css/bpmn-js-bpmnlint.css'
+import 'bpmn-js-color-picker/colors/color-picker.css'
 // 导入 BpmnRenderer 用于自定义渲染器
 import BpmnRenderer from 'bpmn-js/lib/draw/BpmnRenderer';
 // 导入 SimpleAmisRender 组件
@@ -359,6 +365,7 @@ function updateAmisInteractiveMode(element, isInteractive) {
  * 判断元素是否为AMIS元素
  */
 function isAmisElement(element) {
+  if (!element) return false;
   // 检查元素是否包含AMIS配置
   const businessObject = element.businessObject;
   if (!businessObject) return false;
@@ -580,8 +587,8 @@ function handleAmisElementClickInternal(element, event) {
 }
 
 const ReplaceMenuModule = {
-  __init__: ['replaceMenuProvider'],
-  replaceMenuProvider: ['type', ReplaceMenuProvider]
+  __init__: ['customReplace'],
+  customReplace: ['type', class {}]
 }
 
 // 静态任务数据常量
@@ -652,21 +659,16 @@ const controlForm = ref({
   labelVisible: false,
   prefix: "flowable",
   headerButtonSize: "mini",
-  additionalModel: [CustomContentPadProvider, CustomPaletteProvider, ReplaceMenuModule, CustomRendererModule],
+  // 新版设计器已内置所有自定义模块，无需外部传入
+  additionalModel: [],
 });
 // const model = ref<ModelApi.ModelVO>() // 流程模型的信息
 
-/** 初始化 modeler */
+/** 初始化 modeler（通过 ProcessDesigner ref 获取） */
 const initModeler = (item: any) => {
   modeler.value = item;
   // 将 modeler 存储到全局变量以便其他函数使用
   window._currentModeler = item;
-
-  // 关键：主动注册自定义replace菜单
-  const provider = modeler.value?.get?.('replaceMenuProvider');
-  if (provider && typeof provider.register === 'function') {
-    provider.register();
-  }
 
   // 注册AMIS处理程序到全局
   window.BpmnAmisHandler = {
@@ -770,7 +772,7 @@ const handleAmisElementClickGlobal = (element: any, event: Event) => {
       }
     } else {
       // 其他AMIS元素处理
-      alert(`AMIS Element Clicked: ${element.id}\nType: ${element.type}`);
+      alert(`AMIS Element Clicked: ${element?.id}\nType: ${element?.type}`);
     }
   }
 };
@@ -981,6 +983,90 @@ onBeforeUnmount(() => {
 
 onMounted(() => {
   console.log("[app] App.vue onMounted");
+
+  // 通过 ref 获取新版 ProcessDesigner 内部的 modeler 实例
+  nextTick(() => {
+    const designerModeler = processDesigner.value?.getModeler?.();
+    if (designerModeler) {
+      initModeler(designerModeler);
+    } else {
+      // 如果 modeler 还没准备好，延迟重试
+      setTimeout(() => {
+        const m = processDesigner.value?.getModeler?.();
+        if (m) initModeler(m);
+      }, 500);
+    }
+  });
+
+  // 给 minimap 添加可拖动标题栏（含关闭/收起按钮）
+  nextTick(() => {
+    setTimeout(() => {
+      const minimap = document.querySelector('.djs-minimap') as HTMLElement;
+      if (!minimap || minimap.querySelector('.minimap-titlebar')) return;
+
+      // 创建标题栏
+      const titlebar = document.createElement('div');
+      titlebar.className = 'minimap-titlebar';
+      titlebar.innerHTML = `
+        <span class="minimap-titlebar__drag"></span>
+        <span class="minimap-titlebar__actions">
+          <button class="minimap-btn minimap-btn--minimize" title="收起">−</button>
+          <button class="minimap-btn minimap-btn--close" title="关闭">×</button>
+        </span>
+      `;
+      minimap.insertBefore(titlebar, minimap.firstChild);
+
+      // 收起/展开
+      const minimizeBtn = titlebar.querySelector('.minimap-btn--minimize') as HTMLElement;
+      let minimized = false;
+      minimizeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        minimized = !minimized;
+        // 隐藏标题栏之后的所有内容
+        let sibling = titlebar.nextElementSibling as HTMLElement;
+        while (sibling) {
+          sibling.style.display = minimized ? 'none' : '';
+          sibling = sibling.nextElementSibling as HTMLElement;
+        }
+        minimizeBtn.textContent = minimized ? '+' : '−';
+        minimap.style.maxHeight = minimized ? '20px' : '200px';
+      });
+
+      // 关闭（通过 bpmn-js minimap API）
+      const closeBtn = titlebar.querySelector('.minimap-btn--close') as HTMLElement;
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // 使用 modeler 的 minimap.toggle(false) 来关闭，确保状态同步
+        const m = processDesigner.value?.getModeler?.();
+        if (m) {
+          try { m.get('minimap').toggle(false); } catch (_) {}
+        } else {
+          minimap.style.display = 'none';
+        }
+      });
+
+      // 拖动（仅标题栏触发）
+      let isDragging = false, startX = 0, startY = 0, origX = 0, origY = 0;
+      titlebar.addEventListener('mousedown', (e) => {
+        if ((e.target as HTMLElement).closest('.minimap-btn')) return;
+        isDragging = true;
+        startX = e.clientX; startY = e.clientY;
+        const rect = minimap.getBoundingClientRect();
+        const parent = (minimap.offsetParent || document.body).getBoundingClientRect();
+        origX = rect.left - parent.left; origY = rect.top - parent.top;
+        e.preventDefault();
+      });
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        minimap.style.position = 'absolute';
+        minimap.style.left = (origX + e.clientX - startX) + 'px';
+        minimap.style.top = (origY + e.clientY - startY) + 'px';
+        minimap.style.right = 'auto';
+        minimap.style.bottom = 'auto';
+      });
+      document.addEventListener('mouseup', () => { isDragging = false; });
+    }, 1000);
+  });
 
   // 添加全局点击监听器用于调试
   document.addEventListener('click', (e) => {
@@ -1233,6 +1319,7 @@ function updateAllAmisElementsInteractiveMode(isInteractive: boolean) {
  * 判断元素是否为API Activity
  */
 function isApiActivity(element) {
+  if (!element) return false;
   const businessObject = element.businessObject;
   if (!businessObject) return false;
 
@@ -1418,26 +1505,109 @@ declare global {
 }
 </script>
 <style lang="scss">
-@use "../../../bpmn-process-designer/src/package/theme/process-designer.scss";
+// bpmn-process-designer 样式已通过包入口自动导入，无需手动引入
 
 //@import "../../../bpmn-process-designer/src/package/theme/element-variables.scss";
 //@import "../../../bpmn-process-designer/src/package/theme/index.scss";
+
+/* 确保 BPMN 画布正确显示 */
+.bpmn-designer-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #fff;
+}
+
+.design-container {
+  height: 100% !important;
+}
+
+.djs-parent {
+  --bjsl-fill-color: #fff;
+  --bjsl-stroke-color: #000;
+}
+
+/* 隐藏模拟开关（已通过工具栏控制） */
+.bts-toggle-mode {
+  display: none;
+}
+
+/* bpmn.io 水印位置 */
+.bjs-powered-by {
+  bottom: 5px !important;
+  right: 5px !important;
+}
+
+/* 小地图样式 */
+.djs-minimap {
+  box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.25);
+  border: none;
+  background-color: #fff;
+  border-radius: 4px;
+  overflow: hidden;
+  width: 260px !important;
+  height: auto !important;
+  max-height: 200px;
+
+  > .map {
+    width: 260px !important;
+    height: 150px !important;
+  }
+}
+
+/* minimap 标题栏 */
+.minimap-titlebar {
+  height: 20px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  cursor: move;
+  user-select: none;
+}
+
+.minimap-titlebar__drag {
+  flex: 1;
+  height: 100%;
+}
+
+.minimap-titlebar__actions {
+  display: flex;
+  gap: 2px;
+}
+
+.minimap-btn {
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  color: #999;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+
+  &:hover {
+    background: #e0e0e0;
+    color: #333;
+  }
+}
+
+/* minimap 关闭时完全隐藏 */
+.djs-minimap:not(.open) {
+  display: none !important;
+}
+
 .process-panel__container {
   position: absolute;
   top: 172px;
   right: 70px;
-}
-#bpmnCanvas,
-.my-process-designer__canvas,
-.my-process-designer__container {
-  min-height: 600px !important;
-  height: 800px !important;
-  /* background: #fff !important; */
-  z-index: 10 !important;
-  position: relative !important;
-}
-body, html, #app {
-  height: 100% !important;
 }
 
 /* AMIS元素的特殊样式 */

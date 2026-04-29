@@ -1,22 +1,12 @@
-import { provide } from 'vue'
-import App from './App.vue'
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
+import I18n from './package/languages'
+import App from './App.vue'
 
-// mock usePage 全局上下文，防止刷新后为null
-const globalNopPage = {
-  ce: {},
-  component: {},
-  // 可根据实际依赖补充属性
-}
-
-const app = createApp(App, {
-  modelKey: 'Process_1',
-  modelName: '测试流程'
-})
-
-// 全局 provide，防止 usePage() 相关依赖报错
-app.provide('nopPage', globalNopPage)
-
+const app = createApp(App)
+app.use(createPinia())
 app.use(ElementPlus)
+app.use(I18n)
 app.mount('#app')

@@ -1,67 +1,22 @@
 {
   "compilerOptions": {
-    "outDir": "lib",
-    "rootDir": "./",
+    "target": "ESNext",
     "module": "ESNext",
-    "target": "ES2017",
-    "lib": [
-      "ES6",
-      "DOM",
-      "ES2015",
-      "ES2021"
-    ],
-    "jsx": "react",
-    "moduleResolution": "node",
-    "declaration": true,
-    "importHelpers": true,
-    "esModuleInterop": true,
+    "moduleResolution": "bundler",
+    "strict": false,
+    "jsx": "preserve",
     "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true,
-    "sourceRoot": "",
-    "noImplicitReturns": true,
-    "noImplicitThis": true,
-    "noImplicitAny": false,
-    "strictNullChecks": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
-    "downlevelIteration": true,
-    "composite": true,
-    "allowJs": true,
-    "baseUrl": "./",
+    "noEmit": true,
+    "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "src/*"
-      ]
+      "@/*": ["src/package/*"]
     },
-    "types": [
-      // "@intlify/unplugin-vue-i18n/types",
-      "vite/client"
-      // "element-plus/global",
-      // "@types/qrcode",
-      // "vite-plugin-svg-icons/client"
-    ],
-    "typeRoots": [
-      "./node_modules/@types/",
-      "./types"
-    ]
+    "types": ["vite/client"]
   },
-  "types": [
-    "typePatches"
-  ],
-  "references": [],
-  "include": [
-    "src",
-    "types/*.d.ts",
-    "src/**/*.vue",
-    "src/**/*.json",
-    "src/types/auto-imports.d.ts",
-    "src/types/auto-components.d.ts",
-    "../../nop-amis-vue/src/**/*.vue"
-  ],
-  "exclude": [
-    "dist",
-    "target",
-    "node_modules"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "src/**/*.d.ts"],
+  "exclude": ["node_modules", "dist"]
 }

@@ -109,6 +109,7 @@ export const METHOD_BINDING_DESIGNER_ROUTE: AppRouteRecordRaw = {
       meta: {
         title: '方法绑定设计器',
         hideMenu: true,
+        ignoreKeepAlive: true,
       },
     },
   ],

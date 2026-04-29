@@ -54,7 +54,8 @@
         if (!unref(getOpenKeepAlive)) {
           return [];
         }
-        return tabStore.getCachedTabList;
+        // 排除 BPMN 设计器（与 KeepAlive 不兼容）
+        return tabStore.getCachedTabList.filter(name => name !== 'MethodBindingDesigner');
       });
 
       return {

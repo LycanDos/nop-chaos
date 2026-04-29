@@ -38,8 +38,8 @@
 
   useTitle();
 
-  // 集成bpmn-process-designer的AmisEditDialog弹窗和mitt事件监听
-  import { useEmitt } from '../../bpmn-process-designer/src/hooks/web/useEmitt';
+  // 事件总线 hook（本地实现）
+  import { useEmitt } from '/@/hooks/web/useEmitt';
   import { ref, reactive } from 'vue';
   import MethodDialog from './components/MethodDialog/MethodDialog.vue';
   import AmisEditDialog from './components/AmisEditDialog.vue';

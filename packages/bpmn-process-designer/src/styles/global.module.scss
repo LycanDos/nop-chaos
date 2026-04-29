@@ -1,6 +1,0 @@
-@use './variables.scss' as myvar;
-// 导出变量
-:export {
-  namespace: myvar.$namespace;
-  elNamespace: myvar.$elNamespace;
-}

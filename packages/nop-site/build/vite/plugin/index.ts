@@ -48,7 +48,7 @@ export function createVitePlugins(viteEnv: ViteEnv, isBuild: boolean) {
       // Configuration of @vitejs/plugin-react
       // reactOptions: {...}, 
       // Configuration of @vitejs/plugin-vue-jsx
-      // vueJsxOptions: {...}
+      vueJsxOptions: {}
     }),
     // support name
     vueSetupExtend(),
