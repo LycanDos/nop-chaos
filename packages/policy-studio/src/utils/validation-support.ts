@@ -66,7 +66,7 @@ function supportLevelForRule(rule: PolicyRule): { level: ValidationSupportLevel;
     return { level: 'frontend-supported', reason: '当前规则可映射为前端同步校验。' }
   }
 
-  if (['default', 'readonly', 'locked'].includes(rule.operator))
+  if (['default', 'readonly', 'softLock', 'locked'].includes(rule.operator))
     return { level: 'frontend-supported', reason: '当前规则将作为表单行为控制处理。' }
 
   return { level: 'backend-only', reason: '当前规则需要后端上下文或未映射为前端校验器。' }

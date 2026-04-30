@@ -139,7 +139,7 @@ const fieldBehaviors = computed(() => {
     for (const rule of layer.rules.filter(item => item.enabled)) {
       if (rule.operator === 'readonly')
         behaviors[rule.path] = { ...(behaviors[rule.path] || {}), readonly: true }
-      if (rule.operator === 'locked') {
+      if (rule.operator === 'locked' || rule.operator === 'softLock') {
         behaviors[rule.path] = { ...(behaviors[rule.path] || {}), locked: true }
         setValueByPath(localValue.value, rule.path, rule.lockedValue)
       }

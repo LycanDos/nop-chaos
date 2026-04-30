@@ -275,7 +275,7 @@ function MethodPolicyStudioView(props: MethodPolicyStudioProps) {
   const initialExecutorReleaseId = String(resolvedData.executorReleaseId || '')
   const initialMethodId = String(resolvedData.methodId || '')
   const initialSchemaRole = String(resolvedData.schemaRole || 'INPUT').toUpperCase() === 'OUTPUT' ? 'OUTPUT' : 'INPUT'
-  const initialFieldPath = String(resolvedData.fieldPath || '')
+  const initialFieldPath = ''  // 不再支持字段聚焦
 
   const [executorDefId, setExecutorDefId] = useState(initialExecutorDefId)
   const [executorReleaseId, setExecutorReleaseId] = useState(initialExecutorReleaseId)
@@ -633,25 +633,10 @@ function MethodPolicyStudioView(props: MethodPolicyStudioProps) {
               />
             </div>
           </div>
-
-          <div className={`nop-method-policy__field nop-method-policy__field--wide${!methodId || !fieldOptions.length ? ' is-disabled' : ''}`}>
-            <span className="nop-method-policy__label">字段聚焦</span>
-            <div className="nop-method-policy__control-shell">
-              <SearchableSelect
-                value={fieldPath}
-                options={fieldOptions}
-                placeholder={methodId ? '搜索字段路径，默认查看全部' : '先选择方法'}
-                disabled={!methodId || !fieldOptions.length}
-                searchable
-                onChange={setFieldPath}
-              />
-            </div>
-          </div>
         </div>
 
         {payload && (
           <div style={META_STYLE}>
-            <span>{payload.title || '-'}</span>
             <span>{payload.subtitle || '-'}</span>
           </div>
         )}

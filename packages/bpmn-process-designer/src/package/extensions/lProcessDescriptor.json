@@ -32,6 +32,61 @@
         { "name": "timeoutMs", "isAttr": true, "type": "Integer" },
         { "name": "asyncFlag", "isAttr": true, "type": "Boolean" }
       ]
+    },
+    {
+      "name": "ExecutorBinding",
+      "superClass": ["Element"],
+      "meta": {
+        "allowedIn": [
+          "bpmn:Task",
+          "bpmn:ServiceTask"
+        ]
+      },
+      "properties": [
+        { "name": "executorDefId", "isAttr": true, "type": "String" },
+        { "name": "executorCode", "isAttr": true, "type": "String" },
+        { "name": "executorName", "isAttr": true, "type": "String" },
+        { "name": "executorReleaseId", "isAttr": true, "type": "String" },
+        { "name": "releaseVersion", "isAttr": true, "type": "String" },
+        { "name": "versionStrategy", "isAttr": true, "type": "String" },
+        { "name": "versionExpr", "isAttr": true, "type": "String" },
+        { "name": "methodId", "isAttr": true, "type": "String" },
+        { "name": "methodCode", "isAttr": true, "type": "String" },
+        { "name": "methodName", "isAttr": true, "type": "String" },
+        { "name": "timeoutMs", "isAttr": true, "type": "Integer" },
+        { "name": "retryCount", "isAttr": true, "type": "Integer" },
+        { "name": "retryIntervalMs", "isAttr": true, "type": "Integer" },
+        { "name": "asyncFlag", "isAttr": true, "type": "Boolean" },
+        { "name": "failureStrategy", "isAttr": true, "type": "String" },
+        { "name": "inputMappingJson", "isAttr": true, "type": "String" },
+        { "name": "outputDeltaJson", "isAttr": true, "type": "String" }
+      ]
+    },
+    {
+      "name": "InputMapping",
+      "superClass": ["Element"],
+      "meta": {
+        "allowedIn": ["l:ExecutorBinding"]
+      },
+      "properties": [
+        { "name": "source", "isAttr": true, "type": "String" },
+        { "name": "target", "isAttr": true, "type": "String" },
+        { "name": "expression", "isAttr": true, "type": "String" },
+        { "name": "sourceType", "isAttr": true, "type": "String" }
+      ]
+    },
+    {
+      "name": "OutputDelta",
+      "superClass": ["Element"],
+      "meta": {
+        "allowedIn": ["l:ExecutorBinding"]
+      },
+      "properties": [
+        { "name": "source", "isAttr": true, "type": "String" },
+        { "name": "target", "isAttr": true, "type": "String" },
+        { "name": "expression", "isAttr": true, "type": "String" },
+        { "name": "mergeStrategy", "isAttr": true, "type": "String" }
+      ]
     }
   ]
 }

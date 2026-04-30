@@ -40,6 +40,7 @@ import CcTask from './Panel/CcTask/index.vue'
 import ExternalTask from './Panel/ExternalTask/index.vue'
 import DecisionTask from './Panel/DecisionTask/index.vue'
 import Advanced from './Panel/BaseActivity/Advanced.vue'
+import ExecutorTask from './Panel/ExecutorTask/index.vue'
 
 defineOptions({ name: 'BpmnPanel' })
 
@@ -72,6 +73,7 @@ const panelType = computed(() => {
       if (t === 'mule') return 'muleTask'
       if (t === 'jump') return 'jumpTask'
       if (t === 'cc') return 'ccTask'
+      if (t === 'executor') return 'executorTask'
       return 'serviceTask'
     }
     if (is(el, 'bpmn:ScriptTask')) return 'scriptTask'
@@ -223,6 +225,14 @@ const isImplicitRoot = (element: RootLike) => element && element.isImplicit
       <BaseActivity v-else-if="panelType === 'ccTask'">
         <template #basic>
           <CcTask />
+          <Advanced />
+        </template>
+      </BaseActivity>
+
+      <!-- 执行器任务面板 -->
+      <BaseActivity v-else-if="panelType === 'executorTask'">
+        <template #basic>
+          <ExecutorTask />
           <Advanced />
         </template>
       </BaseActivity>

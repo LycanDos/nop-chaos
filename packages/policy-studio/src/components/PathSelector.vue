@@ -241,6 +241,13 @@ const buildTreeData = (fields: FieldInfo[]): TreeNode[] => {
             parentNode.children.push(node)
           }
         }
+      } else if (index < parts.length - 1) {
+        // 节点已存在，但当前不是叶子段——需要确保它有 children 数组
+        // （可能之前作为叶子创建的，现在需要升级为父节点）
+        const existingNode = treeMap.get(nodeValue)!
+        if (!existingNode.children) {
+          existingNode.children = []
+        }
       }
     })
   })

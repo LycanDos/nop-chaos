@@ -249,7 +249,10 @@ watch(() => props.rule.operator, (operator) => {
   }
 
   if (operator === 'locked' && !props.rule.lockMode)
-    props.rule.lockMode = 'LOCKED'
+    props.rule.lockMode = 'HARD_LOCK'
+
+  if (operator === 'softLock' && !props.rule.lockMode)
+    props.rule.lockMode = 'SOFT_LOCK'
 }, { immediate: true })
 
 function createDefaultCondition() {
@@ -297,7 +300,7 @@ function showDefaultValue(operator?: PolicyOperator) {
 }
 
 function showLockedValue(operator?: PolicyOperator) {
-  return operator === 'locked'
+  return operator === 'locked' || operator === 'softLock'
 }
 
 function singleValueLabel(operator?: PolicyOperator) {

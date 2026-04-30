@@ -103,6 +103,8 @@ th.el-table__cell {
   > .map {
     width: 250px;
     height: 150px;
+    overflow: hidden;
+    position: relative;
   }
 }
 

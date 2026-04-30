@@ -36,6 +36,7 @@ import type Canvas from 'diagram-js/lib/core/Canvas'
 import type { Minimap } from 'diagram-js-minimap'
 import { layoutProcess } from 'bpmn-auto-layout'
 import { ElMessage } from 'element-plus'
+import { EXECUTOR_API_KEY, type ExecutorApiAdapter } from '../hooks/useExecutorApi'
 
 defineOptions({
   name: 'ProcessDesigner',
@@ -45,6 +46,8 @@ const props = defineProps<{
   name?: string
   xml?: string
   idPrefix?: string
+  /** 执行器 API 适配器，由使用方注入实际的请求实现 */
+  executorApi?: ExecutorApiAdapter
 }>()
 const mockVisible = customRef<boolean>((track, trigger) => {
   return {
@@ -117,12 +120,46 @@ const isDark = customRef<boolean>((track, trigger) => {
   }
 })
 const rightArrow = ref(true)
+const asideWidth = ref(370)
+const isDragging = ref(false)
 const issuesList = ref<ElementIssue[]>([])
 const modeler = ref<BpmnModeler>()
 const injector = ref<Injector>()
 const fileRef = ref<HTMLInputElement>()
 const labelPosition = ref('left')
 const formSize = ref('small')
+
+// ========== 侧边栏拖拽调整宽度 ==========
+const MIN_ASIDE_WIDTH = 280
+const MAX_ASIDE_WIDTH = 700
+
+const onDragStart = (e: MouseEvent) => {
+  if (!rightArrow.value || mockVisible.value) return
+  e.preventDefault()
+  isDragging.value = true
+  const startX = e.clientX
+  const startWidth = asideWidth.value
+
+  const onMouseMove = (ev: MouseEvent) => {
+    // 向左拖 → 宽度增大（startX - ev.clientX 为正值）
+    const delta = startX - ev.clientX
+    const newWidth = Math.min(MAX_ASIDE_WIDTH, Math.max(MIN_ASIDE_WIDTH, startWidth + delta))
+    asideWidth.value = newWidth
+  }
+
+  const onMouseUp = () => {
+    isDragging.value = false
+    document.removeEventListener('mousemove', onMouseMove)
+    document.removeEventListener('mouseup', onMouseUp)
+    document.body.style.cursor = ''
+    document.body.style.userSelect = ''
+  }
+
+  document.body.style.cursor = 'col-resize'
+  document.body.style.userSelect = 'none'
+  document.addEventListener('mousemove', onMouseMove)
+  document.addEventListener('mouseup', onMouseUp)
+}
 const importXml = () => {
   const file = fileRef.value?.files?.[0]
   if (file) {
@@ -225,6 +262,10 @@ const toggleRightArrow = () => {
 provide('ProcessDesigner', {
   modeler: modeler,
 })
+// 注入执行器 API 适配器，供 ExecutorTask 面板使用
+if (props.executorApi) {
+  provide(EXECUTOR_API_KEY, props.executorApi)
+}
 defineExpose({
   loadXml,
   getXml,
@@ -316,7 +357,20 @@ defineExpose({
           </el-icon>
         </div>
       </div>
-      <div class="design-aside" :style="{ width: rightArrow && !mockVisible ? '370px' : '0px', flex: rightArrow && !mockVisible ? '0 0 370px' : '0 0 0px' }">
+      <!-- 拖拽分割条 -->
+      <div
+        v-if="rightArrow && !mockVisible"
+        class="design-resize-handle"
+        :class="{ 'design-resize-handle--active': isDragging }"
+        @mousedown="onDragStart"
+      />
+      <div
+        class="design-aside"
+        :style="{
+          width: rightArrow && !mockVisible ? asideWidth + 'px' : '0px',
+          flex: rightArrow && !mockVisible ? '0 0 ' + asideWidth + 'px' : '0 0 0px',
+        }"
+      >
         <BpmnPanel
           v-if="modeler"
           :modeler="modeler"
@@ -378,7 +432,30 @@ defineExpose({
   border-left: 1px solid var(--el-border-color, #dcdfe6);
   background-color: var(--el-bg-color, #fff);
   overflow: hidden;
-  transition: width 0.3s ease, flex 0.3s ease;
+}
+
+.design-resize-handle {
+  flex: 0 0 2px;
+  width: 2px;
+  cursor: col-resize;
+  background: transparent;
+  position: relative;
+  z-index: 4;
+  transition: background-color 0.15s;
+
+  &:hover,
+  &--active {
+    background-color: var(--el-color-primary-light-7, #a0cfff);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -4px;
+    right: -4px;
+    bottom: 0;
+  }
 }
 
 .right-panel-arrow {

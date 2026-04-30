@@ -357,7 +357,7 @@ function createDemoPayload(): PolicyStudioViewPayload {
         rules: [
           { id: 'scene-amount-upper', path: 'order.amount', operator: 'le', enabled: true, orderNo: 10, value: 50000, severity: 6 },
           { id: 'scene-quantity-not-between', path: 'order.quantity', operator: 'notBetween', enabled: true, orderNo: 20, min: 99, max: 999, severity: 5 },
-          { id: 'scene-note-locked', path: 'risk.operatorNote', operator: 'locked', enabled: true, orderNo: 30, lockedValue: '历史下单稳定', lockMode: 'LOCKED', severity: 6 }
+          { id: 'scene-note-locked', path: 'risk.operatorNote', operator: 'locked', enabled: true, orderNo: 30, lockedValue: '历史下单稳定', lockMode: 'HARD_LOCK', severity: 6 }
         ]
       },
       {

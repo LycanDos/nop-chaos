@@ -38,9 +38,12 @@ export * from './designer/utils/EventDefinitionUtil'
 
 // hooks
 export { useBpmnContextService, bpmnContext, selectedElementRef } from './hooks/useService'
+export { useExecutorApi, EXECUTOR_API_KEY, nopGraphQLAdapter } from './hooks/useExecutorApi'
+export type { ExecutorApiAdapter } from './hooks/useExecutorApi'
 
 // 类型定义
 export * from './types/index'
+export * from './types/executor'
 
 // Flowable moddle 描述符
 export { default as flowableModdleDescriptors } from './designer/flowable.json'

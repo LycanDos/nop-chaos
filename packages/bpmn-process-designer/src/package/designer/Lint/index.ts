@@ -39,6 +39,7 @@ import httpTaskRequired from './rules/http-task-required.ts'
 import callActivityRequired from './rules/call-activity-required.ts'
 import variableEventRequired from './rules/variable-event-required.ts'
 import sequenceFlowsRequired from './rules/sequence-flows-required.ts'
+import executorTaskRequired from './rules/executor-task-required.ts'
 import eventSubProcessTypedStartEvent from './rules/event-sub-process-typed-start-event.ts'
 import type { Config } from 'bpmnlint/lib/types'
 // import recommended from 'bpmnlint/config/recommended'
@@ -84,6 +85,7 @@ const resolver = new StaticResolver({
   'rule:bpmnlint/call-activity-required': callActivityRequired,
   'rule:bpmnlint/variable-event-required': variableEventRequired,
   'rule:bpmnlint/sequence-flows-required': sequenceFlowsRequired,
+  'rule:bpmnlint/executor-task-required': executorTaskRequired,
   // 'rule:bpmnlint/gateway-join': gatewayJoin,
 })
 const config: Config = {
@@ -128,6 +130,7 @@ const config: Config = {
     'call-activity-required': 'error',
     'variable-event-required': 'error',
     'sequence-flows-required': 'error',
+    'executor-task-required': 'error',
     // 'gateway-join': 'error',
   },
 }

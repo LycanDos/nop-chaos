@@ -3750,11 +3750,6 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
                                     )
                                   })}
                                   <td style={{ ...densityMetrics().td, ...operationCellStyle(), ...highlightedCellStyle(highlightRow) }}>
-                                    <TextActionButton
-                                      label="Clar"
-                                      title="查看当前字段 Clar"
-                                      onClick={() => openPolicyStudioView(field.methodId, field.schemaRole as 'INPUT' | 'OUTPUT', field.fieldPath)}
-                                    />
                                   </td>
                                 </tr>
                                 )

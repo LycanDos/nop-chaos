@@ -76,6 +76,21 @@ function collectFields(
   entityMap: EntityFieldMap
 ) {
   if (rootField.type === 'object') {
+    // object 类型本身也加入 globalFields，使其可在路径选择器中被选中
+    const objectFieldInfo: FieldInfo = {
+      name: rootField.name,
+      displayName: rootField.label,
+      type: 'object',
+      path: rootField.path,
+      aliases: rootField.aliases || [],
+      searchable: rootField.searchable ?? true,
+      format: rootField.format,
+      required: rootField.required,
+      options: rootField.options
+    }
+    entityMap.fields.set(objectFieldInfo.path, objectFieldInfo)
+    mapping.globalFields.set(objectFieldInfo.path, objectFieldInfo)
+
     for (const child of rootField.fields || [])
       collectFields(child, mapping, entityMap)
     return

@@ -238,7 +238,7 @@ function summarizeBehavior(rules: PolicyRule[], field: PolicySchemaField) {
     if (rule.operator === 'readonly')
       disabled = true
 
-    if (rule.operator === 'locked') {
+    if (rule.operator === 'locked' || rule.operator === 'softLock') {
       disabled = true
       value = rule.lockedValue
     }

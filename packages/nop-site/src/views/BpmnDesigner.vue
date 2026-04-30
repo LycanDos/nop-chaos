@@ -13,6 +13,7 @@
       ref="processDesigner"
       :id="modelKey"
       :name="modelName"
+      :executor-api="nopSiteExecutorApi"
     />
   </div>
   <!-- 流程属性器，负责编辑每个流程节点的属性 -->
@@ -21,6 +22,7 @@
 import { ref, shallowRef, provide, onMounted, onBeforeUnmount, nextTick, createApp } from 'vue'
 import { useRouter } from 'vue-router'
 import { ProcessDesigner } from 'bpmn-process-designer';
+import { nopSiteExecutorApi } from '../api/bpmn/executorApi';
 // 导入 bpmn-process-designer 的组件样式（scoped CSS）
 import 'bpmn-process-designer/dist/bpmn-process-designer.css';
 // BPMN 相关 CSS（字体和样式必须从 node_modules 直接导入以确保路径正确）
@@ -1552,6 +1554,8 @@ declare global {
   > .map {
     width: 260px !important;
     height: 150px !important;
+    overflow: hidden;
+    position: relative;
   }
 }
 

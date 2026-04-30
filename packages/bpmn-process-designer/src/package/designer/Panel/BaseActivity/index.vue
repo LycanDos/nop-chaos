@@ -14,7 +14,7 @@ defineOptions({
 })
 const { selectedElement } = useBpmnContextService()
 const activeTabName = ref('basic')
-const actives = ref<string[]>(['general', 'arg1', 'arg2', 'arg3', 'arg4'])
+const actives = ref<string[]>(['general', 'arg1', 'arg2', 'arg3', 'arg4', 'executor-binding', 'executor-input', 'executor-output', 'executor-config'])
 const id = useCustomRef('id')
 const isExecutable = useCustomRef('isExecutable')
 const name = useCustomRef('name')

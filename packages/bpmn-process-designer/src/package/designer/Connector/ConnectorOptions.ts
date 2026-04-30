@@ -594,5 +594,37 @@ export const TASK_CONNECTOR: Connector[] = [
   },*/
 ]
 
+// 执行器任务连接器 - 绑定 LProcessConsole 中的执行器
+export const EXECUTOR_CONNECTOR: Connector = {
+  id: 'io.lycan.connectors.ExecutorConnector-s1',
+  name: 'Executor task',
+  version: 1,
+  description: 'An Executor invocation task bound to LProcessConsole executors.',
+  appliesTo: ['bpmn:Task'],
+  elementType: {
+    value: 'bpmn:ServiceTask',
+  },
+  category: {
+    id: 'connector',
+    name: 'Connectors',
+  },
+  documentationRef: 'http://182.61.39.195:4080/',
+  icon: {
+    contents: '#icon-executor-service',
+  },
+  properties: [
+    {
+      type: 'Hidden',
+      value: 'executor',
+      binding: {
+        type: 'property',
+        name: 'type',
+      },
+    },
+  ],
+}
+
+TASK_CONNECTOR.push(EXECUTOR_CONNECTOR)
+
 const CONNECTORS: Connector[] = [...TASK_CONNECTOR]
 export default CONNECTORS

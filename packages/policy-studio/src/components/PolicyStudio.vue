@@ -604,7 +604,9 @@ function addRule(layerId?: string, path = '') {
     severity: 5
   }
   if (rule.operator === 'locked')
-    rule.lockMode = 'LOCKED'
+    rule.lockMode = 'HARD_LOCK'
+  if (rule.operator === 'softLock')
+    rule.lockMode = 'SOFT_LOCK'
   rule.applyWhen = createDefaultCondition()
   layer.rules.push(rule)
   activeLayerId.value = layer.id

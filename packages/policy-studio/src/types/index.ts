@@ -194,6 +194,7 @@ export type PolicyRuleFamily =
   | 'isBlank'
   | 'notBlank'
   | 'default'
+  | 'softLock'
   | 'locked'
   | 'readonly'
   | (string & {})
@@ -224,12 +225,13 @@ export type PolicyOperator =
   | 'notBlank'
   | 'regex'
   | 'default'
+  | 'softLock'
   | 'locked'
   | 'readonly'
   | 'clear'
   | (string & {})
 
-export type LockMode = 'LOCKED' | 'MUST_EQUAL_PREFILL'
+export type LockMode = 'HARD_LOCK' | 'SOFT_LOCK' | 'MUST_EQUAL_PREFILL'
 
 export interface PolicyRule {
   id: string

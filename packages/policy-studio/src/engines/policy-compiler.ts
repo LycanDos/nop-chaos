@@ -80,6 +80,7 @@ const familyOrder: FamilyKey[] = [
   'isBlank',
   'notBlank',
   'default',
+  'softLock',
   'locked',
   'readonly'
 ]
@@ -129,6 +130,8 @@ function familyForOperator(operator: PolicyOperator): FamilyKey | null {
     return 'default'
   if (operator === 'locked')
     return 'locked'
+  if (operator === 'softLock')
+    return 'softLock'
   if (operator === 'readonly')
     return 'readonly'
   return `operator:${operator}`
@@ -191,7 +194,9 @@ function summarize(rule: PolicyRule): string {
     case 'default':
       return `默认值 ${rule.defaultValue}`
     case 'locked':
-      return `锁定值 ${rule.lockedValue} (${rule.lockMode || 'LOCKED'})`
+      return `锁定值 ${rule.lockedValue} (不可解锁)`
+    case 'softLock':
+      return `上锁值 ${rule.lockedValue} (可申请解锁)`
     case 'readonly':
       return '只读'
     case 'clear':
@@ -368,7 +373,7 @@ function getFiniteAllowedValues(rule: PolicyRule): any[] | null {
 }
 
 function ruleAllowsNull(rule: PolicyRule) {
-  return !['required', 'eq', 'in', 'gt', 'ge', 'lt', 'le', 'between', 'regex', 'contains', 'startsWith', 'endsWith', 'containsSpecialChars', 'notBlank', 'locked'].includes(rule.operator)
+  return !['required', 'eq', 'in', 'gt', 'ge', 'lt', 'le', 'between', 'regex', 'contains', 'startsWith', 'endsWith', 'containsSpecialChars', 'notBlank', 'softLock', 'locked'].includes(rule.operator)
 }
 
 function ruleAllowsBlank(rule: PolicyRule) {
@@ -883,12 +888,12 @@ export class PolicyCompiler {
         if (family === 'eq' || family === 'required' || family === 'regex'
           || family === 'isNull' || family === 'notNull' || family === 'isBlank' || family === 'notBlank'
           || family === 'containsSpecialChars' || family === 'notContainsSpecialChars'
-          || family === 'default' || family === 'locked' || family === 'readonly') {
+          || family === 'default' || family === 'softLock' || family === 'locked' || family === 'readonly') {
           const isEquivalent = family === 'regex'
             ? stringifyValue(existing.rule.pattern) === stringifyValue(rule.pattern)
             : family === 'default'
               ? isSameValue(existing.rule.defaultValue, rule.defaultValue)
-              : family === 'locked'
+              : family === 'locked' || family === 'softLock'
                 ? isSameValue(existing.rule.lockedValue, rule.lockedValue) && stringifyValue(existing.rule.lockMode) === stringifyValue(rule.lockMode)
                 : true
 

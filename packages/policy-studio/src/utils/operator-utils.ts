@@ -89,7 +89,8 @@ const operatorCatalog: OperatorOptionMeta[] = [
   { value: 'required', title: '必填', code: 'required', meaning: '字段必须填写', group: 'form', recommendedFor: ['all'] },
   { value: 'default', title: '默认值', code: 'default', meaning: '设置默认值', group: 'form', recommendedFor: ['all'] },
   { value: 'readonly', title: '只读', code: 'readonly', meaning: '字段只读', group: 'form', recommendedFor: ['all'] },
-  { value: 'locked', title: '锁定', code: 'locked', meaning: '字段锁定为指定值', group: 'form', recommendedFor: ['all'] }
+  { value: 'softLock', title: '上锁', code: 'softLock', meaning: '字段锁定为指定值，允许申请解锁', group: 'form', recommendedFor: ['all'] },
+  { value: 'locked', title: '锁定', code: 'locked', meaning: '字段锁定为指定值，不允许申请解锁', group: 'form', recommendedFor: ['all'] }
 ]
 
 const preferredOrderByKind: Record<FieldOperatorKind | 'unknown', OperatorGroupKey[]> = {
