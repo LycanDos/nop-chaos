@@ -276,6 +276,7 @@ onMounted(async () => {
   max-height: 100%;
   transition: width 0.25s ease;
   flex-shrink: 0;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.04);
 }
 .method-binding-panel--collapsed {
   display: flex;
@@ -283,6 +284,7 @@ onMounted(async () => {
   justify-content: center;
   padding-top: 12px;
   cursor: pointer;
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.08);
 }
 .method-binding-panel__toggle {
   color: var(--el-text-color-secondary);

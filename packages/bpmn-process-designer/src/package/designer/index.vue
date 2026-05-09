@@ -20,6 +20,7 @@ import {
   FolderOpened,
   RefreshLeft,
   RefreshRight,
+  Setting,
   VideoPause,
   VideoPlay,
   ZoomIn,
@@ -351,9 +352,8 @@ defineExpose({
       <div class="design-canvas">
         <bpmn-designer @modeler-ready="modelerReady" />
         <div class="right-panel-arrow" @click="toggleRightArrow">
-          <el-icon :size="15">
-            <CaretRight v-if="rightArrow && !mockVisible" />
-            <CaretLeft v-else />
+          <el-icon :size="16">
+            <Setting />
           </el-icon>
         </div>
       </div>
@@ -468,10 +468,16 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2px;
-  height: 50px;
-  border-radius: 10px 0 0 10px;
+  padding: 4px;
+  height: 48px;
+  border-radius: 8px 0 0 8px;
   cursor: pointer;
-  box-shadow: -7px 0 7px -5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px 0 rgba(8, 14, 26, 0.04), 0 1px 10px 0 rgba(8, 14, 26, 0.05), 0 2px 4px -1px rgba(8, 14, 26, 0.06);
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: var(--el-color-primary-light-9);
+    color: var(--el-color-primary);
+  }
 }
 </style>

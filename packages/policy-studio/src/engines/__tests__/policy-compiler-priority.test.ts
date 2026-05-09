@@ -18,8 +18,7 @@ import type {
   PolicyDocument,
   PolicyLayer,
   PolicyRule,
-  PolicyOperator,
-  CompiledRuleView
+  PolicyOperator
 } from '../../types'
 
 // --- Helpers ---

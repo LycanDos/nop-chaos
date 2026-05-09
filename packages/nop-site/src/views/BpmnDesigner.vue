@@ -1005,6 +1005,7 @@ onMounted(() => {
     setTimeout(() => {
       const minimap = document.querySelector('.djs-minimap') as HTMLElement;
       if (!minimap || minimap.querySelector('.minimap-titlebar')) return;
+      minimap.classList.add('has-titlebar');
 
       // 创建标题栏
       const titlebar = document.createElement('div');
@@ -1031,7 +1032,7 @@ onMounted(() => {
           sibling = sibling.nextElementSibling as HTMLElement;
         }
         minimizeBtn.textContent = minimized ? '+' : '−';
-        minimap.style.maxHeight = minimized ? '20px' : '200px';
+        minimap.style.maxHeight = minimized ? '22px' : '200px';
       });
 
       // 关闭（通过 bpmn-js minimap API）
@@ -1550,6 +1551,7 @@ declare global {
   width: 260px !important;
   height: auto !important;
   max-height: 200px;
+  padding-top: 0;
 
   > .map {
     width: 260px !important;
@@ -1561,7 +1563,7 @@ declare global {
 
 /* minimap 标题栏 */
 .minimap-titlebar {
-  height: 20px;
+  height: 22px;
   background: #f5f5f5;
   border-bottom: 1px solid #e8e8e8;
   display: flex;
@@ -1570,6 +1572,11 @@ declare global {
   padding: 0 4px;
   cursor: move;
   user-select: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
 }
 
 .minimap-titlebar__drag {
@@ -1596,11 +1603,35 @@ declare global {
   align-items: center;
   justify-content: center;
   padding: 0;
+  position: relative;
+  z-index: 31;
 
   &:hover {
     background: #e0e0e0;
     color: #333;
   }
+}
+
+.djs-minimap .viewport-dom {
+  z-index: 8;
+}
+
+.djs-minimap.open .overlay {
+  z-index: 7;
+}
+
+.djs-minimap.has-titlebar > .map {
+  margin-top: 22px;
+  position: relative;
+}
+
+.djs-minimap.has-titlebar .viewport-dom {
+  top: 22px !important;
+  transform: none !important;
+}
+
+.djs-minimap.has-titlebar.open .overlay {
+  top: 22px !important;
 }
 
 /* minimap 关闭时完全隐藏 */

@@ -37,7 +37,7 @@
         <el-tabs
           v-model="activeLayerId"
           :tab-position="layerTabPosition"
-          addable
+          :addable="allowAddLayer"
           class="rules-pane__tabs"
           @tab-add="addLayer"
         >
@@ -48,6 +48,7 @@
             v-for="layer in orderedLayers"
             :key="layer.id"
             :name="layer.id"
+            lazy
           >
             <template #label>
               <div class="layer-tab-label">
@@ -71,6 +72,7 @@
                 <template v-else>
                   <span class="layer-tab-label__text">{{ layer.name }} ({{ layer.orderNo }})</span>
                   <el-button
+                    v-if="isLayerEditable(layer)"
                     class="layer-tab-label__edit"
                     link
                     size="small"
@@ -79,6 +81,7 @@
                     <el-icon><EditPen /></el-icon>
                   </el-button>
                   <el-popconfirm
+                    v-if="allowAddLayer && isLayerEditable(layer)"
                     :title="`确认删除校验集「${layer.name}」？`"
                     confirm-button-text="删除"
                     cancel-button-text="取消"
@@ -119,7 +122,7 @@
                 </template>
                 <template v-else>
                   <el-tag :type="layerTagType(layer.layerType)">{{ layer.layerType }}</el-tag>
-                  <el-button link size="small" @click.stop="startLayerEdit(layer, 'layerType', 'summary')">
+                  <el-button v-if="isLayerEditable(layer)" link size="small" @click.stop="startLayerEdit(layer, 'layerType', 'summary')">
                     <el-icon><EditPen /></el-icon>
                   </el-button>
                 </template>
@@ -144,7 +147,7 @@
                 </template>
                 <template v-else>
                   <span>名称 {{ layer.name }}</span>
-                  <el-button link size="small" @click.stop="startLayerEdit(layer, 'name', 'summary')">
+                  <el-button v-if="isLayerEditable(layer)" link size="small" @click.stop="startLayerEdit(layer, 'name', 'summary')">
                     <el-icon><EditPen /></el-icon>
                   </el-button>
                 </template>
@@ -169,7 +172,7 @@
                 </template>
                 <template v-else>
                   <span>顺序 {{ layer.orderNo }}</span>
-                  <el-button link size="small" @click.stop="startLayerEdit(layer, 'orderNo', 'summary')">
+                  <el-button v-if="isLayerEditable(layer)" link size="small" @click.stop="startLayerEdit(layer, 'orderNo', 'summary')">
                     <el-icon><EditPen /></el-icon>
                   </el-button>
                 </template>
@@ -187,7 +190,7 @@
                 :active-rule-id="activeRuleId"
               >
                 <template #field="{ node: fieldNode }">
-                  <div v-if="fieldNode.path" class="field-node-actions">
+                  <div v-if="fieldNode.path && isLayerEditable(layer)" class="field-node-actions">
                     <el-button size="small" type="primary" link @click="addRule(layer.id, fieldNode.path)">
                       增加添加规则
                     </el-button>
@@ -205,6 +208,7 @@
                     :is-editing-rule-id="isEditingRule(rule.id)"
                     :editing-rule-value="editingRuleValue"
                     :validation-message="ruleValidationMessage(layer.id, rule)"
+                    :read-only="!isLayerEditable(layer)"
                     @select="setActiveRule(rule)"
                     @focus-path="setActiveRule(rule)"
                     @path-change="handleRulePathChange(rule)"
@@ -232,6 +236,7 @@
                 :is-editing-rule-id="isEditingRule(rule.id)"
                 :editing-rule-value="editingRuleValue"
                 :validation-message="ruleValidationMessage(layer.id, rule)"
+                :read-only="!isLayerEditable(layer)"
                 @select="setActiveRule(rule)"
                 @focus-path="setActiveRule(rule)"
                 @path-change="handleRulePathChange(rule)"
@@ -243,7 +248,7 @@
               />
             </div>
 
-            <div class="layer-actions">
+            <div v-if="isLayerEditable(layer)" class="layer-actions">
               <el-button type="primary" plain size="small" @click="addRule(layer.id)">添加规则</el-button>
             </div>
 
@@ -256,11 +261,11 @@
 
       <section class="preview-pane" :style="previewPaneStyle">
         <el-tabs v-model="previewTab">
-          <el-tab-pane label="Schema-JSON" name="schema-json">
+          <el-tab-pane label="Schema-JSON" name="schema-json" lazy>
             <SchemaJsonEditor v-model="localSchemaModel" mode="tree" />
           </el-tab-pane>
 
-          <el-tab-pane label="生成表单" name="generated-form">
+          <el-tab-pane label="生成表单" name="generated-form" lazy>
             <SchemaGeneratedForm
               :schema="localSchema"
               :document="localDocument"
@@ -269,7 +274,7 @@
             />
           </el-tab-pane>
 
-          <el-tab-pane label="AMIS表单" name="amis-form">
+          <el-tab-pane label="AMIS表单" name="amis-form" lazy>
             <SchemaAmisGeneratedForm
               :schema="localSchema"
               :document="localDocument"
@@ -277,7 +282,7 @@
             />
           </el-tab-pane>
 
-          <el-tab-pane label="校验生效预览" name="effective">
+          <el-tab-pane label="校验生效预览" name="effective" lazy>
             <div class="preview-toolbar">
               <div class="preview-title">字段校验树</div>
               <div class="preview-switches">
@@ -303,7 +308,7 @@
             <el-empty v-else :description="emptyPreviewDescription" :image-size="88" />
           </el-tab-pane>
 
-          <el-tab-pane label="校验 XML" name="xml">
+          <el-tab-pane label="校验 XML" name="xml" lazy>
             <MonacoCodeViewer
               :model-value="xmlPreviewText"
               language="xml"
@@ -314,7 +319,7 @@
             />
           </el-tab-pane>
 
-          <el-tab-pane label="校验 JSON" name="json">
+          <el-tab-pane label="校验 JSON" name="json" lazy>
             <SchemaJsonEditor :model-value="localDocument as unknown as Record<string, any>" mode="tree" read-only />
           </el-tab-pane>
         </el-tabs>
@@ -387,6 +392,7 @@ interface Props {
   sampleData?: Record<string, any>
   fieldMapping?: FieldMapping
   sampleBundles?: SampleBundleOption[]
+  allowAddLayer?: boolean
 }
 
 const props = defineProps<Props>()
@@ -445,6 +451,7 @@ let syncingDocumentFromProps = false
 let syncingSampleDataFromProps = false
 
 const sampleBundleOptions = computed(() => props.sampleBundles || [])
+const allowAddLayer = computed(() => props.allowAddLayer !== false)
 const orderedLayers = computed(() => [...localDocument.value.layers].sort((a, b) => a.orderNo - b.orderNo))
 const resolvedFieldMapping = computed(() => props.fieldMapping || createFieldMappingFromSchema(localSchema.value))
 const compileResult = computed(() => compiler.compile(localDocument.value))
@@ -571,7 +578,14 @@ function activeLayer(): PolicyLayer | undefined {
   return localDocument.value.layers.find(layer => layer.id === activeLayerId.value)
 }
 
+function isLayerEditable(layer?: PolicyLayer) {
+  return !!layer && layer.editable !== false
+}
+
 function addLayer() {
+  if (!allowAddLayer.value)
+    return
+
   const layer: PolicyLayer = {
     id: `layer-${Date.now()}`,
     name: `校验集 ${localDocument.value.layers.length + 1}`,
@@ -592,7 +606,7 @@ function addRule(layerId?: string, path = '') {
   const layer = layerId
     ? localDocument.value.layers.find(item => item.id === layerId)
     : activeLayer()
-  if (!layer)
+  if (!layer || !isLayerEditable(layer))
     return
 
   const rule: PolicyRule = {
@@ -633,7 +647,7 @@ function nextLayerOrderNo() {
 
 function removeRule(layerId: string, rule: PolicyRule) {
   const layer = localDocument.value.layers.find(item => item.id === layerId)
-  if (!layer)
+  if (!layer || !isLayerEditable(layer))
     return
   const index = layer.rules.findIndex(item => item.id === rule.id)
   if (index === -1)
@@ -777,7 +791,10 @@ function operatorDisplay(operator?: PolicyOperator) {
 }
 
 function removeLayer(layerId: string) {
-  const index = localDocument.value.layers.findIndex(item => item.id === layerId)
+  if (!allowAddLayer.value)
+    return
+
+  const index = localDocument.value.layers.findIndex(item => item.id === layerId && isLayerEditable(item))
   if (index === -1)
     return
 
@@ -795,6 +812,8 @@ function removeLayer(layerId: string) {
 }
 
 function startLayerEdit(layer: PolicyLayer, field: 'name' | 'layerType' | 'orderNo', source: 'tab' | 'summary') {
+  if (!isLayerEditable(layer))
+    return
   cancelRuleEdit()
   if (source === 'tab')
     activeLayerId.value = layer.id
@@ -827,7 +846,7 @@ function cancelLayerEdit() {
 
 function saveLayerEdit(layer: PolicyLayer) {
   const editing = editingLayerField.value
-  if (!editing || editing.layerId !== layer.id)
+  if (!editing || editing.layerId !== layer.id || !isLayerEditable(layer))
     return
 
   if (editing.field === 'orderNo') {
@@ -855,6 +874,9 @@ function saveLayerEdit(layer: PolicyLayer) {
 }
 
 function startRuleEdit(rule: PolicyRule) {
+  const layer = localDocument.value.layers.find(item => item.rules.some(candidate => candidate.id === rule.id))
+  if (layer && !isLayerEditable(layer))
+    return
   cancelLayerEdit()
   editingRuleKey.value = rule.id
   editingRuleValue.value = rule.id
@@ -1227,7 +1249,8 @@ function scrollActiveLayerTabIntoView() {
   display: flex;
   flex: 1;
   min-width: 0;
-  min-height: 720px;
+  min-height: 0;
+  height: 100%;
 }
 
 .rules-pane,
@@ -1236,10 +1259,12 @@ function scrollActiveLayerTabIntoView() {
   border: 1px solid #e4e7ed;
   border-radius: 10px;
   background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
-  overflow: auto;
+  overflow: hidden;
 }
 
 .rules-pane {
+  display: flex;
+  flex-direction: column;
   padding: 10px;
 }
 
@@ -1273,7 +1298,16 @@ function scrollActiveLayerTabIntoView() {
 }
 
 .rules-pane__tabs {
-  min-height: calc(100% - 48px);
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.rules-pane__tabs :deep(.el-tabs__content) {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
 }
 
 .rules-pane__tabs :deep(.el-tabs__item) {
@@ -1412,7 +1446,16 @@ function scrollActiveLayerTabIntoView() {
 }
 
 .preview-pane {
+  display: flex;
+  flex-direction: column;
   padding: 8px;
+}
+
+.preview-pane :deep(.el-tabs) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .preview-toolbar {
@@ -1453,6 +1496,9 @@ function scrollActiveLayerTabIntoView() {
 }
 
 .preview-pane :deep(.el-tabs__content) {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
   padding-top: 8px;
 }
 

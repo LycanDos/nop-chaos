@@ -539,9 +539,9 @@ function validateCandidateAgainstState(state: FamilyState, rule: PolicyRule): st
   return null
 }
 
-function findHigherPriorityConflict(states: Map<FamilyKey, FamilyState>, candidateRule: PolicyRule, candidateFamily: FamilyKey | null): FamilyState | null {
+function findHigherPriorityConflict(states: Map<FamilyKey, FamilyState>, candidateRule: PolicyRule, _candidateFamily: FamilyKey | null): FamilyState | null {
   const candidatePriority = candidateRule.priority ?? 9999
-  for (const [family, state] of states.entries()) {
+  for (const [_family, state] of states.entries()) {
     const existingPriority = state.rule.priority ?? 9999
     if (existingPriority < candidatePriority) {
       return state

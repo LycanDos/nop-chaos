@@ -6,7 +6,13 @@
     </div>
     <div v-if="editorMode === 'tree' || !supportsSourceMode" ref="containerRef" class="delta-pane__editor"></div>
     <div v-if="supportsSourceMode" v-show="editorMode === 'source'" class="delta-pane__source">
-      <MonacoSurface v-model="sourceText" language="json" syntax-profile="delta-json" @focus="handleSourceFocus" />
+      <MonacoSurface
+        v-model="sourceText"
+        language="json"
+        syntax-profile="delta-json"
+        :read-only="props.readOnly"
+        @focus="handleSourceFocus"
+      />
       <p v-if="sourceStatus" :class="['delta-pane__source-status', sourceStatus.level === 'error' ? 'is-error' : 'is-info']">
         {{ sourceStatus.message }}
       </p>
@@ -45,6 +51,7 @@
     modelValue: Record<string, unknown>;
     baseDocument: Record<string, unknown>;
     deltaDocument: Record<string, unknown>;
+    readOnly?: boolean;
   }>();
 
   const emit = defineEmits<{
@@ -371,6 +378,7 @@
         navigationBar: true,
         statusBar: true,
         mainMenuBar: true,
+        readOnly: props.readOnly,
         onChange: handleChange,
         onSelect: handleSelect,
         onRenderMenu: handleRenderMenu,
@@ -419,7 +427,7 @@
   );
 
   watch(sourceText, (value, previous) => {
-    if (!supportsSourceMode.value || value === previous || isSyncingSourceText) {
+    if (!supportsSourceMode.value || props.readOnly || value === previous || isSyncingSourceText) {
       return;
     }
     handleSourceChange(value);
@@ -451,6 +459,15 @@
 
     destroyTreeEditor();
   });
+
+  watch(
+    () => props.readOnly,
+    (value) => {
+      editorInstance?.updateProps({
+        readOnly: value,
+      });
+    }
+  );
 
   onBeforeUnmount(() => {
     destroyTreeEditor();

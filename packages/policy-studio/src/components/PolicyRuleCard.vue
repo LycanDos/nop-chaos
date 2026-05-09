@@ -1,7 +1,7 @@
 <template>
   <div
     class="rule-card"
-    :class="{ 'is-active': active, 'is-flashing': flash }"
+    :class="{ 'is-active': active, 'is-flashing': flash, 'is-readonly': readOnly }"
     :data-rule-id="rule.id"
     :data-layer-id="layerId"
     @click="emit('select')"
@@ -29,6 +29,7 @@
         <template v-else>
           <span>{{ rule.id }}</span>
           <el-button
+            v-if="!readOnly"
             class="rule-card__edit"
             link
             size="small"
@@ -40,8 +41,8 @@
         <el-tag size="small">{{ operatorDisplay(rule.operator) }}</el-tag>
       </div>
       <div class="rule-card__tools">
-        <el-switch v-model="rule.enabled" />
-        <el-button link type="danger" @click.stop="emit('remove')">删除</el-button>
+        <el-switch v-model="rule.enabled" :disabled="readOnly" />
+        <el-button v-if="!readOnly" link type="danger" @click.stop="emit('remove')">删除</el-button>
       </div>
     </div>
 
@@ -141,24 +142,22 @@
           </el-form-item>
         </el-col>
 
-        <el-col v-if="showDefaultValue(rule.operator)" :span="8">
+        <el-col v-if="showDefaultValue(rule.operator)" :span="12">
           <el-form-item label="默认值">
-            <SchemaValueInput
+            <ClarValueInput
               v-model="rule.defaultValue"
               :field="fieldForPath(rule.path)"
-              placeholder="输入默认值"
-              compact
+              placeholder="输入默认值或表达式"
             />
           </el-form-item>
         </el-col>
 
-        <el-col v-if="showLockedValue(rule.operator)" :span="8">
+        <el-col v-if="showLockedValue(rule.operator)" :span="12">
           <el-form-item label="锁定值">
-            <SchemaValueInput
+            <ClarValueInput
               v-model="rule.lockedValue"
               :field="fieldForPath(rule.path)"
-              placeholder="输入锁定值"
-              compact
+              placeholder="输入锁定值或表达式"
             />
           </el-form-item>
         </el-col>
@@ -202,6 +201,7 @@ import { watch } from 'vue'
 import ConditionBuilder from './ConditionBuilder.vue'
 import OperatorSelect from './OperatorSelect.vue'
 import PathSelector from './PathSelector.vue'
+import ClarValueInput from './ClarValueInput.vue'
 import SchemaValueInput from './SchemaValueInput.vue'
 import { ElMessage } from 'element-plus/es/components/message/index.mjs'
 import { isOperatorCompatible } from '../utils/operator-utils'
@@ -219,6 +219,7 @@ interface Props {
   fieldForPath: (path: string) => PolicySchemaField | undefined
   operatorDisplay: (operator?: PolicyOperator) => string
   validationMessage?: string
+  readOnly?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -226,7 +227,8 @@ const props = withDefaults(defineProps<Props>(), {
   flash: false,
   isEditingRuleId: false,
   editingRuleValue: '',
-  validationMessage: ''
+  validationMessage: '',
+  readOnly: false
 })
 
 const emit = defineEmits<{
@@ -346,6 +348,10 @@ function singleValuePlaceholder(operator?: PolicyOperator) {
   animation: rule-card-flash 0.65s ease-in-out 3;
 }
 
+.rule-card.is-readonly {
+  background: #f8f9fb;
+}
+
 .rule-card + .rule-card {
   margin-top: 10px;
 }
@@ -438,6 +444,11 @@ function singleValuePlaceholder(operator?: PolicyOperator) {
   color: #909399;
   font-size: 11px;
   line-height: 1.4;
+}
+
+.rule-card.is-readonly .rule-form {
+  pointer-events: none;
+  opacity: 0.88;
 }
 
 @keyframes rule-card-flash {

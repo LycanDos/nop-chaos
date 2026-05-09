@@ -1,6 +1,6 @@
 <!--
   执行器任务面板 - 绑定 LProcessConsole 中的执行器
-  支持：选择执行器 → 选择版本 → 选择方法 → 配置入参映射 / 出参 Delta
+  支持：选择执行器 → 选择版本 → 选择方法 → 配置入参 Clar / 出参 Delta
 
   数据加载通过 useExecutorApi() 获取注入的 API 适配器，
   使用方（如 nop-site）通过 ProcessDesigner 的 executorApi prop 传入实际请求实现。
@@ -25,10 +25,12 @@ import type {
   OutputDeltaItem,
   VersionStrategy,
   FailureStrategy,
+  InputPolicyDocument,
 } from '@/types/executor.ts'
 import { EditPen, InfoFilled } from '@element-plus/icons-vue'
 import { useExecutorApi } from '@/hooks/useExecutorApi.ts'
 import InputMappingDrawer from './InputMappingDrawer.vue'
+import InputClarDrawer from './InputClarDrawer.vue'
 import OutputDeltaDrawer from './OutputDeltaDrawer.vue'
 
 defineOptions({ name: 'ExecutorTask' })
@@ -63,11 +65,16 @@ const bindingForm = reactive({
   asyncFlag: false,
   failureStrategy: 'FAIL' as FailureStrategy,
   inputMappings: [] as InputMappingItem[],
+  inputPolicyDocument: null as InputPolicyDocument | null,
   outputDeltas: [] as OutputDeltaItem[],
 })
 
 const inputMappingDrawerRef = ref<InstanceType<typeof InputMappingDrawer>>()
+const inputClarDrawerRef = ref<InstanceType<typeof InputClarDrawer>>()
 const outputDeltaDrawerRef = ref<InstanceType<typeof OutputDeltaDrawer>>()
+
+// 使用新的入参 Clar (可通过配置切换)
+const useInputClar = ref(true)
 
 // ========== 选项 ==========
 const versionStrategyOptions = [
@@ -183,6 +190,7 @@ function handleMethodChange(methodId: string) {
   bindingForm.methodCode = method?.methodCode || ''
   bindingForm.methodName = method?.methodName || ''
   bindingForm.inputMappings = []
+  bindingForm.inputPolicyDocument = null
   bindingForm.outputDeltas = []
   loadMethodSchema(methodId)
   saveBindingToElement()
@@ -195,7 +203,7 @@ function handleVersionStrategyChange() {
   saveBindingToElement()
 }
 
-// ========== 入参映射 ==========
+// ========== 入参映射 (旧版,保留向后兼容) ==========
 function openInputMappingDrawer() {
   inputMappingDrawerRef.value?.openDrawer(
     [...bindingForm.inputMappings],
@@ -208,12 +216,63 @@ function handleInputMappingConfirm(mappings: InputMappingItem[]) {
   saveBindingToElement()
 }
 
+// ========== 入参 Clar (新版) ==========
+function openInputClarDrawer() {
+  if (!bindingForm.methodId) return
+  
+  // 获取当前节点的 ID
+  const nodeId = selectedElementRef.value?.id || ''
+  const canvas = getService<any>('canvas')
+  const rootElement = canvas?.getRootElement?.() || selectedElementRef.value
+  const processDefId = rootElement?.businessObject?.id || rootElement?.id || ''
+
+  console.log('[ClarDebug][ExecutorTask] openInputClarDrawer', {
+    methodId: bindingForm.methodId,
+    methodCode: bindingForm.methodCode,
+    methodName: bindingForm.methodName,
+    nodeId,
+    processDefId,
+    selectedMethodInputsCount: selectedMethodInputs.value.length,
+    selectedMethodInputs: selectedMethodInputs.value.map((field) => ({
+      fieldId: field.fieldId,
+      fieldName: field.fieldName,
+      fieldPath: field.fieldPath,
+      schemaRole: field.schemaRole,
+      dataType: field.dataType,
+    })),
+    hasInputPolicyDocument: !!bindingForm.inputPolicyDocument,
+  })
+  
+  inputClarDrawerRef.value?.openDrawer(
+    bindingForm.methodId,
+    nodeId,
+    processDefId,
+    bindingForm.inputPolicyDocument || undefined,
+    selectedMethodInputs.value
+  )
+}
+
+function handleInputClarConfirm(document: InputPolicyDocument) {
+  bindingForm.inputPolicyDocument = document
+  saveBindingToElement()
+}
+
 // ========== 出参 Delta ==========
 function openOutputDeltaDrawer() {
-  outputDeltaDrawerRef.value?.openDrawer(
-    [...bindingForm.outputDeltas],
-    selectedMethodOutputs.value,
-  )
+  if (!bindingForm.methodId || !selectedElementRef.value) return
+
+  const canvas = getService<any>('canvas')
+  const rootElement = canvas?.getRootElement?.() || selectedElementRef.value
+
+  outputDeltaDrawerRef.value?.openDrawer({
+    currentDeltas: [...bindingForm.outputDeltas],
+    fields: selectedMethodOutputs.value,
+    currentElement: selectedElementRef.value,
+    rootElement,
+    fetchMethodSchema: api.fetchMethodSchema,
+    fetchDesignVariablePool: api.fetchDesignVariablePool,
+    fetchDesignNodeResult: api.fetchDesignNodeResult,
+  })
 }
 
 function handleOutputDeltaConfirm(deltas: OutputDeltaItem[]) {
@@ -247,8 +306,13 @@ function saveBindingToElement() {
       retryIntervalMs: bindingForm.retryIntervalMs,
       asyncFlag: bindingForm.asyncFlag,
       failureStrategy: bindingForm.failureStrategy,
+      // 保留旧版入参映射 (向后兼容)
       inputMappingJson: bindingForm.inputMappings.length
         ? JSON.stringify(bindingForm.inputMappings)
+        : undefined,
+      // 新版入参 Clar
+      inputPolicyDocumentJson: bindingForm.inputPolicyDocument
+        ? JSON.stringify(bindingForm.inputPolicyDocument)
         : undefined,
       outputDeltaJson: bindingForm.outputDeltas.length
         ? JSON.stringify(bindingForm.outputDeltas)
@@ -292,6 +356,12 @@ function readBindingFromElement() {
       bindingForm.inputMappings = inputJson ? JSON.parse(inputJson) : []
     } catch { bindingForm.inputMappings = [] }
 
+    // 读取新版入参 Clar
+    try {
+      const policyJson = binding.get('inputPolicyDocumentJson')
+      bindingForm.inputPolicyDocument = policyJson ? JSON.parse(policyJson) : null
+    } catch { bindingForm.inputPolicyDocument = null }
+
     try {
       const outputJson = binding.get('outputDeltaJson')
       bindingForm.outputDeltas = outputJson ? JSON.parse(outputJson) : []
@@ -314,7 +384,7 @@ function resetForm() {
     methodId: '', methodCode: '', methodName: '',
     timeoutMs: 30000, retryCount: 0, retryIntervalMs: 5000,
     asyncFlag: false, failureStrategy: 'FAIL',
-    inputMappings: [], outputDeltas: [],
+    inputMappings: [], inputPolicyDocument: null, outputDeltas: [],
   })
   releaseList.value = []
   methodList.value = []
@@ -464,11 +534,57 @@ onMounted(() => { loadExecutors() })
     </el-form-item>
   </el-collapse-item>
 
-  <!-- 入参映射 -->
-  <el-collapse-item name="executor-input" title="入参映射">
+  <!-- 入参 Clar -->
+  <el-collapse-item v-if="useInputClar" name="executor-input-clar" title="入参 Clar">
+    <el-form-item label-position="top">
+      <template #label>
+        入参 Clar
+        <el-button
+          type="primary"
+          class="el-icon--right"
+          :icon="EditPen"
+          link
+          :disabled="!bindingForm.methodId"
+          @click="openInputClarDrawer"
+        >
+          编辑 Clar
+        </el-button>
+      </template>
+      
+      <!-- Clar 概览 -->
+      <div v-if="bindingForm.inputPolicyDocument" class="clar-overview">
+        <div class="clar-meta">
+          <span class="clar-name">{{ bindingForm.inputPolicyDocument.name }}</span>
+          <el-tag size="small">Layers: {{ bindingForm.inputPolicyDocument.layers?.length || 0 }}</el-tag>
+        </div>
+        
+        <div class="clar-layers">
+          <div 
+            v-for="layer in bindingForm.inputPolicyDocument.layers" 
+            :key="layer.id"
+            class="layer-item"
+          >
+            <span class="layer-name">{{ layer.name }}</span>
+            <el-tag size="small" type="info">{{ layer.layerType }}</el-tag>
+            <el-tag size="small">Rules: {{ layer.rules?.length || 0 }}</el-tag>
+          </div>
+        </div>
+      </div>
+      
+      <div v-else class="clar-empty">
+        <el-icon><InfoFilled /></el-icon>
+        <span>点击"编辑 Clar"配置入参校验规则和默认值</span>
+      </div>
+    </el-form-item>
+    <InputClarDrawer ref="inputClarDrawerRef" @confirm="handleInputClarConfirm" />
+  </el-collapse-item>
+
+  <!-- 入参映射 (旧版,保留向后兼容) -->
+  <el-collapse-item v-else name="executor-input" title="入参映射">
     <el-form-item label-position="top">
       <template #label>
         入参映射
+        <el-tag size="small" type="warning" class="el-icon--right">旧版</el-tag>
         <el-button
           type="primary"
           class="el-icon--right"
@@ -599,5 +715,58 @@ onMounted(() => { loadExecutors() })
   font-size: 12px;
   color: var(--el-text-color-placeholder);
   margin-top: 8px;
+}
+
+// Clar 相关样式
+.clar-overview {
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 6px;
+  padding: 12px;
+  background: var(--el-fill-color-lighter);
+}
+
+.clar-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.clar-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--el-text-color-primary);
+}
+
+.clar-layers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.layer-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--el-fill-color-blank);
+  border-radius: 4px;
+}
+
+.layer-name {
+  font-size: 13px;
+  color: var(--el-text-color-regular);
+  flex: 1;
+}
+
+.clar-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  background: var(--el-fill-color-lighter);
+  border-radius: 4px;
+  color: var(--el-text-color-placeholder);
+  font-size: 12px;
 }
 </style>

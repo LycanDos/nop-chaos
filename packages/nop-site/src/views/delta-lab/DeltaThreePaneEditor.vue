@@ -127,6 +127,7 @@
               :selected-path="currentSelectionPath"
               :base-document="targetSourceData"
               :delta-document="activeDeltaTabData"
+              :read-only="activeDeltaTabObj?.kind === 'reverse'"
               @update-selected-value="handleSelectedValueUpdate"
             />
           </div>
@@ -229,6 +230,7 @@
               :model-value="activeDeltaTabData"
               :base-document="targetSourceData"
               :delta-document="activeDeltaTabData"
+              :read-only="activeDeltaTabObj?.kind === 'reverse'"
               @update:model-value="updateDeltaData($event)"
               @activate="handleActivate"
               @selection-change="handleSelectionChange"
@@ -249,7 +251,7 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import JsonEditorPane from './components/JsonEditorPane.vue';
 import WorkbenchPanel from './components/WorkbenchPanel.vue';
 import { simulateDeltaPreview } from './model/deltaPreview';
-import { backendApplyDelta } from './model/previewProvider';
+import { backendApplyDelta, backendReverseDelta } from './model/previewProvider';
 import { setValueAtPath } from './model/jsonPath';
 import {
   createMainSourceSample,
@@ -366,9 +368,15 @@ const activeDeltaTabData = computed(() => activeDeltaTabObj.value?.data ?? {});
 function deltaTabIcon(kind: DeltaTabKind): string {
   switch (kind) { case 'delta': return 'Δ'; case 'reverse': return '⟲'; case 'pipeline-step': return '▸'; }
 }
-function switchDeltaTab(tabId: string) {
+async function switchDeltaTab(tabId: string) {
   activeDeltaTab.value = tabId;
   middleMode.value = 'preview';
+  if (tabId === 'delta-reverse') {
+    await ensureReverseDelta();
+    await nextTick();
+    recomputePreview();
+    return;
+  }
   nextTick(() => recomputePreview());
 }
 function updateDeltaData(data: Record<string, unknown>) {
@@ -384,40 +392,86 @@ function rebuildDeltaTabs(deltaData: Record<string, unknown>) {
     steps.forEach((step, index) => {
       newTabs.push({ id: `pipeline-step-${index}`, kind: 'pipeline-step', label: (step.$comment as string) || `Step ${index + 1}`, data: (step.$delta as Record<string, unknown>) ?? step });
     });
-    newTabs.push({ id: 'delta-reverse', kind: 'reverse', label: 'Reverse', data: generateReversePlaceholder(deltaData) });
+    newTabs.push({ id: 'delta-reverse', kind: 'reverse', label: 'Reverse', data: {} });
   } else {
     newTabs.push({ id: 'delta-main', kind: 'delta', label: 'Delta', data: deltaData });
-    newTabs.push({ id: 'delta-reverse', kind: 'reverse', label: 'Reverse', data: generateReversePlaceholder(deltaData) });
+    newTabs.push({ id: 'delta-reverse', kind: 'reverse', label: 'Reverse', data: {} });
   }
   deltaTabs.value = newTabs;
   if (!newTabs.find((t) => t.id === activeDeltaTab.value)) activeDeltaTab.value = newTabs[0]?.id ?? '';
 }
-function generateReversePlaceholder(d: Record<string, unknown>): Record<string, unknown> {
-  if (Array.isArray(d.$pipeline)) {
-    return { $pipeline: [...(d.$pipeline as Array<Record<string, unknown>>)].reverse().map((s) => ({ $delta: genRev((s.$delta as Record<string, unknown>) ?? {}), $comment: `Reverse: ${s.$comment ?? ''}` })) };
-  }
-  return genRev(d);
+const reverseLoading = ref(false);
+const reverseError = ref('');
+const reverseDirty = ref(true);
+let reverseRequestId = 0;
+
+function getReverseTab() {
+  return deltaTabs.value.find((t) => t.kind === 'reverse');
 }
-function genRev(d: Record<string, unknown>): Record<string, unknown> {
-  const r: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(d)) {
-    if (k.startsWith('$')) continue;
-    if (k.endsWith('-')) { r[k.slice(0, -1)] = '/* 需要后端 reverse */'; }
-    else if (k.includes('+[')) {
-      const bp = k.split('+')[0];
-      const nm = v && typeof v === 'object' && !Array.isArray(v) ? ((v as Record<string, unknown>).name ?? (v as Record<string, unknown>).id) : null;
-      r[nm ? `${bp}[name='${nm}']-` : `${bp}/* selector */-`] = true;
-    } else if (k.includes('.+')) { r[k] = '/* 需要后端 reverse */'; }
-    else { r[`${k}-`] = true; }
+
+function invalidateReverseDelta() {
+  reverseDirty.value = true;
+  reverseError.value = '';
+  const reverseTab = getReverseTab();
+  if (reverseTab) {
+    reverseTab.data = {};
   }
-  return r;
+}
+
+async function ensureReverseDelta(force = false) {
+  const reverseTab = getReverseTab();
+  const mainDelta = deltaTabs.value.find((t) => t.id === 'delta-main')?.data;
+  if (!reverseTab || !mainDelta) {
+    return;
+  }
+  if (!force && !reverseDirty.value) {
+    return;
+  }
+
+  reverseLoading.value = true;
+  reverseError.value = '';
+  reverseTab.data = {};
+  const requestId = ++reverseRequestId;
+
+  try {
+    const response = await backendReverseDelta({
+      sources: buildSourcesMap(),
+      target: targetSourceTab.value?.name ?? 'main',
+      delta: cloneDeep(mainDelta),
+    });
+    if (requestId !== reverseRequestId) {
+      return;
+    }
+    if (!response.success) {
+      reverseError.value = response.error ?? '后端未返回 reverse 结果';
+      reverseDirty.value = true;
+      return;
+    }
+    reverseTab.data = response.reverseDelta;
+    reverseDirty.value = false;
+  } finally {
+    if (requestId === reverseRequestId) {
+      reverseLoading.value = false;
+    }
+  }
 }
 
 watch(() => deltaTabs.value.find((t) => t.id === 'delta-main')?.data, (data) => {
   if (!data) return;
-  if (Array.isArray(data.$pipeline) !== deltaTabs.value.some((t) => t.kind === 'pipeline-step')) rebuildDeltaTabs(data);
-  const rt = deltaTabs.value.find((t) => t.kind === 'reverse');
-  if (rt) rt.data = generateReversePlaceholder(data);
+  if (Array.isArray(data.$pipeline) !== deltaTabs.value.some((t) => t.kind === 'pipeline-step')) {
+    rebuildDeltaTabs(data);
+  }
+  invalidateReverseDelta();
+  if (activeDeltaTab.value === 'delta-reverse') {
+    void ensureReverseDelta();
+  }
+}, { deep: true });
+
+watch(sourceTabs, () => {
+  invalidateReverseDelta();
+  if (activeDeltaTab.value === 'delta-reverse') {
+    void ensureReverseDelta();
+  }
 }, { deep: true });
 
 // ─── Preview ─────────────────────────────────────────────────────────────────
@@ -438,12 +492,46 @@ function recomputePreview() {
     }
   }
   if (tab.kind === 'reverse') {
+    if (reverseLoading.value) {
+      previewResult.value = {
+        mode: 'delta',
+        source: 'backend',
+        result: {},
+        warnings: [{ message: '正在请求后端生成 Reverse...' }],
+        steps: [],
+        unresolvedExpressions: 0,
+      };
+      updatePreviewEditor({});
+      return;
+    }
+    if (reverseError.value) {
+      previewResult.value = {
+        mode: 'delta',
+        source: 'backend',
+        result: {},
+        warnings: [{ message: reverseError.value }],
+        steps: [],
+        unresolvedExpressions: 0,
+      };
+      updatePreviewEditor({});
+      return;
+    }
     const mainTab = deltaTabs.value.find((t) => t.id === 'delta-main');
-    if (mainTab) {
+    if (mainTab && !reverseDirty.value) {
       const fwd = simulateDeltaPreview(base, mainTab.data);
       const rev = simulateDeltaPreview(fwd.result, tab.data);
       previewResult.value = rev; updatePreviewEditor(rev.result); return;
     }
+    previewResult.value = {
+      mode: 'delta',
+      source: 'backend',
+      result: {},
+      warnings: [{ message: 'Reverse 尚未生成，请稍后重试。' }],
+      steps: [],
+      unresolvedExpressions: 0,
+    };
+    updatePreviewEditor({});
+    return;
   }
   const res = simulateDeltaPreview(base, tab.data);
   previewResult.value = res; updatePreviewEditor(res.result);
@@ -497,6 +585,7 @@ async function executeBackend() {
     const mainDelta = deltaTabs.value.find((t) => t.id === 'delta-main')?.data ?? {};
     const tab = activeDeltaTabObj.value;
     let deltaToSend = cloneDeep(mainDelta);
+    let sourcesToSend = buildSourcesMap();
 
     // For pipeline-step, send partial pipeline
     if (tab?.kind === 'pipeline-step' && Array.isArray(mainDelta.$pipeline)) {
@@ -504,11 +593,34 @@ async function executeBackend() {
       deltaToSend = { $pipeline: (mainDelta.$pipeline as unknown[]).slice(0, idx + 1) };
     }
 
-    const result = await backendApplyDelta({
-      sources: buildSourcesMap(),
-      target: targetSourceTab.value?.name ?? 'main',
-      delta: deltaToSend,
-    });
+    let result: DeltaPreviewResult;
+    if (tab?.kind === 'reverse') {
+      await ensureReverseDelta();
+      const reverseTab = getReverseTab();
+      if (!reverseTab || reverseDirty.value) {
+        throw new Error(reverseError.value || '未能生成 Reverse');
+      }
+      const forwardResult = await backendApplyDelta({
+        sources: sourcesToSend,
+        target: targetSourceTab.value?.name ?? 'main',
+        delta: cloneDeep(mainDelta),
+      });
+      sourcesToSend = {
+        ...sourcesToSend,
+        [targetSourceTab.value?.name ?? 'main']: cloneDeep(forwardResult.result),
+      };
+      result = await backendApplyDelta({
+        sources: sourcesToSend,
+        target: targetSourceTab.value?.name ?? 'main',
+        delta: cloneDeep(reverseTab.data),
+      });
+    } else {
+      result = await backendApplyDelta({
+        sources: sourcesToSend,
+        target: targetSourceTab.value?.name ?? 'main',
+        delta: deltaToSend,
+      });
+    }
 
     backendResult.value = result;
     // Wait for DOM to render the backendEditorRef container, then mount and update
@@ -640,7 +752,8 @@ function loadSingleSourceSample() {
   sourceTabs.value = [{ id: 'main', name: 'main', isTarget: true, data: createMainSourceSample().data }];
   activeSourceTab.value = 'main';
   const d = createDeltaSample();
-  deltaTabs.value = [{ id: 'delta-main', kind: 'delta', label: 'Delta', data: d }, { id: 'delta-reverse', kind: 'reverse', label: 'Reverse', data: generateReversePlaceholder(d) }];
+  deltaTabs.value = [{ id: 'delta-main', kind: 'delta', label: 'Delta', data: d }, { id: 'delta-reverse', kind: 'reverse', label: 'Reverse', data: {} }];
+  invalidateReverseDelta();
   activeDeltaTab.value = 'delta-main'; middleMode.value = 'workbench';
 }
 function loadMultiSourceSample() {
@@ -652,7 +765,8 @@ function loadMultiSourceSample() {
   ];
   activeSourceTab.value = 'main';
   const d = createMultiSourceDeltaSample();
-  deltaTabs.value = [{ id: 'delta-main', kind: 'delta', label: 'Delta', data: d }, { id: 'delta-reverse', kind: 'reverse', label: 'Reverse', data: generateReversePlaceholder(d) }];
+  deltaTabs.value = [{ id: 'delta-main', kind: 'delta', label: 'Delta', data: d }, { id: 'delta-reverse', kind: 'reverse', label: 'Reverse', data: {} }];
+  invalidateReverseDelta();
   activeDeltaTab.value = 'delta-main'; middleMode.value = 'workbench';
 }
 function loadPipelineSample() {

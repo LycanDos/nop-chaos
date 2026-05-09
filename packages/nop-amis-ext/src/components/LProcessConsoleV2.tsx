@@ -2762,7 +2762,7 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
   const visibleParamColumns = orderedColumns(PARAM_COLUMNS, paramColumnOrder, paramColumnFixed).filter(column => paramColumns[column.key])
   const configSticky = buildStickyOffsets(visibleConfigColumns, configColumnFixed, configColumnWidths, true)
   const methodSticky = buildStickyOffsets(visibleMethodColumns, methodColumnFixed, methodColumnWidths, true)
-  const paramSticky = buildStickyOffsets(visibleParamColumns, paramColumnFixed, paramColumnWidths, true)
+  const paramSticky = buildStickyOffsets(visibleParamColumns, paramColumnFixed, paramColumnWidths, false)
 
   function renderAmisControl(region: string, schema: any) {
     if (!props.render)
@@ -3636,7 +3636,6 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
                               </span>
                             </th>
                           ))}
-                          <th style={{ ...densityMetrics().th, ...operationCellStyle(true) }}>操作</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -3749,15 +3748,13 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
                                       </td>
                                     )
                                   })}
-                                  <td style={{ ...densityMetrics().td, ...operationCellStyle(), ...highlightedCellStyle(highlightRow) }}>
-                                  </td>
                                 </tr>
                                 )
                               }))
                             })
                           : (
                               <tr>
-                                <td style={densityMetrics().td} colSpan={(visibleParamColumns.length || 1) + 1}>
+                                <td style={densityMetrics().td} colSpan={visibleParamColumns.length || 1}>
                                   暂无匹配的参数记录。
                                 </td>
                               </tr>

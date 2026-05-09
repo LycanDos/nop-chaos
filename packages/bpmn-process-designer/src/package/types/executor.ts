@@ -89,6 +89,124 @@ export interface OutputDeltaItem {
 /** 失败策略 */
 export type FailureStrategy = 'FAIL' | 'SKIP' | 'RETRY' | 'FALLBACK'
 
+// ==================== 入参 Clar 相关类型 ====================
+
+/** Delta 表达式类型 */
+export type DeltaExpression =
+  | { $jina: string }  // JSONata 表达式
+  | { $jmes: string }  // JMESPath 表达式
+  | { $java: string }  // Java 方法调用
+
+/** 值类型：字面量或 Delta 表达式 */
+export type ClarValue = string | number | boolean | null | DeltaExpression
+
+/** 条件节点类型 */
+export type ConditionOperator = 'eq' | 'ne' | 'gt' | 'ge' | 'lt' | 'le' | 'in' | 'notIn' | 'contains' | 'startsWith' | 'endsWith' | 'isNull' | 'notNull' | 'isBlank' | 'notBlank'
+
+/** 条件节点 */
+export interface ConditionNode {
+  id: string
+  type: 'simple' | 'and' | 'or'
+  operator?: ConditionOperator
+  field?: string
+  value?: any
+  children?: ConditionNode[]
+}
+
+/** 校验规则操作符 */
+export type PolicyOperator =
+  | 'required'
+  | 'gt' | 'ge' | 'lt' | 'le'
+  | 'eq' | 'ne'
+  | 'in' | 'notIn'
+  | 'between' | 'notBetween'
+  | 'contains' | 'notContains'
+  | 'startsWith' | 'notStartsWith'
+  | 'endsWith' | 'notEndsWith'
+  | 'isNull' | 'notNull'
+  | 'isBlank' | 'notBlank'
+  | 'regex'
+  | 'default'
+  | 'softLock' | 'locked' | 'readonly'
+
+/** 锁定模式 */
+export type LockMode = 'HARD_LOCK' | 'SOFT_LOCK' | 'MUST_EQUAL_PREFILL'
+
+/** 校验规则 */
+export interface PolicyRule {
+  id: string
+  path: string
+  operator: PolicyOperator
+  enabled: boolean
+  orderNo: number
+  value?: ClarValue
+  values?: ClarValue[]
+  min?: ClarValue
+  max?: ClarValue
+  minInclusive?: boolean
+  maxInclusive?: boolean
+  pattern?: string
+  defaultValue?: ClarValue
+  lockedValue?: ClarValue
+  lockMode?: LockMode
+  applyWhen?: ConditionNode
+  errorCode?: string
+  errorDescription?: string
+  severity?: number
+  note?: string
+  priority?: number
+}
+
+/** 校验层类型 */
+export type PolicyLayerType = 'BASE' | 'PLATFORM' | 'EXECUTOR_CONFIG' | 'PROCESS_DESIGN' | 'INSTANCE' | string
+
+/** 校验层 */
+export interface PolicyLayer {
+  id: string
+  name: string
+  layerType: PolicyLayerType
+  orderNo: number
+  editable: boolean
+  description?: string
+  rules: PolicyRule[]
+}
+
+/** 入参 Clar 文档 */
+export interface InputPolicyDocument {
+  id: string
+  name: string
+  targetSchema?: string
+  description?: string
+  version?: string
+  layers: PolicyLayer[]
+}
+
+/** 变量项 */
+export interface VariableItem {
+  name: string
+  path: string
+  type: string
+  source: 'input' | 'output' | 'context' | 'system' | 'config' | 'field'
+  description?: string
+}
+
+/** 
+ * 变量来源
+ * 
+ * 变量来源分类:
+ * - system: 系统注入变量 (currentUserId, tenantId, now 等)
+ * - context: 变量池 (流程中前序节点写入的变量)
+ * - field: 当前入参字段 (用于字段间引用)
+ */
+export interface AvailableVariables {
+  /** 系统注入变量 (运行时自动注入) */
+  system: VariableItem[]
+  /** 变量池变量 (流程中前序节点写入) */
+  context: VariableItem[]
+  /** 当前入参字段 (用于字段间引用) */
+  field: VariableItem[]
+}
+
 /** 执行器绑定配置（保存到 BPMN XML 扩展元素中） */
 export interface ExecutorBindingConfig {
   executorDefId: string
@@ -106,6 +224,11 @@ export interface ExecutorBindingConfig {
   retryIntervalMs: number
   asyncFlag: boolean
   failureStrategy: FailureStrategy
+  /**
+   * @deprecated 使用 inputPolicyDocument 替代
+   */
   inputMappings: InputMappingItem[]
+  /** 入参 Clar 文档 */
+  inputPolicyDocument?: InputPolicyDocument
   outputDeltas: OutputDeltaItem[]
 }

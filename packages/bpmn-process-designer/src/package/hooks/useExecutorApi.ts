@@ -13,6 +13,7 @@ import type {
   ExecutorReleaseItem,
   ExecutorMethodItem,
   MethodSchemaFieldItem,
+  VariableItem,
 } from '@/types/executor'
 
 /** 执行器 API 适配器接口 */
@@ -25,6 +26,20 @@ export interface ExecutorApiAdapter {
   fetchMethodList: (executorReleaseId: string) => Promise<ExecutorMethodItem[]>
   /** 加载指定方法的入参/出参 Schema 字段 */
   fetchMethodSchema: (methodId: string) => Promise<MethodSchemaFieldItem[]>
+  /**
+   * 可选：直接由宿主提供设计态变量池快照。
+   * 若未提供，设计器将根据 BPMN 图中的前序节点和 DataObject 本地推导。
+   */
+  fetchDesignVariablePool?: (nodeId: string) => Promise<Record<string, any>>
+  /**
+   * 可选：直接由宿主提供当前节点的运行结果样例或字段树。
+   * 若未提供，设计器将根据方法 Schema 自动生成占位结构。
+   */
+  fetchDesignNodeResult?: (nodeId: string, methodId: string) => Promise<Record<string, any>>
+  /**
+   * 可选：提供结构化变量清单，供更复杂的 Source 面板使用。
+   */
+  fetchDesignVariableItems?: (nodeId: string) => Promise<VariableItem[]>
 }
 
 /** provide/inject key */
