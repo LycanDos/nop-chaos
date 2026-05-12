@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { customRef, provide, ref } from 'vue'
+import { computed, customRef, markRaw, onBeforeUnmount, provide, ref, shallowRef } from 'vue'
 // CSS 依赖由使用方（如 nop-site）自行导入，避免库构建后字体路径断裂
 // 使用方需要导入：
 //   import 'bpmn-js/dist/assets/diagram-js.css'
@@ -38,6 +38,7 @@ import type { Minimap } from 'diagram-js-minimap'
 import { layoutProcess } from 'bpmn-auto-layout'
 import { ElMessage } from 'element-plus'
 import { EXECUTOR_API_KEY, type ExecutorApiAdapter } from '../hooks/useExecutorApi'
+import { ReverseSimulationController } from './reverseSimulation.ts'
 
 defineOptions({
   name: 'ProcessDesigner',
@@ -124,18 +125,22 @@ const rightArrow = ref(true)
 const asideWidth = ref(370)
 const isDragging = ref(false)
 const issuesList = ref<ElementIssue[]>([])
-const modeler = ref<BpmnModeler>()
-const injector = ref<Injector>()
+const modeler = shallowRef<BpmnModeler>()
+const injector = shallowRef<Injector>()
+const reverseSimulation = shallowRef<ReverseSimulationController>()
+const reverseMockVisible = ref(false)
 const fileRef = ref<HTMLInputElement>()
 const labelPosition = ref('left')
 const formSize = ref('small')
+const isPreviewMode = computed(() => mockVisible.value || reverseMockVisible.value)
+const showRightPanel = computed(() => rightArrow.value && !isPreviewMode.value)
 
 // ========== 侧边栏拖拽调整宽度 ==========
 const MIN_ASIDE_WIDTH = 280
 const MAX_ASIDE_WIDTH = 700
 
 const onDragStart = (e: MouseEvent) => {
-  if (!rightArrow.value || mockVisible.value) return
+  if (!rightArrow.value || mockVisible.value || reverseMockVisible.value) return
   e.preventDefault()
   isDragging.value = true
   const startX = e.clientX
@@ -235,13 +240,40 @@ const getXml = async () => {
   return res?.xml
 }
 const modelerReady = async (bpmnModeler: BpmnModeler) => {
-  modeler.value = bpmnModeler
-  injector.value = bpmnModeler.get<Injector>('injector')
+  modeler.value = markRaw(bpmnModeler)
+  injector.value = markRaw(bpmnModeler.get<Injector>('injector'))
+  reverseSimulation.value = markRaw(new ReverseSimulationController(bpmnModeler, {
+    executorApi: props.executorApi,
+  }))
   modeler.value?.on<{ issues: Issues }>('linting.completed', ({ issues }) => {
     issuesList.value = Object.values(issues).flat()
   })
   restart()
   // await bpmnModeler.createDiagram()
+}
+const toggleMockVisible = () => {
+  if (reverseMockVisible.value) {
+    reverseSimulation.value?.deactivate()
+    reverseMockVisible.value = false
+  }
+  mockVisible.value = !mockVisible.value
+}
+const toggleReverseMockVisible = () => {
+  if (mockVisible.value) {
+    mockVisible.value = false
+  }
+  if (reverseMockVisible.value) {
+    reverseSimulation.value?.deactivate()
+    reverseMockVisible.value = false
+  } else {
+    reverseMockVisible.value = true
+    try {
+      reverseSimulation.value?.activate()
+    } catch (error) {
+      reverseMockVisible.value = false
+      throw error
+    }
+  }
 }
 const validate = async () => {
   const errors = issuesList.value.filter((issue) => issue.category === 'error')
@@ -255,11 +287,15 @@ const resetZoom = () => {
   modeler.value?.get<Canvas>('canvas')?.zoom('fit-viewport')
 }
 const toggleRightArrow = () => {
-  if (mockVisible.value) {
-    return ElMessage.warning('请先退出模拟模式')
+  if (isPreviewMode.value) {
+    return ElMessage.warning('请先退出模拟预览模式')
   }
   rightArrow.value = !rightArrow.value
 }
+onBeforeUnmount(() => {
+  reverseSimulation.value?.deactivate()
+  reverseMockVisible.value = false
+})
 provide('ProcessDesigner', {
   modeler: modeler,
 })
@@ -324,9 +360,17 @@ defineExpose({
           <el-tooltip placement="top" content="流程模拟">
             <el-button
               :icon="mockVisible ? VideoPause : VideoPlay"
-              @click="mockVisible = !mockVisible"
+              @click="toggleMockVisible"
             >
               {{ mockVisible ? '退出模拟' : '开启模拟' }}
+            </el-button>
+          </el-tooltip>
+          <el-tooltip placement="top" content="回退模拟">
+            <el-button
+              :icon="reverseMockVisible ? VideoPause : VideoPlay"
+              @click="toggleReverseMockVisible"
+            >
+              {{ reverseMockVisible ? '退出回退预览' : '开启回退预览' }}
             </el-button>
           </el-tooltip>
           <el-tooltip placement="top" content="流程校验">
@@ -351,7 +395,7 @@ defineExpose({
     <div class="design-body">
       <div class="design-canvas">
         <bpmn-designer @modeler-ready="modelerReady" />
-        <div class="right-panel-arrow" @click="toggleRightArrow">
+        <div v-if="!isPreviewMode" class="right-panel-arrow" @click.stop="toggleRightArrow">
           <el-icon :size="16">
             <Setting />
           </el-icon>
@@ -359,16 +403,17 @@ defineExpose({
       </div>
       <!-- 拖拽分割条 -->
       <div
-        v-if="rightArrow && !mockVisible"
+        v-if="showRightPanel"
         class="design-resize-handle"
         :class="{ 'design-resize-handle--active': isDragging }"
         @mousedown="onDragStart"
       />
       <div
+        v-if="showRightPanel"
         class="design-aside"
         :style="{
-          width: rightArrow && !mockVisible ? asideWidth + 'px' : '0px',
-          flex: rightArrow && !mockVisible ? '0 0 ' + asideWidth + 'px' : '0 0 0px',
+          width: asideWidth + 'px',
+          flex: '0 0 ' + asideWidth + 'px',
         }"
       >
         <BpmnPanel

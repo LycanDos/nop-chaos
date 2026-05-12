@@ -125,12 +125,182 @@ th.el-table__cell {
   --bjsl-font-color: var(--el-text-color-primary);
   --bjsl-font-size: var(--el-font-size-base);
   --token-simulation-green-base-44: var(--el-color-primary);
+  --reverse-simulation-frame: #e67e22;
+  --reverse-simulation-success: #2fb344;
+  --reverse-simulation-warning: #f59f00;
+  --reverse-simulation-danger: #fa5252;
+  --reverse-simulation-text: #fff;
 }
 
 .djs-container {
   > svg:focus {
     outline: none;
   }
+}
+
+.bjs-container.reverse-simulation .djs-container {
+  box-shadow: inset 0 0 0 4px var(--reverse-simulation-frame);
+}
+
+.bjs-container.reverse-simulation .djs-bendpoint,
+.bjs-container.reverse-simulation .djs-context-pad,
+.bjs-container.reverse-simulation .djs-outline,
+.bjs-container.reverse-simulation .djs-palette,
+.bjs-container.reverse-simulation .djs-resizer,
+.bjs-container.reverse-simulation .djs-segment-dragger {
+  display: none !important;
+}
+
+.bjs-container.reverse-simulation
+  .djs-overlay:not(.djs-overlay-bts-context-menu, .djs-overlay-bts-element-notification, .djs-overlay-bts-token-count, .djs-overlay-drilldown) {
+  display: none !important;
+}
+
+.bjs-container.reverse-simulation .djs-overlay-bts-context-menu {
+  pointer-events: auto;
+}
+
+.bjs-container.reverse-simulation .djs-overlay-bts-context-menu .bts-context-pad:hover,
+.bjs-container.reverse-simulation .djs-overlay-bts-context-menu .bts-context-pad.active {
+  background-color: #ff922b;
+  color: #fff;
+  opacity: 1;
+}
+
+.reverse-simulation-speed {
+  z-index: 10;
+}
+
+.bts-set-animation-speed.reverse-simulation-speed > .bts-icon {
+  transform: scaleX(-1);
+}
+
+.bts-set-animation-speed.reverse-simulation-speed .bts-animation-speed-button {
+  transform: scaleX(-1);
+}
+
+.bts-set-animation-speed.reverse-simulation-speed .bts-animation-speed-button.active,
+.bts-set-animation-speed.reverse-simulation-speed .bts-animation-speed-button:hover {
+  background-color: #ff922b;
+  color: #fff;
+}
+
+.reverse-simulation-palette {
+  z-index: 12;
+}
+
+.bts-palette.reverse-simulation-palette .bts-entry:not(.disabled):hover,
+.bts-palette.reverse-simulation-palette .bts-entry.active {
+  background-color: #ff922b;
+  color: #fff;
+}
+
+.reverse-simulation-log {
+  z-index: 13;
+}
+
+.bts-log.reverse-simulation-log .bts-header {
+  background-color: #ff922b;
+}
+
+.reverse-simulation-notifications {
+  z-index: 14;
+}
+
+/* ===== Reverse simulation trail (persistent path) ===== */
+
+.bjs-container.reverse-simulation .layer-reverse-simulation-trace {
+  pointer-events: none;
+}
+
+.bjs-container.reverse-simulation .reverse-simulation-trace-path {
+  fill: none;
+  stroke-width: 3px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.92;
+  transition: stroke-width 0.15s ease, opacity 0.15s ease, filter 0.15s ease;
+}
+
+.bjs-container.reverse-simulation .reverse-simulation-trace-path.reverse-simulation-trace-path-glow {
+  stroke-width: 5px;
+  opacity: 1;
+  filter: drop-shadow(0 0 8px currentColor) drop-shadow(0 0 4px currentColor);
+}
+
+/* ===== Reverse trace token ===== */
+
+.bts-token-count.reverse-trace-token {
+  position: relative;
+  animation: none;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  min-height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px #fff, 0 6px 18px rgba(15, 23, 42, 0.28);
+  transform: translateZ(0);
+}
+
+.bts-token-count.reverse-trace-token.is-paused {
+  animation: reverse-trace-paused-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes reverse-trace-paused-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+.bts-token-count.reverse-trace-token .reverse-trace-token__num {
+  pointer-events: none;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.bts-token-count.reverse-trace-token .reverse-trace-token__resume,
+.bts-token-count.reverse-trace-token .reverse-trace-token__delete {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  font-size: 11px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bts-token-count.reverse-trace-token .reverse-trace-token__resume {
+  top: -7px;
+  left: -7px;
+}
+
+.bts-token-count.reverse-trace-token .reverse-trace-token__delete {
+  top: -8px;
+  right: -8px;
+}
+
+.bts-token-count.reverse-trace-token.is-start:hover .reverse-trace-token__delete,
+.bts-token-count.reverse-trace-token.is-start.is-paused .reverse-trace-token__resume,
+.bts-token-count.reverse-trace-token.is-start:hover .reverse-trace-token__resume {
+  opacity: 1;
+}
+
+.bts-token-count.reverse-trace-token .reverse-trace-token__resume:hover,
+.bts-token-count.reverse-trace-token .reverse-trace-token__delete:hover {
+  transform: scale(1.15);
+  background: #000;
 }
 
 .el-drawer {

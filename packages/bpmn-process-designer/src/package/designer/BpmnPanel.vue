@@ -3,7 +3,7 @@
  * BpmnPanel - BPMN 属性面板
  * 根据选中元素类型显示对应的属性编辑面板
  */
-import { computed, shallowRef } from 'vue'
+import { computed, onMounted, shallowRef } from 'vue'
 import BpmnModeler from 'bpmn-js/lib/Modeler'
 import type { Element } from 'bpmn-js/lib/model/Types'
 import type ElementRegistry from 'diagram-js/lib/core/ElementRegistry'
@@ -122,6 +122,17 @@ const _update = debounce((element: Element) => {
 }, 100)
 
 const isImplicitRoot = (element: RootLike) => element && element.isImplicit
+
+onMounted(() => {
+  const selection = props.modeler.get<any>('selection')
+  const selected = selection?.get?.()?.[0]
+  const rootElement = canvas.getRootElement()
+  if (selected) {
+    _update(selected)
+  } else if (!isImplicitRoot(rootElement)) {
+    _update(rootElement as Element)
+  }
+})
 </script>
 
 <template>

@@ -23,7 +23,7 @@ import { ref, shallowRef, provide, onMounted, onBeforeUnmount, nextTick, createA
 import { useRouter } from 'vue-router'
 import { ProcessDesigner } from 'bpmn-process-designer';
 import { nopSiteExecutorApi } from '../api/bpmn/executorApi';
-// 导入 bpmn-process-designer 的组件样式（scoped CSS）
+// 导入 bpmn-process-designer 组件样式；dev 别名会指向源码 SCSS。
 import 'bpmn-process-designer/dist/bpmn-process-designer.css';
 // BPMN 相关 CSS（字体和样式必须从 node_modules 直接导入以确保路径正确）
 import 'bpmn-js/dist/assets/diagram-js.css'
@@ -1643,6 +1643,19 @@ declare global {
   position: absolute;
   top: 172px;
   right: 70px;
+}
+
+.bjs-container.reverse-simulation foreignObject.amis-foreign-object,
+.bjs-container.reverse-simulation .amis-content-div {
+  pointer-events: none !important;
+}
+
+.bjs-container.reverse-simulation .amis-content-div.amis-interactive {
+  outline: none !important;
+  border: none !important;
+  animation: none !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
 }
 
 /* AMIS元素的特殊样式 */
