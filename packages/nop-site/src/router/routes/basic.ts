@@ -115,23 +115,60 @@ export const METHOD_BINDING_DESIGNER_ROUTE: AppRouteRecordRaw = {
   ],
 };
 
-export const FLOW_RUNTIME_VIEWER_ROUTE: AppRouteRecordRaw = {
-  path: '/flow-runtime-viewer',
-  name: 'FlowRuntimeViewerRoot',
+export const BPMN_DESIGNER_EXAMPLE_ROUTE: AppRouteRecordRaw = {
+  path: '/bpmn-designer',
+  name: 'BpmnDesignerRoot',
   component: LAYOUT,
   meta: {
-    title: '流程运行展示器',
-    hideMenu: true,
+    title: 'BPMN设计器',
+    icon: 'icon-park-outwork:workbench',
+    orderNo: 9,
   },
   children: [
     {
-      path: '',
-      name: 'FlowRuntimeViewer',
-      component: () => import('/@/views/FlowRuntimeViewer.vue'),
+      path: 'example',
+      name: 'BpmnDesignerExample',
+      component: () => import('/@/views/BpmnDesignerExample.vue'),
       meta: {
-        title: '流程运行展示器',
-        hideMenu: true,
+        title: '设计器示例',
+        icon: 'ant-design:experiment-outlined',
+        hideMenu: false,
       },
     },
   ],
 };
+
+export const WORKFLOW_RUNTIME_VIEWER_ROUTE: AppRouteRecordRaw = {
+  path: '/wf',
+  name: 'WorkflowRoot',
+  component: LAYOUT,
+  redirect: '/wf/runtime-viewer',
+  meta: {
+    title: '工作流',
+    icon: 'icon-park-outline:workflow',
+    orderNo: 8,
+  },
+  children: [
+    {
+      path: 'runtime-viewer',
+      name: 'WfRuntimeViewer',
+      component: () => import('/@/views/wf/RuntimeViewerPage.vue'),
+      meta: {
+        title: '工作流运行时View',
+        icon: 'ant-design:eye-outlined',
+        hideMenu: false,
+      },
+    },
+    {
+      path: 'runtime-viewer-example',
+      name: 'WfRuntimeViewerExample',
+      component: () => import('/@/views/wf/RuntimeViewerExample.vue'),
+      meta: {
+        title: '工作流运行时示例',
+        icon: 'ant-design:experiment-outlined',
+        hideMenu: false,
+      },
+    },
+  ],
+};
+
