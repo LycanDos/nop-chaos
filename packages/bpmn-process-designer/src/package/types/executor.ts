@@ -207,6 +207,22 @@ export interface AvailableVariables {
   field: VariableItem[]
 }
 
+// ==================== 执行器插件注册表类型 ====================
+
+/** 执行器类型插件定义 */
+export interface ExecutorTypePlugin {
+  /** 插件唯一标识，如 "lycan.hoppscotch" */
+  id: string
+  /** 显示名称，如 "API 调用" */
+  name: string
+  /** 图标引用（SVG sprite ID 或 URL） */
+  icon: string
+  /** JSON Schema 定义配置结构（用于折叠态摘要 + 自动表单回退） */
+  configSchema?: Record<string, any>
+  /** 全屏编辑器 URL（可选，有则使用 Drawer + iframe） */
+  editorUrl?: string
+}
+
 /** 执行器绑定配置（保存到 BPMN XML 扩展元素中） */
 export interface ExecutorBindingConfig {
   executorDefId: string
@@ -224,6 +240,10 @@ export interface ExecutorBindingConfig {
   retryIntervalMs: number
   asyncFlag: boolean
   failureStrategy: FailureStrategy
+  /** 执行器类型（如 "lycan.hoppscotch"），用于插件执行器 */
+  executorType?: string
+  /** 执行器配置 JSON（插件专属配置，如 Hoppscotch 的 method/url/headers） */
+  executorConfigJson?: string
   /**
    * @deprecated 使用 inputPolicyDocument 替代
    */

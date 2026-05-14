@@ -41,6 +41,7 @@ import ExternalTask from './Panel/ExternalTask/index.vue'
 import DecisionTask from './Panel/DecisionTask/index.vue'
 import Advanced from './Panel/BaseActivity/Advanced.vue'
 import ExecutorTask from './Panel/ExecutorTask/index.vue'
+import SkinConfig from './Panel/SkinConfig/index.vue'
 
 defineOptions({ name: 'BpmnPanel' })
 
@@ -156,6 +157,7 @@ onMounted(() => {
           <Advanced />
         </template>
         <template #other>
+          <SkinConfig />
           <TaskListener />
         </template>
       </BaseActivity>
@@ -165,6 +167,7 @@ onMounted(() => {
         <template #basic>
           <ServiceTask />
           <Advanced />
+          <SkinConfig />
         </template>
       </BaseActivity>
 
@@ -173,6 +176,7 @@ onMounted(() => {
         <template #basic>
           <HttpTask />
           <Advanced />
+          <SkinConfig />
         </template>
       </BaseActivity>
 
@@ -181,6 +185,7 @@ onMounted(() => {
         <template #basic>
           <CamelTask />
           <Advanced />
+          <SkinConfig />
         </template>
       </BaseActivity>
 
@@ -189,6 +194,7 @@ onMounted(() => {
         <template #basic>
           <ShellTask />
           <Advanced />
+          <SkinConfig />
         </template>
       </BaseActivity>
 
@@ -197,6 +203,7 @@ onMounted(() => {
         <template #basic>
           <EmailTask />
           <Advanced />
+          <SkinConfig />
         </template>
       </BaseActivity>
 
@@ -205,6 +212,7 @@ onMounted(() => {
         <template #basic>
           <ExternalTask />
           <Advanced />
+          <SkinConfig />
         </template>
       </BaseActivity>
 
@@ -213,6 +221,7 @@ onMounted(() => {
         <template #basic>
           <DecisionTask />
           <Advanced />
+          <SkinConfig />
         </template>
       </BaseActivity>
 
@@ -221,6 +230,7 @@ onMounted(() => {
         <template #basic>
           <MuleTask />
           <Advanced />
+          <SkinConfig />
         </template>
       </BaseActivity>
 
@@ -229,6 +239,7 @@ onMounted(() => {
         <template #basic>
           <JumpTask />
           <Advanced />
+          <SkinConfig />
         </template>
       </BaseActivity>
 
@@ -237,6 +248,7 @@ onMounted(() => {
         <template #basic>
           <CcTask />
           <Advanced />
+          <SkinConfig />
         </template>
       </BaseActivity>
 
@@ -245,6 +257,7 @@ onMounted(() => {
         <template #basic>
           <ExecutorTask />
           <Advanced />
+          <SkinConfig />
         </template>
       </BaseActivity>
 
@@ -253,6 +266,7 @@ onMounted(() => {
         <template #basic>
           <ScriptTask />
           <Advanced />
+          <SkinConfig />
         </template>
       </BaseActivity>
 
@@ -261,6 +275,7 @@ onMounted(() => {
         <template #basic>
           <CallActivity />
           <Advanced />
+          <SkinConfig />
         </template>
       </BaseActivity>
 
@@ -269,6 +284,7 @@ onMounted(() => {
         <template #basic>
           <BusinessRuleTask />
           <Advanced />
+          <SkinConfig />
         </template>
       </BaseActivity>
 
@@ -279,6 +295,7 @@ onMounted(() => {
         </template>
         <template #basic>
           <Advanced />
+          <SkinConfig />
         </template>
       </BaseActivity>
 
@@ -287,6 +304,7 @@ onMounted(() => {
         <template #basic>
           <SequenceFlow />
           <Advanced />
+          <SkinConfig />
         </template>
       </BaseActivity>
 
@@ -294,6 +312,7 @@ onMounted(() => {
       <BaseActivity v-else>
         <template #basic>
           <Advanced />
+          <SkinConfig />
         </template>
       </BaseActivity>
     </el-form>

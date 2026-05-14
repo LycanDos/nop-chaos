@@ -8,6 +8,7 @@ import { getBusinessObject, is, isAny } from 'bpmn-js/lib/util/ModelUtil'
 import { append as svgAppend, attr as svgAttr, create as svgCreate, remove as svgRemove } from 'tiny-svg'
 import {
   AngleRightIcon,
+  ForkIcon,
   InfoIcon,
   LogIcon,
   PauseIcon,
@@ -51,11 +52,24 @@ interface ReverseTrace {
   steps: ReverseStep[]
   stepIndex: number
   color: ScopeColors
+  laneOffset: number
   status: 'running' | 'animating' | 'paused' | 'completed'
   pausedFrom?: 'running' | 'animating'
   pauseReason?: 'manual' | 'irreversible'
   visitedElementIds: Set<string>
   trailSteps: ReverseStep[]
+}
+
+interface MovingTokenState {
+  flowElementId: string
+  pathData: string
+  totalLength: number
+  measurePath: SVGPathElement
+  tokenGroup: SVGGElement
+  trailPath: SVGPathElement
+  progress: number
+  skipSteps: number
+  totalDuration: number
 }
 
 interface ScopeColors {
@@ -85,12 +99,12 @@ const CONTROL_OFFSET_LEFT = -15
 const TOKEN_OFFSET_BOTTOM = 10
 const TOKEN_OFFSET_LEFT = -15
 const NOTIFICATION_TIME_TO_LIVE = 2200
-const BASE_FLOW_STEP_DELAY = 380
+const BASE_FLOW_STEP_DELAY = 1200
 const BASE_NODE_STEP_DELAY = 720
 const BASE_RESUME_DELAY = 420
 const TRACE_LAYER_NAME = 'reverse-simulation-trace'
 const TRACE_LAYER_INDEX = 120
-const TRACE_LANE_GAP = 14
+const TRACE_LANE_GAP = 5
 const TRACE_ANCHOR_SIZE = 22
 
 const TRACE_COLORS = [
@@ -127,8 +141,14 @@ export class ReverseSimulationController {
   private traceTimers = new Map<string, number>()
   private traceStacks = new Map<string, string[]>()
   private readonly pausePoints = new Set<string>()
+  private readonly movingTokenFrames = new Map<string, number>()
+  private readonly movingTokenStates = new Map<string, MovingTokenState>()
+  private readonly tempTrailPaths = new Map<string, SVGPathElement>()
+  private readonly traceGlowPaths = new Map<string, SVGPathElement>()
   private readonly traces = new Map<string, ReverseTrace>()
   private readonly logEntries: LogEntry[] = []
+  private readonly activeIncomingMap = new Map<string, string>()
+  private readonly xorOverlayIds = new Set<string | number>()
 
   private speedContainer: HTMLDivElement | null = null
   private paletteContainer: HTMLDivElement | null = null
@@ -197,8 +217,12 @@ export class ReverseSimulationController {
     this.renderControls()
     this.renderTokens()
     this.syncPaletteEntries()
+    this.initXorGateways()
   }
 
+  /**
+   * Deactivates
+   */
   deactivate() {
     if (!this.active) {
       return
@@ -214,6 +238,7 @@ export class ReverseSimulationController {
     this.clearNotifications()
     this.syncPaletteEntries()
     this.restoreSelection()
+    this.resetXorGateways()
   }
 
   startOrResumeFromElement(elementId: string) {
@@ -255,6 +280,8 @@ export class ReverseSimulationController {
       return
     }
     this.clearTraceTimer(traceId)
+    this.cleanupMovingTokenAnimation(traceId)
+    this.removeTraceFlowPath(traceId)
     this.clearTraceMarkers(traceId)
     this.removeElementNotification(trace.currentElementId)
     this.removeTracePath(traceId)
@@ -273,11 +300,15 @@ export class ReverseSimulationController {
   }
 
   setTraceGlow(traceId: string, glow: boolean) {
-    const path = this.tracePathElements.get(traceId)
-    if (!path) {
-      return
+    if (glow) {
+      this.addTraceFlowPath(traceId)
+    } else {
+      this.removeTraceFlowPath(traceId)
     }
-    path.classList.toggle('reverse-simulation-trace-path-glow', glow)
+    const tempPath = this.tempTrailPaths.get(traceId)
+    if (tempPath) {
+      tempPath.classList.toggle('reverse-simulation-trace-path-glow', glow)
+    }
   }
 
   private renderTrail(trace: ReverseTrace, step: ReverseStep) {
@@ -325,7 +356,10 @@ export class ReverseSimulationController {
   resetPlayback() {
     this.clearAllTimers()
     this.paused = false
+    this.traceCounter = 1
+    this.colorIndex = 0
     this.clearRuntime()
+    this.initXorGateways()
     this.renderControls()
     this.renderTokens()
     this.syncPaletteEntries()
@@ -333,6 +367,8 @@ export class ReverseSimulationController {
   }
 
   private createTrace(startElementId: string, steps: ReverseStep[]): ReverseTrace {
+    // 每条 trace 按创建顺序获得固定 laneOffset，实现"分叉"——所有元素偏移一致
+    const laneOffset = (this.traceCounter - 1) * TRACE_LANE_GAP
     return {
       id: `R${this.traceCounter++}`,
       startElementId,
@@ -341,6 +377,7 @@ export class ReverseSimulationController {
       steps,
       stepIndex: 0,
       color: this.nextTraceColor(),
+      laneOffset,
       status: 'running',
       visitedElementIds: new Set<string>(),
       trailSteps: [],
@@ -358,31 +395,27 @@ export class ReverseSimulationController {
 
   private buildReversePlan(startElement: Element): ReverseStep[] {
     const visitedNodes = new Set<string>()
-    const visitedFlows = new Set<string>()
     const plan: ReverseStep[] = []
+    let current: Element | null | undefined = startElement
 
-    const visit = (element: Element | null | undefined) => {
-      if (!element || visitedNodes.has(element.id)) {
-        return
-      }
-      visitedNodes.add(element.id)
-      plan.push({ kind: 'node', element })
+    while (current && !visitedNodes.has(current.id)) {
+      visitedNodes.add(current.id)
+      plan.push({ kind: 'node', element: current })
 
-      const incoming = Array.isArray((element as any).incoming)
-        ? ((element as any).incoming as Element[]).filter((flow) => is(flow, 'bpmn:SequenceFlow'))
+      const incoming = Array.isArray((current as any).incoming)
+        ? ((current as any).incoming as Element[]).filter((flow) => is(flow, 'bpmn:SequenceFlow'))
         : []
 
-      for (const flow of incoming.slice().reverse()) {
-        if (visitedFlows.has(flow.id)) {
-          continue
-        }
-        visitedFlows.add(flow.id)
-        plan.push({ kind: 'flow', element: flow })
-        visit((flow as any).source || (flow as any).sourceRef)
+      if (incoming.length === 0) {
+        break
       }
+
+      // 只沿第一条入流走直线路径，其余分叉由运行时动态分裂
+      const flow = incoming[0]
+      plan.push({ kind: 'flow', element: flow })
+      current = (flow as any).source || (flow as any).sourceRef
     }
 
-    visit(startElement)
     return plan
   }
 
@@ -417,6 +450,7 @@ export class ReverseSimulationController {
       window.clearTimeout(timerId)
     })
     this.traceTimers.clear()
+    this.clearAllMovingTokenAnimations()
   }
 
   private async runTraceTick(trace: ReverseTrace) {
@@ -436,10 +470,9 @@ export class ReverseSimulationController {
     if (step.kind === 'flow') {
       trace.status = 'animating'
       trace.stationaryElementId = previousElementId
-      this.renderTrail(trace, step)
       this.renderControls()
       this.renderTokens()
-      this.animateFlow(step.element, trace)
+      this.animateFlowWithMovingToken(step.element, trace)
       return
     }
 
@@ -504,6 +537,9 @@ export class ReverseSimulationController {
       return
     }
 
+    // 遇分叉则动态分裂：节点有多条入流，且当前计划只跟了其中一条
+    const forked = trace.status === 'running' && this.tryForkAtNode(trace, step.element)
+
     if (trace.stepIndex >= trace.steps.length) {
       this.completeTrace(trace)
       return
@@ -512,12 +548,18 @@ export class ReverseSimulationController {
     this.renderControls()
     this.renderTokens()
     this.syncPaletteEntries()
-    this.scheduleTraceTick(trace, this.getDelay(BASE_NODE_STEP_DELAY))
+    // 分叉后父 trace 立即继续，与子 trace 同时从分叉点出发
+    this.scheduleTraceTick(trace, forked ? 0 : this.getDelay(BASE_NODE_STEP_DELAY))
   }
 
   private completeTrace(trace: ReverseTrace) {
     trace.status = 'completed'
     trace.pauseReason = undefined
+
+    // 清理临时动画轨迹，渲染完整持久轨迹
+    this.cleanupTempTrail(trace.id)
+    this.renderAllTracePaths()
+
     const element = this.elementRegistry.get(trace.currentElementId)
     this.log({
       text: `${trace.id} 回退完成${element ? `，停在 ${this.getElementLabel(element)}` : ''}`,
@@ -528,6 +570,284 @@ export class ReverseSimulationController {
     this.renderControls()
     this.renderTokens()
     this.syncPaletteEntries()
+  }
+
+  private cleanupTempTrail(traceId: string) {
+    const tempPath = this.tempTrailPaths.get(traceId)
+    if (tempPath) {
+      svgRemove(tempPath)
+      this.tempTrailPaths.delete(traceId)
+    }
+  }
+
+  /**
+   * 在节点处检测分叉——节点有多条入流时，为每条未跟踪的入流创建子 trace
+   * @param nodeStepIndex 节点在 steps 中的索引，用于定位后续的 flow 步骤
+   *   - 从 runTraceTick 调用时无需传（stepIndex 已递增到下一步）
+   *   - 从 finishMovingTokenAnimation 调用时需要传入当前节点在 steps 中的索引
+   */
+  private tryForkAtNode(trace: ReverseTrace, nodeElement: Element, nodeStepIndex?: number): boolean {
+    const incoming = Array.isArray((nodeElement as any).incoming)
+      ? ((nodeElement as any).incoming as Element[]).filter((flow) => is(flow, 'bpmn:SequenceFlow'))
+      : []
+
+    if (incoming.length <= 1) {
+      return false
+    }
+
+    // 先计算出后续 flow ID，网关切换需要
+    const nextStepIdx = nodeStepIndex != null ? nodeStepIndex + 1 : trace.stepIndex
+    const nextStep = nextStepIdx < trace.steps.length ? trace.steps[nextStepIdx] : undefined
+    const followedFlowId = nextStep?.kind === 'flow' ? nextStep.element.id : null
+
+    // 排他网关：支持交互式路径切换（不分裂）
+    if (is(nodeElement, 'bpmn:ExclusiveGateway')) {
+      return this.handleXorGatewayPathSwitch(trace, nodeElement, nodeStepIndex, followedFlowId)
+    }
+
+    // 事件网关：不分裂
+    if (is(nodeElement, 'bpmn:EventBasedGateway')) {
+      return false
+    }
+
+    // 并行网关/包容网关/普通节点：反向回溯所有入流
+    let forked = false
+    let forkSubCounter = 0
+
+    // trailSteps 共享前缀（到分叉节点为止）
+    const forkNodeId = nodeElement.id
+    const forkTrailIdx = trace.trailSteps.findLastIndex(
+      (s) => s.kind === 'node' && s.element.id === forkNodeId,
+    )
+    const sharedTrail =
+      forkTrailIdx >= 0 ? trace.trailSteps.slice(0, forkTrailIdx + 1) : [...trace.trailSteps]
+
+    for (const flow of incoming) {
+      if (flow.id === followedFlowId) {
+        continue
+      }
+
+      const source = (flow as any).source || (flow as any).sourceRef
+      if (!source) {
+        continue
+      }
+
+      const upstreamPlan = this.buildReversePlan(source)
+      const subSteps: ReverseStep[] = [
+        { kind: 'flow', element: flow },
+        ...upstreamPlan,
+      ]
+
+      forkSubCounter++
+      // 子 trace 使用全局唯一 ID，避免同一父 trace 在多个分叉点创建同名子 trace 导致覆盖
+      const subTrace: ReverseTrace = {
+        id: `R${this.traceCounter++}`,
+        startElementId: nodeElement.id,
+        currentElementId: nodeElement.id,
+        stationaryElementId: nodeElement.id,
+        steps: subSteps,
+        stepIndex: 0,
+        color: { ...trace.color },
+        laneOffset: trace.laneOffset + forkSubCounter * TRACE_LANE_GAP,
+        status: 'running',
+        visitedElementIds: new Set<string>(),
+        trailSteps: [...sharedTrail],
+      }
+      this.traces.set(subTrace.id, subTrace)
+
+      this.log({
+        text: `分叉: 从 ${this.getElementLabel(nodeElement)} 创建分支`,
+        tone: 'info',
+        traceId: subTrace.id,
+        color: subTrace.color,
+      })
+
+      // 立即开始，与父 trace 同时从分叉点出发
+      this.scheduleTraceTick(subTrace, 0)
+      forked = true
+    }
+
+    if (forked) {
+      this.renderControls()
+      this.renderTokens()
+      this.syncPaletteEntries()
+    }
+    return forked
+  }
+
+  /**
+   * 排他网关路径切换：检查用户是否选择了不同的入流，若是则重建剩余步骤
+   */
+  private handleXorGatewayPathSwitch(
+    trace: ReverseTrace,
+    nodeElement: Element,
+    nodeStepIndex?: number,
+    followedFlowId: string | null = null,
+  ): boolean {
+    const activeIncomingId = this.activeIncomingMap.get(nodeElement.id)
+
+    // 未设置选择或当前计划就是选中路径 → 不做变更
+    if (!activeIncomingId || activeIncomingId === followedFlowId) {
+      return false
+    }
+
+    const incoming = Array.isArray((nodeElement as any).incoming)
+      ? ((nodeElement as any).incoming as Element[]).filter((flow) => is(flow, 'bpmn:SequenceFlow'))
+      : []
+
+    const newFlow = incoming.find((f) => f.id === activeIncomingId)
+    if (!newFlow) return false
+
+    const source = (newFlow as any).source || (newFlow as any).sourceRef
+    if (!source) return false
+
+    const upstreamPlan = this.buildReversePlan(source)
+    const newSteps: ReverseStep[] = [{ kind: 'flow', element: newFlow }, ...upstreamPlan]
+
+    // 从当前 flow 步骤后替换剩余步骤
+    const cutIdx = nodeStepIndex != null ? nodeStepIndex + 1 : trace.stepIndex
+    trace.steps = [...trace.steps.slice(0, cutIdx), ...newSteps]
+
+    this.log({
+      text: `排他网关 ${this.getElementLabel(nodeElement)} 切换至 ${this.getElementLabel(newFlow)}`,
+      tone: 'info',
+      traceId: trace.id,
+      color: trace.color,
+    })
+
+    return false
+  }
+
+  private initXorGateways() {
+    this.activeIncomingMap.clear()
+    const gateways = this.elementRegistry.filter((el: Element) => is(el, 'bpmn:ExclusiveGateway'))
+    for (const gateway of gateways) {
+      const incoming = Array.isArray((gateway as any).incoming)
+        ? ((gateway as any).incoming as Element[]).filter((f) => is(f, 'bpmn:SequenceFlow'))
+        : []
+      if (incoming.length >= 2) {
+        this.setActiveIncoming(gateway as Element, incoming[0] as Element)
+      }
+    }
+  }
+
+  private setActiveIncoming(gateway: Element, flow: Element) {
+    this.activeIncomingMap.set(gateway.id, flow.id)
+    this.recolorIncomingFlows(gateway)
+  }
+
+  private cycleXorGatewayIncoming(gateway: Element) {
+    const incoming = Array.isArray((gateway as any).incoming)
+      ? ((gateway as any).incoming as Element[]).filter((f) => is(f, 'bpmn:SequenceFlow'))
+      : []
+    if (incoming.length < 2) return
+
+    const currentId = this.activeIncomingMap.get(gateway.id)
+    const currentIdx = currentId ? incoming.findIndex((f) => f.id === currentId) : -1
+    const nextIdx = (currentIdx + 1) % incoming.length
+    this.setActiveIncoming(gateway, incoming[nextIdx] as Element)
+
+    this.showNotification({
+      text: `排他网关：切换至入流 "${this.getElementLabel(incoming[nextIdx])}"`,
+      tone: 'info',
+    })
+    this.log({
+      text: `排他网关 ${this.getElementLabel(gateway)} 切换入流至 ${this.getElementLabel(incoming[nextIdx])}`,
+      tone: 'info',
+    })
+  }
+
+  private recolorIncomingFlows(gateway: Element) {
+    const incoming = Array.isArray((gateway as any).incoming)
+      ? ((gateway as any).incoming as Element[]).filter((f) => is(f, 'bpmn:SequenceFlow'))
+      : []
+    const activeId = this.activeIncomingMap.get(gateway.id)
+
+    const elementColors = (this.modeler as any).get('elementColors')
+    const simulationStyles = (this.modeler as any).get('simulationStyles')
+    if (!elementColors || !simulationStyles) return
+
+    const colorId = `reverse-xor-${gateway.id}`
+
+    for (const flow of incoming) {
+      const isActive = flow.id === activeId
+      const style = isActive ? '--token-simulation-grey-darken-30' : '--token-simulation-grey-lighten-56'
+      const stroke = simulationStyles.get(style)
+      elementColors.add(flow, colorId, { stroke }, 2000)
+    }
+  }
+
+  private resetXorGateways() {
+    const elementColors = (this.modeler as any).get('elementColors')
+    if (elementColors) {
+      for (const gatewayId of this.activeIncomingMap.keys()) {
+        const gateway = this.elementRegistry.get(gatewayId)
+        if (!gateway) continue
+        const incoming = Array.isArray((gateway as any).incoming)
+          ? ((gateway as any).incoming as Element[]).filter((f) => is(f, 'bpmn:SequenceFlow'))
+          : []
+        const colorId = `reverse-xor-${gatewayId}`
+        for (const flow of incoming) {
+          elementColors.remove(flow, colorId)
+        }
+      }
+    }
+    this.activeIncomingMap.clear()
+    this.clearXorGatewayPads()
+  }
+
+  private renderXorGatewayPads() {
+    this.clearXorGatewayPads()
+    if (!this.active) return
+
+    this.elementRegistry
+      .filter((el: Element) => is(el, 'bpmn:ExclusiveGateway'))
+      .forEach((gateway) => {
+        const incoming = Array.isArray((gateway as any).incoming)
+          ? ((gateway as any).incoming as Element[]).filter((f) => is(f, 'bpmn:SequenceFlow'))
+          : []
+        if (incoming.length >= 2) {
+          this.renderXorGatewayPad(gateway as Element)
+        }
+      })
+  }
+
+  private renderXorGatewayPad(element: Element) {
+    const html = document.createElement('div')
+    html.className = 'bts-context-pad'
+    html.title = '切换排他网关入流'
+    html.innerHTML = ForkIcon()
+
+    const stop = (event: Event) => {
+      event.preventDefault()
+      event.stopPropagation()
+    }
+    html.addEventListener('pointerdown', stop)
+    html.addEventListener('mousedown', stop)
+    html.addEventListener('touchstart', stop, { passive: false })
+    html.addEventListener('click', (event) => {
+      stop(event)
+      this.cycleXorGatewayIncoming(element)
+    })
+
+    const overlayId = this.overlays.add(element, CONTROL_OVERLAY_TYPE, {
+      position: {
+        bottom: 5,
+        right: 5,
+      },
+      html,
+      show: {
+        minZoom: 0.5,
+      },
+    })
+    this.xorOverlayIds.add(overlayId)
+  }
+
+  private clearXorGatewayPads() {
+    for (const id of this.xorOverlayIds) {
+      this.overlays.remove(id)
+    }
+    this.xorOverlayIds.clear()
   }
 
   private pauseAllRunningTraces(reason: 'manual' | 'irreversible') {
@@ -560,7 +880,9 @@ export class ReverseSimulationController {
     this.renderControls()
     this.renderTokens()
     this.syncPaletteEntries()
-    if (!wasAnimating) {
+    if (wasAnimating) {
+      this.resumeMovingTokenAnimation(trace.id)
+    } else {
       this.scheduleTraceTick(trace, this.getDelay(BASE_RESUME_DELAY))
     }
   }
@@ -672,14 +994,28 @@ export class ReverseSimulationController {
 
   private clearRuntime() {
     this.clearAllTimers()
+    this.clearAllMovingTokenAnimations()
     this.traces.clear()
     this.logEntries.splice(0, this.logEntries.length)
     this.clearTokenOverlays()
     this.clearElementNotifications()
     this.clearAllTraceMarkers()
     this.clearAllTracePaths()
+    this.clearAllTraceFlowPaths()
     this.clearLog()
     this.clearNotifications()
+    // 最终清扫：移除 traceLayer 中所有残留的 trace 路径
+    this.scavengeTraceLayer()
+    this.clearXorGatewayPads()
+  }
+
+  private scavengeTraceLayer() {
+    const paths = this.traceLayer.querySelectorAll<SVGPathElement>(
+      '.reverse-simulation-trace-path',
+    )
+    paths.forEach((path) => {
+      svgRemove(path)
+    })
   }
 
   private clearTokenOverlays() {
@@ -700,7 +1036,10 @@ export class ReverseSimulationController {
     this.clearTokenOverlays()
 
     Array.from(this.traces.values()).forEach((trace) => {
-      const element = this.elementRegistry.get(trace.startElementId)
+      // 暂停时 token 展示在当前暂停节点，方便点击继续
+      const isPaused = trace.status === 'paused'
+      const elementId = isPaused ? trace.currentElementId : trace.startElementId
+      const element = this.elementRegistry.get(elementId)
       if (!element || is(element, 'bpmn:SequenceFlow')) {
         return
       }
@@ -732,7 +1071,7 @@ export class ReverseSimulationController {
       ? '<button type="button" class="reverse-trace-token__resume" data-action="resume" aria-label="Resume">▶</button>'
       : ''
     const deleteBtn = '<button type="button" class="reverse-trace-token__delete" data-action="delete" aria-label="Delete trace">×</button>'
-    const traceNumber = trace.id.replace(/^[^0-9]+/, '') || trace.id
+    const traceNumber = trace.id.match(/\d+/)?.[0] || trace.id
     return `
       <div
         class="bts-token-count waiting reverse-trace-token is-start${paused}${completed}"
@@ -833,6 +1172,7 @@ export class ReverseSimulationController {
         this.renderPausePointPad(element)
       }
     })
+    this.renderXorGatewayPads()
   }
 
   private renderTriggerPad(element: Element) {
@@ -1322,34 +1662,428 @@ export class ReverseSimulationController {
     return methodMap.get(methodId) || null
   }
 
-  private animateFlow(element: Element, trace: ReverseTrace) {
-    const connection = element as any
-    const reversedConnection = {
-      ...connection,
-      waypoints: Array.isArray(connection.waypoints) ? connection.waypoints.slice().reverse() : connection.waypoints,
+  private easeInOutCubic(t: number): number {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+  }
+
+  private buildCombinedPath(trace: ReverseTrace): {
+    points: Array<{ x: number; y: number }>
+    pathData: string
+    totalLength: number
+    measurePath: SVGPathElement
+    skipSteps: number
+    numFlows: number
+    totalFlowLength: number
+  } | null {
+    let skipSteps = 0
+    let numFlows = 0
+    let totalFlowLength = 0
+
+    const allPoints: Array<{ x: number; y: number }> = []
+
+    // 从已存在的 trail 最后一个点开始
+    if (trace.trailSteps.length > 0) {
+      const lastStep = trace.trailSteps[trace.trailSteps.length - 1]
+      if (lastStep.kind === 'node') {
+        const prevCenter = this.getElementCenterPoint(lastStep.element, trace.id)
+        allPoints.push(prevCenter)
+      }
     }
 
-    const scope = {
-      id: trace.id,
-      colors: trace.color,
-      element,
-      parent: null,
+    let currentIdx = trace.stepIndex - 1
+
+    while (currentIdx < trace.steps.length) {
+      const step = trace.steps[currentIdx]
+      let points: Array<{ x: number; y: number }> = []
+
+      if (step.kind === 'flow') {
+        points = this.getFlowTracePoints(trace, step.element)
+        numFlows++
+        const waypoints = (step.element as any).waypoints as
+          | Array<{ x: number; y: number }>
+          | undefined
+        if (waypoints && waypoints.length >= 2) {
+          for (let i = 1; i < waypoints.length; i++) {
+            totalFlowLength += Math.sqrt(
+              (waypoints[i].x - waypoints[i - 1].x) ** 2 +
+                (waypoints[i].y - waypoints[i - 1].y) ** 2,
+            )
+          }
+        }
+      } else if (step.kind === 'node') {
+        // 遇到分叉节点（多条入流）时停止合并，让 runTraceTick 触发分叉
+        const incoming = Array.isArray((step.element as any).incoming)
+          ? ((step.element as any).incoming as Element[]).filter((f) => is(f, 'bpmn:SequenceFlow'))
+          : []
+        if (incoming.length > 1) {
+          break
+        }
+        if (this.pausePoints.has(step.element.id)) break
+        const prev = currentIdx > 0 ? trace.steps[currentIdx - 1] : undefined
+        const next = currentIdx + 1 < trace.steps.length ? trace.steps[currentIdx + 1] : undefined
+        points = this.getNodeTracePoints(trace, step.element, prev, next)
+      } else {
+        break
+      }
+
+      this.appendPathPoints(allPoints, points)
+      skipSteps++
+      currentIdx++
     }
 
-    this.animation?.animate?.(reversedConnection, scope, () => {
-      if (!this.active) {
-        return
-      }
-      if (trace.status === 'completed') {
-        return
-      }
-      if (trace.status !== 'animating') {
-        // 已被暂停或其他状态修改过，不再自动推进
-        return
-      }
+    if (skipSteps < 1 || allPoints.length < 2) {
+      return null
+    }
+
+    const pathData = allPoints
+      .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
+      .join(' ')
+
+    const measurePath = svgCreate('path') as SVGPathElement
+    svgAttr(measurePath, { d: pathData })
+    const totalLength = measurePath.getTotalLength()
+
+    if (totalLength < 1) return null
+
+    return { points: allPoints, pathData, totalLength, measurePath, skipSteps, numFlows, totalFlowLength }
+  }
+
+  private animateFlowWithMovingToken(element: Element, trace: ReverseTrace) {
+    const existingState = this.movingTokenStates.get(trace.id)
+    if (existingState) {
+      // resume existing combined animation
+      this.movingTokenFrames.set(
+        trace.id,
+        requestAnimationFrame(this.createMovingTokenAnimFn(trace.id)),
+      )
+      return
+    }
+
+    // 构建连续路径（合并多个 flow + node 步骤为单个路径）
+    const combined = this.buildCombinedPath(trace)
+    if (!combined) {
       trace.status = 'running'
       this.scheduleTraceTick(trace, 0)
+      return
+    }
+
+    const { points, pathData, totalLength, measurePath, skipSteps, numFlows, totalFlowLength } = combined
+
+    const traceNumber = trace.id.match(/\d+/)?.[0] || trace.id
+
+    const tokenGroup = svgCreate('g') as SVGGElement
+    tokenGroup.classList.add('reverse-simulation-moving-token')
+
+    const circle = svgCreate('circle') as SVGCircleElement
+    svgAttr(circle, {
+      r: 11,
+      fill: trace.color.primary,
+      stroke: '#fff',
+      'stroke-width': 2,
     })
+
+    const text = svgCreate('text') as SVGTextElement
+    svgAttr(text, {
+      fill: trace.color.auxiliary,
+      'font-size': 12,
+      'font-weight': 700,
+      'text-anchor': 'middle',
+      'dominant-baseline': 'central',
+    })
+    text.textContent = traceNumber
+
+    svgAppend(tokenGroup, circle)
+    svgAppend(tokenGroup, text)
+    svgAppend(this.traceLayer, tokenGroup)
+
+    const trailPath = svgCreate('path') as SVGPathElement
+    trailPath.classList.add(
+      'reverse-simulation-trace-path',
+      'reverse-simulation-trace-path-active',
+    )
+    trailPath.style.setProperty('color', trace.color.primary)
+    svgAttr(trailPath, {
+      d: pathData,
+      fill: 'none',
+      stroke: trace.color.primary,
+      'stroke-width': 2,
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+      'stroke-dasharray': `${totalLength}`,
+      'stroke-dashoffset': `${totalLength}`,
+    })
+    svgAppend(this.traceLayer, trailPath)
+
+    // 移除上一个临时 trail（防止残留）
+    const oldTrail = this.tempTrailPaths.get(trace.id)
+    if (oldTrail) {
+      svgRemove(oldTrail)
+    }
+    this.tempTrailPaths.set(trace.id, trailPath)
+
+    const startPoint = points[0]
+    svgAttr(tokenGroup, { transform: `translate(${startPoint.x}, ${startPoint.y})` })
+
+    const avgFlowLen = totalFlowLength / Math.max(1, numFlows)
+    const perFlowDuration = Math.log(Math.max(avgFlowLen, 10)) * 250
+    const baseDuration = perFlowDuration * numFlows
+    const totalDuration = this.getDelay(baseDuration)
+
+    this.movingTokenStates.set(trace.id, {
+      flowElementId: element.id,
+      pathData,
+      totalLength,
+      measurePath,
+      tokenGroup,
+      trailPath,
+      progress: 0,
+      skipSteps,
+      totalDuration,
+    })
+
+    this.movingTokenFrames.set(
+      trace.id,
+      requestAnimationFrame(this.createMovingTokenAnimFn(trace.id)),
+    )
+  }
+
+  private createMovingTokenAnimFn(traceId: string): (timestamp: number) => void {
+    const state = this.movingTokenStates.get(traceId)
+    if (!state) return () => {}
+
+    const totalLength = state.totalLength
+    const measurePath = state.measurePath
+    const tokenGroup = state.tokenGroup
+    const trailPath = state.trailPath
+    const animationDuration = state.totalDuration || this.getDelay(BASE_FLOW_STEP_DELAY)
+    let startTime: number | null = null
+
+    const animateFn = (timestamp: number) => {
+      if (!this.active) {
+        this.cleanupMovingTokenAnimation(traceId)
+        return
+      }
+
+      const trace = this.traces.get(traceId)
+      if (!trace) {
+        this.cleanupMovingTokenAnimation(traceId)
+        return
+      }
+
+      if (trace.status !== 'animating') {
+        this.movingTokenFrames.delete(traceId)
+        if (trace.status === 'paused') {
+          if (startTime != null) {
+            state.progress = Math.min(
+              (timestamp - startTime) / animationDuration,
+              1,
+            )
+          }
+        } else {
+          this.cleanupMovingTokenAnimation(traceId)
+        }
+        return
+      }
+
+      if (startTime === null) {
+        startTime = timestamp - state.progress * animationDuration
+      }
+
+      const elapsed = timestamp - startTime
+      const rawProgress = Math.min(elapsed / animationDuration, 1)
+      state.progress = rawProgress
+
+      const easedProgress = this.easeInOutCubic(rawProgress)
+      const currentLength = totalLength * easedProgress
+      const point = measurePath.getPointAtLength(currentLength)
+
+      svgAttr(tokenGroup, { transform: `translate(${point.x}, ${point.y})` })
+      svgAttr(trailPath, { 'stroke-dashoffset': totalLength - currentLength })
+
+      if (rawProgress < 1) {
+        this.movingTokenFrames.set(
+          traceId,
+          requestAnimationFrame(animateFn),
+        )
+      } else {
+        svgAttr(trailPath, { 'stroke-dashoffset': 0 })
+        void this.finishMovingTokenAnimation(traceId)
+      }
+    }
+
+    return animateFn
+  }
+
+  private async finishMovingTokenAnimation(traceId: string) {
+    const state = this.movingTokenStates.get(traceId)
+    if (!state) return
+
+    // 只移除 token group，保留 trail path 持续可见
+    svgRemove(state.tokenGroup)
+    this.movingTokenFrames.delete(traceId)
+    this.movingTokenStates.delete(traceId)
+
+    const trace = this.traces.get(traceId)
+    if (!trace) return
+    if (!this.active || trace.status === 'completed') return
+    if (trace.status !== 'animating') return
+
+    const skipSteps = state.skipSteps || 1
+    const startIdx = trace.stepIndex - 1  // flow step 的索引
+
+    // 1. 将所有覆盖的步骤加入 trail
+    for (let i = 0; i < skipSteps; i++) {
+      const stepIdx = startIdx + i
+      if (stepIdx < trace.steps.length) {
+        this.renderTrail(trace, trace.steps[stepIdx])
+      }
+    }
+
+    // 2. 推进 stepIndex
+    trace.stepIndex = startIdx + skipSteps
+
+    // 3. 恢复状态为 running，使节点副作用循环和后续调度能正常执行
+    trace.status = 'running'
+    this.renderControls()
+    this.renderTokens()
+
+    // 4. 处理覆盖的 node 步骤的副作用
+    let lastHadFork = false
+    for (let i = 0; i < skipSteps; i++) {
+      const stepIdx = startIdx + i
+      if (stepIdx >= trace.steps.length) break
+
+      const step = trace.steps[stepIdx]
+      if (step.kind !== 'node') continue
+
+      trace.currentElementId = step.element.id
+      trace.stationaryElementId = step.element.id
+
+      const presentation = await this.resolveStepPresentation(step.element)
+      if (!this.active || trace.status !== 'running') return
+
+      if (presentation.text) {
+        this.renderElementNotification(step.element, presentation, trace)
+        this.showNotification({
+          text: presentation.text,
+          tone: presentation.tone,
+          traceId: trace.id,
+          color: trace.color,
+        })
+        this.log({
+          text: `${this.getElementLabel(step.element)}: ${presentation.text}`,
+          tone: presentation.tone,
+          traceId: trace.id,
+          color: trace.color,
+        })
+      } else {
+        this.removeElementNotification(step.element.id)
+        this.log({
+          text: `回退到 ${this.getElementLabel(step.element)}`,
+          tone: 'info',
+          traceId: trace.id,
+          color: trace.color,
+        })
+      }
+
+      // 检查自动暂停
+      if (presentation.autoPause) {
+        trace.status = 'paused'
+        trace.pauseReason = 'irreversible'
+        this.paused = this.hasPausedTrace()
+        this.syncAnimationPlayState()
+        this.renderControls()
+        this.renderTokens()
+        this.syncPaletteEntries()
+        return
+      }
+
+      // 检查手动暂停点
+      if (this.pausePoints.has(step.element.id)) {
+        trace.status = 'paused'
+        trace.pauseReason = 'manual'
+        this.paused = this.hasPausedTrace()
+        this.syncAnimationPlayState()
+        this.showNotification({
+          text: `命中回退暂停点，点击左侧播放继续`,
+          tone: 'info',
+          traceId: trace.id,
+          color: trace.color,
+        })
+        this.renderControls()
+        this.renderTokens()
+        this.syncPaletteEntries()
+        return
+      }
+
+      // 组合动画中也需要在节点处检测分叉
+      if (trace.status === 'running') {
+        if (this.tryForkAtNode(trace, step.element, stepIdx)) {
+          lastHadFork = true
+        }
+      }
+    }
+
+    this.syncPaletteEntries()
+
+    // 5. 继续或完成（分叉后父 trace 立即继续）
+    if (trace.stepIndex >= trace.steps.length) {
+      this.completeTrace(trace)
+    } else {
+      this.scheduleTraceTick(trace, lastHadFork ? 0 : this.getDelay(BASE_NODE_STEP_DELAY))
+    }
+  }
+
+  private resumeMovingTokenAnimation(traceId: string) {
+    const state = this.movingTokenStates.get(traceId)
+    if (!state) return
+
+    const frameId = this.movingTokenFrames.get(traceId)
+    if (frameId != null) {
+      cancelAnimationFrame(frameId)
+    }
+
+    this.movingTokenFrames.set(
+      traceId,
+      requestAnimationFrame(this.createMovingTokenAnimFn(traceId)),
+    )
+  }
+
+  private cleanupMovingTokenAnimation(traceId: string) {
+    const frameId = this.movingTokenFrames.get(traceId)
+    if (frameId != null) {
+      cancelAnimationFrame(frameId)
+      this.movingTokenFrames.delete(traceId)
+    }
+
+    const state = this.movingTokenStates.get(traceId)
+    if (state) {
+      svgRemove(state.tokenGroup)
+      svgRemove(state.trailPath)
+      this.movingTokenStates.delete(traceId)
+    }
+
+    // 同时清理临时 trail（已完成的动画留下的）
+    this.cleanupTempTrail(traceId)
+  }
+
+  private clearAllMovingTokenAnimations() {
+    this.movingTokenFrames.forEach((frameId) => {
+      cancelAnimationFrame(frameId)
+    })
+    this.movingTokenFrames.clear()
+
+    this.movingTokenStates.forEach((state) => {
+      svgRemove(state.tokenGroup)
+      svgRemove(state.trailPath)
+    })
+    this.movingTokenStates.clear()
+
+    // 清理所有遗留的临时 trail
+    this.tempTrailPaths.forEach((path) => {
+      svgRemove(path)
+    })
+    this.tempTrailPaths.clear()
   }
 
   private getElementLabel(element: Element) {
@@ -1394,10 +2128,12 @@ export class ReverseSimulationController {
 
     path = svgCreate('path') as SVGPathElement
     path.classList.add('reverse-simulation-trace-path')
+    // 设置 CSS color 使 drop-shadow 的 currentColor 正确匹配路径颜色
+    path.style.setProperty('color', color)
     svgAttr(path, {
       fill: 'none',
       stroke: color,
-      'stroke-width': 3,
+      'stroke-width': 2,
       'stroke-linecap': 'round',
       'stroke-linejoin': 'round',
       'pointer-events': 'none',
@@ -1416,9 +2152,62 @@ export class ReverseSimulationController {
     this.tracePathElements.delete(traceId)
   }
 
+  private addTraceFlowPath(traceId: string) {
+    this.removeTraceFlowPath(traceId)
+
+    const sourcePath = this.tracePathElements.get(traceId) || this.tempTrailPaths.get(traceId)
+    if (!sourcePath) return
+
+    const d = sourcePath.getAttribute('d')
+    if (!d) return
+
+    // 测量路径长度用于 dasharray 和动画
+    const measure = svgCreate('path') as SVGPathElement
+    svgAttr(measure, { d })
+    const totalLength = measure.getTotalLength()
+    if (totalLength < 5) return
+
+    const dashLen = Math.min(Math.round(totalLength * 0.15), 20)
+    const gapLen = dashLen * 2.5
+    const period = dashLen + gapLen
+
+    const flowPath = svgCreate('path') as SVGPathElement
+    svgAttr(flowPath, {
+      d,
+      fill: 'none',
+      stroke: '#ffffff',
+      'stroke-width': 2.5,
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+      'stroke-dasharray': `${dashLen} ${gapLen}`,
+      'stroke-dashoffset': '0',
+      'pointer-events': 'none',
+      opacity: '0.85',
+    })
+    flowPath.classList.add('reverse-simulation-flow-path')
+    flowPath.style.setProperty('--flow-period', `${period}px`)
+
+    svgAppend(this.traceLayer, flowPath)
+    this.traceGlowPaths.set(traceId, flowPath)
+  }
+
+  private removeTraceFlowPath(traceId: string) {
+    const flowPath = this.traceGlowPaths.get(traceId)
+    if (flowPath) {
+      svgRemove(flowPath)
+      this.traceGlowPaths.delete(traceId)
+    }
+  }
+
   private clearAllTracePaths() {
     Array.from(this.tracePathElements.keys()).forEach((traceId) => {
       this.removeTracePath(traceId)
+    })
+  }
+
+  private clearAllTraceFlowPaths() {
+    Array.from(this.traceGlowPaths.keys()).forEach((traceId) => {
+      this.removeTraceFlowPath(traceId)
     })
   }
 
@@ -1444,9 +2233,25 @@ export class ReverseSimulationController {
       ? ((element as any).waypoints as Array<{ x: number; y: number }>).slice().reverse()
       : []
 
+    if (laneOffset === 0 || waypoints.length < 2) {
+      return waypoints.map((p) => ({ x: p.x, y: p.y }))
+    }
+
+    // 计算 Flow 总方向，沿垂直方向偏移以实现纵向路径也躲避
+    const dx = waypoints[waypoints.length - 1].x - waypoints[0].x
+    const dy = waypoints[waypoints.length - 1].y - waypoints[0].y
+    const len = Math.sqrt(dx * dx + dy * dy)
+    if (len < 1) {
+      return waypoints.map((p) => ({ x: p.x, y: p.y + laneOffset }))
+    }
+
+    // 顺时针旋转 90° 得到垂直向量
+    const perpX = (-dy / len) * laneOffset
+    const perpY = (dx / len) * laneOffset
+
     return waypoints.map((point) => ({
-      x: point.x,
-      y: point.y + laneOffset,
+      x: point.x + perpX,
+      y: point.y + perpY,
     }))
   }
 
@@ -1492,21 +2297,41 @@ export class ReverseSimulationController {
     node: Element,
     edge: 'start' | 'end',
   ) {
-    const flowPoints = this.getFlowTracePoints(trace, flow)
-    const point = edge === 'start'
-      ? flowPoints[0]
-      : flowPoints[flowPoints.length - 1]
+    // 使用原始（未偏移）路径点来确定正确的连接边，避免 laneOffset 把端点推到节点角落
+    const waypoints = Array.isArray((flow as any).waypoints)
+      ? ((flow as any).waypoints as Array<{ x: number; y: number }>)
+      : []
 
-    if (!point) {
+    const rawPoint = edge === 'start'
+      ? waypoints[0]
+      : waypoints[waypoints.length - 1]
+
+    if (!rawPoint) {
       return this.getElementCenterPoint(node, trace.id)
     }
 
-    const { x, width, y, height } = this.getElementBounds(node)
-    const centerY = y + (height / 2) + this.getElementLaneOffset(trace.id, node.id)
-    return {
-      x: Math.max(x, Math.min(x + width, point.x)),
-      y: centerY,
+    // 先用原始路径点投影到节点边界
+    const bounds = this.getElementBounds(node)
+    const clamped = {
+      x: Math.max(bounds.x, Math.min(bounds.x + bounds.width, rawPoint.x)),
+      y: Math.max(bounds.y, Math.min(bounds.y + bounds.height, rawPoint.y)),
     }
+
+    // 再沿 flow 垂直方向叠加 laneOffset，使 trace 路径整体平行偏移
+    const laneOffset = this.getElementLaneOffset(trace.id, flow.id)
+    if (laneOffset !== 0 && waypoints.length >= 2) {
+      const fdx = waypoints[waypoints.length - 1].x - waypoints[0].x
+      const fdy = waypoints[waypoints.length - 1].y - waypoints[0].y
+      const flen = Math.sqrt(fdx * fdx + fdy * fdy)
+      if (flen > 0.01) {
+        const perpX = (-fdy / flen) * laneOffset
+        const perpY = (fdx / flen) * laneOffset
+        clamped.x += perpX
+        clamped.y += perpY
+      }
+    }
+
+    return clamped
   }
 
   private getElementCenterPoint(element: Element, traceId: string) {
@@ -1527,16 +2352,10 @@ export class ReverseSimulationController {
     }
   }
 
-  private getElementLaneOffset(traceId: string, elementId: string) {
-    const stack = this.traceStacks.get(elementId)
-    if (!stack || stack.length <= 1) {
-      return 0
-    }
-    const index = stack.indexOf(traceId)
-    if (index <= 0) {
-      return 0
-    }
-    return index * TRACE_LANE_GAP
+  private getElementLaneOffset(traceId: string, _elementId: string) {
+    // 每条 trace 使用固定偏移（创建时分配的 laneOffset），所有元素偏移一致
+    const trace = this.traces.get(traceId)
+    return trace ? trace.laneOffset : 0
   }
 
   private appendPathPoints(
@@ -1560,7 +2379,8 @@ export class ReverseSimulationController {
 
   private getTokenOverlayPosition(trace: ReverseTrace, element: Element) {
     const { width, height } = this.getElementBounds(element)
-    const laneOffset = this.getElementLaneOffset(trace.id, trace.startElementId)
+    // 使用 overlay 所在元素的 lane offset（暂停时可能是 currentElement）
+    const laneOffset = this.getElementLaneOffset(trace.id, element.id)
     return {
       left: (width / 2) - (TRACE_ANCHOR_SIZE / 2),
       top: (height / 2) - (TRACE_ANCHOR_SIZE / 2) + laneOffset,

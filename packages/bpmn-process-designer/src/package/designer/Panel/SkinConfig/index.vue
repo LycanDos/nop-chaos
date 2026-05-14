@@ -4,7 +4,7 @@
  * 在属性面板中展示当前节点绑定的皮肤信息
  */
 import { computed, ref, watch } from 'vue'
-import { useBpmnContextService } from '@/designer/hooks/useService'
+import { useBpmnContextService } from '@/hooks/useService'
 import { getBusinessObject } from 'bpmn-js/lib/util/ModelUtil'
 
 const { selectedElementRef } = useBpmnContextService()

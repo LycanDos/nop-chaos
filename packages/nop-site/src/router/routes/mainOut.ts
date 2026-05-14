@@ -25,7 +25,7 @@ export const mainOutRoutes: AppRouteModule[] = [
   },
 
   {
-    path: '/pages/',
+    path: '/pages/:path(.*)',
     name: 'jsonPage',
     component: XuiPage,
     meta: {
@@ -35,7 +35,9 @@ export const mainOutRoutes: AppRouteModule[] = [
     },
 
     props: (route) => {
-      return { path: '/' + route.params.path }
+      const p = route.params.path
+      const pathStr = p ? (Array.isArray(p) ? p.join('/') : String(p)) : ''
+      return { path: pathStr.startsWith('/') ? pathStr : '/' + pathStr }
     }
   },
 

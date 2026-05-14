@@ -30,7 +30,7 @@ export type {
   MetadataDiffItem,
 }
 
-type ConsoleSourceMode = 'existing' | 'upload'
+type ConsoleSourceMode = 'existing' | 'upload' | 'dynamic'
 
 type ExecutorSnapshot = {
   executorDefId?: string
@@ -2341,6 +2341,48 @@ async function fetchCompatReports(props: LProcessConsoleV2Props, methodCode: str
   }
 }
 
+// ── 来源管理 API ──────────────────────────────────────────
+async function fetchSourceList(props: LProcessConsoleV2Props) {
+  return callApi(props, {
+    url: '@query:LProcessConsole__listPackageSources',
+    method: 'post',
+    'gql:selection': 'sourceId,sourceType,sourceName,url,branch,tagPattern,subdirectory,authType,cronExpr,lastFetchStatus,lastFetchLog,lastFetchAt,enabled,remark,createTime,updatedTime',
+  }, {})
+}
+
+async function createSource(props: LProcessConsoleV2Props, data: any) {
+  return callApi(props, {
+    url: '@mutation:LProcessConsole__createPackageSource',
+    'gql:selection': 'sourceId',
+  }, { data })
+}
+
+async function updateSource(props: LProcessConsoleV2Props, data: any) {
+  return callApi(props, {
+    url: '@mutation:LProcessConsole__updatePackageSource',
+    'gql:selection': 'sourceId',
+  }, { data })
+}
+
+async function deleteSource(props: LProcessConsoleV2Props, sourceId: string) {
+  return callApi(props, {
+    url: '@mutation:LProcessConsole__deletePackageSource',
+  }, { sourceId })
+}
+
+async function triggerFetchSource(props: LProcessConsoleV2Props, sourceId: string) {
+  return callApi(props, {
+    url: '@mutation:LProcessConsole__triggerFetchPackageSource',
+    'gql:selection': 'executorReleaseId',
+  }, { sourceId })
+}
+
+async function triggerFetchAllSources(props: LProcessConsoleV2Props) {
+  return callApi(props, {
+    url: '@mutation:LProcessConsole__triggerFetchAllPackageSources',
+  }, {})
+}
+
 function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
   const data = props.data || {}
   const sourceMode = (data.sourceMode || 'existing') as ConsoleSourceMode
@@ -2438,6 +2480,14 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
   const [switchResult, setSwitchResult] = useState<SwitchResult | null>(null)
   const [switchLoading, setSwitchLoading] = useState(false)
   const [switchError, setSwitchError] = useState<string | null>(null)
+
+  // 来源管理状态
+  const [sourcesList, setSourcesList] = useState<any[]>([])
+  const [sourcesLoading, setSourcesLoading] = useState(false)
+
+  // 动态拉取状态
+  const [selectedSourceId, setSelectedSourceId] = useState<string>('')
+  const [dynamicFetching, setDynamicFetching] = useState(false)
 
   const requestRef = useRef(0)
   const snapshot = sourceReady && visibleSnapshotKey === activeSourceKey ? snapshotCache[activeSourceKey] || null : null
@@ -2631,6 +2681,20 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
       setEditDialog(null)
     }
 
+    if (sourceMode === 'dynamic') {
+      setWaitForFreshUpload(false)
+      setSelectedSourceId('')
+      updateFormValues(props, {
+        selectedExecutorDefId: '',
+        selectedExecutorReleaseId: '',
+      })
+      setLoading(false)
+      setExecutorEditing(false)
+      setExecutorDraft(emptyDraft())
+      setHoveredParamRow(null)
+      setEditDialog(null)
+    }
+
     prevSourceModeRef.current = sourceMode
   }, [props.store, sourceMode, uploadedExecutorDefId, uploadedExecutorReleaseId, uploadedFileId])
 
@@ -2724,7 +2788,39 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
       setHoveredParamRow(null)
       setEditDialog(null)
     }
-  }, [selectedExecutorDefId, selectedExecutorReleaseId, sourceMode, uploadSnapshotLocked])
+
+    if (sourceMode === 'dynamic' && !selectedExecutorDefId) {
+      requestRef.current += 1
+      setVisibleSnapshotKey('')
+      setLoading(false)
+      setExecutorEditing(false)
+      setExecutorDraft(emptyDraft())
+      setHoveredParamRow(null)
+      setEditDialog(null)
+    }
+  }, [selectedExecutorDefId, selectedExecutorReleaseId, sourceMode, uploadSnapshotLocked, selectedSourceId])
+
+  useEffect(() => {
+    if (sourceMode !== 'dynamic') return
+    let cancelled = false
+    async function loadSources() {
+      setSourcesLoading(true)
+      try {
+        const list = arrayValue<any>(await callApi(props, {
+          url: '@query:LProcessConsole__listPackageSources',
+          method: 'post',
+          'gql:selection': 'sourceId,sourceType,sourceName,url',
+        }, {}))
+        if (!cancelled) setSourcesList(list)
+      } catch {
+        if (!cancelled) setSourcesList([])
+      } finally {
+        if (!cancelled) setSourcesLoading(false)
+      }
+    }
+    loadSources()
+    return () => { cancelled = true }
+  }, [props.store, sourceMode])
 
   const filteredConfigs = arrayValue(snapshot?.configs).filter((item) => {
     return matchesScopedKeyword(configFilter, {
@@ -2814,6 +2910,7 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
       setVersionLoading(false)
     }
   }
+
 
   async function handleDeprecate(methodId: string) {
     try {
@@ -3078,6 +3175,13 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
               </button>
               <button
                 type="button"
+                className={sourceMode === 'dynamic' ? 'is-active' : ''}
+                onClick={() => setSourceMode('dynamic')}
+              >
+                动态拉取
+              </button>
+              <button
+                type="button"
                 className={sourceMode === 'upload' ? 'is-active' : ''}
                 onClick={() => setSourceMode('upload')}
               >
@@ -3127,6 +3231,69 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
                     {tagPill('当前', { background: '#e0f2fe', color: '#0369a1' })}
                   </span>
                 )}
+              </div>
+            </>
+          )}
+
+          {sourceMode === 'dynamic' && (
+            <>
+              <div className="nop-lprocess-v2__source-field nop-lprocess-v2__source-field--executor">
+                <span style={SOURCE_FIELD_LABEL_STYLE}>拉取来源</span>
+                <div className="nop-lprocess-v2__source-field-control">
+                  <Select
+                    value={selectedSourceId}
+                    options={sourcesList.map(s => ({
+                      value: s.sourceId,
+                      label: `${s.sourceName} (${s.sourceType === 'GIT' ? 'Git' : 'URL'})`,
+                    }))}
+                    placeholder={sourcesLoading ? '加载中...' : '选择已配置的来源'}
+                    clearable
+                    searchable
+                    loading={sourcesLoading}
+                    onChange={(value) => {
+                      setSelectedSourceId(value || '')
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="nop-lprocess-v2__source-field" style={{ flex: '0 0 auto' }}>
+                <button
+                  type="button"
+                  disabled={!selectedSourceId || dynamicFetching}
+                  onClick={async () => {
+                    if (!selectedSourceId) return
+                    setDynamicFetching(true)
+                    setError('')
+                    try {
+                      const result = await callApi(props, {
+                        url: '@mutation:LProcessConsole__triggerFetchPackageSource',
+                        method: 'post',
+                        'gql:selection': 'executorDefId,executorReleaseId,fileId,executorCode,executorName,parseStatus,language,releaseVersion,entryType,compatLevel,mainClass,description,configCount,methodCount,inputFieldCount,outputFieldCount',
+                      }, { sourceId: selectedSourceId })
+                      if (result) {
+                        updateFormValues(props, {
+                          selectedExecutorDefId: result.executorDefId || '',
+                          selectedExecutorReleaseId: result.executorReleaseId || '',
+                          executorDefId: result.executorDefId || '',
+                          executorReleaseId: result.executorReleaseId || '',
+                          fileId: result.fileId || '',
+                        })
+                      }
+                    } catch (err: any) {
+                      setError(err?.message || '拉取解析失败')
+                      console.error('动态拉取失败', err)
+                    } finally {
+                      setDynamicFetching(false)
+                    }
+                  }}
+                  style={{
+                    ...(selectedSourceId && !dynamicFetching ? primaryButtonStyle() : { ...primaryButtonStyle(), opacity: 0.5, cursor: 'not-allowed' }),
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {dynamicFetching ? '拉取解析中...' : '拉取并解析'}
+                </button>
               </div>
             </>
           )}
@@ -3188,6 +3355,14 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
       return (
         <div className="nop-lprocess-v2__hint-box">
           请选择版本后再查看当前快照。
+        </div>
+      )
+    }
+
+    if (sourceMode === 'dynamic' && !selectedSourceId) {
+      return (
+        <div className="nop-lprocess-v2__hint-box">
+          请选择动态拉取来源并点击"拉取并解析"来获取执行器快照。
         </div>
       )
     }
@@ -4660,10 +4835,11 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
           </div>,
           document.body
         )}
-      </div>
-    </div>
-  )
-}
+
+	      </div>
+	    </div>
+	  )
+	}
 
 function renderInputItem(label: string, input: React.ReactNode) {
   return (

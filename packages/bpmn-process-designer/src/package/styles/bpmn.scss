@@ -215,7 +215,7 @@ th.el-table__cell {
 
 .bjs-container.reverse-simulation .reverse-simulation-trace-path {
   fill: none;
-  stroke-width: 3px;
+  stroke-width: 2px;
   stroke-linecap: round;
   stroke-linejoin: round;
   opacity: 0.92;
@@ -223,9 +223,40 @@ th.el-table__cell {
 }
 
 .bjs-container.reverse-simulation .reverse-simulation-trace-path.reverse-simulation-trace-path-glow {
-  stroke-width: 5px;
+  stroke-width: 3px;
   opacity: 1;
-  filter: drop-shadow(0 0 8px currentColor) drop-shadow(0 0 4px currentColor);
+}
+
+.bjs-container.reverse-simulation .reverse-simulation-trace-path.reverse-simulation-trace-path-active {
+  transition: none;
+  opacity: 0.8;
+}
+
+/* ===== Reverse simulation moving token (airplane head) ===== */
+
+.bjs-container.reverse-simulation .reverse-simulation-moving-token {
+  pointer-events: none;
+  filter: drop-shadow(0 2px 8px rgba(15, 23, 42, 0.35));
+  z-index: 1;
+}
+
+.bjs-container.reverse-simulation .reverse-simulation-moving-token circle {
+  transition: none;
+}
+
+/* ===== Reverse simulation flowing white line (hover effect) ===== */
+
+.bjs-container.reverse-simulation .reverse-simulation-flow-path {
+  animation: reverse-flow-line var(--flow-duration, 1s) linear infinite;
+}
+
+@keyframes reverse-flow-line {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: calc(var(--flow-period, 30) * -1);
+  }
 }
 
 /* ===== Reverse trace token ===== */

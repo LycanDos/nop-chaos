@@ -632,8 +632,8 @@ console.log("[app] App.vue loaded");
 
 defineProps<{
   modelId?: string;
-  modelKey: string;
-  modelName: string;
+  modelKey?: string;
+  modelName?: string;
   value?: string;
 }>();
 

@@ -8,7 +8,7 @@
   "associations": [],
   "types": [
     {
-      "name": "MethodBinding",
+      "name": "TaskBinding",
       "superClass": ["Element"],
       "meta": {
         "allowedIn": [
@@ -25,12 +25,14 @@
         ]
       },
       "properties": [
-        { "name": "executorDefId", "isAttr": true, "type": "String" },
-        { "name": "methodCode", "isAttr": true, "type": "String" },
-        { "name": "versionConstraintType", "isAttr": true, "type": "String" },
-        { "name": "versionConstraintExpr", "isAttr": true, "type": "String" },
+        { "name": "executor", "isAttr": true, "type": "String" },
+        { "name": "method", "isAttr": true, "type": "String" },
+        { "name": "entryType", "isAttr": true, "type": "String" },
+        { "name": "versionConstraint", "isAttr": true, "type": "String" },
+        { "name": "versionExpr", "isAttr": true, "type": "String" },
         { "name": "timeoutMs", "isAttr": true, "type": "Integer" },
-        { "name": "asyncFlag", "isAttr": true, "type": "Boolean" }
+        { "name": "asyncFlag", "isAttr": true, "type": "Boolean" },
+        { "name": "retryPolicy", "isAttr": true, "type": "String" }
       ]
     },
     {
@@ -59,7 +61,9 @@
         { "name": "asyncFlag", "isAttr": true, "type": "Boolean" },
         { "name": "failureStrategy", "isAttr": true, "type": "String" },
         { "name": "inputMappingJson", "isAttr": true, "type": "String" },
-        { "name": "outputDeltaJson", "isAttr": true, "type": "String" }
+        { "name": "outputDeltaJson", "isAttr": true, "type": "String" },
+        { "name": "executorType", "isAttr": true, "type": "String" },
+        { "name": "executorConfigJson", "isAttr": true, "type": "String" }
       ]
     },
     {
@@ -86,6 +90,33 @@
         { "name": "target", "isAttr": true, "type": "String" },
         { "name": "expression", "isAttr": true, "type": "String" },
         { "name": "mergeStrategy", "isAttr": true, "type": "String" }
+      ]
+    },
+    {
+      "name": "SkinDef",
+      "superClass": ["Element"],
+      "meta": {
+        "allowedIn": [
+          "bpmn:Task",
+          "bpmn:UserTask",
+          "bpmn:ServiceTask",
+          "bpmn:ScriptTask",
+          "bpmn:SendTask",
+          "bpmn:ReceiveTask",
+          "bpmn:ManualTask",
+          "bpmn:BusinessRuleTask",
+          "bpmn:CallActivity",
+          "bpmn:SubProcess",
+          "bpmn:StartEvent",
+          "bpmn:EndEvent",
+          "bpmn:IntermediateCatchEvent",
+          "bpmn:IntermediateThrowEvent",
+          "bpmn:BoundaryEvent"
+        ]
+      },
+      "properties": [
+        { "name": "skinCode", "isAttr": true, "type": "String" },
+        { "name": "uiOverridesJson", "isAttr": true, "type": "String" }
       ]
     }
   ]

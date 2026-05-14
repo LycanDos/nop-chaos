@@ -20,11 +20,10 @@ export function default_jumpTo(router: Router, to: string) {
 
 
     function go(to: any, replace: boolean) {
-
         if (replace) {
-            router.push(to)
-        } else {
             router.replace(to)
+        } else {
+            router.push(to)
         }
     }
 
@@ -36,7 +35,8 @@ export function default_jumpTo(router: Router, to: string) {
         const pos = to.indexOf('?')
         const query = pos > 0 ? to.substring(pos+1) : null
         const data = query ? qs.parse(query) : null
-        const page = { name: 'jsonPage', params: { path: to, data} }
+        const path = to.startsWith('/') ? to.substring(1) : to
+        const page = { name: 'jsonPage', params: { path: path, data} }
         go(page as any, replace)
     } else {
         go(to, replace)
@@ -83,7 +83,7 @@ function normalizeLink(to) {
     const hash = ~idx2 ? to.substring(idx2) : ''
     if (!pathname) {
         pathname = location.pathname
-    } else if (pathname[0] != '/' && !/^https?:\/\//.test(pathname)) {
+    } else if (pathname[0] != '/' && !/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(pathname)) {
         const relativeBase = location.pathname
         const paths = relativeBase.split('/')
         paths.pop()
@@ -104,6 +104,11 @@ export function default_updateLocation(to: any, replace: boolean) {
         return window.history.back();
     }
 
+    // replace://、open:// 协议应由 jumpTo 处理，不在这里做 location.href 跳转
+    if (typeof to === 'string' && (to.startsWith('replace://') || to.startsWith('open://'))) {
+        return;
+    }
+
     if (replace && window.history.replaceState) {
         window.history.replaceState('', document.title, to);
         return;
@@ -113,6 +118,11 @@ export function default_updateLocation(to: any, replace: boolean) {
 }
 
 export function default_isCurrentUrl(to: string, ctx?: any) {
+    // replace://、open://、@mutation:、@query: 都是 AMIS 动作协议，不是导航路径
+    if (!to || to.startsWith('replace://') || to.startsWith('open://') || to.startsWith('@')) {
+        return false;
+    }
+
     const link = normalizeLink(to);
     const location = window.location;
     let pathname = link;
@@ -137,10 +147,14 @@ export function default_isCurrentUrl(to: string, ctx?: any) {
     } else if (pathname === location.pathname) {
         return true;
     } else if (!~pathname.indexOf('http') && ~pathname.indexOf(':')) {
-        return match(link, {
-            decode: decodeURIComponent,
-            strict: ctx?.strict ?? true
-        })(location.pathname);
+        try {
+            return match(link, {
+                decode: decodeURIComponent,
+                strict: ctx?.strict ?? true
+            })(location.pathname);
+        } catch (_e) {
+            return false;
+        }
     }
 
     return false;
