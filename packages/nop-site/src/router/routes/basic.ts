@@ -138,6 +138,27 @@ export const BPMN_DESIGNER_EXAMPLE_ROUTE: AppRouteRecordRaw = {
   ],
 };
 
+export const SKIN_DESIGNER_ROUTE: AppRouteRecordRaw = {
+  path: '/skin-designer',
+  name: 'SkinDesignerRoot',
+  component: LAYOUT,
+  meta: {
+    title: '皮肤设计器',
+    hideMenu: true,
+  },
+  children: [
+    {
+      path: '',
+      name: 'SkinDesigner',
+      component: () => import('/@/views/skin/SkinDesigner.vue'),
+      meta: {
+        title: '皮肤设计器',
+        hideMenu: true,
+      },
+    },
+  ],
+};
+
 export const WORKFLOW_RUNTIME_VIEWER_ROUTE: AppRouteRecordRaw = {
   path: '/wf',
   name: 'WorkflowRoot',

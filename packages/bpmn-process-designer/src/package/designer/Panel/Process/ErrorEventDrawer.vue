@@ -55,7 +55,8 @@ defineExpose({
     append-to-body
     :lock-scroll="false"
     @closed="onClosed"
-    title="错误事件"
+    :show-close="false"
+    :with-header="false"
   >
     <el-form
       ref="formRef"

@@ -57,40 +57,6 @@ async function getAsyncMenus() {
   const permissionStore = usePermissionStore();
   if (isBackMode()) {
     const menus = permissionStore.getBackMenuList.filter((item) => !item.meta?.hideMenu && !item.hideMenu);
-    // 注入前端定义的 BPMN 设计器菜单（无需后端配置）
-    menus.push({
-      name: 'BPMN设计器',
-      icon: 'icon-park-outline:workbench',
-      path: '/bpmn-designer',
-      orderNo: 9,
-      children: [
-        {
-          name: '设计器示例',
-          icon: 'ant-design:experiment-outlined',
-          path: '/bpmn-designer/example',
-        },
-      ],
-    });
-
-    // 注入前端定义的工作流运行时菜单（无需后端配置）
-    menus.push({
-      name: '工作流',
-      icon: 'icon-park-outline:workflow',
-      path: '/wf',
-      orderNo: 8,
-      children: [
-        {
-          name: '工作流运行时View',
-          icon: 'ant-design:eye-outlined',
-          path: '/wf/runtime-viewer',
-        },
-        {
-          name: '工作流运行时示例',
-          icon: 'ant-design:experiment-outlined',
-          path: '/wf/runtime-viewer-example',
-        },
-      ],
-    });
     return menus;
   }
   if (isRouteMappingMode()) {

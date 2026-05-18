@@ -132,7 +132,7 @@ export const nopGraphQLAdapter: ExecutorApiAdapter = {
   },
 
   async fetchMethodSchema(methodId: string) {
-    const selection = 'fieldId,methodId,schemaRole,fieldPath,fieldName,dataType,javaType,required,defaultValue,defaultExpr'
+    const selection = 'fieldId,methodId,schemaRole,fieldPath,fieldName,dataType,javaType,required,defaultValue,defaultExpr,uiWidget,editorUrl'
     const res = await nopRestPost(
       `/r/MethodSchemaField__findList?@selection=${selection}`,
       {

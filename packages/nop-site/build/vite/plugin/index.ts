@@ -6,8 +6,6 @@ import purgeIcons from 'vite-plugin-purge-icons';
 import UnoCSS from 'unocss/vite';
 import { presetTypography, presetUno } from 'unocss';
 import VitePluginCertificate from 'vite-plugin-mkcert';
-//[issues/555]开发环境，vscode断点调试，文件或行数对不上
-import vueSetupExtend from 'vite-plugin-vue-setup-extend-plus';
 import { configHtmlPlugin } from './html';
 
 //import { configMockPlugin } from './mock';
@@ -16,11 +14,11 @@ import { configStyleImportPlugin } from './styleImport';
 import { configVisualizerConfig } from './visualizer';
 import { configThemePlugin } from './theme';
 import { configSvgIconsPlugin } from './svgSprite';
-
+import { configPwaPlugin } from './pwa';
 
 import veauryVitePlugins from 'veaury/vite'
 
-export function createVitePlugins(viteEnv: ViteEnv, isBuild: boolean) {
+export function createVitePlugins(viteEnv: ViteEnv, isBuild: boolean, extraPrePlugins?: PluginOption[]) {
   const { VITE_USE_IMAGEMIN, VITE_USE_MOCK, VITE_LEGACY, VITE_BUILD_COMPRESS, VITE_BUILD_COMPRESS_DELETE_ORIGIN_FILE } = viteEnv;
 
   const vitePlugins: (PluginOption | PluginOption[])[] = [
@@ -28,7 +26,7 @@ export function createVitePlugins(viteEnv: ViteEnv, isBuild: boolean) {
     //vue(),
     // have to
     //vueJsx(),
-    UnoCSS({ 
+    UnoCSS({
       presets: [presetUno(), presetTypography()] ,
       theme: {
         // ...
@@ -41,23 +39,18 @@ export function createVitePlugins(viteEnv: ViteEnv, isBuild: boolean) {
         },
       }
     }),
+    // bpmn-designer aliases must come BEFORE veaury (@vitejs/plugin-vue uses enforce: 'pre')
+    ...(extraPrePlugins || []),
     veauryVitePlugins({
       type: 'vue',
       // Configuration of @vitejs/plugin-vue
       // vueOptions: {...},
       // Configuration of @vitejs/plugin-react
-      // reactOptions: {...}, 
+      // reactOptions: {...},
       // Configuration of @vitejs/plugin-vue-jsx
       vueJsxOptions: {}
     }),
-    // support name
-    vueSetupExtend(),
-    // @ts-ignore
-    VitePluginCertificate({
-      source: 'coding',
-    }),
   ];
-
 
   // vite-plugin-html
   vitePlugins.push(configHtmlPlugin(viteEnv, isBuild));
@@ -85,6 +78,9 @@ export function createVitePlugins(viteEnv: ViteEnv, isBuild: boolean) {
 
     // rollup-plugin-gzip
     vitePlugins.push(configCompressPlugin(VITE_BUILD_COMPRESS, VITE_BUILD_COMPRESS_DELETE_ORIGIN_FILE));
+
+    // vite-plugin-pwa (Service Worker缓存)
+    vitePlugins.push(configPwaPlugin(viteEnv, isBuild));
 
   }
 

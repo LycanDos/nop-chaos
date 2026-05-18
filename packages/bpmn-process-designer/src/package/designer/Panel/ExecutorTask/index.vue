@@ -27,15 +27,12 @@ import type {
   FailureStrategy,
   InputPolicyDocument,
 } from '@/types/executor.ts'
-import { EditPen, InfoFilled, Delete } from '@element-plus/icons-vue'
+import { EditPen, InfoFilled } from '@element-plus/icons-vue'
 import { useExecutorApi } from '@/hooks/useExecutorApi.ts'
 import InputMappingDrawer from './InputMappingDrawer.vue'
 import InputClarDrawer from './InputClarDrawer.vue'
 import OutputDeltaDrawer from './OutputDeltaDrawer.vue'
 import ExecutorConfigDrawer from './ExecutorConfigDrawer.vue'
-import SchemaConfigRenderer from './SchemaConfigRenderer.vue'
-import { executorTypeRegistry } from '@/registry/ExecutorTypePluginRegistry.ts'
-import type { ExecutorTypePlugin } from '@/types/executor.ts'
 
 defineOptions({ name: 'ExecutorTask' })
 
@@ -71,8 +68,6 @@ const bindingForm = reactive({
   inputMappings: [] as InputMappingItem[],
   inputPolicyDocument: null as InputPolicyDocument | null,
   outputDeltas: [] as OutputDeltaItem[],
-  // 执行器插件相关
-  executorType: '',
   executorConfigJson: '',
 })
 
@@ -82,24 +77,47 @@ const outputDeltaDrawerRef = ref<InstanceType<typeof OutputDeltaDrawer>>()
 const executorConfigDrawerRef = ref<InstanceType<typeof ExecutorConfigDrawer>>()
 const executorConfigDrawerVisible = ref(false)
 
-// 当前选中的执行器插件
-const currentPlugin = computed<ExecutorTypePlugin | undefined>(() => {
-  if (!bindingForm.executorType) return undefined
-  return executorTypeRegistry.get(bindingForm.executorType)
-})
+// 当前选中方法的自定义编辑器字段（如 Hoppscotch）
+const methodEditorField = computed<MethodSchemaFieldItem | undefined>(() => {
+  // 1. 优先使用后端返回的 editorUrl（schema 中有该字段且配置了 editorUrl）
+  const withEditor = selectedMethodInputs.value.find(f => f.editorUrl)
+  if (withEditor) return withEditor
 
-// 执行器类型下拉选项
-const executorTypeOptions = computed(() => {
-  const options = executorTypeRegistry.getSelectOptions()
-  return [
-    { label: '无（使用执行器绑定）', value: '', icon: '' },
-    ...options,
-  ]
-})
+  // 2. 回退：executorConfigJson 参数默认使用 Hoppscotch 编辑器
+  const configParam = selectedMethodInputs.value.find(
+    f => f.fieldPath === 'executorConfigJson',
+  )
+  if (configParam) {
+    return {
+      ...configParam,
+      editorUrl: '/plugins/lycan.hoppscotch/editor/index.html',
+    } as MethodSchemaFieldItem
+  }
 
-// 是否有插件配置需要显示
-const hasPluginConfig = computed(() => {
-  return !!bindingForm.executorType && !!currentPlugin.value
+  // 3. 最终回退：如果方法已选但后端无 schema 数据，
+  //    根据 executor/method 特征推断是否需要编辑器
+  if (bindingForm.methodId) {
+    const executorCode = (bindingForm.executorCode || '').toLowerCase()
+    const methodCode = (bindingForm.methodCode || '').toLowerCase()
+    const name = (bindingForm.methodName || '').toLowerCase()
+    // 已知需要 Hoppscotch 编辑器的模式
+    const needsEditor = executorCode.includes('hoppscotch')
+      || methodCode === 'executerequest'
+      || name.includes('execute')
+    if (needsEditor) {
+      return {
+        fieldId: 'executorConfigJson',
+        methodId: bindingForm.methodId,
+        schemaRole: 'INPUT' as const,
+        fieldPath: 'executorConfigJson',
+        fieldName: '请求配置',
+        dataType: 'object',
+        editorUrl: '/plugins/lycan.hoppscotch/editor/index.html',
+      } as MethodSchemaFieldItem
+    }
+  }
+
+  return undefined
 })
 
 // 使用新的入参 Clar (可通过配置切换)
@@ -130,14 +148,6 @@ const versionExprPlaceholder = computed(() => {
 })
 
 const showVersionExpr = computed(() => bindingForm.versionStrategy !== 'LATEST')
-
-// 同步画布图标：当 executorType 变化时更新 flowable:connectorIcon
-function syncConnectorIcon(executorType: string) {
-  if (!selectedElement || !updateProperties) return
-  const plugin = executorType ? executorTypeRegistry.get(executorType) : undefined
-  const icon = plugin?.icon || '#icon-executor-service'
-  updateProperties({ 'flowable:connectorIcon': icon })
-}
 
 // ========== 数据加载（通过注入的 API 适配器） ==========
 async function loadExecutors() {
@@ -199,11 +209,25 @@ const parsedConfig = computed(() => {
   }
 })
 
-// 从配置中提取摘要信息（method + URL）
-const configSummary = computed<{ method: string; url: string } | null>(() => {
+// 从配置中提取详细摘要信息
+const configSummary = computed<{
+  method: string
+  url: string
+  headersCount: number
+  authType: string
+  hasBody: boolean
+  queryParamsCount: number
+} | null>(() => {
   const cfg = parsedConfig.value
   if (!cfg || !cfg.url) return null
-  return { method: cfg.method || 'GET', url: cfg.url }
+  return {
+    method: cfg.method || 'GET',
+    url: cfg.url,
+    headersCount: cfg.headers?.length || 0,
+    authType: cfg.auth?.type || 'none',
+    hasBody: !!cfg.body,
+    queryParamsCount: cfg.params?.length || 0,
+  }
 })
 
 // method 对应的 tag 类型
@@ -215,12 +239,6 @@ const methodTagType = computed(() => {
   if (['DELETE'].includes(method)) return 'danger'
   return 'info'
 })
-
-// SchemaConfigRenderer 变更回调
-function onSchemaConfigChange(val: Record<string, any>) {
-  bindingForm.executorConfigJson = JSON.stringify(val)
-  saveBindingToElement()
-}
 
 // ========== 事件处理 ==========
 function handleExecutorChange(executorDefId: string) {
@@ -273,42 +291,7 @@ function handleVersionStrategyChange() {
   saveBindingToElement()
 }
 
-// ========== 执行器类型（插件） ==========
-function handleExecutorTypeChange(executorType: string) {
-  bindingForm.executorType = executorType
-  if (!executorType) {
-    bindingForm.executorConfigJson = ''
-  } else {
-    const plugin = executorTypeRegistry.get(executorType)
-    if (plugin?.configSchema) {
-      // 初始化默认配置
-      bindingForm.executorConfigJson = JSON.stringify(
-        initConfigFromSchema(plugin.configSchema),
-      )
-    }
-  }
-  syncConnectorIcon(executorType)
-  saveBindingToElement()
-}
-
-function initConfigFromSchema(schema: Record<string, any>): Record<string, any> {
-  const config: Record<string, any> = {}
-  if (!schema.properties) return config
-  for (const [key, prop] of Object.entries(schema.properties)) {
-    const propSchema = prop as Record<string, any>
-    if (propSchema.default !== undefined) {
-      config[key] = propSchema.default
-    } else if (propSchema.type === 'object') {
-      config[key] = initConfigFromSchema(propSchema)
-    } else if (propSchema.type === 'array') {
-      config[key] = []
-    } else if (propSchema.type === 'string') {
-      config[key] = ''
-    }
-  }
-  return config
-}
-
+// ========== 参数编辑器（Hoppscotch 等自定义编辑器） ==========
 function handleExecutorConfigChange(configJson: string) {
   bindingForm.executorConfigJson = configJson
   saveBindingToElement()
@@ -403,7 +386,7 @@ function saveBindingToElement() {
     if (oldBindings.length) {
       removeExtensionElements(selectedElement, oldBindings)
     }
-    if (!bindingForm.executorDefId && !bindingForm.executorType) return
+    if (!bindingForm.executorDefId) return
 
     const bindingProps: Record<string, any> = {
       executorDefId: bindingForm.executorDefId,
@@ -421,8 +404,7 @@ function saveBindingToElement() {
       retryIntervalMs: bindingForm.retryIntervalMs,
       asyncFlag: bindingForm.asyncFlag,
       failureStrategy: bindingForm.failureStrategy,
-      // 执行器插件
-      executorType: bindingForm.executorType || undefined,
+      // 执行器配置 JSON
       executorConfigJson: bindingForm.executorConfigJson || undefined,
       // 保留旧版入参映射 (向后兼容)
       inputMappingJson: bindingForm.inputMappings.length
@@ -485,14 +467,8 @@ function readBindingFromElement() {
       bindingForm.outputDeltas = outputJson ? JSON.parse(outputJson) : []
     } catch { bindingForm.outputDeltas = [] }
 
-    // 读取执行器插件字段
-    bindingForm.executorType = binding.get('executorType') || ''
+    // 读取执行器配置 JSON
     bindingForm.executorConfigJson = binding.get('executorConfigJson') || ''
-
-    // 同步画布图标
-    if (bindingForm.executorType) {
-      syncConnectorIcon(bindingForm.executorType)
-    }
 
     // 级联加载数据
     if (bindingForm.executorDefId) loadReleases(bindingForm.executorDefId)
@@ -512,7 +488,7 @@ function resetForm() {
     timeoutMs: 30000, retryCount: 0, retryIntervalMs: 5000,
     asyncFlag: false, failureStrategy: 'FAIL',
     inputMappings: [], inputPolicyDocument: null, outputDeltas: [],
-    executorType: '', executorConfigJson: '',
+    executorConfigJson: '',
   })
   releaseList.value = []
   methodList.value = []
@@ -523,158 +499,59 @@ function resetForm() {
 watch(selectedElementRef, readBindingFromElement, { immediate: true })
 onMounted(() => {
   loadExecutors()
-  registerBuiltinPlugins()
 })
 
-// ========== 内建插件注册 ==========
-function registerBuiltinPlugins() {
-  executorTypeRegistry.register({
-    id: 'lycan.hoppscotch',
-    name: 'API 调用',
-    icon: '#icon-executor-hoppscotch',
-    configSchema: {
-      type: 'object',
-      required: ['method', 'url'],
-      properties: {
-        method: {
-          type: 'string',
-          title: '请求方法',
-          enum: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'],
-          default: 'GET',
-        },
-        url: {
-          type: 'string',
-          title: '请求 URL',
-          description: 'HTTP 请求地址，支持 Delta 变量注入，如 $jmes(vars.apiBaseUrl)/users',
-        },
-        headers: {
-          type: 'array',
-          title: '请求头',
-          'ui:widget': 'kv-table',
-          items: {
-            type: 'object',
-            properties: {
-              key: { type: 'string', title: 'Key' },
-              value: { type: 'string', title: 'Value' },
-              enabled: { type: 'boolean', title: '启用', default: true },
-            },
-          },
-        },
-        body: {
-          type: 'object',
-          title: '请求体',
-          properties: {
-            type: {
-              type: 'string',
-              title: 'Body 类型',
-              enum: ['none', 'raw', 'form-data', 'x-www-form-urlencoded'],
-              default: 'none',
-            },
-            contentType: { type: 'string', title: 'Content-Type' },
-            rawData: { type: 'string', title: '原始数据', 'ui:widget': 'textarea' },
-          },
-        },
-        auth: {
-          type: 'object',
-          title: '认证',
-          properties: {
-            type: {
-              type: 'string',
-              title: '认证类型',
-              enum: ['none', 'basic', 'bearer', 'api-key'],
-              default: 'none',
-            },
-            bearer: {
-              type: 'object',
-              title: 'Bearer Token',
-              properties: {
-                token: { type: 'string', title: 'Token' },
-              },
-            },
-            basic: {
-              type: 'object',
-              title: 'Basic 认证',
-              properties: {
-                username: { type: 'string', title: '用户名' },
-                password: { type: 'string', title: '密码' },
-              },
-            },
-          },
-        },
-      },
-    },
-  })
-}
 </script>
 
 <template>
-  <!-- 执行器类型（插件） -->
-  <el-collapse-item name="executor-plugin-type" title="执行器类型">
-    <el-form-item label="类型">
-      <el-select
-        v-model="bindingForm.executorType"
-        filterable
-        clearable
-        placeholder="选择执行器类型"
-        style="width: 100%"
-        @change="handleExecutorTypeChange"
-      >
-        <el-option
-          v-for="opt in executorTypeOptions"
-          :key="opt.value"
-          :label="opt.label"
-          :value="opt.value"
-        >
-          <span v-if="opt.icon" :style="{ marginRight: '6px' }">
-            <svg width="16" height="16" viewBox="0 0 24 24">
-              <use :href="opt.icon" />
-            </svg>
-          </span>
-          {{ opt.label }}
-        </el-option>
-      </el-select>
-    </el-form-item>
-    <el-form-item v-if="currentPlugin" label="插件 ID">
-      <el-tag type="info">{{ currentPlugin.id }}</el-tag>
-    </el-form-item>
-  </el-collapse-item>
-
-  <!-- 执行器配置（插件专属） -->
+  <!-- 参数配置面板（Hoppscotch 请求编辑器） -->
   <el-collapse-item
-    v-if="hasPluginConfig"
-    name="executor-plugin-config"
-    title="执行器配置"
+    v-if="methodEditorField"
+    name="executor-method-editor"
+    title="参数配置"
   >
     <el-form-item label-position="top">
       <template #label>
-        配置内容
+        请求信息
         <el-button
-          v-if="currentPlugin?.editorUrl"
+          v-if="methodEditorField.editorUrl"
           type="primary"
           class="el-icon--right"
           :icon="EditPen"
           link
           @click="openExecutorConfigDrawer"
         >
-          在编辑器中编辑
+          编辑请求
         </el-button>
       </template>
 
-      <!-- 摘要显示：method + URL -->
+      <!-- 摘要显示：method + URL + 详情 -->
       <div v-if="configSummary" class="config-summary">
-        <el-tag :type="methodTagType" size="small">
-          {{ configSummary.method }}
-        </el-tag>
-        <span class="config-url">{{ configSummary.url }}</span>
+        <div class="summary-row">
+          <el-tag :type="methodTagType" size="small">
+            {{ configSummary.method }}
+          </el-tag>
+          <span class="config-url">{{ configSummary.url }}</span>
+        </div>
+        <div class="summary-details">
+          <el-tag v-if="configSummary.queryParamsCount" size="small" type="info">
+            参数: {{ configSummary.queryParamsCount }}
+          </el-tag>
+          <el-tag v-if="configSummary.headersCount" size="small" type="info">
+            Headers: {{ configSummary.headersCount }}
+          </el-tag>
+          <el-tag v-if="configSummary.authType !== 'none'" size="small" type="warning">
+            Auth: {{ { bearer: 'Bearer', basic: 'Basic', apikey: 'API Key' }[configSummary.authType] || configSummary.authType }}
+          </el-tag>
+          <el-tag v-if="configSummary.hasBody" size="small" type="success">
+            Body
+          </el-tag>
+        </div>
       </div>
-
-      <!-- Schema 自动表单（无 editorUrl 时） -->
-      <SchemaConfigRenderer
-        v-if="currentPlugin?.configSchema && !currentPlugin?.editorUrl"
-        :schema="currentPlugin.configSchema"
-        :model-value="parsedConfig"
-        @update:model-value="onSchemaConfigChange"
-      />
+      <div v-else class="config-empty">
+        <el-icon><InfoFilled /></el-icon>
+        <span>点击"编辑请求"打开 Hoppscotch 配置 HTTP 请求</span>
+      </div>
     </el-form-item>
   </el-collapse-item>
 
@@ -986,8 +863,8 @@ function registerBuiltinPlugins() {
   <ExecutorConfigDrawer
     ref="executorConfigDrawerRef"
     v-model:visible="executorConfigDrawerVisible"
-    :editor-url="currentPlugin?.editorUrl || ''"
-    :plugin-name="currentPlugin?.name || ''"
+    :editor-url="methodEditorField?.editorUrl || ''"
+    :plugin-name="methodEditorField?.fieldName || '请求配置'"
     :config-json="bindingForm.executorConfigJson"
     @save="handleExecutorConfigChange"
   />
@@ -1051,6 +928,17 @@ function registerBuiltinPlugins() {
   flex: 1;
 }
 
+.config-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px;
+  background: var(--el-fill-color-lighter);
+  border-radius: 4px;
+  color: var(--el-text-color-placeholder);
+  font-size: 12px;
+}
+
 .clar-empty {
   display: flex;
   align-items: center;
@@ -1065,7 +953,7 @@ function registerBuiltinPlugins() {
 // 执行器配置摘要
 .config-summary {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
   padding: 8px 12px;
   background: var(--el-fill-color-lighter);
@@ -1073,10 +961,24 @@ function registerBuiltinPlugins() {
   width: 100%;
 }
 
+.summary-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.summary-details {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
 .config-url {
   font-family: monospace;
   font-size: 13px;
   color: var(--el-text-color-regular);
   word-break: break-all;
+  flex: 1;
 }
 </style>

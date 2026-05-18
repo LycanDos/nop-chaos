@@ -54,8 +54,9 @@ defineExpose({
     append-to-body
     :lock-scroll="false"
     @closed="onClosed"
+    :show-close="false"
+    :with-header="false"
     v-bind="$attrs"
-    title="出入参数"
   >
     <el-form
       ref="formRef"

@@ -16,7 +16,7 @@
       </div>
     </ContentWrap>
     <ContentWrap>
-      <div class="designer-container">
+      <div class="bpmn-designer-wrapper">
         <ProcessDesigner
           ref="processDesignerRef"
           :xml="currentXml"
@@ -28,9 +28,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { ProcessDesigner } from 'bpmn-process-designer'
 import { nopSiteExecutorApi } from '../api/bpmn/executorApi'
+// bpmn-js 样式 — 必须导入，否则渲染为大黑块
+import 'bpmn-process-designer/dist/bpmn-process-designer.css';
+import 'bpmn-js/dist/assets/diagram-js.css'
+import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css'
+import 'bpmn-js/dist/assets/bpmn-js.css'
+import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css'
+import 'diagram-js-minimap/assets/diagram-js-minimap.css'
+import 'bpmn-js-token-simulation/assets/css/bpmn-js-token-simulation.css'
+import 'bpmn-js-bpmnlint/dist/assets/css/bpmn-js-bpmnlint.css'
+import 'bpmn-js-color-picker/colors/color-picker.css'
 
 defineOptions({ name: 'BpmnDesignerExample' })
 
@@ -136,9 +146,79 @@ const currentXml = computed(() => exampleMap[selectedExample.value] || '')
 function switchExample(val: string) {
   selectedExample.value = val
 }
+
+// 给小地图添加可拖动标题栏（含收缩/关闭按钮）
+onMounted(() => {
+  nextTick(() => {
+    setTimeout(() => {
+      const minimap = document.querySelector('.djs-minimap') as HTMLElement;
+      if (!minimap || minimap.querySelector('.minimap-titlebar')) return;
+      minimap.classList.add('has-titlebar');
+
+      const titlebar = document.createElement('div');
+      titlebar.className = 'minimap-titlebar';
+      titlebar.innerHTML = `
+        <span class="minimap-titlebar__drag"></span>
+        <span class="minimap-titlebar__actions">
+          <button class="minimap-btn minimap-btn--minimize" title="收缩">−</button>
+          <button class="minimap-btn minimap-btn--close" title="关闭">×</button>
+        </span>
+      `;
+      minimap.insertBefore(titlebar, minimap.firstChild);
+
+      // 收缩/展开
+      const minimizeBtn = titlebar.querySelector('.minimap-btn--minimize') as HTMLElement;
+      let minimized = false;
+      minimizeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        minimized = !minimized;
+        let sibling = titlebar.nextElementSibling as HTMLElement;
+        while (sibling) {
+          sibling.style.display = minimized ? 'none' : '';
+          sibling = sibling.nextElementSibling as HTMLElement;
+        }
+        minimizeBtn.textContent = minimized ? '+' : '−';
+        minimap.style.maxHeight = minimized ? '22px' : '200px';
+      });
+
+      // 关闭
+      const closeBtn = titlebar.querySelector('.minimap-btn--close') as HTMLElement;
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const m = processDesignerRef.value?.getModeler?.();
+        if (m) {
+          try { m.get('minimap').toggle(false); } catch (_) {}
+        } else {
+          minimap.style.display = 'none';
+        }
+      });
+
+      // 拖动
+      let isDragging = false, startX = 0, startY = 0, origX = 0, origY = 0;
+      titlebar.addEventListener('mousedown', (e) => {
+        if ((e.target as HTMLElement).closest('.minimap-btn')) return;
+        isDragging = true;
+        startX = e.clientX; startY = e.clientY;
+        const rect = minimap.getBoundingClientRect();
+        const parent = (minimap.offsetParent || document.body).getBoundingClientRect();
+        origX = rect.left - parent.left; origY = rect.top - parent.top;
+        e.preventDefault();
+      });
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        minimap.style.position = 'absolute';
+        minimap.style.left = (origX + e.clientX - startX) + 'px';
+        minimap.style.top = (origY + e.clientY - startY) + 'px';
+        minimap.style.right = 'auto';
+        minimap.style.bottom = 'auto';
+      });
+      document.addEventListener('mouseup', () => { isDragging = false; });
+    }, 1000);
+  });
+});
 </script>
 
-<style scoped>
+<style lang="scss">
 .bpmn-designer-example {
   padding: 16px;
 }
@@ -158,11 +238,66 @@ function switchExample(val: string) {
   font-size: 13px;
   margin: 0;
 }
-.designer-container {
+.bpmn-designer-wrapper {
+  width: 100%;
   height: calc(100vh - 260px);
   min-height: 500px;
+  overflow: hidden;
+  background-color: #fff;
   border: 1px solid #e8e8e8;
   border-radius: 4px;
-  overflow: hidden;
 }
+
+/* 小地图样式 */
+.djs-minimap {
+  box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.25);
+  border: none;
+  background-color: #fff;
+  border-radius: 4px;
+  overflow: hidden;
+  width: 260px !important;
+  height: auto !important;
+  max-height: 200px;
+  padding-top: 0;
+}
+.djs-minimap > .map {
+  width: 260px !important;
+  height: 150px !important;
+  overflow: hidden;
+  position: relative;
+}
+.minimap-titlebar {
+  height: 22px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  cursor: move;
+  user-select: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+}
+.minimap-titlebar__drag { flex: 1; height: 100%; }
+.minimap-titlebar__actions {
+  display: flex;
+  gap: 2px;
+}
+.minimap-btn {
+  width: 16px; height: 16px; border: none; background: transparent;
+  cursor: pointer; font-size: 14px; line-height: 1; color: #999;
+  border-radius: 2px; display: flex; align-items: center;
+  justify-content: center; padding: 0; position: relative; z-index: 31;
+}
+.minimap-btn:hover { background: #e0e0e0; color: #333; }
+.djs-minimap .viewport-dom { z-index: 8; }
+.djs-minimap.open .overlay { z-index: 7; }
+.djs-minimap.has-titlebar > .map { margin-top: 22px; position: relative; }
+.djs-minimap.has-titlebar .viewport-dom { top: 22px !important; transform: none !important; }
+.djs-minimap.has-titlebar.open .overlay { top: 22px !important; }
+.djs-minimap:not(.open) { display: none !important; }
 </style>

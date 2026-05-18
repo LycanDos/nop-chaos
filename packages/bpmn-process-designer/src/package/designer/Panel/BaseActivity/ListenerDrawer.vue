@@ -128,6 +128,8 @@ defineExpose({
     :lock-scroll="false"
     size="35%"
     @closed="onClosed"
+    :show-close="false"
+    :with-header="false"
     v-bind="$attrs"
   >
     <el-form

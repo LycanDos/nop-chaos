@@ -3,7 +3,7 @@
  * BpmnPanel - BPMN 属性面板
  * 根据选中元素类型显示对应的属性编辑面板
  */
-import { computed, onMounted, shallowRef } from 'vue'
+import { computed, onMounted, shallowRef, watch } from 'vue'
 import BpmnModeler from 'bpmn-js/lib/Modeler'
 import type { Element } from 'bpmn-js/lib/model/Types'
 import type ElementRegistry from 'diagram-js/lib/core/ElementRegistry'
@@ -124,6 +124,13 @@ const _update = debounce((element: Element) => {
 
 const isImplicitRoot = (element: RootLike) => element && element.isImplicit
 
+watch(selectedElement, (el) => {
+  console.log('[BpmnPanel] selectedElement changed:', el?.id, el?.type)
+})
+watch(panelType, (type) => {
+  console.log('[BpmnPanel] panelType:', type)
+})
+
 onMounted(() => {
   const selection = props.modeler.get<any>('selection')
   const selected = selection?.get?.()?.[0]
@@ -137,8 +144,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="panel-container" v-if="panelType !== 'none'">
-    <el-form v-bind="$attrs" label-width="110px">
+  <div class="panel-container">
+    <div v-if="panelType === 'none'" class="panel-fallback">
+      <el-empty description="请在画布中选择一个元素" />
+    </div>
+    <el-form v-else v-bind="$attrs" label-width="110px">
       <!-- 流程级别面板 -->
       <BaseActivity v-if="panelType === 'process'">
         <template #basic>
@@ -323,6 +333,12 @@ onMounted(() => {
 .panel-container {
   height: 100%;
   overflow-y: auto;
+}
+.panel-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
 }
 :deep {
   .el-form, .el-tabs, .el-tab-pane { height: 100%; }

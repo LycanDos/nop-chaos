@@ -81,6 +81,18 @@ export const useAppStore = defineStore({
     setProjectConfig(config: DeepPartial<ProjectConfig>): void {
       this.projectConfig = deepMerge(this.projectConfig || {}, config);
       Persistent.setLocal(PROJ_CFG_KEY, this.projectConfig);
+      this.syncSkeletonTheme();
+    },
+
+    syncSkeletonTheme(): void {
+      const cfg = this.projectConfig;
+      if (!cfg) return;
+      const theme: Record<string, string> = {};
+      if (cfg.menuSetting?.bgColor) theme.menuBg = cfg.menuSetting.bgColor;
+      if (cfg.menuSetting?.theme) theme.menuTheme = cfg.menuSetting.theme;
+      if (cfg.headerSetting?.bgColor) theme.headerBg = cfg.headerSetting.bgColor;
+      if (cfg.themeColor) theme.themeColor = cfg.themeColor;
+      localStorage.setItem('__SKELETON_THEME__', JSON.stringify(theme));
     },
 
     async resetAllState() {

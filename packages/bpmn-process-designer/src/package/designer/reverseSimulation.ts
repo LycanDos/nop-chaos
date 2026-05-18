@@ -556,8 +556,9 @@ export class ReverseSimulationController {
     trace.status = 'completed'
     trace.pauseReason = undefined
 
-    // 清理临时动画轨迹，渲染完整持久轨迹
+    // 清理临时动画轨迹与白色流动虚线，渲染完整持久轨迹
     this.cleanupTempTrail(trace.id)
+    this.removeTraceFlowPath(trace.id)
     this.renderAllTracePaths()
 
     const element = this.elementRegistry.get(trace.currentElementId)
@@ -614,14 +615,6 @@ export class ReverseSimulationController {
     let forked = false
     let forkSubCounter = 0
 
-    // trailSteps 共享前缀（到分叉节点为止）
-    const forkNodeId = nodeElement.id
-    const forkTrailIdx = trace.trailSteps.findLastIndex(
-      (s) => s.kind === 'node' && s.element.id === forkNodeId,
-    )
-    const sharedTrail =
-      forkTrailIdx >= 0 ? trace.trailSteps.slice(0, forkTrailIdx + 1) : [...trace.trailSteps]
-
     for (const flow of incoming) {
       if (flow.id === followedFlowId) {
         continue
@@ -650,8 +643,10 @@ export class ReverseSimulationController {
         color: { ...trace.color },
         laneOffset: trace.laneOffset + forkSubCounter * TRACE_LANE_GAP,
         status: 'running',
-        visitedElementIds: new Set<string>(),
-        trailSteps: [...sharedTrail],
+        // 复制父 trace 的 visited 状态和 trail，使子 trace 路径从起点开始渲染，
+        // 并通过 visitedElementIds 避免 renderTrail 重复添加已访问节点
+        visitedElementIds: new Set(trace.visitedElementIds),
+        trailSteps: [...trace.trailSteps],
       }
       this.traces.set(subTrace.id, subTrace)
 
@@ -2264,10 +2259,10 @@ export class ReverseSimulationController {
     const center = this.getElementCenterPoint(element, trace.id)
     const points: Array<{ x: number; y: number }> = []
     const entry = prev?.kind === 'flow'
-      ? this.projectFlowPointToNode(trace, prev.element, element, 'end')
+      ? this.projectFlowPointToNode(trace, prev.element, element)
       : null
     const exit = next?.kind === 'flow'
-      ? this.projectFlowPointToNode(trace, next.element, element, 'start')
+      ? this.projectFlowPointToNode(trace, next.element, element)
       : null
 
     if (!prev) {
@@ -2295,29 +2290,27 @@ export class ReverseSimulationController {
     trace: ReverseTrace,
     flow: Element,
     node: Element,
-    edge: 'start' | 'end',
   ) {
-    // 使用原始（未偏移）路径点来确定正确的连接边，避免 laneOffset 把端点推到节点角落
     const waypoints = Array.isArray((flow as any).waypoints)
       ? ((flow as any).waypoints as Array<{ x: number; y: number }>)
       : []
 
-    const rawPoint = edge === 'start'
-      ? waypoints[0]
-      : waypoints[waypoints.length - 1]
+    // 判断当前节点是 flow 的 target 还是 source，以选取对应的路径端点
+    // 不进行 clamp/吸附：flow 路径端点已在节点边界上，直接使用可保证
+    // nodeTrace 与 flowTrace 完美拼接，不会产生"折线"
+    const isTarget = (flow as any).target === node ||
+      (flow as any).target?.id === node.id
+    const rawPoint = isTarget
+      ? waypoints[waypoints.length - 1]  // target 端
+      : waypoints[0]                      // source 端
 
     if (!rawPoint) {
       return this.getElementCenterPoint(node, trace.id)
     }
 
-    // 先用原始路径点投影到节点边界
-    const bounds = this.getElementBounds(node)
-    const clamped = {
-      x: Math.max(bounds.x, Math.min(bounds.x + bounds.width, rawPoint.x)),
-      y: Math.max(bounds.y, Math.min(bounds.y + bounds.height, rawPoint.y)),
-    }
+    const result = { x: rawPoint.x, y: rawPoint.y }
 
-    // 再沿 flow 垂直方向叠加 laneOffset，使 trace 路径整体平行偏移
+    // 沿 flow 垂直方向叠加 laneOffset
     const laneOffset = this.getElementLaneOffset(trace.id, flow.id)
     if (laneOffset !== 0 && waypoints.length >= 2) {
       const fdx = waypoints[waypoints.length - 1].x - waypoints[0].x
@@ -2326,19 +2319,19 @@ export class ReverseSimulationController {
       if (flen > 0.01) {
         const perpX = (-fdy / flen) * laneOffset
         const perpY = (fdx / flen) * laneOffset
-        clamped.x += perpX
-        clamped.y += perpY
+        result.x -= perpX
+        result.y -= perpY
       }
     }
 
-    return clamped
+    return result
   }
 
-  private getElementCenterPoint(element: Element, traceId: string) {
+  private getElementCenterPoint(element: Element, _traceId: string) {
     const { x, y, width, height } = this.getElementBounds(element)
     return {
       x: x + (width / 2),
-      y: y + (height / 2) + this.getElementLaneOffset(traceId, element.id),
+      y: y + (height / 2),
     }
   }
 

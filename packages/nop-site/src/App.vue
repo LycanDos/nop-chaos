@@ -40,10 +40,10 @@
 
   // 事件总线 hook（本地实现）
   import { useEmitt } from '/@/hooks/web/useEmitt';
-  import { ref, reactive } from 'vue';
-  import MethodDialog from './components/MethodDialog/MethodDialog.vue';
-  import AmisEditDialog from './components/AmisEditDialog.vue';
-  import DiyStyleDialog from './components/DiyStyleDialog.vue';
+  import { ref, reactive, defineAsyncComponent } from 'vue';
+  const MethodDialog = defineAsyncComponent(() => import('./components/MethodDialog/MethodDialog.vue'));
+  const AmisEditDialog = defineAsyncComponent(() => import('./components/AmisEditDialog.vue'));
+  const DiyStyleDialog = defineAsyncComponent(() => import('./components/DiyStyleDialog.vue'));
 
   console.log('nop-site App.vue setup executed');
 

@@ -62,7 +62,6 @@
         { "name": "failureStrategy", "isAttr": true, "type": "String" },
         { "name": "inputMappingJson", "isAttr": true, "type": "String" },
         { "name": "outputDeltaJson", "isAttr": true, "type": "String" },
-        { "name": "executorType", "isAttr": true, "type": "String" },
         { "name": "executorConfigJson", "isAttr": true, "type": "String" }
       ]
     },

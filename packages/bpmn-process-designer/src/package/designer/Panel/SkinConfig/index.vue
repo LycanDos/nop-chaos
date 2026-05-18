@@ -4,10 +4,8 @@
  * 在属性面板中展示当前节点绑定的皮肤信息
  */
 import { computed, ref, watch } from 'vue'
-import { useBpmnContextService } from '@/hooks/useService'
+import { selectedElementRef, useBpmnContextService } from '@/hooks/useService'
 import { getBusinessObject } from 'bpmn-js/lib/util/ModelUtil'
-
-const { selectedElementRef } = useBpmnContextService()
 
 // 从 extensionElements 中查找 l:SkinDef
 const skinCode = ref('')

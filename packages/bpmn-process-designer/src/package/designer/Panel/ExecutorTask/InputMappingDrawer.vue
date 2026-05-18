@@ -69,10 +69,11 @@ defineExpose({ openDrawer })
 <template>
   <el-drawer
     v-model="visible"
-    title="入参映射配置"
     direction="rtl"
     size="520px"
-    :close-on-click-modal="false"
+    :close-on-click-modal="true"
+    :show-close="false"
+    :with-header="false"
   >
     <div class="mapping-drawer-content">
       <div class="mapping-toolbar">

@@ -17,6 +17,7 @@ import '@nop-chaos/sdk/lib/style.css'
 import type { App } from 'vue';
 
 import { clearLocalCache, importModule, registerAdapter, registerModule, XuiPage,useAdapter,ajaxRequest } from '@nop-chaos/sdk';
+import NopTemplateEditor from 'nop-template-editor';
 import { useUserStoreWithOut } from '../store/modules/user';
 import { isArray } from '../utils/is';
 
@@ -143,6 +144,7 @@ export async function initNopApp(app: App) {
     app.component("AMIS", XuiPage)
     app.component("icon-picker", IconPicker)
     app.component("icon", Icon)
+    app.use(NopTemplateEditor)
 
     useUserStoreWithOut().$subscribe((mutation) => {
         // 登录信息变化的时候清空页面缓存和字典缓存

@@ -136,7 +136,8 @@ defineExpose({
     append-to-body
     :lock-scroll="false"
     @closed="onClosed"
-    title="事件监听器"
+    :show-close="false"
+    :with-header="false"
   >
     <el-form ref="formRef" label-position="top" :model="cloned" label-width="90px" :size="formSize">
       <el-form-item

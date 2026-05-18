@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API 请求编辑器</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #fff;
+      color: #333;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .toolbar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 16px; border-bottom: 1px solid #e0e0e0;
+      background: #fafafa; flex-shrink: 0;
+    }
+    .toolbar .title { font-size: 14px; font-weight: 600; flex: 1; }
+    .toolbar button {
+      padding: 6px 16px; border-radius: 4px; border: 1px solid #d0d0d0;
+      background: #fff; cursor: pointer; font-size: 13px;
+    }
+    .toolbar button:hover { background: #f0f0f0; }
+    .toolbar button.primary { background: #1677ff; color: #fff; border-color: #1677ff; }
+    .toolbar button.primary:hover { background: #4096ff; }
+    .toolbar button.success { background: #52c41a; color: #fff; border-color: #52c41a; }
+    .toolbar button.success:hover { background: #73d13d; }
+
+    .editor-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    iframe#hoppscotch-iframe {
+      flex: 1; border: none; width: 100%; min-height: 0;
+    }
+
+    .json-section {
+      border-top: 1px solid #e0e0e0;
+      flex-shrink: 0;
+    }
+    .json-section .section-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 16px;
+      background: #fafafa;
+      font-size: 12px; color: #888;
+      cursor: pointer;
+      user-select: none;
+    }
+    .json-section .section-header:hover { background: #f0f0f0; }
+    .json-section .section-header .arrow { transition: transform 0.2s; }
+    .json-section .section-header .arrow.collapsed { transform: rotate(-90deg); }
+    .json-section textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: none;
+      font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      resize: vertical;
+      outline: none;
+    }
+    .json-section textarea:focus { background: #fafcff; }
+
+    .status-bar {
+      padding: 4px 16px; border-top: 1px solid #e0e0e0;
+      font-size: 12px; color: #888; background: #fafafa;
+      flex-shrink: 0; display: flex; align-items: center; gap: 12px;
+    }
+    .status-bar .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #d0d0d0; display: inline-block;
+    }
+    .status-bar .dot.connected { background: #52c41a; }
+    .status-bar .dot.synced { background: #1677ff; }
+  </style>
+</head>
+<body>
+
+  <div class="toolbar">
+    <span class="title">API 请求配置 — Hoppscotch</span>
+    <button onclick="saveConfig()" class="success">保存配置</button>
+    <button onclick="cancelEdit()">取消</button>
+  </div>
+
+  <div class="editor-body">
+    <iframe id="hoppscotch-iframe" allow="clipboard-read; clipboard-write"
+      sandbox="allow-scripts allow-same-origin allow-forms allow-popups">
+    </iframe>
+
+    <div class="json-section">
+      <div class="section-header" onclick="toggleJsonEditor()">
+        <span class="arrow" id="json-arrow">▼</span>
+        <span>配置文件 (JSON) — 自动同步自 Hoppscotch</span>
+      </div>
+      <textarea id="json-editor" rows="10"
+        placeholder="{ &quot;method&quot;: &quot;GET&quot;, &quot;url&quot;: &quot;https://...&quot;, ... }"
+        oninput="syncFromJson()"></textarea>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <span id="status-dot" class="dot"></span>
+    <span id="status-text">等待初始化...</span>
+  </div>
+
+  <script>
+    // ===== 桥接协议实现（使用 Hoppscotch 原生 embed API） =====
+
+    const HOPPSCOTCH_DEFAULT_URL = 'http://localhost:3000/embed';
+    let currentConfig = {};
+    let currentSurfaceId = '';
+    let jsonCollapsed = false;
+    let hoppscotchReady = false;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const hoppscotchUrl = urlParams.get('hoppscotchUrl') || HOPPSCOTCH_DEFAULT_URL;
+    const hsIframe = document.getElementById('hoppscotch-iframe');
+    if (hsIframe) hsIframe.src = hoppscotchUrl;
+
+    // ---- iframe 加载状态追踪 ----
+    let iframeLoaded = false;
+    let pendingConfig = null;
+
+    if (hsIframe) {
+      hsIframe.addEventListener('load', function onIframeLoad() {
+        iframeLoaded = true;
+        if (pendingConfig) {
+          try {
+            hsIframe.contentWindow.postMessage({
+              type: 'hoppscotch:config',
+              data: pendingConfig
+            }, '*');
+          } catch (e) {
+            console.warn('推送配置到 Hoppscotch 失败:', e);
+          }
+          pendingConfig = null;
+        }
+      });
+    }
+
+    // ---- 发送配置到 Hoppscotch（等待 iframe 加载完成） ----
+    function pushConfigToHoppscotch(config) {
+      if (iframeLoaded && hsIframe && hsIframe.contentWindow) {
+        try {
+          hsIframe.contentWindow.postMessage({
+            type: 'hoppscotch:config',
+            data: config
+          }, '*');
+        } catch (e) {
+          console.warn('推送配置到 Hoppscotch 失败:', e);
+        }
+      } else {
+        pendingConfig = config;
+      }
+    }
+
+    // ---- 更新 JSON 编辑区 ----
+    function updateJsonEditor() {
+      const editor = document.getElementById('json-editor');
+      if (editor) {
+        editor.value = JSON.stringify(currentConfig, null, 2);
+      }
+    }
+
+    function syncFromJson() {
+      const text = document.getElementById('json-editor').value;
+      try {
+        const parsed = JSON.parse(text);
+        currentConfig = parsed;
+        pushConfigToHoppscotch(currentConfig);
+      } catch (e) {
+        // JSON 不合法时不更新
+      }
+    }
+
+    function toggleJsonEditor() {
+      const editor = document.getElementById('json-editor');
+      const arrow = document.getElementById('json-arrow');
+      jsonCollapsed = !jsonCollapsed;
+      editor.style.display = jsonCollapsed ? 'none' : 'block';
+      arrow.className = 'arrow' + (jsonCollapsed ? ' collapsed' : '');
+    }
+
+    function updateStatus(connected, synced) {
+      const dot = document.getElementById('status-dot');
+      const text = document.getElementById('status-text');
+      if (connected) {
+        dot.className = 'dot' + (synced ? ' synced' : ' connected');
+        text.textContent = synced ? 'Hoppscotch 已同步' : '已就绪';
+      }
+    }
+
+    // ---- 接收消息 ----
+    window.addEventListener('message', (event) => {
+      const data = event.data || {};
+
+      // 处理来自平台的消息
+      if (data.type === 'init') {
+        try {
+          currentSurfaceId = data.surfaceId || 'request';
+          currentConfig = data.config || JSON.parse(data.configJson || '{}');
+          updateJsonEditor();
+          // 推送到 Hoppscotch
+          pushConfigToHoppscotch(currentConfig);
+          event.source.postMessage({ type: 'ready' }, event.origin);
+          updateStatus(true, true);
+        } catch (e) {
+          event.source.postMessage({ type: 'error', message: e.message }, event.origin);
+        }
+        return;
+      }
+
+      // 处理来自 Hoppscotch 的实时配置同步（原生 embed API）
+      if (data.type === 'hoppscotch:config' && data.data) {
+        currentConfig = data.data;
+        updateJsonEditor();
+        updateStatus(true, true);
+        return;
+      }
+    });
+
+    // ---- 保存 / 取消 ----
+    function saveConfig() {
+      // 保存前同步 JSON 编辑器内容（用户在 JSON 区或 Hoppscotch 编辑的都算）
+      syncFromJson();
+      window.parent.postMessage({
+        type: 'saved',
+        surfaceId: currentSurfaceId,
+        configJson: JSON.stringify(currentConfig)
+      }, '*');
+    }
+
+    function cancelEdit() {
+      window.parent.postMessage({ type: 'canceled' }, '*');
+    }
+  </script>
+</body>
+</html>

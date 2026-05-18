@@ -93,6 +93,10 @@ const instanceStatusTag = computed(() => {
 
 onMounted(() => {
   initViewer()
+  // 如果 props 中已有数据（v-if 条件渲染场景），补发加载
+  if (props.modelValue?.bpmnXml) {
+    loadDiagram(props.modelValue)
+  }
 })
 
 onBeforeUnmount(() => {
@@ -104,7 +108,7 @@ watch(() => props.modelValue, async (data) => {
   if (data && data.bpmnXml) {
     await loadDiagram(data)
   }
-}, { immediate: true })
+})
 
 async function initViewer() {
   if (!canvasRef.value) return

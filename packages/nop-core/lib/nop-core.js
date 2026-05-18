@@ -21,9 +21,9 @@ function default_jumpTo(router, to) {
   }
   function go(to2, replace2) {
     if (replace2) {
-      router.push(to2);
-    } else {
       router.replace(to2);
+    } else {
+      router.push(to2);
     }
   }
   const replace = to.startsWith("replace://");
@@ -34,7 +34,8 @@ function default_jumpTo(router, to) {
     const pos = to.indexOf("?");
     const query = pos > 0 ? to.substring(pos + 1) : null;
     const data = query ? qs.parse(query) : null;
-    const page = { name: "jsonPage", params: { path: to, data } };
+    const path = to.startsWith("/") ? to.substring(1) : to;
+    const page = { name: "jsonPage", params: { path, data } };
     go(page, replace);
   } else {
     go(to, replace);
@@ -71,7 +72,7 @@ function normalizeLink(to) {
   const hash = ~idx2 ? to.substring(idx2) : "";
   if (!pathname) {
     pathname = location2.pathname;
-  } else if (pathname[0] != "/" && !/^https?:\/\//.test(pathname)) {
+  } else if (pathname[0] != "/" && !/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(pathname)) {
     const relativeBase = location2.pathname;
     const paths = relativeBase.split("/");
     paths.pop();
@@ -90,6 +91,9 @@ function default_updateLocation(to, replace) {
   if (to === "goBack") {
     return window.history.back();
   }
+  if (typeof to === "string" && (to.startsWith("replace://") || to.startsWith("open://"))) {
+    return;
+  }
   if (replace && window.history.replaceState) {
     window.history.replaceState("", document.title, to);
     return;
@@ -97,6 +101,9 @@ function default_updateLocation(to, replace) {
   location.href = normalizeLink(to);
 }
 function default_isCurrentUrl(to, ctx) {
+  if (!to || to.startsWith("replace://") || to.startsWith("open://") || to.startsWith("@")) {
+    return false;
+  }
   const link = normalizeLink(to);
   const location2 = window.location;
   let pathname = link;
@@ -118,10 +125,14 @@ function default_isCurrentUrl(to, ctx) {
   } else if (pathname === location2.pathname) {
     return true;
   } else if (!~pathname.indexOf("http") && ~pathname.indexOf(":")) {
-    return match(link, {
-      decode: decodeURIComponent,
-      strict: (ctx == null ? void 0 : ctx.strict) ?? true
-    })(location2.pathname);
+    try {
+      return match(link, {
+        decode: decodeURIComponent,
+        strict: (ctx == null ? void 0 : ctx.strict) ?? true
+      })(location2.pathname);
+    } catch (_e) {
+      return false;
+    }
   }
   return false;
 }

@@ -28,147 +28,489 @@
         }
       })();
     </script>
+    <script>
+      (() => {
+        try {
+          var themeStr = window.localStorage.getItem('__SKELETON_THEME__');
+          if (!themeStr) return;
+          var theme = JSON.parse(themeStr);
+          var root = document.documentElement;
+          if (theme.menuBg) {
+            root.style.setProperty('--sk-sidebar-bg', theme.menuBg);
+            if (theme.menuTheme === 'dark') {
+              root.style.setProperty('--sk-sidebar-text', 'rgba(255,255,255,0.85)');
+            }
+          }
+          if (theme.headerBg) {
+            root.style.setProperty('--sk-header-bg', theme.headerBg);
+            root.style.setProperty('--sk-tabs-bg', theme.headerBg);
+          }
+          if (theme.themeColor) {
+            root.style.setProperty('--sk-theme-color', theme.themeColor);
+          }
+        } catch(e) {
+          // ignore - use CSS defaults
+        }
+      })();
+    </script>
+<!-- ====================================================================
+     新加载页（当前激活）
+     如需切换回旧骨架屏，将下方标记了 OLD_SKELETON_START 到
+     OLD_SKELETON_END 的注释取消，并注释掉本段代码即可。
+     ==================================================================== -->
     <div id="app">
       <style>
-        html[data-theme='dark'] .app-loading {
-          background-color: #2c344a;
+        html, body, #app {
+          height: 100%; margin: 0;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+            "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
         }
 
-        html[data-theme='dark'] .app-loading .app-loading-title {
-          color: rgba(255, 255, 255, 0.85);
+        /* ---- 亮色模式 ---- */
+        .app-loading-next {
+          --ld-bg: #f4f7fa;
+          --ld-orb-1: rgba(24, 144, 255, 0.18);
+          --ld-orb-2: rgba(0, 150, 136, 0.14);
+          --ld-orb-3: rgba(114, 46, 209, 0.12);
+          --ld-orb-4: rgba(255, 184, 0, 0.12);
+          --ld-grid: rgba(0, 0, 0, 0.03);
+          --ld-text: #2c3e50;
+          --ld-text-dim: #94a3b8;
+          --ld-brand: #1a1a2e;
+          --ld-progress-bg: rgba(0, 0, 0, 0.06);
+          --ld-progress-fill: #1890ff;
+          --ld-footer: #94a3b8;
+        }
+        /* ---- 暗色模式 ---- */
+        html[data-theme='dark'] .app-loading-next {
+          --ld-bg: #141824;
+          --ld-orb-1: rgba(24, 144, 255, 0.22);
+          --ld-orb-2: rgba(0, 150, 136, 0.16);
+          --ld-orb-3: rgba(114, 46, 209, 0.14);
+          --ld-orb-4: rgba(255, 184, 0, 0.12);
+          --ld-grid: rgba(255, 255, 255, 0.02);
+          --ld-text: rgba(255, 255, 255, 0.85);
+          --ld-text-dim: rgba(255, 255, 255, 0.35);
+          --ld-brand: rgba(255, 255, 255, 0.90);
+          --ld-progress-bg: rgba(255, 255, 255, 0.08);
+          --ld-progress-fill: #1890ff;
+          --ld-footer: rgba(255, 255, 255, 0.30);
         }
 
-        .app-loading {
+        /* ---- 容器 ---- */
+        .app-loading-next {
           display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
           width: 100%;
+          min-height: 100vh;
           height: 100%;
-          justify-content: center;
-          align-items: center;
-          flex-direction: column;
-          background-color: #f4f7f9;
-        }
-
-        .app-loading .app-loading-wrap {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          display: flex;
-          -webkit-transform: translate3d(-50%, -50%, 0);
-          transform: translate3d(-50%, -50%, 0);
-          justify-content: center;
-          align-items: center;
-          flex-direction: column;
-        }
-
-        .app-loading .dots {
-          display: flex;
-          padding: 98px;
-          justify-content: center;
-          align-items: center;
-        }
-
-        .app-loading .app-loading-title {
-          display: flex;
-          margin-top: 30px;
-          font-size: 30px;
-          color: rgba(0, 0, 0, 0.85);
-          justify-content: center;
-          align-items: center;
-        }
-
-        .app-loading .app-loading-logo {
-          display: block;
-          width: 90px;
-          margin: 0 auto;
-          margin-bottom: 20px;
-        }
-
-        .dot {
+          background: var(--ld-bg);
+          overflow: hidden;
           position: relative;
-          display: inline-block;
-          width: 48px;
-          height: 48px;
-          margin-top: 30px;
-          font-size: 32px;
-          transform: rotate(45deg);
-          box-sizing: border-box;
-          animation: antRotate 1.2s infinite linear;
+          user-select: none;
+          transition: opacity 0.35s ease;
         }
 
-        .dot i {
-          position: absolute;
-          display: block;
-          width: 20px;
-          height: 20px;
-          background-color: #0065cc;
-          border-radius: 100%;
-          opacity: 0.3;
-          transform: scale(0.75);
-          animation: antSpinMove 1s infinite linear alternate;
-          transform-origin: 50% 50%;
+        /* ---- 浮动光晕（带视差容器） ---- */
+        .ld-ambient {
+          position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+        }
+        .ld-orb-wrap {
+          position: absolute; inset: 0;
+          will-change: transform;
+        }
+        .ld-orb {
+          position: absolute; border-radius: 50%; filter: blur(80px); will-change: transform;
+        }
+        .ld-orb-1 {
+          width: 600px; height: 600px; top: -15%; left: -10%;
+          background: var(--ld-orb-1);
+          animation: ld-drift-1 25s ease-in-out infinite;
+        }
+        .ld-orb-2 {
+          width: 500px; height: 500px; bottom: -10%; right: -5%;
+          background: var(--ld-orb-2);
+          animation: ld-drift-2 20s ease-in-out infinite;
+        }
+        .ld-orb-3 {
+          width: 400px; height: 400px; top: 40%; right: 15%;
+          background: var(--ld-orb-3);
+          animation: ld-drift-3 30s ease-in-out infinite;
+        }
+        .ld-orb-4 {
+          width: 300px; height: 300px; bottom: 25%; left: 10%;
+          background: var(--ld-orb-4);
+          animation: ld-drift-4 22s ease-in-out infinite;
+        }
+        @keyframes ld-drift-1 {
+          0%,100% { transform: translate(0,0) scale(1); }
+          33% { transform: translate(120px,80px) scale(1.1); }
+          66% { transform: translate(-60px,160px) scale(0.95); }
+        }
+        @keyframes ld-drift-2 {
+          0%,100% { transform: translate(0,0) scale(1); }
+          33% { transform: translate(-100px,-60px) scale(1.15); }
+          66% { transform: translate(60px,-120px) scale(0.9); }
+        }
+        @keyframes ld-drift-3 {
+          0%,100% { transform: translate(0,0) scale(1); }
+          50% { transform: translate(80px,-100px) scale(1.2); }
+        }
+        @keyframes ld-drift-4 {
+          0%,100% { transform: translate(0,0) scale(1); }
+          50% { transform: translate(-80px,60px) scale(1.1); }
         }
 
-        .dot i:nth-child(1) {
-          top: 0;
-          left: 0;
+        /* ---- 网格纹理 ---- */
+        .ld-grid {
+          position: absolute; inset: 0; pointer-events: none;
+          background-image: linear-gradient(var(--ld-grid) 1px, transparent 1px),
+            linear-gradient(90deg, var(--ld-grid) 1px, transparent 1px);
+          background-size: 64px 64px;
+          mask-image: radial-gradient(ellipse 60% 50% at center, black 20%, transparent 70%);
+          -webkit-mask-image: radial-gradient(ellipse 60% 50% at center, black 20%, transparent 70%);
         }
 
-        .dot i:nth-child(2) {
-          top: 0;
-          right: 0;
-          -webkit-animation-delay: 0.4s;
-          animation-delay: 0.4s;
+        /* ---- 中心内容 ---- */
+        .ld-center {
+          position: relative; z-index: 1;
+          display: flex; flex-direction: column; align-items: center; gap: 40px;
         }
 
-        .dot i:nth-child(3) {
-          right: 0;
-          bottom: 0;
-          -webkit-animation-delay: 0.8s;
-          animation-delay: 0.8s;
+        /* ---- Logo ---- */
+        .ld-brand { display: flex; flex-direction: column; align-items: center; gap: 0; }
+        .ld-logo { width: 120px; height: 120px; border-radius: 12px;
+          animation: ld-float 3s ease-in-out infinite; }
+        .ld-brand-name {
+          font-size: 32px; font-weight: 500; letter-spacing: 6px;
+          background: linear-gradient(135deg, #1890ff 0%, #53d187 50%, #c084fc 100%);
+          background-size: 200% 200%;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          filter: drop-shadow(0 0 12px rgba(24,144,255,0.2));
+          opacity: 0; animation: ld-fade-up 0.6s 0.2s ease forwards, ld-shimmer 4s ease-in-out infinite 0.8s;
+        }
+        @keyframes ld-shimmer {
+          0%,100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        @keyframes ld-float {
+          0%,100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
+        }
+        .ld-star { animation: ld-twinkle 2s ease-in-out infinite; animation-delay: var(--sd,0s); transform-origin: center; }
+        @keyframes ld-twinkle {
+          0%,100% { opacity: 0.3; transform: scale(0.7); }
+          50% { opacity: 1; transform: scale(1.15); }
+        }
+        .ld-tip { animation: ld-tip-color 4s ease-in-out infinite; }
+        @keyframes ld-tip-color {
+          0% { fill: #fbbf24; }
+          25% { fill: #34d399; }
+          50% { fill: #60a5fa; }
+          75% { fill: #c084fc; }
+          100% { fill: #fbbf24; }
         }
 
-        .dot i:nth-child(4) {
-          bottom: 0;
-          left: 0;
-          -webkit-animation-delay: 1.2s;
-          animation-delay: 1.2s;
+        /* ---- 文字轮播（交叉淡入淡出） ---- */
+        .ld-carousel { opacity: 0; animation: ld-fade-up 0.6s 0.4s ease forwards; }
+        .ld-cp-view { height: 52px; display: flex; align-items: center; justify-content: center; }
+        .ld-cp-item {
+          display: flex; align-items: center; justify-content: center; gap: 12px;
+          transition: opacity 0.45s ease, transform 0.45s ease;
         }
-        @keyframes antRotate {
-          to {
-            -webkit-transform: rotate(405deg);
-            transform: rotate(405deg);
-          }
+        .ld-cp-item.is-hidden {
+          opacity: 0;
+          transform: translateY(10px);
+          pointer-events: none;
         }
-        @-webkit-keyframes antRotate {
-          to {
-            -webkit-transform: rotate(405deg);
-            transform: rotate(405deg);
-          }
+        .ld-cp-icon { font-size: 14px; color: var(--ld-progress-fill); opacity: 0.6; flex-shrink: 0; }
+        .ld-cp-text {
+          font-size: 28px; font-weight: 300; letter-spacing: 1px;
+          color: var(--ld-text); white-space: nowrap;
         }
-        @keyframes antSpinMove {
-          to {
-            opacity: 1;
-          }
+
+        /* ---- 进度条 ---- */
+        .ld-progress {
+          display: flex; flex-direction: column; align-items: center; gap: 12px;
+          width: 200px; opacity: 0; animation: ld-fade-up 0.6s 0.6s ease forwards;
         }
-        @-webkit-keyframes antSpinMove {
-          to {
-            opacity: 1;
-          }
+        .ld-pbar { width: 100%; height: 2px; border-radius: 2px; background: var(--ld-progress-bg); overflow: hidden; }
+        .ld-pfill {
+          height: 100%; width: 0%; border-radius: 2px;
+          background: linear-gradient(90deg, var(--ld-progress-fill), #53d187, var(--ld-progress-fill));
+          background-size: 200% 100%;
+          transition: width 0.4s ease;
+        }
+        .ld-plabel {
+          font-size: 12px; font-weight: 400; letter-spacing: 3px; text-transform: uppercase;
+          color: var(--ld-text-dim);
+        }
+
+        /* ---- 底部信息 ---- */
+        .ld-footer {
+          position: absolute; bottom: 32px; z-index: 1;
+          display: flex; align-items: center; gap: 5px;
+          font-size: 13px; color: var(--ld-footer); letter-spacing: 0.5px;
+          opacity: 0; animation: ld-fade-up 0.8s 0.8s ease forwards;
+        }
+        .ld-fdot { opacity: 0.4; }
+
+        @keyframes ld-fade-up {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
       </style>
-      <div class="app-loading">
-        <div class="app-loading-wrap">
-          <img src="/resource/img/logo.png" class="app-loading-logo" alt="Logo" />
-          <div class="app-loading-dots">
-            <span class="dot dot-spin"><i></i><i></i><i></i><i></i></span>
+
+      <div class="app-loading-next">
+        <div class="ld-ambient" id="ambientLayer">
+          <div class="ld-orb-wrap" data-parallax="1"><div class="ld-orb ld-orb-1"></div></div>
+          <div class="ld-orb-wrap" data-parallax="1.5"><div class="ld-orb ld-orb-2"></div></div>
+          <div class="ld-orb-wrap" data-parallax="2"><div class="ld-orb ld-orb-3"></div></div>
+          <div class="ld-orb-wrap" data-parallax="2.5"><div class="ld-orb ld-orb-4"></div></div>
+        </div>
+        <div class="ld-grid"></div>
+
+        <div class="ld-center">
+          <div class="ld-brand">
+            <svg class="ld-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <filter id="sparkle-glow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="1.5" result="blur"/>
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+              <!-- 水波涟漪 -->
+              <circle cx="75" cy="28" r="8" stroke="#1890ff" stroke-width="1.5" fill="none" opacity="0.3"/>
+              <circle cx="75" cy="28" r="16" stroke="#1890ff" stroke-width="1" fill="none" opacity="0.15"/>
+              <circle cx="75" cy="28" r="26" stroke="#1890ff" stroke-width="0.8" fill="none" opacity="0.08"/>
+              <!-- 乐团弧线 -->
+              <path d="M 6 97.5 C 6 40, 94 40, 94 97.5" stroke="#1890ff" stroke-width="4.5" fill="none" stroke-linecap="round" opacity="0.25"/>
+              <!-- 彩色四角星 -->
+              <path class="ld-star" d="M 21 61 C 21 63, 24 64.5, 28 62 C 24 63.5, 21 65, 21 67 C 21 65, 18 63.5, 14 62 C 18 64.5, 21 63, 21 61 Z" fill="#fbbf24" filter="url(#sparkle-glow)" style="--sd:0s"/>
+              <path class="ld-star" d="M 36 48 C 36 49.5, 38 51, 41 49 C 38 50, 36 51.5, 36 53 C 36 51.5, 34 50, 31 49 C 34 51, 36 49.5, 36 48 Z" fill="#f472b6" filter="url(#sparkle-glow)" style="--sd:0.7s"/>
+              <path class="ld-star" d="M 54 45 C 54 47, 56.5 48.5, 59 46 C 56.5 47.5, 54 49, 54 51 C 54 49, 51.5 47.5, 49 46 C 51.5 48.5, 54 47, 54 45 Z" fill="#34d399" filter="url(#sparkle-glow)" style="--sd:1.4s"/>
+              <path class="ld-star" d="M 72 49 C 72 50.5, 74 52, 77 50 C 74 51, 72 52.5, 72 54 C 72 52.5, 70 51, 67 50 C 70 52, 72 50.5, 72 49 Z" fill="#c084fc" filter="url(#sparkle-glow)" style="--sd:0.3s"/>
+              <path class="ld-star" d="M 83 61 C 83 63, 85.5 64.5, 89 62 C 85.5 63.5, 83 65, 83 67 C 83 65, 80.5 63.5, 77 62 C 80.5 64.5, 83 63, 83 61 Z" fill="#60a5fa" filter="url(#sparkle-glow)" style="--sd:1.1s"/>
+              <!-- 指挥棒 -->
+              <line x1="26" y1="72" x2="75" y2="28" stroke="#1890ff" stroke-width="6" stroke-linecap="round"/>
+              <!-- 棒尖 -->
+              <circle cx="75" cy="28" r="5" fill="#fbbf24" class="ld-tip"/>
+            </svg>
+            <div class="ld-brand-name">趋山海-乐趋</div>
           </div>
-          <div class="app-loading-title">
-<!--            <b>N</b>op&nbsp;is&nbsp;n<b>o</b>t&nbsp;<b>P</b>rogramming-->
-            <b>志</b>所趋&nbsp;无<b>远</b>勿届&nbsp;穷山距海&nbsp;不能限
+
+          <div class="ld-carousel">
+            <div class="ld-cp-view">
+              <div class="ld-cp-item" id="carouselItem">
+                <span class="ld-cp-icon" id="carouselIcon">✦</span>
+                <span class="ld-cp-text" id="carouselText">志所趋,无远勿界 穷山巨海,不能限</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ld-progress">
+            <div class="ld-pbar"><div class="ld-pfill" id="loadProgress" style="width:0%"></div></div>
+            <div class="ld-plabel">Loading</div>
+          </div>
+        </div>
+
+        <div class="ld-footer">
+          <span>© 2026</span>
+          <span class="ld-fdot">·</span>
+          <span>v2.0</span>
+        </div>
+      </div>
+
+      <script>
+        // ===== 文案 =====
+        var taglines = [
+          { icon: '✦', text: '志所趋,无远勿界 穷山巨海,不能限' },
+          { icon: '◆', text: '知止而后有定,定而后能静' },
+          { icon: '◈', text: '博观而约取,厚积而薄发' },
+          { icon: '◇', text: '流水不争先,争的是滔滔不绝' },
+          { icon: '▣', text: '行远自迩,登高自卑' },
+        ];
+
+        // ===== 文字轮播（交叉淡入淡出，随机不重复） =====
+        (function() {
+          var iconEl = document.getElementById('carouselIcon');
+          var textEl = document.getElementById('carouselText');
+          var itemEl = document.getElementById('carouselItem');
+          if (!iconEl || !textEl || !itemEl) return;
+
+          var currentIdx = -1;
+
+          function pickNext() {
+            var next;
+            do {
+              next = Math.floor(Math.random() * taglines.length);
+            } while (next === currentIdx && taglines.length > 1);
+            return next;
+          }
+
+          function showTagline(idx) {
+            currentIdx = idx;
+            iconEl.textContent = taglines[idx].icon;
+            textEl.textContent = taglines[idx].text;
+          }
+
+          function rotate() {
+            itemEl.classList.add('is-hidden');
+            setTimeout(function() {
+              showTagline(pickNext());
+              itemEl.classList.remove('is-hidden');
+            }, 400);
+          }
+
+          showTagline(0);
+          setInterval(rotate, 4000);
+        })();
+
+        // ===== 鼠标背景互动（若隐若现呼吸效果） =====
+        (function() {
+          var orbWraps = document.querySelectorAll('.ld-orb-wrap');
+          if (!orbWraps.length) return;
+
+          var mx = 0, my = 0;
+          var targetX = 0, targetY = 0;
+          var glow = 0.7, targetGlow = 0.7;
+          var idleTimer;
+
+          document.addEventListener('mousemove', function(e) {
+            targetX = (e.clientX / window.innerWidth - 0.5) * 2;
+            targetY = (e.clientY / window.innerHeight - 0.5) * 2;
+            targetGlow = 1.3;
+            clearTimeout(idleTimer);
+            idleTimer = setTimeout(function() {
+              targetGlow = 0.7;
+            }, 2000);
+          });
+          setTimeout(function() { targetGlow = 0.7; }, 2000);
+
+          function animate() {
+            mx += (targetX - mx) * 0.1;
+            my += (targetY - my) * 0.1;
+            glow += (targetGlow - glow) * 0.04;
+
+            orbWraps.forEach(function(wrap) {
+              var factor = parseFloat(wrap.getAttribute('data-parallax')) || 1;
+              var range = 30 + factor * 25;
+              wrap.style.transform = 'translate(' + (mx * range) + 'px, ' + (my * range) + 'px)';
+              wrap.style.filter = 'brightness(' + glow + ')';
+            });
+
+            requestAnimationFrame(animate);
+          }
+          animate();
+        })();
+
+        // ===== 加载进度（由 main.ts 调用） =====
+        window.__setLoadProgress__ = function(pct) {
+          var bar = document.getElementById('loadProgress');
+          if (bar) bar.style.width = Math.min(pct, 100) + '%';
+        };
+      </script>
+    </div>
+
+    <!-- ========== 旧骨架屏（禁用） ==========
+         如需切回旧版，把上面 <div id="app">...</div> 整段注释掉，
+         再将下方 OLD_SKELETON_START 到 OLD_SKELETON_END 的注释取消。
+    =================================================== -->
+    <!-- OLD_SKELETON_START -->
+    <!-- <div id="app">
+      <style>
+        html, body, #app { height: 100%; margin: 0; }
+        html {
+          --sk-body-bg: #f0f2f5;
+          --sk-sidebar-bg: #fff;
+          --sk-sidebar-header-border: #f0f0f0;
+          --sk-logo-text-color: #333;
+          --sk-header-bg: #fff;
+          --sk-tabs-bg: #fff;
+          --sk-tabs-border: #f0f0f0;
+          --sk-card-bg: #fff;
+          --sk-item-shimmer: linear-gradient(90deg, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%);
+        }
+        html[data-theme='dark'] {
+          --sk-body-bg: #1a1f2e;
+          --sk-sidebar-bg: #1e2538;
+          --sk-sidebar-header-border: #2a3040;
+          --sk-logo-text-color: rgba(255,255,255,0.6);
+          --sk-header-bg: #1e2538;
+          --sk-tabs-bg: #1e2538;
+          --sk-tabs-border: #2a3040;
+          --sk-card-bg: #1e2538;
+          --sk-item-shimmer: linear-gradient(90deg, #2a3040 25%, #353d50 50%, #2a3040 75%);
+        }
+        .app-skeleton { display: flex; width: 100%; height: 100%; background-color: var(--sk-body-bg); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .app-skeleton .sk-sidebar { width: 240px; height: 100%; background: var(--sk-sidebar-bg); display: flex; flex-direction: column; flex-shrink: 0; box-shadow: 2px 0 8px rgba(0,0,0,0.05); }
+        .app-skeleton .sk-sidebar-header { display: flex; align-items: center; padding: 20px 16px; border-bottom: 1px solid var(--sk-sidebar-header-border); }
+        .app-skeleton .sk-logo { width: 36px; height: 36px; border-radius: 8px; margin-right: 12px; flex-shrink: 0; }
+        .app-skeleton .sk-logo-text { font-size: 16px; font-weight: 600; color: var(--sk-logo-text-color); }
+        .app-skeleton .sk-menu { padding: 12px 0; flex: 1; }
+        .app-skeleton .sk-menu-item { display: flex; align-items: center; padding: 0 16px; height: 44px; margin: 2px 0; }
+        .app-skeleton .sk-menu-icon { width: 18px; height: 18px; border-radius: 4px; margin-right: 12px; flex-shrink: 0; }
+        .app-skeleton .sk-menu-text { height: 14px; border-radius: 4px; flex: 1; max-width: 120px; }
+        .app-skeleton .sk-main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .app-skeleton .sk-header { height: 56px; background: var(--sk-header-bg); display: flex; align-items: center; padding: 0 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .app-skeleton .sk-breadcrumb { display: flex; align-items: center; gap: 5px; }
+        .app-skeleton .sk-breadcrumb-item { height: 12px; width: 60px; border-radius: 4px; }
+        .app-skeleton .sk-breadcrumb-sep { width: 8px; height: 12px; border-radius: 2px; }
+        .app-skeleton .sk-header-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+        .app-skeleton .sk-avatar { width: 36px; height: 36px; border-radius: 50%; }
+        .app-skeleton .sk-badge { width: 24px; height: 24px; border-radius: 50%; }
+        .app-skeleton .sk-tabs { height: 44px; background: var(--sk-tabs-bg); display: flex; align-items: center; padding: 0 24px; gap: 5px; border-bottom: 1px solid var(--sk-tabs-border); }
+        .app-skeleton .sk-tab { height: 28px; width: 80px; border-radius: 4px; }
+        .app-skeleton .sk-content { flex: 1; padding: 20px; overflow: hidden; }
+        .app-skeleton .sk-card { background: var(--sk-card-bg); border-radius: 8px; padding: 20px; margin-bottom: 16px; }
+        .app-skeleton .sk-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .app-skeleton .sk-card-title { height: 20px; width: 120px; border-radius: 4px; }
+        .app-skeleton .sk-card-action { height: 32px; width: 80px; border-radius: 6px; }
+        .app-skeleton .sk-row { display: flex; gap: 16px; margin-bottom: 16px; }
+        .app-skeleton .sk-cell { height: 16px; border-radius: 4px; flex: 1; }
+        .app-skeleton .sk-item { background: var(--sk-item-shimmer); background-size: 200% 100%; animation: sk-shimmer 1.5s ease-in-out infinite; }
+        @keyframes sk-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+      </style>
+      <div class="app-skeleton">
+        <div class="sk-sidebar">
+          <div class="sk-sidebar-header">
+            <div class="sk-logo sk-item"><img src="/resource/img/logo.png" style="width:100%;height:100%;object-fit:contain" alt="Logo" /></div>
+            <span class="sk-logo-text">趋山海</span>
+          </div>
+          <div class="sk-menu">
+            <div class="sk-menu-item"><div class="sk-menu-icon sk-item"></div><div class="sk-menu-text sk-item"></div></div>
+            <div class="sk-menu-item"><div class="sk-menu-icon sk-item"></div><div class="sk-menu-text sk-item"></div></div>
+            <div class="sk-menu-item"><div class="sk-menu-icon sk-item"></div><div class="sk-menu-text sk-item"></div></div>
+            <div class="sk-menu-item"><div class="sk-menu-icon sk-item"></div><div class="sk-menu-text sk-item"></div></div>
+            <div class="sk-menu-item"><div class="sk-menu-icon sk-item"></div><div class="sk-menu-text sk-item"></div></div>
+          </div>
+        </div>
+        <div class="sk-main">
+          <div class="sk-header">
+            <div class="sk-breadcrumb"><div class="sk-breadcrumb-item sk-item"></div><div class="sk-breadcrumb-sep sk-item"></div><div class="sk-breadcrumb-item sk-item"></div></div>
+            <div class="sk-header-right"><div class="sk-badge sk-item"></div><div class="sk-badge sk-item"></div><div class="sk-avatar sk-item"></div></div>
+          </div>
+          <div class="sk-tabs"><div class="sk-tab sk-item"></div><div class="sk-tab sk-item"></div></div>
+          <div class="sk-content">
+            <div class="sk-card">
+              <div class="sk-card-header"><div class="sk-card-title sk-item"></div><div class="sk-card-action sk-item"></div></div>
+              <div class="sk-row"><div class="sk-cell sk-item"></div><div class="sk-cell sk-item"></div><div class="sk-cell sk-item"></div><div class="sk-cell sk-item"></div></div>
+              <div class="sk-row"><div class="sk-cell sk-item"></div><div class="sk-cell sk-item"></div><div class="sk-cell sk-item"></div><div class="sk-cell sk-item"></div></div>
+              <div class="sk-row"><div class="sk-cell sk-item"></div><div class="sk-cell sk-item"></div><div class="sk-cell sk-item"></div><div class="sk-cell sk-item"></div></div>
+            </div>
+            <div class="sk-card">
+              <div class="sk-card-header"><div class="sk-card-title sk-item"></div><div class="sk-card-action sk-item"></div></div>
+              <div class="sk-row"><div class="sk-cell sk-item"></div><div class="sk-cell sk-item"></div></div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
+    <!-- OLD_SKELETON_END -->
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

@@ -2,13 +2,13 @@ import type { UserConfig, ConfigEnv } from 'vite';
 import pkg from './package.json';
 import dayjs from 'dayjs';
 import { loadEnv } from 'vite';
-import { resolve } from 'path';
+import { resolve, relative, dirname } from 'path';
+import fs from 'fs';
 import { generateModifyVars } from './build/generate/generateModifyVars';
 import { createProxy } from './build/vite/proxy';
 import { wrapperEnv } from './build/utils';
 import { createVitePlugins } from './build/vite/plugin';
 import { OUTPUT_DIR } from './build/constant';
-import { fileURLToPath, URL } from 'node:url'
 
 function pathResolve(dir: string) {
   return resolve(process.cwd(), '.', dir);
@@ -47,6 +47,18 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
                 find: '@nop-chaos/sdk',
                 replacement: resolve(root, '../sdk/lib/sdk.js'),
               },
+              {
+                find: '@nop-chaos/nop-amis-ext/lib/nop-amis-ext.js',
+                replacement: resolve(root, '../nop-amis-ext/src/index.ts'),
+              },
+              {
+                find: /^bpmn-process-designer$/,
+                replacement: resolve(root, '../bpmn-process-designer/src/package/index.ts'),
+              },
+              {
+                find: /^nop-template-editor$/,
+                replacement: resolve(root, '../nop-template-editor/src/index.ts'),
+              },
             ]
           : []),
         {
@@ -72,19 +84,11 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
           find: /\/#\//,
           replacement: pathResolve('types') + '/',
         },
-        {
-          find: /@\//,
-          replacement: pathResolve('src') + '/',
-        },
         // /#/xxxx => types/xxxx
         {
           find: /#\//,
           replacement: pathResolve('types') + '/',
         },
-        // {
-        //   find: 'bpmn-process-designer',
-        //   replacement: fileURLToPath(new URL('../bpmn-process-designer/src/index.ts', import.meta.url)),
-        // }
       ],
     },
     server: {
@@ -111,7 +115,7 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
           manualChunks(id) {
                  // console.log("id="+id)
              const libs = ["amis-editor","monaco-editor","tinymce","codemirror",
-                       "froala-editor","exceljs","xlsx","office-viewer","ant-design-vue"];
+                       "froala-editor","exceljs","xlsx","office-viewer","ant-design-vue","element-plus"];
              for(let lib of libs){
           	   if(id.includes("node_modules/"+lib+'/'))
           		  return lib
@@ -139,23 +143,32 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
 		   
               if(include_any(["amis","amis-ui","amis-formula","amis-core","video-react"]))
           		return "amis";
-        
 
-              //     if (include_any(["vue","vue-router","@vue","pinia"])){
-          		// console.log("vue,id=:" + id);
-              //       return "vue"; 
-              //     }
+                  if (include_any(["vue","vue-router","@vue","pinia"])){
+                    return "vue";
+                  }
+
+                  if (include_any(["lodash","lodash-es","dayjs","axios","js-yaml","clipboard","copy-to-clipboard","qs","nprogress","path-to-regexp","sortablejs","md5","crypto-js","xss","showdown","cron-parser","cropperjs"])){
+                    return "shared-lib";
+                  }
+
+                  if (include_any(["react","react-dom","scheduler"])){
+                    return "react";
+                  }
+
+                  if (include_any(["quill","@vueup/vue-quill","parchment"])){
+                    return "quill";
+                  }
+
+                  if (include_any(["@vueuse"])){
+                    return "vueuse";
+                  }
 
                   if (id.includes('node_modules/@nop-chaos')) {
-                    return "nop-sdk"; 
+                    return "nop-sdk";
                   }
-                 // if (id.includes('node_modules')) {
-          //		console.log("vendor,id=:" + id);
-              //      return "vendor"; 
-              //    }
                   if (id.includes('/packages/nop-site/src/') && !id.includes('/.pnpm/')) {
-          		console.log("nop-site,id=:" + id);
-                    return "nop-site"; 
+                    return "nop-site";
                   }
           	//console.log("app,id="+id);
           	//return "app"
@@ -179,11 +192,62 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
     },
 
     // The vite plugin used by the project. The quantity is large, so it is separately extracted and managed
-    plugins: createVitePlugins(viteEnv, isBuild),
+    plugins: [
+      ...createVitePlugins(viteEnv, isBuild, [
+        {
+          name: 'bpmn-designer-aliases',
+          enforce: 'pre',
+          resolveId(id, importer) {
+            if (!id.startsWith('@/')) return null
+            if (importer && importer.includes('/packages/bpmn-process-designer/')) {
+            const srcRoot = resolve(root, '../bpmn-process-designer/src/package/')
+            const base = srcRoot + '/' + id.slice(2)
+            // Import may already have extension (e.g. @/designer/utils/ElementUtil.ts)
+            if (fs.existsSync(base) && fs.statSync(base).isFile()) return base
+            const exts = ['.ts', '.js', '.vue', '.tsx', '.jsx', '.mjs', '.json']
+            for (const ext of exts) {
+              const p = base + ext
+              if (fs.existsSync(p)) return p
+            }
+            // Try index files for directory imports
+            for (const ext of exts) {
+              const p = base + '/index' + ext
+              if (fs.existsSync(p)) return p
+            }
+            return null
+          }
+          return pathResolve('src') + '/' + id.slice(2)
+        },
+        transform(code, id) {
+          // Replace @/ with relative path so @vue/compiler-sfc can resolve types
+          if (!id.includes('/packages/bpmn-process-designer/src/package/')) return
+          const srcRoot = resolve(root, '../bpmn-process-designer/src/package/')
+          // Match both "from '@/...'" and "import '@/...'"
+          const re = /(from|import)\s+(['"])@\/([^'"]+)\2/g
+          let match
+          let result = ''
+          let lastIndex = 0
+          while ((match = re.exec(code)) !== null) {
+            const fullPath = resolve(srcRoot, match[3])
+            const relPath = relative(dirname(id), fullPath)
+            const normalized = relPath.startsWith('.') ? relPath : './' + relPath
+            result += code.slice(lastIndex, match.index)
+            result += match[1] + match[2] + normalized + match[2]
+            lastIndex = match.index + match[0].length
+          }
+          if (!lastIndex) return
+          result += code.slice(lastIndex)
+          return { code: result, map: null }
+        },
+      } ]),
+    ],
 
     optimizeDeps: {
       exclude: [
         '@nop-chaos/sdk',
+        '@nop-chaos/nop-amis-ext',
+        'bpmn-process-designer',
+        'nop-template-editor',
       ],
       esbuildOptions: {
         target: 'es2015',

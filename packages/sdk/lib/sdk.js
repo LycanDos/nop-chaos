@@ -1,4 +1,4 @@
-import { PopupEditorControl$1 } from "./index-a2c9ea57.js";
+import { PopupEditorControl$1 } from "./index-dbece035.js";
 export * from "@nop-chaos/nop-core";
 export * from "@nop-chaos/nop-amis-vue";
 import "amis-core";

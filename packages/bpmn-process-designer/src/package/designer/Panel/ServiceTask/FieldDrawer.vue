@@ -65,7 +65,8 @@ defineExpose({
     append-to-body
     :lock-scroll="false"
     @closed="onClosed"
-    title="注入字段"
+    :show-close="false"
+    :with-header="false"
   >
     <el-form
       ref="formRef"

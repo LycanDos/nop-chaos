@@ -103,6 +103,14 @@ declare interface VueControlProps extends FormControlProps {
 
 export declare const XuiLoading: DefineComponent<    {}, {}, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, {}, string, PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, ComponentProvideOptions, true, {}, any>;
 
+export declare const XuiLoadingNext: DefineComponent<    {}, {
+taglines: {
+icon: string;
+text: string;
+}[];
+carouselIndex: Ref<number, number>;
+}, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, {}, string, PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, ComponentProvideOptions, true, {}, any>;
+
 /**
  * 在AmisSchemaPage的基础上增加AmisDebugger调试功能，以及根据path动态加载schema的功能
  */

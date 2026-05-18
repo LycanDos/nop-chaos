@@ -1362,7 +1362,6 @@ defineExpose({ openDrawer })
   min-height: 0;
   min-width: 0;
   transition: width 0.15s ease;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.06);
   overflow: visible;
   
   &.is-collapsed {

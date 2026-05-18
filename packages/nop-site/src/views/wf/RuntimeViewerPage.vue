@@ -96,6 +96,11 @@ onMounted(async () => {
   }
 })
 
+const DEMO_INSTANCES = [
+  { wfId: 'demo-001', wfName: 'leaveProcess', wfVersion: 1, status: 'ACTIVATED', createdTime: '2026-05-10 09:00:00', finishedTime: '', bizKey: 'LEAVE-2026-001' },
+  { wfId: 'demo-002', wfName: 'leaveProcess', wfVersion: 1, status: 'COMPLETED', createdTime: '2026-05-09 08:00:00', finishedTime: '2026-05-09 10:30:00', bizKey: 'LEAVE-2026-002' },
+]
+
 async function loadList() {
   listLoading.value = true
   try {
@@ -114,10 +119,10 @@ async function loadList() {
         }`,
       },
     })
-    instanceList.value = res?.NopWfInstance__findList || []
+    instanceList.value = res?.NopWfInstance__findList || DEMO_INSTANCES
   } catch (e: any) {
-    console.error('加载流程实例列表失败:', e)
-    instanceList.value = []
+    console.warn('后端工作流服务不可用，使用示例数据:', e)
+    instanceList.value = DEMO_INSTANCES
   } finally {
     listLoading.value = false
   }
@@ -127,11 +132,17 @@ async function loadRuntimeView(wfId: string) {
   mode.value = 'view'
   runtimeData.value = null
 
+  // 示例 ID 直接使用 demo 数据，不请求后端
+  if (wfId.startsWith('demo-')) {
+    runtimeData.value = demoData
+    return
+  }
+
   try {
     const data = await fetchRuntimeData(wfId)
     runtimeData.value = data
   } catch (e: any) {
-    console.error('加载运行时数据失败:', e)
+    console.warn('加载运行时数据失败，使用示例数据:', e)
     // 使用示例数据作为降级
     runtimeData.value = demoData
     ElMessage.warning('加载失败，已切换至示例数据')

@@ -2,7 +2,7 @@
     <component :is="componentType" v-bind="props" :schema="schemaRef"
         @exit="handleExit" v-if="componentType"/>
 
-    <xui-loading v-if="!componentType" />    
+    <xui-loading v-if="!componentType" />
 </template>
   
 <script lang="ts" setup>

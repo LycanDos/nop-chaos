@@ -35,72 +35,76 @@ style.innerHTML = `
 }
 `;
 document.head.appendChild(style);
-import 'bpmn-js/dist/assets/diagram-js.css'
-import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css'
-import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-codes.css'
-import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css'
-import '@vueup/vue-quill/dist/vue-quill.snow.css'
-// 在本地开发中引入的,以提高浏览器响应速度
+// 在开发环境引入 ant-design-vue 的 less 文件
 if (import.meta.env.DEV) {
   import('ant-design-vue/dist/antd.less');
 }
+function reportProgress(pct: number) {
+  const fn = (window as any).__setLoadProgress__;
+  if (fn) fn(pct);
+}
+
 async function bootstrap() {
   // 创建应用实例
   const app = createApp(App);
+  reportProgress(5);
 
-  // 多语言配置,异步情况:语言文件可以从服务器端获得
-  await setupI18n(app);
-
-  // 配置存储
+  // 同步配置（必须优先执行）
   setupStore(app);
-
-  // 初始化内部系统配置
   initAppConfigStore();
-
-  // 注册外部模块路由
   registerPackages(app);
-
-  // 注册全局组件
   registerGlobComp(app);
-
-  //CAS单点登录
-  await useSso().ssoLogin();
-
-  // 配置路由
   setupRouter(app);
-
-  // 路由保护
   setupRouterGuard(router);
-
-  // 注册全局指令
   setupGlobDirectives(app);
-
-  // 配置全局错误处理
   setupErrorHandle(app);
+  reportProgress(20);
 
-  await initNopApp(app)
+  // 并行执行独立异步操作: i18n加载、SSO登录、Nop平台初始化
+  await Promise.all([
+    setupI18n(app),
+    useSso().ssoLogin(),
+    initNopApp(app),
+  ]);
+  reportProgress(70);
 
   // 注册第三方组件
   await registerThirdComp(app);
+  reportProgress(85);
 
   // 当路由准备好时再执行挂载( https://next.router.vuejs.org/api/#isready)
   await router.isReady();
+  reportProgress(95);
 
   app.use(ElementPlus);
+
+  // 过渡：loading 淡出 + Vue 淡入，消除割裂感
+  reportProgress(100);
+  const loadingEl = document.querySelector('.app-loading-next');
+  if (loadingEl) {
+    (loadingEl as HTMLElement).style.transition = 'opacity 0.25s ease';
+    (loadingEl as HTMLElement).style.opacity = '0';
+    // 短暂等待让淡出启动，不等完成就挂载，形成交叉过渡
+    await new Promise(r => setTimeout(r, 80));
+  }
+
   // 挂载应用
   app.mount('#app', true);
 
-  // 调试：打印所有注册的路由
-  if (app.config.globalProperties?.$router) {
-    const routes = app.config.globalProperties.$router.getRoutes();
-    console.log('【调试】当前注册的路由:', routes.map(r => ({ path: r.path, name: r.name })));
-    const bpmnRoute = routes.find(r => r.path === '/bpmn-designer');
-    console.log('【调试】/bpmn-designer 路由详情:', bpmnRoute);
-  } else if (router) {
-    const routes = router.getRoutes();
-    console.log('【调试】当前注册的路由:', routes.map(r => ({ path: r.path, name: r.name })));
-    const bpmnRoute = routes.find(r => r.path === '/bpmn-designer');
-    console.log('【调试】/bpmn-designer 路由详情:', bpmnRoute);
+  // Vue 内容淡入
+  const appRoot = document.getElementById('app');
+  if (appRoot) {
+    appRoot.style.setProperty('animation', 'app-fade-in 0.4s ease');
+    // 确保关键帧存在
+    if (!document.getElementById('app-fade-style')) {
+      const style = document.createElement('style');
+      style.id = 'app-fade-style';
+      style.textContent = `@keyframes app-fade-in {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+      }`;
+      document.head.appendChild(style);
+    }
   }
 }
 

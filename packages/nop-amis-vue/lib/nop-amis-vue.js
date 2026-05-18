@@ -1,8 +1,8 @@
 import * as Vue from "vue";
-import { defineComponent, ref, onUnmounted, openBlock, createElementBlock, watch, onBeforeUnmount, h, onMounted, createElementVNode, createTextVNode, shallowRef, watchEffect, markRaw, Fragment as Fragment$1, createBlock, resolveDynamicComponent, mergeProps, createCommentVNode, unref, withCtx, createVNode, normalizeProps, guardReactiveProps, resolveComponent } from "vue";
-import { ajaxFetch, useDebug, useAdapter, providePage, default_jumpTo, isCancel, default_isCurrentUrl, default_updateLocation, createPage, transformPageJson, bindActions, getSchemaProcessorType, deletePageCache, PageApis, registerAdapter, registerModule } from "@nop-chaos/nop-core";
+import { defineComponent, ref, onUnmounted, createElementBlock, openBlock, watch, onBeforeUnmount, h, onMounted, createElementVNode, createTextVNode, shallowRef, watchEffect, markRaw, Fragment as Fragment$1, createBlock, createCommentVNode, resolveDynamicComponent, mergeProps, unref, withCtx, createVNode, normalizeProps, guardReactiveProps, resolveComponent, createStaticVNode, normalizeStyle, renderList, toDisplayString } from "vue";
+import { ajaxFetch, useDebug, useAdapter, default_isCurrentUrl, isCancel, default_updateLocation, default_jumpTo, providePage, createPage, transformPageJson, bindActions, getSchemaProcessorType, PageApis, deletePageCache, registerAdapter, registerModule } from "@nop-chaos/nop-core";
 import { isString, cloneDeep } from "lodash-es";
-import { toast, clearStoresCache, setDefaultLocale, render, ToastComponent, ScopedContext, Renderer, FormItem, dataMapping, alert, confirm } from "amis";
+import { toast, setDefaultLocale, render, clearStoresCache, ToastComponent, ScopedContext, Renderer, FormItem, confirm, alert, dataMapping } from "amis";
 import copy from "copy-to-clipboard";
 import { createRoot } from "react-dom/client";
 import * as React from "react";
@@ -12,7 +12,7 @@ import yaml from "js-yaml";
 import { createObject, resolveVariableAndFilter } from "amis-core";
 import { applyPureVueInReact, applyVueInReact } from "veaury";
 import * as ReactDom from "react-dom";
-const _sfc_main$7 = defineComponent({
+const _sfc_main$8 = defineComponent({
   props: {
     schema: Object,
     rollbackPageSource: Function,
@@ -32,8 +32,7 @@ const _sfc_main$7 = defineComponent({
     const { savePageSource, rollbackPageSource, getPageSource } = props;
     function handleEvent(event) {
       if (event.data == "amis-editor-inited") {
-        if (fetched)
-          return;
+        if (fetched) return;
         var msg = {
           type: "setSchema",
           data: props.schema
@@ -93,15 +92,13 @@ const _sfc_main$7 = defineComponent({
     }
     function postMsg(msg) {
       const frame = editorRef.value;
-      if (!frame)
-        return;
+      if (!frame) return;
       const str = isString(msg) ? msg : JSON.stringify(msg);
       frame.contentWindow.postMessage(str, "*");
     }
     function startFetch() {
       const frame = editorRef.value;
-      if (!frame)
-        return;
+      if (!frame) return;
       fetched = true;
       return getPageSource(true).then((page) => {
         postMsg({
@@ -140,15 +137,15 @@ const _export_sfc = (sfc, props) => {
   }
   return target;
 };
-const _hoisted_1$2 = {
+const _hoisted_1$3 = {
   style: { "width": "100%", "height": "100%", "border": "none" },
   ref: "editorRef",
   src: "/amis-editor/index.html"
 };
-function _sfc_render$3(_ctx, _cache, $props, $setup, $data, $options) {
-  return openBlock(), createElementBlock("iframe", _hoisted_1$2, null, 512);
+function _sfc_render$4(_ctx, _cache, $props, $setup, $data, $options) {
+  return openBlock(), createElementBlock("iframe", _hoisted_1$3, null, 512);
 }
-const AmisPageEditor = /* @__PURE__ */ _export_sfc(_sfc_main$7, [["render", _sfc_render$3]]);
+const AmisPageEditor = /* @__PURE__ */ _export_sfc(_sfc_main$8, [["render", _sfc_render$4]]);
 function createEnv(page) {
   const { debug } = useDebug();
   const adapter = useAdapter();
@@ -331,7 +328,7 @@ const AmisSchemaPage = defineReactPageComponent((props) => {
     }
   }
 });
-const _sfc_main$6 = /* @__PURE__ */ defineComponent({
+const _sfc_main$7 = /* @__PURE__ */ defineComponent({
   __name: "AmisToast",
   setup(__props) {
     const domRef = ref();
@@ -411,11 +408,10 @@ const debuggerSchema = {
     ]
   }
 };
-const XuiLoading_vue_vue_type_style_index_0_scoped_b50685ed_lang = "";
-const _sfc_main$5 = {};
-const _hoisted_1$1 = { class: "app-loading" };
-function _sfc_render$2(_ctx, _cache) {
-  return openBlock(), createElementBlock("div", _hoisted_1$1, _cache[0] || (_cache[0] = [
+const _sfc_main$6 = {};
+const _hoisted_1$2 = { class: "app-loading" };
+function _sfc_render$3(_ctx, _cache) {
+  return openBlock(), createElementBlock("div", _hoisted_1$2, _cache[0] || (_cache[0] = [
     createElementVNode("div", { class: "app-loading-wrap" }, [
       createElementVNode("div", { class: "app-loading-dots" }, [
         createElementVNode("span", { class: "dot dot-spin" }, [
@@ -436,8 +432,8 @@ function _sfc_render$2(_ctx, _cache) {
     ], -1)
   ]));
 }
-const XuiLoading = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["render", _sfc_render$2], ["__scopeId", "data-v-b50685ed"]]);
-const _sfc_main$4 = /* @__PURE__ */ defineComponent({
+const XuiLoading = /* @__PURE__ */ _export_sfc(_sfc_main$6, [["render", _sfc_render$3], ["__scopeId", "data-v-b50685ed"]]);
+const _sfc_main$5 = /* @__PURE__ */ defineComponent({
   __name: "XuiPageEditor",
   props: {
     rollbackPageSource: Function,
@@ -495,7 +491,7 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
     };
   }
 });
-const _sfc_main$3 = /* @__PURE__ */ defineComponent({
+const _sfc_main$4 = /* @__PURE__ */ defineComponent({
   __name: "XuiPageEditorDialog",
   props: {
     modelValue: Boolean,
@@ -540,7 +536,7 @@ const _sfc_main$3 = /* @__PURE__ */ defineComponent({
       }, {
         default: withCtx(() => [
           _cache[0] || (_cache[0] = createElementVNode("header", null, null, -1)),
-          createVNode(_sfc_main$4, {
+          createVNode(_sfc_main$5, {
             onExit: handleEditorExit,
             savePageSource: __props.savePageSource,
             rollbackPageSource: __props.rollbackPageSource,
@@ -553,9 +549,8 @@ const _sfc_main$3 = /* @__PURE__ */ defineComponent({
     };
   }
 });
-const XuiPageEditorDialog_vue_vue_type_style_index_0_lang = "";
-const _hoisted_1 = { class: "page-debugger" };
-const _sfc_main$2 = /* @__PURE__ */ defineComponent({
+const _hoisted_1$1 = { class: "page-debugger" };
+const _sfc_main$3 = /* @__PURE__ */ defineComponent({
   __name: "XuiDebugger",
   props: {
     path: {
@@ -624,7 +619,7 @@ const _sfc_main$2 = /* @__PURE__ */ defineComponent({
     }
     return (_ctx, _cache) => {
       return openBlock(), createElementBlock(Fragment$1, null, [
-        createElementVNode("span", _hoisted_1, [
+        createElementVNode("span", _hoisted_1$1, [
           createVNode(unref(ElButton), {
             type: "primary",
             circle: true,
@@ -676,7 +671,7 @@ const _sfc_main$2 = /* @__PURE__ */ defineComponent({
           ]),
           _: 1
         }, 8, ["modelValue"]),
-        createVNode(_sfc_main$3, {
+        createVNode(_sfc_main$4, {
           modelValue: designerVisible.value,
           "onUpdate:modelValue": _cache[1] || (_cache[1] = ($event) => designerVisible.value = $event),
           savePageSource,
@@ -687,8 +682,7 @@ const _sfc_main$2 = /* @__PURE__ */ defineComponent({
     };
   }
 });
-const XuiDebugger_vue_vue_type_style_index_0_lang = "";
-const _sfc_main$1 = defineComponent({
+const _sfc_main$2 = defineComponent({
   props: {
     schema: Object,
     data: Object,
@@ -718,11 +712,11 @@ const _sfc_main$1 = defineComponent({
     };
   }
 });
-function _sfc_render$1(_ctx, _cache, $props, $setup, $data, $options) {
+function _sfc_render$2(_ctx, _cache, $props, $setup, $data, $options) {
   return openBlock(), createBlock(resolveDynamicComponent(_ctx.componentType), normalizeProps(guardReactiveProps(_ctx.$props)), null, 16);
 }
-const XuiSchemaPage = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["render", _sfc_render$1]]);
-const _sfc_main = defineComponent({
+const XuiSchemaPage = /* @__PURE__ */ _export_sfc(_sfc_main$2, [["render", _sfc_render$2]]);
+const _sfc_main$1 = defineComponent({
   name: "amis-page",
   props: {
     path: {
@@ -734,7 +728,7 @@ const _sfc_main = defineComponent({
     registerPage: Function,
     actions: Object
   },
-  components: { XuiDebugger: _sfc_main$2, XuiSchemaPage },
+  components: { XuiDebugger: _sfc_main$3, XuiSchemaPage },
   setup(props) {
     const { getPage } = useAdapter();
     let pageSchema = shallowRef();
@@ -767,7 +761,7 @@ const _sfc_main = defineComponent({
     };
   }
 });
-function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
+function _sfc_render$1(_ctx, _cache, $props, $setup, $data, $options) {
   const _component_xui_debugger = resolveComponent("xui-debugger");
   const _component_XuiSchemaPage = resolveComponent("XuiSchemaPage");
   return openBlock(), createElementBlock(Fragment$1, null, [
@@ -786,7 +780,84 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     }, null, 8, ["schema", "registerPage", "action", "data"])
   ], 64);
 }
-const XuiPage = /* @__PURE__ */ _export_sfc(_sfc_main, [["render", _sfc_render]]);
+const XuiPage = /* @__PURE__ */ _export_sfc(_sfc_main$1, [["render", _sfc_render$1]]);
+const taglines = [
+  { icon: "✦", text: "Nop is not Programming" },
+  { icon: "◆", text: "重构软件生产力" },
+  { icon: "◈", text: "声明式 · 差量式 · 可逆式" },
+  { icon: "◇", text: "Reimagining Productivity" },
+  { icon: "▣", text: "面向模型 · 面向复用" }
+];
+const _sfc_main = {
+  name: "XuiLoadingNext",
+  setup() {
+    const carouselIndex = ref(0);
+    let timer = null;
+    onMounted(() => {
+      timer = setInterval(() => {
+        carouselIndex.value = (carouselIndex.value + 1) % taglines.length;
+      }, 3500);
+    });
+    onUnmounted(() => {
+      if (timer) clearInterval(timer);
+    });
+    return { taglines, carouselIndex };
+  }
+};
+const _imports_0 = "/resource/img/logo.png";
+const _hoisted_1 = { class: "app-loading-next" };
+const _hoisted_2 = { class: "loading-center" };
+const _hoisted_3 = { class: "loading-carousel" };
+const _hoisted_4 = { class: "carousel-viewport" };
+const _hoisted_5 = { class: "carousel-icon" };
+const _hoisted_6 = { class: "carousel-text" };
+function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
+  return openBlock(), createElementBlock("div", _hoisted_1, [
+    _cache[2] || (_cache[2] = createStaticVNode('<div class="loading-ambient" data-v-8e98475a><div class="ambient-orb ambient-orb-1" data-v-8e98475a></div><div class="ambient-orb ambient-orb-2" data-v-8e98475a></div><div class="ambient-orb ambient-orb-3" data-v-8e98475a></div><div class="ambient-orb ambient-orb-4" data-v-8e98475a></div></div><div class="loading-grid" data-v-8e98475a></div>', 2)),
+    createElementVNode("div", _hoisted_2, [
+      _cache[0] || (_cache[0] = createElementVNode("div", { class: "loading-brand" }, [
+        createElementVNode("div", { class: "loading-logo-ring" }, [
+          createElementVNode("img", {
+            src: _imports_0,
+            class: "loading-logo",
+            alt: "Logo"
+          })
+        ]),
+        createElementVNode("div", { class: "loading-brand-name" }, "Nop Platform")
+      ], -1)),
+      createElementVNode("div", _hoisted_3, [
+        createElementVNode("div", _hoisted_4, [
+          createElementVNode("div", {
+            class: "carousel-track",
+            style: normalizeStyle({ transform: `translateY(-${$setup.carouselIndex * 20}%)` })
+          }, [
+            (openBlock(true), createElementBlock(Fragment$1, null, renderList($setup.taglines, (item, idx) => {
+              return openBlock(), createElementBlock("div", {
+                key: idx,
+                class: "carousel-item"
+              }, [
+                createElementVNode("span", _hoisted_5, toDisplayString(item.icon), 1),
+                createElementVNode("span", _hoisted_6, toDisplayString(item.text), 1)
+              ]);
+            }), 128))
+          ], 4)
+        ])
+      ]),
+      _cache[1] || (_cache[1] = createElementVNode("div", { class: "loading-progress" }, [
+        createElementVNode("div", { class: "progress-bar" }, [
+          createElementVNode("div", { class: "progress-fill" })
+        ]),
+        createElementVNode("div", { class: "progress-label" }, "Initializing")
+      ], -1))
+    ]),
+    _cache[3] || (_cache[3] = createElementVNode("div", { class: "loading-footer" }, [
+      createElementVNode("span", null, "© 2026 Nop Platform"),
+      createElementVNode("span", { class: "footer-dot" }, "·"),
+      createElementVNode("span", null, "v2.0")
+    ], -1))
+  ]);
+}
+const XuiLoadingNext = /* @__PURE__ */ _export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-8e98475a"]]);
 class VueControl extends React__default.Component {
   constructor(props) {
     super(props);
@@ -846,20 +917,19 @@ class VueControl extends React__default.Component {
     return React__default.createElement(this.vueComponent, mergedProps);
   }
 }
-class VueRenderer extends VueControl {
+const _VueRenderer = class _VueRenderer extends VueControl {
   constructor(props) {
     super(props);
     const scoped = this.context;
-    if (scoped)
-      scoped.registerComponent(this);
+    if (scoped) scoped.registerComponent(this);
   }
   componentWillUnmount() {
     const scoped = this.context;
-    if (scoped)
-      scoped.unRegisterComponent(this);
+    if (scoped) scoped.unRegisterComponent(this);
   }
-}
-VueRenderer.contextType = ScopedContext;
+};
+_VueRenderer.contextType = ScopedContext;
+let VueRenderer = _VueRenderer;
 Renderer({
   type: "vue-renderer",
   autoVar: false
@@ -885,7 +955,7 @@ class XuiPageEditorButton extends React__default.Component {
     this.state = {
       dialogVisible: false
     };
-    this.dialogComponent = applyVueInReact(_sfc_main$3);
+    this.dialogComponent = applyVueInReact(_sfc_main$4);
     this.handleAction = this.handleAction.bind(this);
     const store = getPageStore(this.props.store);
     this.getPageSource = () => {
@@ -951,8 +1021,7 @@ registerAdapter({
   alert,
   confirm,
   notify(type, msg, conf) {
-    if (msg.startsWith("_"))
-      return;
+    if (msg.startsWith("_")) return;
     conf = { closeButton: true, ...conf };
     toast[type] ? toast[type](msg, conf) : console.warn("[notify]", type, msg);
     console.log("[notify]", type, msg);
@@ -971,11 +1040,12 @@ registerModule("react-dom", ReactDom);
 export {
   AmisPageEditor,
   AmisSchemaPage,
-  _sfc_main$6 as AmisToast,
+  _sfc_main$7 as AmisToast,
   VueControl as AmisVueComponent,
   XuiLoading,
+  XuiLoadingNext,
   XuiPage,
-  _sfc_main$4 as XuiPageEditor,
+  _sfc_main$5 as XuiPageEditor,
   XuiSchemaPage,
   defineReactPageComponent
 };

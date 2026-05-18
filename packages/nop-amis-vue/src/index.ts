@@ -9,6 +9,7 @@ import XuiPageEditor from './XuiPageEditor.vue'
 import XuiSchemaPage from './XuiSchemaPage.vue'
 
 import XuiLoading  from './XuiLoading.vue'
+import XuiLoadingNext  from './XuiLoadingNext.vue'
 
 export * from './react-adapter'
 
@@ -63,5 +64,6 @@ export {
     XuiPage,
     XuiPageEditor,
     XuiSchemaPage,
-    XuiLoading
+    XuiLoading,
+    XuiLoadingNext
 }

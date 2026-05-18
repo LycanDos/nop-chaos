@@ -403,13 +403,13 @@ defineExpose({
       </div>
       <!-- 拖拽分割条 -->
       <div
-        v-if="showRightPanel"
+        v-show="showRightPanel"
         class="design-resize-handle"
         :class="{ 'design-resize-handle--active': isDragging }"
         @mousedown="onDragStart"
       />
       <div
-        v-if="showRightPanel"
+        v-show="showRightPanel"
         class="design-aside"
         :style="{
           width: asideWidth + 'px',

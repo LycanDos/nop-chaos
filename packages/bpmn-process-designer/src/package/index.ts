@@ -22,6 +22,8 @@ import './extensions/binding-overlay.css'
 import { registerSvgSprite } from './assets/svgSprite'
 registerSvgSprite()
 
+// 注册内置执行器插件预留（暂无内置插件）
+
 // 核心设计器组件
 export { default as ProcessDesigner } from './designer/index.vue'
 
