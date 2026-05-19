@@ -14,6 +14,7 @@ import { Ref } from 'vue';
 import { RegisterPage } from '@nop-chaos/nop-core';
 import { RendererData } from 'amis-core';
 import { RendererElement } from 'vue';
+import { RendererEvent } from 'amis';
 import { RendererNode } from 'vue';
 import { ShallowRef } from 'vue';
 import { VNode } from 'vue';
@@ -67,6 +68,8 @@ export declare class AmisVueComponent extends default_2.Component<VueControlProp
     constructor(props: any);
     doAction(action: ActionObject, data: RendererData, throwErrors?: boolean): void;
     dispatchChangeEvent(eventData?: any): Promise<void>;
+    dispatchRendererEvent(eventName: string, eventData?: any): Promise<RendererEvent<any>>;
+    dispatchNamedEvent(eventName: string, eventData?: any): Promise<RendererEvent<any>>;
     render(): default_2.DetailedReactHTMLElement<{
         style: {
             color: "red";

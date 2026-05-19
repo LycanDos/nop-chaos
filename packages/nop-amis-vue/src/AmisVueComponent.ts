@@ -36,19 +36,39 @@ export default class VueControl extends React.Component<VueControlProps, any> {
     
     
       async dispatchChangeEvent(eventData: any = {}) {
-        const {dispatchEvent, data, onChange} = this.props;
-        const rendererEvent = await dispatchEvent(
-          'change',
-          createObject(data, {
-            value: eventData
-          })
-        );
+        const rendererEvent = await this.dispatchRendererEvent('change', {
+          value: eventData
+        });
     
         if (rendererEvent?.prevented) {
           return;
         }
     
+        const {onChange} = this.props;
         onChange && onChange(eventData);
+      }
+
+      async dispatchRendererEvent(eventName: string, eventData: any = {}) {
+        const {dispatchEvent, data} = this.props;
+        return await dispatchEvent(
+          eventName,
+          createObject(data, eventData)
+        );
+      }
+
+      async dispatchNamedEvent(eventName: string, eventData: any = {}) {
+        const normalizedData =
+          eventData && typeof eventData === 'object' && !Array.isArray(eventData)
+            ? eventData
+            : { value: eventData };
+
+        const nextValue = normalizedData.templateJson ?? normalizedData.value;
+        if (nextValue !== undefined) {
+          const {onChange} = this.props;
+          onChange && onChange(nextValue);
+        }
+
+        return this.dispatchRendererEvent(eventName, normalizedData);
       }
     
 
@@ -72,7 +92,9 @@ export default class VueControl extends React.Component<VueControlProps, any> {
             env, store,
             ...props,
             value,
-            'onUpdate:value': ((value: any) => this.dispatchChangeEvent(value))
+            'onUpdate:value': ((value: any) => this.dispatchChangeEvent(value)),
+            onSaved: ((payload: any) => this.dispatchNamedEvent('saved', payload)),
+            onPreview: ((payload: any) => this.dispatchNamedEvent('preview', payload))
         }
         if (!this.vueComponent) {
             return React.createElement('div', { style: { color: 'red', padding: '10px' } }, `Vue component "${this.props.vueComponent}" not found`)

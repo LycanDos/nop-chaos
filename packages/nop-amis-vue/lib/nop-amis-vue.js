@@ -1,8 +1,8 @@
 import * as Vue from "vue";
-import { defineComponent, ref, onUnmounted, createElementBlock, openBlock, watch, onBeforeUnmount, h, onMounted, createElementVNode, createTextVNode, shallowRef, watchEffect, markRaw, Fragment as Fragment$1, createBlock, createCommentVNode, resolveDynamicComponent, mergeProps, unref, withCtx, createVNode, normalizeProps, guardReactiveProps, resolveComponent, createStaticVNode, normalizeStyle, renderList, toDisplayString } from "vue";
-import { ajaxFetch, useDebug, useAdapter, default_isCurrentUrl, isCancel, default_updateLocation, default_jumpTo, providePage, createPage, transformPageJson, bindActions, getSchemaProcessorType, PageApis, deletePageCache, registerAdapter, registerModule } from "@nop-chaos/nop-core";
+import { defineComponent, ref, onUnmounted, openBlock, createElementBlock, watch, onBeforeUnmount, h, onMounted, createElementVNode, createTextVNode, shallowRef, watchEffect, markRaw, Fragment as Fragment$1, createBlock, resolveDynamicComponent, mergeProps, createCommentVNode, unref, withCtx, createVNode, normalizeProps, guardReactiveProps, resolveComponent, createStaticVNode, normalizeStyle, renderList, toDisplayString } from "vue";
+import { ajaxFetch, useDebug, useAdapter, providePage, default_jumpTo, isCancel, default_isCurrentUrl, default_updateLocation, createPage, transformPageJson, bindActions, getSchemaProcessorType, deletePageCache, PageApis, registerAdapter, registerModule } from "@nop-chaos/nop-core";
 import { isString, cloneDeep } from "lodash-es";
-import { toast, setDefaultLocale, render, clearStoresCache, ToastComponent, ScopedContext, Renderer, FormItem, confirm, alert, dataMapping } from "amis";
+import { toast, clearStoresCache, setDefaultLocale, render, ToastComponent, ScopedContext, Renderer, FormItem, dataMapping, alert, confirm } from "amis";
 import copy from "copy-to-clipboard";
 import { createRoot } from "react-dom/client";
 import * as React from "react";
@@ -32,7 +32,8 @@ const _sfc_main$8 = defineComponent({
     const { savePageSource, rollbackPageSource, getPageSource } = props;
     function handleEvent(event) {
       if (event.data == "amis-editor-inited") {
-        if (fetched) return;
+        if (fetched)
+          return;
         var msg = {
           type: "setSchema",
           data: props.schema
@@ -92,13 +93,15 @@ const _sfc_main$8 = defineComponent({
     }
     function postMsg(msg) {
       const frame = editorRef.value;
-      if (!frame) return;
+      if (!frame)
+        return;
       const str = isString(msg) ? msg : JSON.stringify(msg);
       frame.contentWindow.postMessage(str, "*");
     }
     function startFetch() {
       const frame = editorRef.value;
-      if (!frame) return;
+      if (!frame)
+        return;
       fetched = true;
       return getPageSource(true).then((page) => {
         postMsg({
@@ -408,6 +411,7 @@ const debuggerSchema = {
     ]
   }
 };
+const XuiLoading_vue_vue_type_style_index_0_scoped_b50685ed_lang = "";
 const _sfc_main$6 = {};
 const _hoisted_1$2 = { class: "app-loading" };
 function _sfc_render$3(_ctx, _cache) {
@@ -549,6 +553,7 @@ const _sfc_main$4 = /* @__PURE__ */ defineComponent({
     };
   }
 });
+const XuiPageEditorDialog_vue_vue_type_style_index_0_lang = "";
 const _hoisted_1$1 = { class: "page-debugger" };
 const _sfc_main$3 = /* @__PURE__ */ defineComponent({
   __name: "XuiDebugger",
@@ -682,6 +687,7 @@ const _sfc_main$3 = /* @__PURE__ */ defineComponent({
     };
   }
 });
+const XuiDebugger_vue_vue_type_style_index_0_lang = "";
 const _sfc_main$2 = defineComponent({
   props: {
     schema: Object,
@@ -799,12 +805,14 @@ const _sfc_main = {
       }, 3500);
     });
     onUnmounted(() => {
-      if (timer) clearInterval(timer);
+      if (timer)
+        clearInterval(timer);
     });
     return { taglines, carouselIndex };
   }
 };
 const _imports_0 = "/resource/img/logo.png";
+const XuiLoadingNext_vue_vue_type_style_index_0_scoped_8e98475a_lang = "";
 const _hoisted_1 = { class: "app-loading-next" };
 const _hoisted_2 = { class: "loading-center" };
 const _hoisted_3 = { class: "loading-carousel" };
@@ -878,17 +886,30 @@ class VueControl extends React__default.Component {
     }
   }
   async dispatchChangeEvent(eventData = {}) {
-    const { dispatchEvent, data, onChange } = this.props;
-    const rendererEvent = await dispatchEvent(
-      "change",
-      createObject(data, {
-        value: eventData
-      })
-    );
+    const rendererEvent = await this.dispatchRendererEvent("change", {
+      value: eventData
+    });
     if (rendererEvent == null ? void 0 : rendererEvent.prevented) {
       return;
     }
+    const { onChange } = this.props;
     onChange && onChange(eventData);
+  }
+  async dispatchRendererEvent(eventName, eventData = {}) {
+    const { dispatchEvent, data } = this.props;
+    return await dispatchEvent(
+      eventName,
+      createObject(data, eventData)
+    );
+  }
+  async dispatchNamedEvent(eventName, eventData = {}) {
+    const normalizedData = eventData && typeof eventData === "object" && !Array.isArray(eventData) ? eventData : { value: eventData };
+    const nextValue = normalizedData.templateJson ?? normalizedData.value;
+    if (nextValue !== void 0) {
+      const { onChange } = this.props;
+      onChange && onChange(nextValue);
+    }
+    return this.dispatchRendererEvent(eventName, normalizedData);
   }
   render() {
     let { props, value, env, store } = this.props;
@@ -909,7 +930,9 @@ class VueControl extends React__default.Component {
       store,
       ...props,
       value,
-      "onUpdate:value": (value2) => this.dispatchChangeEvent(value2)
+      "onUpdate:value": (value2) => this.dispatchChangeEvent(value2),
+      onSaved: (payload) => this.dispatchNamedEvent("saved", payload),
+      onPreview: (payload) => this.dispatchNamedEvent("preview", payload)
     };
     if (!this.vueComponent) {
       return React__default.createElement("div", { style: { color: "red", padding: "10px" } }, `Vue component "${this.props.vueComponent}" not found`);
@@ -917,19 +940,20 @@ class VueControl extends React__default.Component {
     return React__default.createElement(this.vueComponent, mergedProps);
   }
 }
-const _VueRenderer = class _VueRenderer extends VueControl {
+class VueRenderer extends VueControl {
   constructor(props) {
     super(props);
     const scoped = this.context;
-    if (scoped) scoped.registerComponent(this);
+    if (scoped)
+      scoped.registerComponent(this);
   }
   componentWillUnmount() {
     const scoped = this.context;
-    if (scoped) scoped.unRegisterComponent(this);
+    if (scoped)
+      scoped.unRegisterComponent(this);
   }
-};
-_VueRenderer.contextType = ScopedContext;
-let VueRenderer = _VueRenderer;
+}
+VueRenderer.contextType = ScopedContext;
 Renderer({
   type: "vue-renderer",
   autoVar: false
@@ -1021,7 +1045,8 @@ registerAdapter({
   alert,
   confirm,
   notify(type, msg, conf) {
-    if (msg.startsWith("_")) return;
+    if (msg.startsWith("_"))
+      return;
     conf = { closeButton: true, ...conf };
     toast[type] ? toast[type](msg, conf) : console.warn("[notify]", type, msg);
     console.log("[notify]", type, msg);
