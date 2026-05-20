@@ -399,7 +399,7 @@
                     primary: selectedId === el.id,
                     locked: !!el.locked,
                     hidden: el.visible === false,
-                    'is-text-editing': editingTextId === el.id
+                    'is-text-editing': editingTextElementId === el.id
                   }"
                   :data-element-id="el.id"
                   :style="elementStyle(el)"
@@ -411,21 +411,22 @@
                     :class="{ primary: selectedId === el.id }"
                   ></span>
 
-                  <div class="element-content" @dblclick.stop="onDblClickElement(el)">
+                  <div class="element-content">
                     <template v-if="el.type === 'text'">
-                      <div
-                        v-if="editingTextId === el.id"
-                        class="text-element text-element--editing"
-                        :contenteditable="true"
-                        :style="textContentStyle(el)"
-                        @input="onTextEditInput($event, el)"
-                      ></div>
-                      <div
-                        v-else
-                        class="text-element"
-                        :style="textContentStyle(el)"
-                        v-html="el.content || '文本'"
-                      ></div>
+                      <InlineTextEditor
+                        v-model="el.content"
+                        :element-style="{
+                          fontSize: el.fontSize,
+                          fontFamily: el.fontFamily,
+                          color: el.color,
+                          textAlign: el.textAlign,
+                          lineHeight: el.lineHeight,
+                          letterSpacing: el.letterSpacing
+                        }"
+                        @edit-start="onTextEditorStart(el)"
+                        @edit-finish="onTextEditorFinish(el)"
+                        @edit-cancel="onTextEditorCancel(el)"
+                      />
                     </template>
 
                     <template v-else-if="el.type === 'prefill'">
@@ -546,106 +547,6 @@
             </div>
           </div>
         </div>
-
-        <Teleport to="body">
-          <div v-if="activeTextElement && textEditorPos" class="text-editor-tb" :style="tbStyle">
-            <div class="tb-row">
-              <button class="tb-done" @mousedown.prevent="finishTextEdit">✓</button>
-              <span class="tb-sep"></span>
-              <span class="tb-grp">
-                <button class="tb-btn" @mousedown.prevent="execFmt('bold')"><b>B</b></button>
-                <button class="tb-btn" @mousedown.prevent="execFmt('italic')"><i>I</i></button>
-                <button class="tb-btn" @mousedown.prevent="execFmt('underline')"><u>U</u></button>
-                <button class="tb-btn" @mousedown.prevent="execFmt('strikeThrough')"><s>S</s></button>
-              </span>
-              <span class="tb-sep"></span>
-              <span class="tb-grp">
-                <span class="tb-lbl">字号</span>
-                <span class="tb-adjs"><span class="tb-adj" @pointerdown.prevent="adj('fs',-1)">−</span><span class="tb-adjv" id="tb_fs">14</span><span class="tb-adj" @pointerdown.prevent="adj('fs',1)">+</span></span>
-                <span class="tb-lbl">行距</span>
-                <span class="tb-adjs"><span class="tb-adj" @pointerdown.prevent="adj('lh',-0.1)">−</span><span class="tb-adjv" id="tb_lh">1.5</span><span class="tb-adj" @pointerdown.prevent="adj('lh',0.1)">+</span></span>
-                <span class="tb-lbl">字距</span>
-                <span class="tb-adjs"><span class="tb-adj" @pointerdown.prevent="adj('ls',-0.5)">−</span><span class="tb-adjv" id="tb_ls">0</span><span class="tb-adj" @pointerdown.prevent="adj('ls',0.5)">+</span></span>
-              </span>
-            </div>
-            <div class="tb-row">
-              <span class="tb-grp">
-                <select class="tb-sel" @change="execFmt('fontName', ($event.target as HTMLSelectElement).value)">
-                  <option value="">默认</option>
-                  <option value="sans-serif">无衬线</option>
-                  <option value="serif">衬线</option>
-                  <option value="monospace">等宽</option>
-                  <option value="SimSun">宋体</option>
-                  <option value="SimHei">黑体</option>
-                  <option value="KaiTi">楷体</option>
-                  <option value="FangSong">仿宋</option>
-                  <option value="Microsoft YaHei">微软雅黑</option>
-                </select>
-              </span>
-              <span class="tb-sep"></span>
-              <span class="tb-grp">
-                <button class="tb-btn tb-clr" :style="{ color: txtColor }" @click.stop="cPop = cPop === 'fg' ? '' : 'fg'" title="文字色">A</button>
-                <div v-if="cPop === 'fg'" class="tb-cpop" @mouseleave="cPop = ''">
-                  <span v-for="c in clrs" :key="c" class="tb-csw" :style="{ background: c }" @mousedown.prevent="pickClr('fg', c)"></span>
-                  <input type="color" class="tb-cin" @input="pickClr('fg', ($event.target as HTMLInputElement).value)" />
-                </div>
-                <button class="tb-btn tb-clr" :style="bgColor ? { background: bgColor, color: '#fff' } : { background: 'linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%)', backgroundSize: '6px 6px', color: '#999' }" @click.stop="cPop = cPop === 'bg' ? '' : 'bg'" title="背景色">⬜</button>
-                <div v-if="cPop === 'bg'" class="tb-cpop" @mouseleave="cPop = ''">
-                  <span v-for="c in clrs" :key="c" class="tb-csw" :style="{ background: c }" @mousedown.prevent="pickClr('bg', c)"></span>
-                  <span class="tb-cclr" @mousedown.prevent="pickClr('bg', '')">清除</span>
-                  <input type="color" class="tb-cin" @input="pickClr('bg', ($event.target as HTMLInputElement).value)" />
-                </div>
-              </span>
-              <span class="tb-sep"></span>
-              <span class="tb-grp">
-                <button class="tb-btn" @click.stop="eOpen = !eOpen" title="表情" style="position:relative;font-size:16px">😊</button>
-                <div v-if="eOpen" class="tb-emo" @mouseleave="eOpen = false">
-                  <input class="tb-esrc" v-model="eQ" placeholder="搜索..." @click.stop />
-                  <div class="tb-egrd">
-                    <button v-for="e in eList" :key="e.c" class="tb-eitem" @mousedown.prevent="insEmoji(e.c)" :title="e.k">{{ e.c }}</button>
-                  </div>
-                </div>
-                <button class="tb-btn" @click.stop="alignOpen = !alignOpen">
-                  <svg v-if="curAlign === 'left'" viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 4h10M2 7h8M2 10h12M2 13h6"/></svg>
-                  <svg v-else-if="curAlign === 'center'" viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3 4h10M4 7h8M2 10h12M5 13h6"/></svg>
-                  <svg v-else viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 4h10M6 7h8M2 10h12M8 13h6"/></svg>
-                  <span class="tb-ddarr">▾</span>
-                </button>
-                <div v-if="alignOpen" class="tb-dd" @mouseleave="alignOpen = false">
-                  <button class="tb-ddi" @mousedown.prevent="setAlign('left')">左</button>
-                  <button class="tb-ddi" @mousedown.prevent="setAlign('center')">中</button>
-                  <button class="tb-ddi" @mousedown.prevent="setAlign('right')">右</button>
-                </div>
-              </span>
-              <span class="tb-sep"></span>
-              <span class="tb-grp">
-                <button class="tb-btn" @mousedown.prevent="execFmt('insertUnorderedList')" title="无序列表">
-                  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 5h9M5 8h9M5 11h9M3 5h1M3 8h1M3 11h1"/></svg>
-                </button>
-                <button class="tb-btn" @mousedown.prevent="execFmt('insertOrderedList')" title="有序列表">
-                  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 5h8M6 8h8M6 11h8M2.5 4v1.5M2 8.5l1-.5v3"/></svg>
-                </button>
-                <button class="tb-btn" @mousedown.prevent="execFmt('outdent')">
-                  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M7 5l-3 3 3 3M4 4h9M4 8h7M4 12h9"/></svg>
-                </button>
-                <button class="tb-btn" @mousedown.prevent="execFmt('indent')">
-                  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M9 5l3 3-3 3M3 4h9M5 8h7M3 12h9"/></svg>
-                </button>
-              </span>
-              <span class="tb-sep"></span>
-              <span class="tb-grp">
-                <button class="tb-btn" @mousedown.prevent="execFmt('createLink')" title="链接">
-                  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6.5 9.5l3-3M7.5 3.5l1.5-1.5a3 3 0 014 4l-1.5 1.5M8.5 12.5L7 14a3 3 0 01-4-4l1.5-1.5"/><path d="M9.5 6.5L7 9"/></svg>
-                </button>
-                <button class="tb-btn" @mousedown.prevent="execFmt('removeFormat')" title="清除格式">
-                  <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 12H2M4 12l2-8h4l2 8M6 8h4M5 4l1-2h4l1 2"/></svg>
-                </button>
-              </span>
-              <span class="tb-sep"></span>
-              <button class="tb-cancel" @mousedown.prevent="cancelTextEdit">✕</button>
-            </div>
-          </div>
-        </Teleport>
 
         <button
           class="inspector-toggle"
@@ -1848,7 +1749,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import interact from 'interactjs'
-import QuillEditor from './QuillEditor.vue'
+import InlineTextEditor from './InlineTextEditor.vue'
 import type {
   TemplateDefinition,
   TemplateElement,
@@ -1971,34 +1872,8 @@ const selectedIds = ref<string[]>([])
 const inspectorGroupId = ref<string | null>(null)
 const inspectorCollapsed = ref(false)
 const panelTreeCollapsed = ref(false)
-const editingTextId = ref<string | null>(null)
-const textEditorValue = ref('')
-const textEditorPos = ref<{ top: number; left: number; width: number; height: number } | null>(null)
-const textEditorInitialValue = ref('')
-const textEditorSnapshot = ref<string | null>(null)
-const curAlign = ref<'left' | 'center' | 'right'>('left')
-const alignOpen = ref(false)
-let rngSave: Range | null = null
-const cPop = ref('')
-const eOpen = ref(false)
-const eQ = ref('')
-const txtColor = ref('#333333')
-const bgColor = ref('')
-const clrs = ['#000000','#333333','#666666','#999999','#cccccc','#ffffff','#ff0000','#cc0000','#ff4444','#ff8800','#ffcc00','#ffff00','#88cc00','#00cc00','#00aaaa','#0066cc','#0000ff','#4444ff','#6600cc','#cc00cc','#ff66cc','#dd8866']
-const EMOJIS = [
-  {c:'😊',k:'smile'},{c:'😂',k:'joy'},{c:'😍',k:'love'},{c:'😎',k:'cool'},{c:'🤔',k:'think'},{c:'🙄',k:'roll'},{c:'😴',k:'sleep'},{c:'😈',k:'devil'},
-  {c:'😭',k:'cry'},{c:'😡',k:'angry'},{c:'🥺',k:'plead'},{c:'😱',k:'scream'},{c:'🤗',k:'hug'},{c:'🤩',k:'starstruck'},{c:'🥰',k:'lovely'},{c:'😘',k:'kiss'},
-  {c:'😋',k:'yummy'},{c:'🤪',k:'crazy'},{c:'😏',k:'smirk'},{c:'😒',k:'unamused'},{c:'😌',k:'relieved'},{c:'😔',k:'sad'},{c:'🙃',k:'upside'},{c:'🤤',k:'drool'},
-  {c:'👍',k:'thumbsup'},{c:'👎',k:'thumbsdown'},{c:'👏',k:'clap'},{c:'🙌',k:'raise'},{c:'🤝',k:'handshake'},{c:'✌️',k:'victory'},{c:'💪',k:'muscle'},{c:'🤞',k:'cross'},
-  {c:'❤️',k:'heart'},{c:'💔',k:'brokenheart'},{c:'🔥',k:'fire'},{c:'✨',k:'sparkle'},{c:'⭐',k:'star'},{c:'🌟',k:'glow'},{c:'🌈',k:'rainbow'},{c:'💡',k:'bulb'},
-  {c:'🎉',k:'party'},{c:'🎊',k:'confetti'},{c:'🎈',k:'balloon'},{c:'🎁',k:'gift'},{c:'🏆',k:'trophy'},{c:'📝',k:'memo'},{c:'📌',k:'pin'},{c:'🔗',k:'link'},
-  {c:'✅',k:'check'},{c:'❌',k:'cross'},{c:'✔️',k:'checkmark'},{c:'⚠️',k:'warn'},{c:'🚫',k:'no'},{c:'🔔',k:'bell'},{c:'💬',k:'bubble'},{c:'📱',k:'phone'},
-  {c:'🎂',k:'cake'},{c:'🍀',k:'clover'},{c:'🎯',k:'target'},{c:'🎨',k:'palette'},{c:'✈️',k:'airplane'},{c:'🚀',k:'rocket'},{c:'💎',k:'diamond'},{c:'🧩',k:'puzzle'},
-]
-const eList = computed(() => {
-  const q = eQ.value.toLowerCase().trim()
-  return q ? EMOJIS.filter(e => e.k.includes(q)) : EMOJIS
-})
+// 文本编辑器状态（由 InlineTextEditor 组件管理）
+const editingTextElementId = ref<string | null>(null)
 const pages = ref<TemplatePage[]>([createEmptyPage(1)])
 const currentPageIdx = ref(0)
 const undoStack = ref<string[]>([])
@@ -2030,7 +1905,6 @@ const selectionBox = ref<{
 const editorRootRef = ref<HTMLElement | null>(null)
 const viewportRef = ref<HTMLElement | null>(null)
 const canvasRef = ref<HTMLElement | null>(null)
-const quillEditorRef = ref<any>(null)
 const pageNameInputRef = ref<HTMLInputElement | null>(null)
 
 const incomingTemplateJson = computed(() => props.templateJson ?? props.value ?? '')
@@ -2083,21 +1957,6 @@ const inspectorGroup = computed(() =>
     ? groups.value.find(group => group.id === inspectorGroupId.value) || null
     : null
 )
-const activeTextElement = computed(() =>
-  editingTextId.value
-    ? elements.value.find(item => item.id === editingTextId.value && item.type === 'text') || null
-    : null
-)
-const tbStyle = computed(() => {
-  const pos = textEditorPos.value
-  if (!pos) return {}
-  return {
-    position: 'fixed' as const,
-    zIndex: 9999,
-    top: `${Math.max(pos.top - 86, 4)}px`,
-    left: `${Math.max(pos.left, 4)}px`
-  }
-})
 const groupPanels = computed(() => {
   const groupMap = new Map(groups.value.map(group => [group.id, group]))
   const usedGroupIds = [...new Set(elements.value.map(item => item.groupId).filter(Boolean))] as string[]
@@ -2293,24 +2152,7 @@ watch(incomingTemplateJson, (json) => {
   loadFromJson(json)
 }, { immediate: true })
 
-watch([editingTextId, textEditorValue], ([editingId, value]) => {
-  if (!editingId) {
-    return
-  }
-
-  const textEl = elements.value.find(item => item.id === editingId && item.type === 'text')
-  if (!textEl) {
-    return
-  }
-
-  const nextContent = value || ''
-  if (textEl.content === nextContent) {
-    return
-  }
-
-  textEl.content = nextContent
-  markDirty('正在编辑文本')
-}, { flush: 'sync' })
+// 文本编辑现在由 InlineTextEditor 组件内部管理
 
 function createEmptyPage(index: number): TemplatePage {
   return {
@@ -2336,10 +2178,7 @@ function resetEditor() {
   selectedId.value = null
   selectedIds.value = []
   inspectorGroupId.value = null
-  editingTextId.value = null
-  textEditorValue.value = ''
-  textEditorInitialValue.value = ''
-  textEditorSnapshot.value = null
+  editingTextElementId.value = null
   renamingPageIdx.value = null
   pageNameDraft.value = ''
   guidesVisible.value = true
@@ -2391,10 +2230,7 @@ function loadFromJson(json: string) {
     selectedId.value = null
     selectedIds.value = []
     inspectorGroupId.value = null
-    editingTextId.value = null
-    textEditorValue.value = ''
-    textEditorInitialValue.value = ''
-    textEditorSnapshot.value = null
+    editingTextElementId.value = null
     renamingPageIdx.value = null
     pageNameDraft.value = ''
     guidesVisible.value = true
@@ -2534,10 +2370,7 @@ function applySnapshot(snapshot: string) {
   selectedId.value = null
   selectedIds.value = []
   inspectorGroupId.value = null
-  editingTextId.value = null
-  textEditorValue.value = ''
-  textEditorInitialValue.value = ''
-  textEditorSnapshot.value = null
+  editingTextElementId.value = null
   activeGuideId.value = null
   draftGuide.value = null
   guideSnapIndicator.value = null
@@ -2564,10 +2397,7 @@ function switchPage(index: number) {
   selectedId.value = null
   selectedIds.value = []
   inspectorGroupId.value = null
-  editingTextId.value = null
-  textEditorValue.value = ''
-  textEditorInitialValue.value = ''
-  textEditorSnapshot.value = null
+  editingTextElementId.value = null
   renamingPageIdx.value = null
   pageNameDraft.value = ''
   undoStack.value = []
@@ -2582,10 +2412,7 @@ function addPage() {
   selectedId.value = null
   selectedIds.value = []
   inspectorGroupId.value = null
-  editingTextId.value = null
-  textEditorValue.value = ''
-  textEditorInitialValue.value = ''
-  textEditorSnapshot.value = null
+  editingTextElementId.value = null
   renamingPageIdx.value = null
   undoStack.value = []
   redoStack.value = []
@@ -2609,10 +2436,7 @@ function removePage(index: number) {
   selectedId.value = null
   selectedIds.value = []
   inspectorGroupId.value = null
-  editingTextId.value = null
-  textEditorValue.value = ''
-  textEditorInitialValue.value = ''
-  textEditorSnapshot.value = null
+  editingTextElementId.value = null
   renamingPageIdx.value = null
   undoStack.value = []
   redoStack.value = []
@@ -2682,12 +2506,29 @@ function elementStyle(el: TemplateElement) {
 }
 
 function textContentStyle(el: TemplateElement) {
-  return {
+  const style: Record<string, string> = {
     fontSize: `${el.fontSize || 14}px`,
     fontWeight: el.fontWeight || 'normal',
     textAlign: el.textAlign || 'left',
-    color: el.color || '#1f2937'
+    color: el.color || '#1f2937',
+    width: '100%',
+    height: '100%',
+    wordWrap: 'break-word',
+    overflowWrap: 'break-word',
+    whiteSpace: 'pre-wrap'
   }
+  
+  if (el.fontFamily) {
+    style.fontFamily = el.fontFamily
+  }
+  if (el.lineHeight) {
+    style.lineHeight = String(el.lineHeight)
+  }
+  if (el.letterSpacing) {
+    style.letterSpacing = `${el.letterSpacing}px`
+  }
+  
+  return style
 }
 
 function handwriteStyle(el: TemplateElement) {
@@ -3248,9 +3089,7 @@ function selectOutlineElement(id: string, event?: MouseEvent) {
 }
 
 function deselectElement() {
-  if (editingTextId.value) {
-    finishTextEdit()
-  }
+  editingTextElementId.value = null
   selectedId.value = null
   selectedIds.value = []
   inspectorGroupId.value = null
@@ -3937,149 +3776,20 @@ function reflowElementsBelowTable(tableId: string) {
   })
 }
 
-function adj(t: string, d: number) {
-  const el = document.getElementById('tb_' + t)
-  if (!el) return
-  const v = t === 'fs' ? Math.max(1, Math.min(200, parseInt(el.textContent || '14') + d)) :
-           t === 'lh' ? Math.max(0.5, Math.min(5, Math.round((parseFloat(el.textContent || '1.5') + d) * 10) / 10)) :
-           Math.max(0, Math.min(10, Math.round((parseFloat(el.textContent || '0') + d) * 10) / 10))
-  el.textContent = String(v)
-  const n = document.querySelector(`[data-element-id="${editingTextId.value}"] .text-element--editing`) as HTMLElement | null
-  if (!n) return; n.focus()
-  if (rngSave) { const s = window.getSelection(); if (s) { s.removeAllRanges(); s.addRange(rngSave) } }
-  const s = window.getSelection()
-  if (!s || s.isCollapsed) return
-  const txt = s.toString()
-  if (!txt) return
-  if (t === 'fs') {
-    document.execCommand('fontSize', false, '7')
-    const s2 = window.getSelection()
-    if (s2 && s2.rangeCount > 0) {
-      let node = s2.getRangeAt(0).startContainer
-      while (node && node.nodeType === 3) node = node.parentNode as Node
-      const font = (node as Element)?.closest?.('font') || n?.querySelector?.('font')
-      if (font) {
-        const span = document.createElement('span')
-        span.style.fontSize = v + 'px'
-        while (font.firstChild) span.appendChild(font.firstChild)
-        font.parentNode!.replaceChild(span, font)
-      }
-    }
-  } else if (t === 'lh') {
-    document.execCommand('insertHTML', false, '<span style="line-height:' + v + '">' + txt + '</span>')
-  } else if (t === 'ls') {
-    if (v > 0) document.execCommand('insertHTML', false, '<span style="letter-spacing:' + v + 'px">' + txt + '</span>')
-  }
-  const el2 = elements.value.find((e: any) => e.id === editingTextId.value && e.type === 'text')
-  if (el2) { el2.content = n.innerHTML; textEditorValue.value = n.innerHTML }
+// 文本编辑器事件处理（InlineTextEditor 组件回调）
+function onTextEditorStart(el: TemplateElement) {
+  editingTextElementId.value = el.id
+  // 设置元素为编辑状态，阻止拖拽
+  pushUndoSnapshot()
 }
 
-
-
-function execFmt(cmd: string, val?: string) {
-  const n = document.querySelector(`[data-element-id="${editingTextId.value}"] .text-element--editing`) as HTMLElement | null
-  if (!n) return
-  n.focus()
-  if (cmd === 'createLink') { const u = prompt('链接:'); if (u) document.execCommand('createLink', false, u) }
-  else document.execCommand(cmd, false, val)
-  const el = elements.value.find(e => e.id === editingTextId.value && e.type === 'text')
-  if (el) { el.content = n.innerHTML; textEditorValue.value = n.innerHTML }
+function onTextEditorFinish(el: TemplateElement) {
+  editingTextElementId.value = null
+  markDirty('已更新文本内容')
 }
 
-function onTextEditInput(e: Event, el: TemplateElement) {
-  const t = e.target as HTMLElement
-  el.content = t.innerHTML; textEditorValue.value = t.innerHTML
-}
-
-function pickClr(t: 'fg' | 'bg', c: string) {
-  cPop.value = ''
-  if (t === 'fg') { txtColor.value = c; execFmt('foreColor', c) }
-  else if (t === 'bg') {
-    bgColor.value = c || ''
-    if (c) execFmt('hiliteColor', c)
-    else document.execCommand('removeFormat', false)
-  }
-}
-function insEmoji(e: string) {
-  eOpen.value = false
-  const n = document.querySelector(`[data-element-id="${editingTextId.value}"] .text-element--editing`) as HTMLElement | null
-  if (!n) return
-  n.focus(); document.execCommand('insertText', false, e)
-  const el = elements.value.find(x => x.id === editingTextId.value && x.type === 'text')
-  if (el) { el.content = n.innerHTML; textEditorValue.value = n.innerHTML }
-}
-function setAlign(a: 'left' | 'center' | 'right') {
-  curAlign.value = a; alignOpen.value = false; execFmt('justify' + a[0].toUpperCase() + a.slice(1))
-}
-
-function updateTextEditorPos() {
-  const activeId = editingTextId.value
-  if (!activeId) {
-    textEditorPos.value = null
-    return
-  }
-  const elNode = document.querySelector(`[data-element-id="${activeId}"]`)
-  if (elNode) {
-    const rect = elNode.getBoundingClientRect()
-    textEditorPos.value = {
-      top: rect.top,
-      left: rect.left,
-      width: rect.width,
-      height: rect.height
-    }
-  }
-}
-
-function onDblClickElement(el: TemplateElement) {
-  if (el.type !== 'text' || el.locked) return
-  editingTextId.value = el.id
-  inspectorGroupId.value = null
-  setSelection([el.id], el.id)
-  textEditorSnapshot.value = snapshotPageState()
-  textEditorInitialValue.value = el.content || ''
-  textEditorValue.value = el.content || ''
-  nextTick(() => {
-    updateTextEditorPos()
-    viewportRef.value?.addEventListener('scroll', updateTextEditorPos)
-  })
-}
-
-function finishTextEdit() {
-  if (textEditorInitialValue.value !== textEditorValue.value) {
-    if (textEditorSnapshot.value && undoStack.value[undoStack.value.length - 1] !== textEditorSnapshot.value) {
-      undoStack.value.push(textEditorSnapshot.value)
-      if (undoStack.value.length > 50) {
-        undoStack.value.shift()
-      }
-      redoStack.value = []
-    }
-    const textEl = elements.value.find(item => item.id === editingTextId.value && item.type === 'text')
-    if (textEl) {
-      textEl.content = textEditorValue.value
-    }
-    markDirty('已更新文本内容')
-  }
-
-  viewportRef.value?.removeEventListener('scroll', updateTextEditorPos)
-  editingTextId.value = null
-  textEditorPos.value = null
-  textEditorInitialValue.value = ''
-  textEditorSnapshot.value = null
-}
-
-function cancelTextEdit() {
-  const textEl = activeTextElement.value
-  if (textEl?.type === 'text' && textEl.content !== textEditorInitialValue.value) {
-    textEl.content = textEditorInitialValue.value || ''
-    textEditorValue.value = textEditorInitialValue.value || ''
-    dirty.value = lastSyncedJson.value !== toJson()
-  }
-  statusHint.value = dirty.value ? '有未保存修改' : '已取消文本编辑'
-  viewportRef.value?.removeEventListener('scroll', updateTextEditorPos)
-  editingTextId.value = null
-  textEditorPos.value = null
-  textEditorInitialValue.value = ''
-  textEditorSnapshot.value = null
+function onTextEditorCancel(el: TemplateElement) {
+  editingTextElementId.value = null
 }
 
 function toggleInspector() {
@@ -4738,7 +4448,6 @@ let parentObserver: ResizeObserver | null = null
 onMounted(() => {
   setupInteract()
   window.addEventListener('keydown', onKeydown)
-  window.addEventListener('resize', updateTextEditorPos)
   window.addEventListener('resize', fitEditorToViewport)
   const parent = editorRootRef.value?.parentElement
   if (parent) {
@@ -4755,7 +4464,6 @@ onUnmounted(() => {
   interact('.template-element:not(.locked):not(.is-text-editing)').unset()
   stopCanvasSelection()
   window.removeEventListener('keydown', onKeydown)
-  window.removeEventListener('resize', updateTextEditorPos)
   window.removeEventListener('resize', fitEditorToViewport)
 })
 </script>
