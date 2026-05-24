@@ -259,7 +259,7 @@ async function onSendMessage(message: string): Promise<void> {
         onText(text: string): void {
           store.appendToLastMessage(text)
         },
-        onAction(instruction: FrontendInstruction): void {
+        onInstruction(instruction: FrontendInstruction): void {
           store.finalizeLastMessage()
 
           // 检查是否需要确认
@@ -292,7 +292,7 @@ async function onSendMessage(message: string): Promise<void> {
             })
           })
         },
-        onConfirm(instruction: FrontendInstruction): void {
+        onConfirmRequired(instruction: FrontendInstruction): void {
           store.setPendingConfirm({
             instruction,
             resolve: async (confirmed: boolean) => {
@@ -301,6 +301,9 @@ async function onSendMessage(message: string): Promise<void> {
               }
             },
           })
+        },
+        onClarification(text: string): void {
+          store.appendToLastMessage(text)
         },
         onDone(usage): void {
           store.finalizeLastMessage()

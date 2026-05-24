@@ -10,6 +10,14 @@ export interface PageRuntimeContext {
   actions?: Record<string, ActionHandler>
 }
 
+export type CopilotStreamEventType =
+  | 'content'
+  | 'instruction'
+  | 'confirm_required'
+  | 'clarification'
+  | 'done'
+  | 'error'
+
 export interface PageAction {
   name: string
   description: string
@@ -79,6 +87,12 @@ export interface DebugPlan {
 export interface UserPermissionInfo {
   roles: string[]
   menuAccess: string[]
+}
+
+export interface CopilotUsage {
+  promptTokens: number
+  completionTokens: number
+  totalTokens?: number
 }
 
 export interface ChatRequest {

@@ -47,18 +47,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { CopilotMessage } from './types'
+import { renderCopilotMessageContent } from './message-format'
 
 const props = defineProps<{
   message: CopilotMessage
 }>()
 
 const renderedContent = computed(() => {
-  const text = props.message.content || ''
-  // 简单 Markdown 渲染: **bold**, `code`, 换行
-  return text
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\n/g, '<br>')
+  return renderCopilotMessageContent(props.message.content)
 })
 
 function formatTime(ts: number): string {

@@ -2,15 +2,12 @@
 // SSE 通信客户端
 // ============================================================
 
-import type { ChatRequest, FrontendInstruction, CopilotMessage } from './types'
-
-export interface StreamCallbacks {
-  onText: (text: string) => void
-  onAction: (instruction: FrontendInstruction) => void
-  onConfirm: (instruction: FrontendInstruction) => void
-  onDone: (usage?: { promptTokens: number; completionTokens: number }) => void
-  onError: (error: string) => void
-}
+import type { ChatRequest } from './types'
+import {
+  dispatchCopilotEvent,
+  SseEventParser,
+  type StreamCallbacks,
+} from './sse'
 
 export class CopilotClient {
   private baseUrl = '/sse/r/NopCopilot__chatStream'
@@ -57,84 +54,28 @@ export class CopilotClient {
       }
 
       const decoder = new TextDecoder()
-      let buffer = ''
-      let eventType = ''
-      let eventData = ''
+      const parser = new SseEventParser()
 
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
 
-        buffer += decoder.decode(value, { stream: true })
-
-        // Parse SSE events
-        const lines = buffer.split('\n')
-        buffer = lines.pop() || ''
-
-        eventType = ''
-        eventData = ''
-
-        for (const line of lines) {
-          if (line.startsWith('event: ')) {
-            eventType = line.slice(7).trim()
-          } else if (line.startsWith('data: ')) {
-            eventData = line.slice(6)
-          } else if (line === '' && eventType) {
-            // Empty line = end of event
-            this.processEvent(eventType, eventData, callbacks)
-            eventType = ''
-            eventData = ''
-          }
+        const text = decoder.decode(value, { stream: true })
+        for (const event of parser.feed(text)) {
+          dispatchCopilotEvent(event.event, event.data, callbacks)
         }
       }
 
-      // Flush TextDecoder internal buffer
-      buffer += decoder.decode()
-      const finalLine = buffer.trim()
-      if (finalLine) {
-        // Process any final data line (e.g., data: {...} without trailing blank line)
-        if (finalLine.startsWith('data: ')) {
-          eventData = finalLine.slice(6)
-        }
+      const tail = decoder.decode()
+      for (const event of parser.feed(tail)) {
+        dispatchCopilotEvent(event.event, event.data, callbacks)
       }
-
-      // Process remaining event
-      if (eventType && eventData) {
-        this.processEvent(eventType, eventData, callbacks)
+      for (const event of parser.flush()) {
+        dispatchCopilotEvent(event.event, event.data, callbacks)
       }
-
     } catch (err: any) {
       if (err.name === 'AbortError') return
       callbacks.onError(err.message || 'Network error')
-    }
-  }
-
-  private processEvent(
-    type: string,
-    data: string,
-    callbacks: StreamCallbacks,
-  ): void {
-    try {
-      const parsed = JSON.parse(data)
-      switch (type) {
-        case 'content':
-          callbacks.onText(parsed.text || parsed.content || '')
-          break
-        case 'action':
-          callbacks.onAction(parsed.instruction || parsed)
-          break
-        case 'confirm':
-          callbacks.onConfirm(parsed.instruction || parsed)
-          break
-        case 'done':
-          callbacks.onDone(parsed.usage)
-          break
-        case 'error':
-          callbacks.onError(parsed.error || 'Unknown error')
-          break
-      }
-    } catch {
-      // Invalid JSON, ignore
     }
   }
 
