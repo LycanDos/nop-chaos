@@ -7,3 +7,5 @@ export * from './registry'
 export * from './transform'
 
 export * from './page'
+
+export * from './ai-copilot'

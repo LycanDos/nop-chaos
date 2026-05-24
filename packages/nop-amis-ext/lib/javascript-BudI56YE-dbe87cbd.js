@@ -1,5 +1,5 @@
-import { conf as x, language as b } from "./typescript-CfyLo3ly-66bce77a.js";
-import "./index-c9997c13.js";
+import { conf as x, language as b } from "./typescript-CfyLo3ly-6015e611.js";
+import "./index-23dd5bd9.js";
 import "amis-core";
 import "react";
 import "amis-ui";

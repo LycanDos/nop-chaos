@@ -4,9 +4,13 @@
 -->
 <template>
   <div class="anticon" :class="getAppLogoClass" @click="goHome">
-    <img src="/resource/img/logo.png" />
+    <svg class="app-logo-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 6 97.5 C 6 40, 94 40, 94 97.5" stroke="#1890ff" stroke-width="4.5" fill="none" stroke-linecap="round" opacity="0.7"/>
+      <line x1="26" y1="72" x2="75" y2="28" stroke="currentColor" stroke-width="6" stroke-linecap="round"/>
+      <circle cx="75" cy="28" r="5" fill="currentColor"/>
+    </svg>
     <div class="ml-2 truncate md:opacity-100" :class="getTitleClass" v-show="showTitle">
-      {{ title }}
+      {{ displayTitle }}
     </div>
   </div>
 </template>
@@ -38,6 +42,7 @@
   const { getCollapsedShowTitle } = useMenuSetting();
   const userStore = useUserStore();
   const { title } = useGlobSetting();
+  const displayTitle = '乐趋'
   const go = useGo();
 
   const getAppLogoClass = computed(() => [prefixCls, props.theme, { 'collapsed-show-title': unref(getCollapsedShowTitle) }]);
@@ -84,6 +89,13 @@
       font-weight: 700;
       transition: all 0.5s;
       line-height: normal;
+    }
+
+    .app-logo-svg {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      color: #1890ff;
     }
   }
 </style>

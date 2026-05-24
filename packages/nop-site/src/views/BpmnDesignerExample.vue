@@ -147,6 +147,111 @@ function switchExample(val: string) {
   selectedExample.value = val
 }
 
+// ====== AI Copilot 页面上下文注册 ======
+import { providePageContext } from '@/components/AiCopilot/usePageContext'
+
+onMounted(() => {
+  // 注册 AI Copilot 页面上下文
+  providePageContext({
+    pageType: 'bpmn-designer',
+    route: '/bpmn-designer/example',
+    getState: () => ({
+      processName: selectedExample.value,
+      hasContent: !!currentXml.value,
+    }),
+    actions: {
+      async createProcess(params: any) {
+        if (processDesignerRef.value) {
+          await processDesignerRef.value.loadXml(params?.xml || '')
+        }
+      },
+      async addNode(params: any) {
+        const modeler = processDesignerRef.value?.getModeler()
+        if (!modeler) return
+        const modeling = modeler.get('modeling')
+        const canvas = modeler.get('canvas')
+        const rootElement = canvas.getRootElement()
+        const shape = modeling.createShape(
+          { type: params.type, width: 100, height: 80 },
+          { x: params.x || 200, y: params.y || 200 },
+          rootElement,
+        )
+        if (params.name) {
+          modeling.updateProperties(shape, { name: params.name })
+        }
+      },
+      async updateNode(params: any) {
+        const modeler = processDesignerRef.value?.getModeler()
+        if (!modeler) return
+        const modeling = modeler.get('modeling')
+        const elementRegistry = modeler.get('elementRegistry')
+        const element = params.id ? elementRegistry.get(params.id) : null
+        if (element) {
+          modeling.updateProperties(element, params.properties || {})
+        }
+      },
+      async removeNode(params: any) {
+        const modeler = processDesignerRef.value?.getModeler()
+        if (!modeler) return
+        const modeling = modeler.get('modeling')
+        const elementRegistry = modeler.get('elementRegistry')
+        const element = params.id ? elementRegistry.get(params.id) : null
+        if (element) {
+          modeling.removeElements([element])
+        }
+      },
+      async connectNodes(params: any) {
+        const modeler = processDesignerRef.value?.getModeler()
+        if (!modeler) return
+        const modeling = modeler.get('modeling')
+        const elementRegistry = modeler.get('elementRegistry')
+        const source = params.sourceId ? elementRegistry.get(params.sourceId) : null
+        const target = params.targetId ? elementRegistry.get(params.targetId) : null
+        if (source && target) {
+          modeling.connect(source, target)
+        }
+      },
+      async layoutProcess() {
+        const modeler = processDesignerRef.value?.getModeler()
+        if (modeler) {
+          try {
+            const autoLayout = modeler.get('autoLayout')
+            if (autoLayout) autoLayout.layout()
+          } catch (_) { /* layout not available */ }
+        }
+      },
+      async getProcessStructure() {
+        const modeler = processDesignerRef.value?.getModeler()
+        if (!modeler) return { nodes: [] }
+        const elementRegistry = modeler.get('elementRegistry')
+        const elements = elementRegistry.getAll()
+        return {
+          nodes: elements
+            .filter((e: any) => e.businessObject?.$type?.startsWith('bpmn:'))
+            .map((e: any) => ({
+              id: e.id,
+              type: e.businessObject.$type.replace('bpmn:', ''),
+              name: e.businessObject.name || '',
+            })),
+        }
+      },
+      async getNodeInfo(params: any) {
+        const modeler = processDesignerRef.value?.getModeler()
+        if (!modeler) return null
+        const elementRegistry = modeler.get('elementRegistry')
+        const el = params.id ? elementRegistry.get(params.id) : null
+        if (!el) return null
+        return {
+          id: el.id,
+          type: el.businessObject?.$type?.replace('bpmn:', '') || '',
+          name: el.businessObject?.name || '',
+          properties: el.businessObject,
+        }
+      },
+    },
+  })
+})
+
 // 给小地图添加可拖动标题栏（含收缩/关闭按钮）
 onMounted(() => {
   nextTick(() => {

@@ -159,6 +159,8 @@ export const SKIN_DESIGNER_ROUTE: AppRouteRecordRaw = {
   ],
 };
 
+// 工作流运行时查看器 — 已整合到服务端菜单「流程中心 > 流程实例」中
+// 路由保留供直接URL访问，不显示在侧边栏
 export const WORKFLOW_RUNTIME_VIEWER_ROUTE: AppRouteRecordRaw = {
   path: '/wf',
   name: 'WorkflowRoot',
@@ -168,6 +170,7 @@ export const WORKFLOW_RUNTIME_VIEWER_ROUTE: AppRouteRecordRaw = {
     title: '工作流',
     icon: 'icon-park-outline:workflow',
     orderNo: 8,
+    hideMenu: true,
   },
   children: [
     {
@@ -177,7 +180,7 @@ export const WORKFLOW_RUNTIME_VIEWER_ROUTE: AppRouteRecordRaw = {
       meta: {
         title: '工作流运行时View',
         icon: 'ant-design:eye-outlined',
-        hideMenu: false,
+        hideMenu: true,
       },
     },
     {
@@ -187,7 +190,18 @@ export const WORKFLOW_RUNTIME_VIEWER_ROUTE: AppRouteRecordRaw = {
       meta: {
         title: '工作流运行时示例',
         icon: 'ant-design:experiment-outlined',
-        hideMenu: false,
+        hideMenu: true,
+      },
+    },
+    {
+      path: 'definition-designer',
+      name: 'WfDefinitionDesigner',
+      component: () => import('/@/views/wf/WfDefinitionDesigner.vue'),
+      meta: {
+        title: '流程定义设计器',
+        icon: 'ant-design:edit-outlined',
+        hideMenu: true,
+        ignoreKeepAlive: true,
       },
     },
   ],

@@ -39,20 +39,6 @@
         </span>
         <span class="tb-sep"></span>
         <span class="tb-grp">
-          <select class="tb-sel" @change="onFontChange" title="字体">
-            <option value="">默认字体</option>
-            <option value="sans-serif">无衬线</option>
-            <option value="serif">衬线</option>
-            <option value="monospace">等宽</option>
-            <option value="SimSun">宋体</option>
-            <option value="SimHei">黑体</option>
-            <option value="KaiTi">楷体</option>
-            <option value="FangSong">仿宋</option>
-            <option value="Microsoft YaHei">微软雅黑</option>
-          </select>
-        </span>
-        <span class="tb-sep"></span>
-        <span class="tb-grp">
           <span class="tb-lbl">字号</span>
           <span class="tb-adjs">
             <span class="tb-adj" @click="adjustFontSize(-1)">−</span>
@@ -80,6 +66,22 @@
         </span>
       </div>
       <div class="toolbar-row">
+        <button class="tb-cancel" @click="cancelEdit" title="取消编辑">✕</button>
+        <span class="tb-sep"></span>
+        <span class="tb-grp">
+          <select class="tb-sel" @change="onFontChange" title="字体">
+            <option value="">默认字体</option>
+            <option value="sans-serif">无衬线</option>
+            <option value="serif">衬线</option>
+            <option value="monospace">等宽</option>
+            <option value="SimSun">宋体</option>
+            <option value="SimHei">黑体</option>
+            <option value="KaiTi">楷体</option>
+            <option value="FangSong">仿宋</option>
+            <option value="Microsoft YaHei">微软雅黑</option>
+          </select>
+        </span>
+        <span class="tb-sep"></span>
         <span class="tb-grp">
           <button class="tb-btn tb-clr" :style="{ color: currentColor }" @click="showColorPicker = showColorPicker === 'color' ? '' : 'color'" title="文字颜色">A</button>
           <div v-if="showColorPicker === 'color'" class="tb-cpop" @mouseleave="showColorPicker = ''">
@@ -123,8 +125,6 @@
             <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 12H2M4 12l2-8h4l2 8M6 8h4M5 4l1-2h4l1 2"/></svg>
           </button>
         </span>
-        <span class="tb-sep"></span>
-        <button class="tb-cancel" @click="cancelEdit" title="取消编辑">✕</button>
       </div>
     </div>
   </Teleport>

@@ -231,3 +231,15 @@ export async function validateCasLogin(params) {
   let url = Api.validateCasLogin;
   return defHttp.get({ url: url, params });
 }
+
+/**
+ * 获取登录页轮播文案（预留API，后端可返回包含富文本的轮播内容）
+ * @returns Promise<Array<{icon: string, text: string}>>
+ */
+export function getLoginCarousel() {
+  return ajaxRequest({
+    url: '@query:LoginApi__getLoginCarousel',
+    data: {},
+    silent: true,
+  });
+}

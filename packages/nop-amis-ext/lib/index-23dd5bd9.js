@@ -10,15 +10,15 @@ import { defineComponent, computed, openBlock, createElementBlock, normalizeClas
 import { AmisSchemaPage } from "@nop-chaos/nop-amis-vue";
 import ElementPlus from "element-plus";
 import { applyPureVueInReact } from "veaury";
-var __defProp$6 = Object.defineProperty;
-var __getOwnPropDesc$6 = Object.getOwnPropertyDescriptor;
-var __decorateClass$6 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$6(target, key) : target;
+var __defProp$8 = Object.defineProperty;
+var __getOwnPropDesc$8 = Object.getOwnPropertyDescriptor;
+var __decorateClass$8 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$8(target, key) : target;
   for (var i = decorators.length - 1, decorator; i >= 0; i--)
     if (decorator = decorators[i])
       result = (kind ? decorator(target, key, result) : decorator(result)) || result;
   if (kind && result)
-    __defProp$6(target, key, result);
+    __defProp$8(target, key, result);
   return result;
 };
 class PopupEditor extends React.Component {
@@ -97,10 +97,10 @@ class PopupEditor extends React.Component {
     );
   }
 }
-__decorateClass$6([
+__decorateClass$8([
   autobind
 ], PopupEditor.prototype, "handleClear", 1);
-__decorateClass$6([
+__decorateClass$8([
   autobind
 ], PopupEditor.prototype, "highlightValue", 1);
 const PopupEditorControl$1 = themeable(
@@ -110,15 +110,15 @@ const PopupEditorControl$1 = themeable(
     })
   )
 );
-var __defProp$5 = Object.defineProperty;
-var __getOwnPropDesc$5 = Object.getOwnPropertyDescriptor;
-var __decorateClass$5 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$5(target, key) : target;
+var __defProp$7 = Object.defineProperty;
+var __getOwnPropDesc$7 = Object.getOwnPropertyDescriptor;
+var __decorateClass$7 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$7(target, key) : target;
   for (var i = decorators.length - 1, decorator; i >= 0; i--)
     if (decorator = decorators[i])
       result = (kind ? decorator(target, key, result) : decorator(result)) || result;
   if (kind && result)
-    __defProp$5(target, key, result);
+    __defProp$7(target, key, result);
   return result;
 };
 class PopupEditorControl extends React.Component {
@@ -139,21 +139,21 @@ class PopupEditorControl extends React.Component {
 }
 let PopupEditorRenderer = class extends PopupEditorControl {
 };
-PopupEditorRenderer = __decorateClass$5([
+PopupEditorRenderer = __decorateClass$7([
   FormItem({
     type: "popup-editor",
     strictMode: false
   })
 ], PopupEditorRenderer);
-var __defProp$4 = Object.defineProperty;
-var __getOwnPropDesc$4 = Object.getOwnPropertyDescriptor;
-var __decorateClass$4 = (decorators, target, key, kind) => {
-  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$4(target, key) : target;
+var __defProp$6 = Object.defineProperty;
+var __getOwnPropDesc$6 = Object.getOwnPropertyDescriptor;
+var __decorateClass$6 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$6(target, key) : target;
   for (var i = decorators.length - 1, decorator; i >= 0; i--)
     if (decorator = decorators[i])
       result = (kind ? decorator(target, key, result) : decorator(result)) || result;
   if (kind && result)
-    __defProp$4(target, key, result);
+    __defProp$6(target, key, result);
   return result;
 };
 unRegisterRenderer("nop-graph-designer");
@@ -214,11 +214,57 @@ let GraphDesignerRenderer = class extends React.Component {
     } }, /* @__PURE__ */ React.createElement(GraphDesigner, { ...props, onAction: this.handleAmisAction })));
   }
 };
-GraphDesignerRenderer = __decorateClass$4([
+GraphDesignerRenderer = __decorateClass$6([
   Renderer({
     type: "nop-graph-designer"
   })
 ], GraphDesignerRenderer);
+var __defProp$5 = Object.defineProperty;
+var __getOwnPropDesc$5 = Object.getOwnPropertyDescriptor;
+var __decorateClass$5 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$5(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result)
+    __defProp$5(target, key, result);
+  return result;
+};
+unRegisterRenderer("nop-flow-builder");
+let FlowBulderRenderer = class extends React.Component {
+  render() {
+    const props = this.props;
+    return /* @__PURE__ */ React.createElement(FlowBuilder, { ...props });
+  }
+};
+FlowBulderRenderer = __decorateClass$5([
+  Renderer({
+    type: "nop-flow-builder"
+  })
+], FlowBulderRenderer);
+var __defProp$4 = Object.defineProperty;
+var __getOwnPropDesc$4 = Object.getOwnPropertyDescriptor;
+var __decorateClass$4 = (decorators, target, key, kind) => {
+  var result = kind > 1 ? void 0 : kind ? __getOwnPropDesc$4(target, key) : target;
+  for (var i = decorators.length - 1, decorator; i >= 0; i--)
+    if (decorator = decorators[i])
+      result = (kind ? decorator(target, key, result) : decorator(result)) || result;
+  if (kind && result)
+    __defProp$4(target, key, result);
+  return result;
+};
+unRegisterRenderer("nop-flow-editor");
+let FlowEditorRenderer = class extends React.Component {
+  render() {
+    const { render: render2, body, flowEditorSchema, componentLib, ...rest } = this.props;
+    return /* @__PURE__ */ React.createElement("div", { className: "nop-flow-editor" }, render2("body", body || "", {}, rest));
+  }
+};
+FlowEditorRenderer = __decorateClass$4([
+  Renderer({
+    type: "nop-flow-editor"
+  })
+], FlowEditorRenderer);
 var __defProp$3 = Object.defineProperty;
 var __getOwnPropDesc$3 = Object.getOwnPropertyDescriptor;
 var __decorateClass$3 = (decorators, target, key, kind) => {
@@ -230,18 +276,18 @@ var __decorateClass$3 = (decorators, target, key, kind) => {
     __defProp$3(target, key, result);
   return result;
 };
-unRegisterRenderer("nop-flow-builder");
-let FlowBulderRenderer = class extends React.Component {
+unRegisterRenderer("nop-flow-editor-canvas");
+let FlowEditorCanvasRenderer = class extends React.Component {
   render() {
-    const props = this.props;
-    return /* @__PURE__ */ React.createElement(FlowBuilder, { ...props });
+    const { classnames: cx2, className } = this.props;
+    return /* @__PURE__ */ React.createElement("div", { className: cx2("nop-flow-editor-canvas", className) }, /* @__PURE__ */ React.createElement("div", { className: "nop-flow-editor-canvas-placeholder" }, /* @__PURE__ */ React.createElement("p", null, "流程设计器画布")));
   }
 };
-FlowBulderRenderer = __decorateClass$3([
+FlowEditorCanvasRenderer = __decorateClass$3([
   Renderer({
-    type: "nop-flow-builder"
+    type: "nop-flow-editor-canvas"
   })
-], FlowBulderRenderer);
+], FlowEditorCanvasRenderer);
 function getDefaultExportFromCjs(x) {
   return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, "default") ? x["default"] : x;
 }
@@ -30931,12 +30977,12 @@ function LProcessConsoleV2View(props) {
     async function loadExecutors() {
       try {
         const list = arrayValue(await callApi$2(props, {
-          url: "@query:ExecutorDef__findList",
+          url: "@query:LProcessConsole__listAvailableExecutorSources",
           method: "post",
           data: {
             limit: 200
           },
-          "gql:selection": "executorDefId,executorCode,executorName"
+          "gql:selection": "executorDefId,executorCode,executorName,displayLabel,sourceMode"
         }, {
           limit: 200
         }));
@@ -30944,7 +30990,7 @@ function LProcessConsoleV2View(props) {
           return;
         setExecutorOptions(list.map((item) => ({
           value: String(item.executorDefId || ""),
-          label: item.executorCode ? `${item.executorCode}${item.executorName ? ` | ${item.executorName}` : ""}` : String(item.executorDefId || "")
+          label: item.displayLabel || (item.executorCode ? `${item.executorCode}${item.executorName ? ` | ${item.executorName}` : ""}` : String(item.executorDefId || ""))
         })).filter((item) => item.value));
       } catch {
         if (!cancelled)
@@ -211990,37 +212036,37 @@ Xt({
   id: "freemarker2",
   extensions: [".ftl", ".ftlh", ".ftlx"],
   aliases: ["FreeMarker2", "Apache FreeMarker2"],
-  loader: () => import("./freemarker2-D4uZa5A2-3da8a5a4.js").then((n10) => n10.TagAutoInterpolationDollar)
+  loader: () => import("./freemarker2-D4uZa5A2-40c2e4b1.js").then((n10) => n10.TagAutoInterpolationDollar)
 });
 Xt({
   id: "freemarker2.tag-angle.interpolation-dollar",
   aliases: ["FreeMarker2 (Angle/Dollar)", "Apache FreeMarker2 (Angle/Dollar)"],
-  loader: () => import("./freemarker2-D4uZa5A2-3da8a5a4.js").then((n10) => n10.TagAngleInterpolationDollar)
+  loader: () => import("./freemarker2-D4uZa5A2-40c2e4b1.js").then((n10) => n10.TagAngleInterpolationDollar)
 });
 Xt({
   id: "freemarker2.tag-bracket.interpolation-dollar",
   aliases: ["FreeMarker2 (Bracket/Dollar)", "Apache FreeMarker2 (Bracket/Dollar)"],
-  loader: () => import("./freemarker2-D4uZa5A2-3da8a5a4.js").then((n10) => n10.TagBracketInterpolationDollar)
+  loader: () => import("./freemarker2-D4uZa5A2-40c2e4b1.js").then((n10) => n10.TagBracketInterpolationDollar)
 });
 Xt({
   id: "freemarker2.tag-angle.interpolation-bracket",
   aliases: ["FreeMarker2 (Angle/Bracket)", "Apache FreeMarker2 (Angle/Bracket)"],
-  loader: () => import("./freemarker2-D4uZa5A2-3da8a5a4.js").then((n10) => n10.TagAngleInterpolationBracket)
+  loader: () => import("./freemarker2-D4uZa5A2-40c2e4b1.js").then((n10) => n10.TagAngleInterpolationBracket)
 });
 Xt({
   id: "freemarker2.tag-bracket.interpolation-bracket",
   aliases: ["FreeMarker2 (Bracket/Bracket)", "Apache FreeMarker2 (Bracket/Bracket)"],
-  loader: () => import("./freemarker2-D4uZa5A2-3da8a5a4.js").then((n10) => n10.TagBracketInterpolationBracket)
+  loader: () => import("./freemarker2-D4uZa5A2-40c2e4b1.js").then((n10) => n10.TagBracketInterpolationBracket)
 });
 Xt({
   id: "freemarker2.tag-auto.interpolation-dollar",
   aliases: ["FreeMarker2 (Auto/Dollar)", "Apache FreeMarker2 (Auto/Dollar)"],
-  loader: () => import("./freemarker2-D4uZa5A2-3da8a5a4.js").then((n10) => n10.TagAutoInterpolationDollar)
+  loader: () => import("./freemarker2-D4uZa5A2-40c2e4b1.js").then((n10) => n10.TagAutoInterpolationDollar)
 });
 Xt({
   id: "freemarker2.tag-auto.interpolation-bracket",
   aliases: ["FreeMarker2 (Auto/Bracket)", "Apache FreeMarker2 (Auto/Bracket)"],
-  loader: () => import("./freemarker2-D4uZa5A2-3da8a5a4.js").then((n10) => n10.TagAutoInterpolationBracket)
+  loader: () => import("./freemarker2-D4uZa5A2-40c2e4b1.js").then((n10) => n10.TagAutoInterpolationBracket)
 });
 /*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
@@ -212058,7 +212104,7 @@ Xt({
   extensions: [".handlebars", ".hbs"],
   aliases: ["Handlebars", "handlebars", "hbs"],
   mimetypes: ["text/x-handlebars-template"],
-  loader: () => import("./handlebars-BOoltFXU-e4a9f82c.js")
+  loader: () => import("./handlebars-BOoltFXU-c7e8eb5e.js")
 });
 /*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
@@ -212083,7 +212129,7 @@ Xt({
   extensions: [".html", ".htm", ".shtml", ".xhtml", ".mdoc", ".jsp", ".asp", ".aspx", ".jshtm"],
   aliases: ["HTML", "htm", "html", "xhtml"],
   mimetypes: ["text/html", "text/x-jshtm", "text/template", "text/ng-template"],
-  loader: () => import("./html-Cm6wObNu-457a5dea.js")
+  loader: () => import("./html-Cm6wObNu-faa326ea.js")
 });
 /*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
@@ -212124,7 +212170,7 @@ Xt({
   filenames: ["jakefile"],
   aliases: ["JavaScript", "javascript", "js"],
   mimetypes: ["text/javascript"],
-  loader: () => import("./javascript-BudI56YE-59f467b6.js")
+  loader: () => import("./javascript-BudI56YE-dbe87cbd.js")
 });
 /*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
@@ -212199,7 +212245,7 @@ Xt({
   extensions: [".liquid", ".html.liquid"],
   aliases: ["Liquid", "liquid"],
   mimetypes: ["application/liquid"],
-  loader: () => import("./liquid-Yu4as6B_-7117fc89.js")
+  loader: () => import("./liquid-Yu4as6B_-d9720240.js")
 });
 /*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
@@ -212235,7 +212281,7 @@ Xt({
   id: "mdx",
   extensions: [".mdx"],
   aliases: ["MDX", "mdx"],
-  loader: () => import("./mdx-CMMSqMjo-e12e935b.js")
+  loader: () => import("./mdx-CMMSqMjo-7c622f66.js")
 });
 /*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
@@ -212430,7 +212476,7 @@ Xt({
   extensions: [".py", ".rpy", ".pyw", ".cpy", ".gyp", ".gypi"],
   aliases: ["Python", "py"],
   firstLine: "^#!/.*\\bpython[0-9.-]*\\b",
-  loader: () => import("./python-DaJz__mX-43e65864.js")
+  loader: () => import("./python-DaJz__mX-347618cb.js")
 });
 /*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
@@ -212467,7 +212513,7 @@ Xt({
   extensions: [".cshtml"],
   aliases: ["Razor", "razor"],
   mimetypes: ["text/x-cshtml"],
-  loader: () => import("./razor-BmQnQJN2-70fb5b10.js")
+  loader: () => import("./razor-BmQnQJN2-0a00c720.js")
 });
 /*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
@@ -212719,7 +212765,7 @@ Xt({
   extensions: [".ts", ".tsx", ".cts", ".mts"],
   aliases: ["TypeScript", "ts", "typescript"],
   mimetypes: ["text/typescript"],
-  loader: () => import("./typescript-CfyLo3ly-66bce77a.js")
+  loader: () => import("./typescript-CfyLo3ly-6015e611.js")
 });
 /*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
@@ -212787,7 +212833,7 @@ Xt({
   firstLine: "(\\<\\?xml.*)|(\\<svg)|(\\<\\!doctype\\s+svg)",
   aliases: ["XML", "xml"],
   mimetypes: ["text/xml", "application/xml", "application/xaml+xml", "application/xml-dtd"],
-  loader: () => import("./xml-DXPqs2b3-226b09b2.js")
+  loader: () => import("./xml-DXPqs2b3-8e43a0bd.js")
 });
 /*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
@@ -212800,7 +212846,7 @@ Xt({
   extensions: [".yaml", ".yml"],
   aliases: ["YAML", "yaml", "YML", "yml"],
   mimetypes: ["application/x-yaml", "text/x-yaml"],
-  loader: () => import("./yaml-DTc10bDF-853d6c85.js")
+  loader: () => import("./yaml-DTc10bDF-5da47220.js")
 });
 /*!-----------------------------------------------------------------------------
  * Copyright (c) Microsoft Corporation. All rights reserved.
@@ -212903,7 +212949,7 @@ var eue = class {
 );
 BD.languages.css = { cssDefaults: S5e, lessDefaults: k5e, scssDefaults: x5e };
 function nue() {
-  return import("./cssMode-CKkH0LQx-80d063b7.js");
+  return import("./cssMode-CKkH0LQx-b12c72b4.js");
 }
 BD.languages.onLanguage("less", () => {
   nue().then((n10) => n10.setupMode(k5e));
@@ -213009,7 +213055,7 @@ b$.languages.html = {
   registerHTMLLanguageService: C$
 };
 function bVt() {
-  return import("./htmlMode-Cxlfuett-7b8661b5.js");
+  return import("./htmlMode-Cxlfuett-db77c393.js");
 }
 function C$(n10, e = w$, t = y$(n10)) {
   const i = new gVt(n10, e, t);
@@ -213086,7 +213132,7 @@ var LVt = class {
 ), DVt = () => N5e().then((n10) => n10.getWorker());
 h4.languages.json = { jsonDefaults: D5e, getWorker: DVt };
 function N5e() {
-  return import("./jsonMode-B0LtfC8F-8266355c.js");
+  return import("./jsonMode-B0LtfC8F-6b362988.js");
 }
 h4.languages.register({
   id: "json",
@@ -213250,7 +213296,7 @@ qE.languages.typescript = {
   getJavaScriptWorker: WVt
 };
 function S$() {
-  return import("./tsMode-B8dd-L4n-58180a42.js");
+  return import("./tsMode-B8dd-L4n-9e61db07.js");
 }
 qE.languages.onLanguage("typescript", () => S$().then((n10) => n10.setupTypeScript(B5e)));
 qE.languages.onLanguage("javascript", () => S$().then((n10) => n10.setupJavaScript(W5e)));

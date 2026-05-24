@@ -32,16 +32,8 @@
         <div class="toolbar-separator"></div>
 
         <div class="toolbar-group">
-          <select class="toolbar-select" v-model="canvasSizePreset" @change="onCanvasSizeChange" title="画布尺寸">
-            <option value="A4-portrait">A4 纵向 21×29.7</option>
-            <option value="A4-landscape">A4 横向 29.7×21</option>
-            <option value="A3-portrait">A3 纵向 29.7×42</option>
-            <option value="A3-landscape">A3 横向 42×29.7</option>
-            <option value="letter-portrait">Letter 纵向 21.6×27.9</option>
-            <option value="letter-landscape">Letter 横向 27.9×21.6</option>
-          </select>
-          <button class="tool-btn icon-only" @click="toggleOrientation" title="切换横纵">
-            <span v-html="BTN_ICONS.orientation"></span>
+          <button class="tool-btn icon-only" @click="toggleOrientation" :title="isLandscape ? '切换为纵向' : '切换为横向'">
+            <span v-html="isLandscape ? BTN_ICONS.orientationLandscape : BTN_ICONS.orientation"></span>
           </button>
         </div>
 
@@ -100,6 +92,42 @@
         >
           <span v-html="BTN_ICONS.clearGuides"></span>
         </button>
+        </div>
+
+        <div class="toolbar-group toolbar-region-switch">
+          <label class="toolbar-check">
+            <input
+              type="checkbox"
+              :checked="showRegions"
+              @change="showRegions = checked($event)"
+            />
+            <span>显示区域</span>
+          </label>
+        </div>
+
+        <div class="toolbar-group edge-warning-group">
+        <button
+          class="tool-btn icon-only"
+          :title="edgeWarningEnabled ? '关闭边缘提醒' : '开启边缘提醒'"
+          @click="edgeWarningEnabled = !edgeWarningEnabled"
+        >
+          <span v-html="edgeWarningEnabled ? BTN_ICONS.edgeWarnOn : BTN_ICONS.edgeWarnOff"></span>
+        </button>
+        <input
+          v-if="edgeWarningEnabled"
+          class="toolbar-input-small"
+          type="number"
+          min="1"
+          max="100"
+          :value="edgeWarningDistance"
+          @input="edgeWarningDistance = intNum($event, 20)"
+          title="边缘提醒距离"
+        />
+        <select v-if="edgeWarningEnabled" class="toolbar-select-small" v-model="edgeWarningUnit" title="单位">
+          <option value="px">px</option>
+          <option value="mm">mm</option>
+          <option value="%">%</option>
+        </select>
         </div>
 
         <div class="toolbar-separator"></div>
@@ -216,39 +244,60 @@
 
       <div class="toolbar-meta">
         <div class="toolbar-page-switcher">
-          <button
-            class="tool-btn icon-only"
-            :disabled="currentPageIdx === 0"
-            title="上一页"
-            @click="switchPage(currentPageIdx - 1)"
-          >
-            <span>‹</span>
-          </button>
-          <div class="toolbar-page-name">
-            <template v-if="renamingPageIdx === currentPageIdx">
+          <div class="toolbar-page-dropdown" :class="{ open: pageDropdownOpen }">
+            <button
+              class="toolbar-page-name-btn"
+              title="切换页面"
+              @click="togglePageDropdown"
+            >
+              <span class="page-dropdown-label">{{ currentPageLabel }}</span>
+              <span class="page-dropdown-arrow">&#9662;</span>
+            </button>
+            <div v-if="pageDropdownOpen" class="page-dropdown-menu" @click.stop>
               <input
-                ref="pageNameInputRef"
-                v-model="pageNameDraft"
-                class="toolbar-page-input"
-                @blur="commitRenamePage"
-                @keydown.enter.prevent="commitRenamePage"
-                @keydown.esc.prevent="cancelRenamePage"
+                ref="pageSearchInputRef"
+                v-model="pageSearchQuery"
+                class="page-dropdown-search"
+                placeholder="搜索页面..."
+                @keydown.esc="closePageDropdown"
               />
-            </template>
-            <template v-else>
-              <button class="toolbar-page-name-btn" title="点击重命名页面" @click="beginRenamePage(currentPageIdx)">
-                {{ currentPageLabel }}
-              </button>
-            </template>
+              <div class="page-dropdown-list">
+                <button
+                  v-for="item in filteredPages"
+                  :key="item.page.id"
+                  class="page-dropdown-item"
+                  :class="{ active: item.idx === currentPageIdx }"
+                  @click="selectPage(item.idx)"
+                >
+                  <span class="page-dropdown-idx">{{ item.idx + 1 }}</span>
+                  <template v-if="renamingPageIdx === item.idx">
+                    <input
+                      ref="pageNameInputRef"
+                      v-model="pageNameDraft"
+                      class="page-dropdown-rename-input"
+                      @blur="commitRenamePage"
+                      @keydown.enter.prevent="commitRenamePage"
+                      @keydown.esc.prevent="cancelRenamePage"
+                      @click.stop
+                    />
+                  </template>
+                  <template v-else>
+                    <span class="page-dropdown-label">{{ item.page.name || `第${item.idx + 1}页` }}</span>
+                    <button
+                      class="page-dropdown-rename-btn"
+                      title="重命名"
+                      @click.stop="beginRenamePage(item.idx)"
+                    >&#9998;</button>
+                  </template>
+                </button>
+              </div>
+              <div v-if="filteredPages.length === 0" class="page-dropdown-empty">
+                无匹配页面
+              </div>
+            </div>
           </div>
-          <button
-            class="tool-btn icon-only"
-            :disabled="currentPageIdx >= pages.length - 1"
-            title="下一页"
-            @click="switchPage(currentPageIdx + 1)"
-          >
-            <span>›</span>
-          </button>
+          <!-- 点击外部关闭 -->
+          <div v-if="pageDropdownOpen" class="page-dropdown-backdrop" @click="closePageDropdown"></div>
         </div>
         <div class="toolbar-page-actions">
           <button class="tool-btn icon-only" title="新增页" @click="addPage">
@@ -361,6 +410,23 @@
                   class="selection-box"
                   :style="selectionBoxStyle"
                 ></div>
+                <!-- 边缘红光提醒：支持多个边缘同时显示 -->
+                <div
+                  v-if="edgeDangerSide && edgeDangerSide.includes('top')"
+                  class="canvas-edge-glow top active"
+                ></div>
+                <div
+                  v-if="edgeDangerSide && edgeDangerSide.includes('bottom')"
+                  class="canvas-edge-glow bottom active"
+                ></div>
+                <div
+                  v-if="edgeDangerSide && edgeDangerSide.includes('left')"
+                  class="canvas-edge-glow left active"
+                ></div>
+                <div
+                  v-if="edgeDangerSide && edgeDangerSide.includes('right')"
+                  class="canvas-edge-glow right active"
+                ></div>
                 <div
                   v-if="guidesVisible"
                   v-for="guide in guides"
@@ -391,7 +457,7 @@
                 ></div>
 
                 <div
-                  v-for="el in elements"
+                  v-for="el in canvasRenderableElements"
                   :key="el.id"
                   class="template-element"
                   :class="{
@@ -399,7 +465,8 @@
                     primary: selectedId === el.id,
                     locked: !!el.locked,
                     hidden: el.visible === false,
-                    'is-text-editing': editingTextElementId === el.id
+                    'is-text-editing': editingTextElementId === el.id,
+                    'edge-danger': edgeDangerSide !== null
                   }"
                   :data-element-id="el.id"
                   :style="elementStyle(el)"
@@ -413,20 +480,100 @@
 
                   <div class="element-content">
                     <template v-if="el.type === 'text'">
-                      <InlineTextEditor
-                        v-model="el.content"
-                        :element-style="{
-                          fontSize: el.fontSize,
-                          fontFamily: el.fontFamily,
-                          color: el.color,
-                          textAlign: el.textAlign,
-                          lineHeight: el.lineHeight,
-                          letterSpacing: el.letterSpacing
-                        }"
-                        @edit-start="onTextEditorStart(el)"
-                        @edit-finish="onTextEditorFinish(el)"
-                        @edit-cancel="onTextEditorCancel(el)"
-                      />
+                      <!-- 文字环绕容器 -->
+                      <div class="text-content-area text-wrap-container" :style="getTextWrapStyle(el)">
+                        <!-- 为每个挖空创建浮动占位元素，实现文字环绕 -->
+                        <!-- CSS shape-outside 要求：浮动元素必须在文本内容之前 -->
+                        <template v-for="(co, idx) in el.cutouts || []" :key="'float-' + idx">
+                          <div
+                            class="cutout-float-shape"
+                            :style="cutoutFloatStyle(el, co)"
+                          ></div>
+                          <!-- 如果需要清除浮动（挖空不在同一行），添加清除元素 -->
+                          <div 
+                            v-if="shouldClearFloat(el.cutouts || [], idx)"
+                            class="clear-float"
+                          ></div>
+                        </template>
+                        <InlineTextEditor
+                          v-model="el.content"
+                          :element-style="{
+                            fontSize: el.fontSize,
+                            fontFamily: el.fontFamily,
+                            color: el.color,
+                            textAlign: el.textAlign,
+                            lineHeight: el.lineHeight,
+                            letterSpacing: el.letterSpacing
+                          }"
+                          @edit-start="onTextEditorStart(el)"
+                          @edit-finish="onTextEditorFinish(el)"
+                          @edit-cancel="onTextEditorCancel(el)"
+                        />
+                      </div>
+                      <div
+                        v-if="selectedIds.includes(el.id) && el.type === 'text' && !el.locked && editingTextElementId !== el.id"
+                        class="cutout-overlay"
+                        @mousedown="onCutoutOverlayMouseDown"
+                      >
+                        <!-- 挖空形状列表 -->
+                        <template v-for="co in el.cutouts || []" :key="co.id">
+                          <div
+                            class="cutout-shape"
+                            :class="{
+                              'cutout-selected': selectedCutoutId === co.id
+                            }"
+                            :style="cutoutStyle(co)"
+                            @mousedown="onCutoutMouseDown(co.id, $event)"
+                          >
+                            <svg class="cutout-shape-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                              <path :d="cutoutSvgPath(co)" class="cutout-shape-fill" />
+                              <path :d="cutoutSvgPath(co)" class="cutout-shape-stroke" />
+                            </svg>
+                            <!-- 删除按钮（选中时显示，和文本元素一致） -->
+                            <button
+                              v-if="selectedCutoutId === co.id"
+                              class="element-delete-btn"
+                              title="删除"
+                              @click.stop="deleteCutout(el, co.id)"
+                            >×</button>
+                            <!-- 缩放手柄（放在内部，和文本元素一致） -->
+                            <template v-if="selectedCutoutId === co.id">
+                              <div class="resize-handle handle-nw" @mousedown.stop="startCutoutResize(el, co, 'nw', $event)"></div>
+                              <div class="resize-handle handle-n" @mousedown.stop="startCutoutResize(el, co, 'n', $event)"></div>
+                              <div class="resize-handle handle-ne" @mousedown.stop="startCutoutResize(el, co, 'ne', $event)"></div>
+                              <div class="resize-handle handle-w" @mousedown.stop="startCutoutResize(el, co, 'w', $event)"></div>
+                              <div class="resize-handle handle-e" @mousedown.stop="startCutoutResize(el, co, 'e', $event)"></div>
+                              <div class="resize-handle handle-sw" @mousedown.stop="startCutoutResize(el, co, 'sw', $event)"></div>
+                              <div class="resize-handle handle-s" @mousedown.stop="startCutoutResize(el, co, 's', $event)"></div>
+                              <div class="resize-handle handle-se" @mousedown.stop="startCutoutResize(el, co, 'se', $event)"></div>
+                            </template>
+                          </div>
+                        </template>
+                        <!-- 添加挖空按钮 -->
+                        <div class="cutout-add-bar">
+                          <div class="cutout-add-icon" title="添加矩形挖空" @click.stop="addCutout(el, 'rect')">
+                            <svg viewBox="0 0 24 24" width="20" height="20">
+                              <rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4 2"/>
+                              <line x1="12" y1="8" x2="12" y2="16" stroke="#ef4444" stroke-width="1.5"/>
+                              <line x1="8" y1="12" x2="16" y2="12" stroke="#ef4444" stroke-width="1.5"/>
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+
+                    <template v-else-if="el.type === 'watermark'">
+                      <div class="watermark-element">
+                        <div class="watermark-grid" :style="watermarkGridStyle(el)">
+                          <div
+                            v-for="tile in watermarkTiles(el)"
+                            :key="`${el.id}_wm_${tile}`"
+                            class="watermark-tile"
+                            :style="watermarkTileStyle(el)"
+                            v-html="el.content || '水印'"
+                          ></div>
+                        </div>
+                      </div>
                     </template>
 
                     <template v-else-if="el.type === 'prefill'">
@@ -501,6 +648,14 @@
                           :class="shapeLineClass(el)"
                           :style="shapeLineStyle(el)"
                         ></div>
+                      </div>
+                    </template>
+
+                    <template v-else-if="el.type === 'region'">
+                      <div class="region-element" :style="regionStyle(el)">
+                        <span class="region-label" :style="regionLabelStyle(el)">
+                          {{ el.regionCode || el.label || '区域' }}
+                        </span>
                       </div>
                     </template>
                   </div>
@@ -728,61 +883,68 @@
                 <button class="tool-btn" @click="bringSelectedToFront">置顶</button>
                 <button class="tool-btn" @click="sendSelectedToBack">置底</button>
               </div>
+              <div class="prop-actions">
+                <button class="tool-btn" @click="moveSelectedUp">上移一层</button>
+                <button class="tool-btn" @click="moveSelectedDown">下移一层</button>
+              </div>
             </div>
 
             <div class="prop-section">
-              <div class="prop-section-title">位置与尺寸</div>
+              <div class="prop-section-title">
+                位置与尺寸
+                <button class="prop-unit-btn" title="切换单位（px / cm / %）" @click="cyclePropUnit">({{ propUnit }})</button>
+              </div>
 
               <div class="prop-row">
                 <div class="prop-field half">
-                  <label>X (%)</label>
+                  <label>X ({{ propUnit }})</label>
                   <input
                     class="prop-input"
                     type="number"
-                    step="0.1"
-                    min="0"
-                    max="100"
-                    :value="+sel.x.toFixed(1)"
-                    @input="updateSel('x', clamp(num($event), 0, 100 - sel.w))"
+                    :step="propUnit === 'cm' ? 0.01 : 0.1"
+                    :min="0"
+                    :max="propUnit === 'percent' ? 100 - sel.w : 9999"
+                    :value="percentToUnit(sel.x, 'x')"
+                    @input="updateSel('x', unitToPercent(num($event), 'x'))"
                   />
                 </div>
                 <div class="prop-field half">
-                  <label>Y (%)</label>
+                  <label>Y ({{ propUnit }})</label>
                   <input
                     class="prop-input"
                     type="number"
-                    step="0.1"
-                    min="0"
-                    max="100"
-                    :value="+sel.y.toFixed(1)"
-                    @input="updateSel('y', clamp(num($event), 0, 100 - sel.h))"
+                    :step="propUnit === 'cm' ? 0.01 : 0.1"
+                    :min="0"
+                    :max="propUnit === 'percent' ? 100 - sel.h : 9999"
+                    :value="percentToUnit(sel.y, 'y')"
+                    @input="updateSel('y', unitToPercent(num($event), 'y'))"
                   />
                 </div>
               </div>
 
               <div class="prop-row">
                 <div class="prop-field half">
-                  <label>宽 (%)</label>
+                  <label>宽 ({{ propUnit }})</label>
                   <input
                     class="prop-input"
                     type="number"
-                    step="0.1"
-                    min="1"
-                    max="100"
-                    :value="+sel.w.toFixed(1)"
-                    @input="updateSel('w', clamp(num($event), 1, 100))"
+                    :step="propUnit === 'cm' ? 0.01 : 0.1"
+                    :min="propUnit === 'percent' ? 1 : 0.1"
+                    :max="propUnit === 'percent' ? 100 : 9999"
+                    :value="percentToUnit(sel.w, 'x')"
+                    @input="updateSel('w', unitToPercent(num($event), 'x'))"
                   />
                 </div>
                 <div class="prop-field half">
-                  <label>高 (%)</label>
+                  <label>高 ({{ propUnit }})</label>
                   <input
                     class="prop-input"
                     type="number"
-                    step="0.1"
-                    min="0.5"
-                    max="100"
-                    :value="+sel.h.toFixed(1)"
-                    @input="updateSel('h', clamp(num($event), 0.5, 100))"
+                    :step="propUnit === 'cm' ? 0.01 : 0.1"
+                    :min="propUnit === 'percent' ? 0.5 : 0.1"
+                    :max="propUnit === 'percent' ? 100 : 9999"
+                    :value="percentToUnit(sel.h, 'y')"
+                    @input="updateSel('h', unitToPercent(num($event), 'y'))"
                   />
                 </div>
               </div>
@@ -872,6 +1034,139 @@
                       type="color"
                       :value="sel.color || '#1f2937'"
                       @input="updateSel('color', val($event))"
+                    />
+                  </div>
+                </div>
+
+                <div class="prop-section-title" style="margin-top: 12px">挖空区域</div>
+                <div class="prop-actions" style="padding: 0">
+                  <button class="tool-btn" style="flex: 1" @click="addCutout(sel, 'rect')">+ 添加挖空</button>
+                </div>
+                <div v-if="sel.cutouts && sel.cutouts.length > 0" style="margin-top: 8px">
+                  <div
+                    v-for="co in sel.cutouts"
+                    :key="co.id"
+                    class="cutout-list-item"
+                    :class="{ active: selectedCutoutId === co.id }"
+                    @click="selectedCutoutId = co.id"
+                  >
+                    <span>挖空 {{ Math.round(co.w) }}% × {{ Math.round(co.h) }}%</span>
+                    <button class="mini-btn danger" @click.stop="deleteCutout(sel, co.id)">×</button>
+                  </div>
+                  <div style="font-size: 10px; color: var(--text-sub); margin-top: 4px">
+                    提示：拖拽挖空移动位置，拖拽四角调整大小
+                  </div>
+                </div>
+                <div v-else style="font-size: 11px; color: var(--text-sub); margin-top: 4px">
+                  添加挖空区域让文字环绕，用于图文混排
+                </div>
+              </template>
+
+              <template v-else-if="sel.type === 'watermark'">
+                <div class="prop-field">
+                  <label>水印内容</label>
+                  <QuillEditor
+                    :model-value="sel.content || ''"
+                    placeholder="输入水印富文本内容…"
+                    @update:modelValue="updateSel('content', $event)"
+                  />
+                </div>
+
+                <div class="prop-row">
+                  <div class="prop-field half">
+                    <label>字号 (px)</label>
+                    <input
+                      class="prop-input"
+                      type="number"
+                      min="8"
+                      max="96"
+                      :value="sel.fontSize || 24"
+                      @input="updateSel('fontSize', clamp(intNum($event, 24), 8, 96))"
+                    />
+                  </div>
+                  <div class="prop-field half">
+                    <label>粗细</label>
+                    <select
+                      class="prop-input"
+                      :value="sel.fontWeight || 'bold'"
+                      @change="updateSel('fontWeight', val($event))"
+                    >
+                      <option value="normal">正常</option>
+                      <option value="bold">加粗</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="prop-row">
+                  <div class="prop-field half">
+                    <label>对齐</label>
+                    <select
+                      class="prop-input"
+                      :value="sel.textAlign || 'center'"
+                      @change="updateSel('textAlign', val($event))"
+                    >
+                      <option value="left">左对齐</option>
+                      <option value="center">居中</option>
+                      <option value="right">右对齐</option>
+                    </select>
+                  </div>
+                  <div class="prop-field half">
+                    <label>颜色</label>
+                    <input
+                      class="prop-input"
+                      type="color"
+                      :value="sel.color || '#94a3b8'"
+                      @input="updateSel('color', val($event))"
+                    />
+                  </div>
+                </div>
+
+                <div class="prop-row">
+                  <div class="prop-field half">
+                    <label>透明度 (%)</label>
+                    <input
+                      class="prop-input"
+                      type="number"
+                      min="0"
+                      max="100"
+                      :value="Math.round((sel.opacity ?? 0.18) * 100)"
+                      @input="updateSel('opacity', clamp(num($event), 0, 100) / 100)"
+                    />
+                  </div>
+                  <div class="prop-field half">
+                    <label>旋转角度</label>
+                    <input
+                      class="prop-input"
+                      type="number"
+                      min="-360"
+                      max="360"
+                      :value="sel.rotation ?? -25"
+                      @input="updateSel('rotation', clamp(intNum($event, -25), -360, 360))"
+                    />
+                  </div>
+                </div>
+
+                <div class="prop-row">
+                  <div class="prop-field half">
+                    <label>水平间距 (px)</label>
+                    <input
+                      class="prop-input"
+                      type="number"
+                      min="0"
+                      max="400"
+                      :value="sel.tileGapX ?? 48"
+                      @input="updateSel('tileGapX', clamp(intNum($event, 48), 0, 400))"
+                    />
+                  </div>
+                  <div class="prop-field half">
+                    <label>垂直间距 (px)</label>
+                    <input
+                      class="prop-input"
+                      type="number"
+                      min="0"
+                      max="400"
+                      :value="sel.tileGapY ?? 36"
+                      @input="updateSel('tileGapY', clamp(intNum($event, 36), 0, 400))"
                     />
                   </div>
                 </div>
@@ -1305,6 +1600,437 @@
                 </div>
               </template>
 
+              <template v-else-if="sel.type === 'region'">
+                <div class="prop-field">
+                  <label>区域编码</label>
+                  <input
+                    class="prop-input"
+                    :value="sel.regionCode || ''"
+                    placeholder="REGION_01"
+                    @input="updateSel('regionCode', val($event))"
+                  />
+                </div>
+
+                <div class="prop-field">
+                  <label>区域颜色</label>
+                  <input
+                    class="prop-input"
+                    type="color"
+                    :value="sel.regionColor || '#3b82f6'"
+                    @input="updateSel('regionColor', val($event))"
+                  />
+                </div>
+
+                <div class="prop-field">
+                  <label>区域用途</label>
+                  <div class="purpose-checkbox-group">
+                    <template v-for="opt in REGION_PURPOSE_OPTIONS" :key="opt.value">
+                      <div v-if="opt.group && opt.group !== (REGION_PURPOSE_OPTIONS[REGION_PURPOSE_OPTIONS.indexOf(opt) - 1]?.group || '')" class="purpose-group-label">
+                        {{ opt.group }}
+                      </div>
+                      <label class="prop-checkbox purpose-item" :class="{ 'purpose-sub': !!opt.group }">
+                        <input
+                          type="checkbox"
+                          :checked="(sel.regionPurposes || []).includes(opt.value)"
+                          @change="toggleRegionPurpose(opt.value)"
+                        />
+                        {{ opt.label }}
+                      </label>
+                    </template>
+                  </div>
+                </div>
+
+                <!-- per-purpose config sections -->
+                <div v-if="purposeIsChecked('ocr-text')" class="purpose-config-section">
+                  <div class="purpose-config-header" @click="purposeConfigExpanded['ocr-text'] = !purposeConfigExpanded['ocr-text']">
+                    <span class="purpose-config-chevron">{{ purposeConfigExpanded['ocr-text'] ? '▾' : '▸' }}</span>
+                    OCR-文本 配置
+                  </div>
+                  <div v-show="purposeConfigExpanded['ocr-text']" class="purpose-config-body">
+                    <div class="prop-field">
+                      <label>语言</label>
+                      <select class="prop-input" :value="regionPurposeConfig('ocr-text').language" @change="updateRegionPurposeConfig('ocr-text', 'language', val($event))">
+                        <option value="mixed">中英混合</option>
+                        <option value="chi_sim">中文</option>
+                        <option value="eng">英文</option>
+                      </select>
+                    </div>
+                    <div class="prop-row">
+                      <div class="prop-field half">
+                        <label>置信度</label>
+                        <input class="prop-input" type="number" min="0" max="100" :value="regionPurposeConfig('ocr-text').confidenceThreshold" @input="updateRegionPurposeConfig('ocr-text', 'confidenceThreshold', intNum($event, 60))" />
+                      </div>
+                      <div class="prop-field half">
+                        <label>文字方向</label>
+                        <select class="prop-input" :value="regionPurposeConfig('ocr-text').textDirection" @change="updateRegionPurposeConfig('ocr-text', 'textDirection', val($event))">
+                          <option value="auto">自动</option>
+                          <option value="horizontal">水平</option>
+                          <option value="vertical">垂直</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="prop-field">
+                      <label>预处理</label>
+                      <div class="prop-row">
+                        <label class="prop-checkbox"><input type="checkbox" :checked="purposeConfigArrayIncludes('ocr-text','preprocessing','denoise')" @change="togglePurposeConfigArrayItem('ocr-text','preprocessing','denoise')" />去噪</label>
+                        <label class="prop-checkbox"><input type="checkbox" :checked="purposeConfigArrayIncludes('ocr-text','preprocessing','binarize')" @change="togglePurposeConfigArrayItem('ocr-text','preprocessing','binarize')" />二值化</label>
+                        <label class="prop-checkbox"><input type="checkbox" :checked="purposeConfigArrayIncludes('ocr-text','preprocessing','grayscale')" @change="togglePurposeConfigArrayItem('ocr-text','preprocessing','grayscale')" />灰度化</label>
+                        <label class="prop-checkbox"><input type="checkbox" :checked="purposeConfigArrayIncludes('ocr-text','preprocessing','deskew')" @change="togglePurposeConfigArrayItem('ocr-text','preprocessing','deskew')" />纠偏</label>
+                      </div>
+                    </div>
+                    <div class="prop-field">
+                      <label>字符限制</label>
+                      <input class="prop-input" :value="regionPurposeConfig('ocr-text').charSet || ''" placeholder="例如 A-Za-z0-9" @input="updateRegionPurposeConfig('ocr-text', 'charSet', val($event))" />
+                    </div>
+                    <div class="prop-row">
+                      <div class="prop-field half">
+                        <label>最短字符</label>
+                        <input class="prop-input" type="number" min="0" :value="regionPurposeConfig('ocr-text').minLength || 0" @input="updateRegionPurposeConfig('ocr-text', 'minLength', intNum($event, 0))" />
+                      </div>
+                      <div class="prop-field half">
+                        <label>最长字符</label>
+                        <input class="prop-input" type="number" min="0" :value="regionPurposeConfig('ocr-text').maxLength || 0" @input="updateRegionPurposeConfig('ocr-text', 'maxLength', intNum($event, 0))" />
+                      </div>
+                    </div>
+                    <label class="prop-checkbox"><input type="checkbox" :checked="regionPurposeConfig('ocr-text').mergeLines !== false" @change="updateRegionPurposeConfig('ocr-text', 'mergeLines', checked($event))" />合并多行</label>
+                  </div>
+                </div>
+
+                <div v-if="purposeIsChecked('ocr-table')" class="purpose-config-section">
+                  <div class="purpose-config-header" @click="purposeConfigExpanded['ocr-table'] = !purposeConfigExpanded['ocr-table']">
+                    <span class="purpose-config-chevron">{{ purposeConfigExpanded['ocr-table'] ? '▾' : '▸' }}</span>
+                    OCR-表格 配置
+                  </div>
+                  <div v-show="purposeConfigExpanded['ocr-table']" class="purpose-config-body">
+                    <div class="prop-field">
+                      <label>语言</label>
+                      <select class="prop-input" :value="regionPurposeConfig('ocr-table').language" @change="updateRegionPurposeConfig('ocr-table', 'language', val($event))">
+                        <option value="mixed">中英混合</option>
+                        <option value="chi_sim">中文</option>
+                        <option value="eng">英文</option>
+                      </select>
+                    </div>
+                    <div class="prop-field">
+                      <label>置信度</label>
+                      <input class="prop-input" type="number" min="0" max="100" :value="regionPurposeConfig('ocr-table').confidenceThreshold" @input="updateRegionPurposeConfig('ocr-table', 'confidenceThreshold', intNum($event, 60))" />
+                    </div>
+                    <div class="prop-field">
+                      <label>输出格式</label>
+                      <select class="prop-input" :value="regionPurposeConfig('ocr-table').outputFormat" @change="updateRegionPurposeConfig('ocr-table', 'outputFormat', val($event))">
+                        <option value="json">JSON</option>
+                        <option value="csv">CSV</option>
+                        <option value="html">HTML</option>
+                      </select>
+                    </div>
+                    <label class="prop-checkbox"><input type="checkbox" :checked="regionPurposeConfig('ocr-table').detectHeader !== false" @change="updateRegionPurposeConfig('ocr-table', 'detectHeader', checked($event))" />检测表头</label>
+                    <label class="prop-checkbox"><input type="checkbox" :checked="regionPurposeConfig('ocr-table').detectMergedCells !== false" @change="updateRegionPurposeConfig('ocr-table', 'detectMergedCells', checked($event))" />检测合并单元格</label>
+                    <div class="prop-field">
+                      <label>预处理</label>
+                      <div class="prop-row">
+                        <label class="prop-checkbox"><input type="checkbox" :checked="purposeConfigArrayIncludes('ocr-table','preprocessing','denoise')" @change="togglePurposeConfigArrayItem('ocr-table','preprocessing','denoise')" />去噪</label>
+                        <label class="prop-checkbox"><input type="checkbox" :checked="purposeConfigArrayIncludes('ocr-table','preprocessing','grayscale')" @change="togglePurposeConfigArrayItem('ocr-table','preprocessing','grayscale')" />灰度化</label>
+                        <label class="prop-checkbox"><input type="checkbox" :checked="purposeConfigArrayIncludes('ocr-table','preprocessing','deskew')" @change="togglePurposeConfigArrayItem('ocr-table','preprocessing','deskew')" />纠偏</label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-if="purposeIsChecked('ocr-template')" class="purpose-config-section">
+                  <div class="purpose-config-header" @click="purposeConfigExpanded['ocr-template'] = !purposeConfigExpanded['ocr-template']">
+                    <span class="purpose-config-chevron">{{ purposeConfigExpanded['ocr-template'] ? '▾' : '▸' }}</span>
+                    OCR-模板 配置
+                  </div>
+                  <div v-show="purposeConfigExpanded['ocr-template']" class="purpose-config-body">
+                    <div class="prop-field">
+                      <label>模板ID</label>
+                      <input class="prop-input" :value="regionPurposeConfig('ocr-template').templateId || ''" placeholder="OCR模板标识" @input="updateRegionPurposeConfig('ocr-template', 'templateId', val($event))" />
+                    </div>
+                    <div class="prop-field">
+                      <label>匹配模式</label>
+                      <select class="prop-input" :value="regionPurposeConfig('ocr-template').matchMode" @change="updateRegionPurposeConfig('ocr-template', 'matchMode', val($event))">
+                        <option value="fuzzy">模糊匹配</option>
+                        <option value="exact">精确匹配</option>
+                        <option value="best-effort">尽力匹配</option>
+                      </select>
+                    </div>
+                    <div class="prop-field">
+                      <label>置信度</label>
+                      <input class="prop-input" type="number" min="0" max="100" :value="regionPurposeConfig('ocr-template').confidenceThreshold" @input="updateRegionPurposeConfig('ocr-template', 'confidenceThreshold', intNum($event, 70))" />
+                    </div>
+                    <label class="prop-checkbox"><input type="checkbox" :checked="regionPurposeConfig('ocr-template').allowPartialMatch === true" @change="updateRegionPurposeConfig('ocr-template', 'allowPartialMatch', checked($event))" />允许部分匹配</label>
+                  </div>
+                </div>
+
+                <div v-if="purposeIsChecked('stain-detect')" class="purpose-config-section">
+                  <div class="purpose-config-header" @click="purposeConfigExpanded['stain-detect'] = !purposeConfigExpanded['stain-detect']">
+                    <span class="purpose-config-chevron">{{ purposeConfigExpanded['stain-detect'] ? '▾' : '▸' }}</span>
+                    污渍识别 配置
+                  </div>
+                  <div v-show="purposeConfigExpanded['stain-detect']" class="purpose-config-body">
+                    <div class="prop-field">
+                      <label>污渍类型</label>
+                      <div class="prop-row">
+                        <label class="prop-checkbox"><input type="checkbox" :checked="purposeConfigArrayIncludes('stain-detect','stainTypes','general')" @change="togglePurposeConfigArrayItem('stain-detect','stainTypes','general')" />通用</label>
+                        <label class="prop-checkbox"><input type="checkbox" :checked="purposeConfigArrayIncludes('stain-detect','stainTypes','ink')" @change="togglePurposeConfigArrayItem('stain-detect','stainTypes','ink')" />墨渍</label>
+                        <label class="prop-checkbox"><input type="checkbox" :checked="purposeConfigArrayIncludes('stain-detect','stainTypes','coffee')" @change="togglePurposeConfigArrayItem('stain-detect','stainTypes','coffee')" />咖啡</label>
+                        <label class="prop-checkbox"><input type="checkbox" :checked="purposeConfigArrayIncludes('stain-detect','stainTypes','oil')" @change="togglePurposeConfigArrayItem('stain-detect','stainTypes','oil')" />油渍</label>
+                        <label class="prop-checkbox"><input type="checkbox" :checked="purposeConfigArrayIncludes('stain-detect','stainTypes','water')" @change="togglePurposeConfigArrayItem('stain-detect','stainTypes','water')" />水渍</label>
+                        <label class="prop-checkbox"><input type="checkbox" :checked="purposeConfigArrayIncludes('stain-detect','stainTypes','mold')" @change="togglePurposeConfigArrayItem('stain-detect','stainTypes','mold')" />霉斑</label>
+                      </div>
+                    </div>
+                    <div class="prop-row">
+                      <div class="prop-field half">
+                        <label>灵敏度</label>
+                        <select class="prop-input" :value="regionPurposeConfig('stain-detect').sensitivity" @change="updateRegionPurposeConfig('stain-detect', 'sensitivity', val($event))">
+                          <option value="low">低</option>
+                          <option value="medium">中</option>
+                          <option value="high">高</option>
+                        </select>
+                      </div>
+                      <div class="prop-field half">
+                        <label>最小面积(%)</label>
+                        <input class="prop-input" type="number" min="0" max="100" :value="regionPurposeConfig('stain-detect').minAreaPercent" @input="updateRegionPurposeConfig('stain-detect', 'minAreaPercent', intNum($event, 1))" />
+                      </div>
+                    </div>
+                    <div class="prop-field">
+                      <label>报告模式</label>
+                      <select class="prop-input" :value="regionPurposeConfig('stain-detect').reportMode" @change="updateRegionPurposeConfig('stain-detect', 'reportMode', val($event))">
+                        <option value="binary">有/无</option>
+                        <option value="severity">严重程度</option>
+                        <option value="detailed">详细报告</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-if="purposeIsChecked('tamper-detect')" class="purpose-config-section">
+                  <div class="purpose-config-header" @click="purposeConfigExpanded['tamper-detect'] = !purposeConfigExpanded['tamper-detect']">
+                    <span class="purpose-config-chevron">{{ purposeConfigExpanded['tamper-detect'] ? '▾' : '▸' }}</span>
+                    篡改识别 配置
+                  </div>
+                  <div v-show="purposeConfigExpanded['tamper-detect']" class="purpose-config-body">
+                    <div class="prop-field">
+                      <label>检测模式</label>
+                      <select class="prop-input" :value="regionPurposeConfig('tamper-detect').detectionMode" @change="updateRegionPurposeConfig('tamper-detect', 'detectionMode', val($event))">
+                        <option value="both">文本+图像</option>
+                        <option value="text">仅文本</option>
+                        <option value="image">仅图像</option>
+                      </select>
+                    </div>
+                    <div class="prop-field">
+                      <label>灵敏度</label>
+                      <select class="prop-input" :value="regionPurposeConfig('tamper-detect').sensitivity" @change="updateRegionPurposeConfig('tamper-detect', 'sensitivity', val($event))">
+                        <option value="low">低</option>
+                        <option value="medium">中</option>
+                        <option value="high">高</option>
+                      </select>
+                    </div>
+                    <label class="prop-checkbox"><input type="checkbox" :checked="regionPurposeConfig('tamper-detect').checkMetadata !== false" @change="updateRegionPurposeConfig('tamper-detect', 'checkMetadata', checked($event))" />检查元数据</label>
+                    <label class="prop-checkbox"><input type="checkbox" :checked="regionPurposeConfig('tamper-detect').checkPixelAnomaly !== false" @change="updateRegionPurposeConfig('tamper-detect', 'checkPixelAnomaly', checked($event))" />检查像素异常</label>
+                    <label class="prop-checkbox"><input type="checkbox" :checked="regionPurposeConfig('tamper-detect').checkFontConsistency !== false" @change="updateRegionPurposeConfig('tamper-detect', 'checkFontConsistency', checked($event))" />检查字体一致性</label>
+                  </div>
+                </div>
+
+                <div v-if="purposeIsChecked('stamp-detect')" class="purpose-config-section">
+                  <div class="purpose-config-header" @click="purposeConfigExpanded['stamp-detect'] = !purposeConfigExpanded['stamp-detect']">
+                    <span class="purpose-config-chevron">{{ purposeConfigExpanded['stamp-detect'] ? '▾' : '▸' }}</span>
+                    印章检测 配置
+                  </div>
+                  <div v-show="purposeConfigExpanded['stamp-detect']" class="purpose-config-body">
+                    <div class="prop-field">
+                      <label>印章类型</label>
+                      <select class="prop-input" :value="regionPurposeConfig('stamp-detect').stampType" @change="updateRegionPurposeConfig('stamp-detect', 'stampType', val($event))">
+                        <option value="any">不限</option>
+                        <option value="circle">圆形</option>
+                        <option value="oval">椭圆</option>
+                        <option value="rect">矩形</option>
+                      </select>
+                    </div>
+                    <div class="prop-field">
+                      <label>置信度</label>
+                      <input class="prop-input" type="number" min="0" max="100" :value="regionPurposeConfig('stamp-detect').confidenceThreshold" @input="updateRegionPurposeConfig('stamp-detect', 'confidenceThreshold', intNum($event, 65))" />
+                    </div>
+                    <label class="prop-checkbox"><input type="checkbox" :checked="regionPurposeConfig('stamp-detect').detectColor !== false" @change="updateRegionPurposeConfig('stamp-detect', 'detectColor', checked($event))" />检测印章颜色</label>
+                    <label class="prop-checkbox"><input type="checkbox" :checked="regionPurposeConfig('stamp-detect').extractText !== false" @change="updateRegionPurposeConfig('stamp-detect', 'extractText', checked($event))" />提取印章文字</label>
+                  </div>
+                </div>
+
+                <div v-if="purposeIsChecked('barcode')" class="purpose-config-section">
+                  <div class="purpose-config-header" @click="purposeConfigExpanded['barcode'] = !purposeConfigExpanded['barcode']">
+                    <span class="purpose-config-chevron">{{ purposeConfigExpanded['barcode'] ? '▾' : '▸' }}</span>
+                    条码识别 配置
+                  </div>
+                  <div v-show="purposeConfigExpanded['barcode']" class="purpose-config-body">
+                    <label class="prop-checkbox"><input type="checkbox" :checked="regionPurposeConfig('barcode').autoDetect !== false" @change="updateRegionPurposeConfig('barcode', 'autoDetect', checked($event))" />自动检测类型</label>
+                    <div v-if="!regionPurposeConfig('barcode').autoDetect" class="prop-field">
+                      <label>条码类型</label>
+                      <div class="prop-row">
+                        <label class="prop-checkbox"><input type="checkbox" :checked="purposeConfigArrayIncludes('barcode','barcodeTypes','qr')" @change="togglePurposeConfigArrayItem('barcode','barcodeTypes','qr')" />QR</label>
+                        <label class="prop-checkbox"><input type="checkbox" :checked="purposeConfigArrayIncludes('barcode','barcodeTypes','ean13')" @change="togglePurposeConfigArrayItem('barcode','barcodeTypes','ean13')" />EAN13</label>
+                        <label class="prop-checkbox"><input type="checkbox" :checked="purposeConfigArrayIncludes('barcode','barcodeTypes','code128')" @change="togglePurposeConfigArrayItem('barcode','barcodeTypes','code128')" />Code128</label>
+                        <label class="prop-checkbox"><input type="checkbox" :checked="purposeConfigArrayIncludes('barcode','barcodeTypes','datamatrix')" @change="togglePurposeConfigArrayItem('barcode','barcodeTypes','datamatrix')" />DataMatrix</label>
+                      </div>
+                    </div>
+                    <div class="prop-field">
+                      <label>最低置信度</label>
+                      <input class="prop-input" type="number" min="0" max="100" :value="regionPurposeConfig('barcode').minConfidence" @input="updateRegionPurposeConfig('barcode', 'minConfidence', intNum($event, 70))" />
+                    </div>
+                    <div class="prop-field">
+                      <label>预期格式</label>
+                      <input class="prop-input" :value="regionPurposeConfig('barcode').expectedFormat || ''" placeholder="正则表达式" @input="updateRegionPurposeConfig('barcode', 'expectedFormat', val($event))" />
+                    </div>
+                  </div>
+                </div>
+
+                <div v-if="purposeIsChecked('signature-detect')" class="purpose-config-section">
+                  <div class="purpose-config-header" @click="purposeConfigExpanded['signature-detect'] = !purposeConfigExpanded['signature-detect']">
+                    <span class="purpose-config-chevron">{{ purposeConfigExpanded['signature-detect'] ? '▾' : '▸' }}</span>
+                    签名检测 配置
+                  </div>
+                  <div v-show="purposeConfigExpanded['signature-detect']" class="purpose-config-body">
+                    <div class="prop-field">
+                      <label>检测模式</label>
+                      <select class="prop-input" :value="regionPurposeConfig('signature-detect').detectionMode" @change="updateRegionPurposeConfig('signature-detect', 'detectionMode', val($event))">
+                        <option value="presence">检测存在</option>
+                        <option value="verify">比对验证</option>
+                        <option value="extract">提取签名</option>
+                      </select>
+                    </div>
+                    <div class="prop-field">
+                      <label>置信度</label>
+                      <input class="prop-input" type="number" min="0" max="100" :value="regionPurposeConfig('signature-detect').confidenceThreshold" @input="updateRegionPurposeConfig('signature-detect', 'confidenceThreshold', intNum($event, 60))" />
+                    </div>
+                    <label class="prop-checkbox"><input type="checkbox" :checked="regionPurposeConfig('signature-detect').allowPrinted === true" @change="updateRegionPurposeConfig('signature-detect', 'allowPrinted', checked($event))" />允许打印体</label>
+                    <label class="prop-checkbox"><input type="checkbox" :checked="regionPurposeConfig('signature-detect').multiSignature === true" @change="updateRegionPurposeConfig('signature-detect', 'multiSignature', checked($event))" />允许多人签名</label>
+                  </div>
+                </div>
+
+                <div v-if="purposeIsChecked('key-extraction')" class="purpose-config-section">
+                  <div class="purpose-config-header" @click="purposeConfigExpanded['key-extraction'] = !purposeConfigExpanded['key-extraction']">
+                    <span class="purpose-config-chevron">{{ purposeConfigExpanded['key-extraction'] ? '▾' : '▸' }}</span>
+                    关键字段提取 配置
+                  </div>
+                  <div v-show="purposeConfigExpanded['key-extraction']" class="purpose-config-body">
+                    <div class="prop-field">
+                      <label>提取模式</label>
+                      <select class="prop-input" :value="regionPurposeConfig('key-extraction').extractionMode" @change="updateRegionPurposeConfig('key-extraction', 'extractionMode', val($event))">
+                        <option value="regex">正则</option>
+                        <option value="llm">LLM</option>
+                        <option value="hybrid">混合</option>
+                      </select>
+                    </div>
+                    <div class="prop-field">
+                      <label>后处理</label>
+                      <select class="prop-input" :value="regionPurposeConfig('key-extraction').postProcess" @change="updateRegionPurposeConfig('key-extraction', 'postProcess', val($event))">
+                        <option value="trim">去空格</option>
+                        <option value="normalize">标准化</option>
+                        <option value="validate">校验</option>
+                      </select>
+                    </div>
+                    <label class="prop-checkbox"><input type="checkbox" :checked="regionPurposeConfig('key-extraction').strictValidation === true" @change="updateRegionPurposeConfig('key-extraction', 'strictValidation', checked($event))" />严格校验</label>
+                    <div class="prop-value readonly" style="font-size:11px;color:var(--text-sub);margin-top:4px;">
+                      字段列表在代码中通过 fields 数组定义
+                    </div>
+                  </div>
+                </div>
+
+                <div v-if="purposeIsChecked('desensitize')" class="purpose-config-section">
+                  <div class="purpose-config-header" @click="purposeConfigExpanded['desensitize'] = !purposeConfigExpanded['desensitize']">
+                    <span class="purpose-config-chevron">{{ purposeConfigExpanded['desensitize'] ? '▾' : '▸' }}</span>
+                    脱敏区域 配置
+                  </div>
+                  <div v-show="purposeConfigExpanded['desensitize']" class="purpose-config-body">
+                    <div class="prop-field">
+                      <label>脱敏方式</label>
+                      <select class="prop-input" :value="regionPurposeConfig('desensitize').method" @change="updateRegionPurposeConfig('desensitize', 'method', val($event))">
+                        <option value="blur">模糊</option>
+                        <option value="black">黑色遮盖</option>
+                        <option value="replace">字符替换</option>
+                        <option value="pixelate">像素化</option>
+                      </select>
+                    </div>
+                    <div class="prop-field">
+                      <label>适用范围</label>
+                      <select class="prop-input" :value="regionPurposeConfig('desensitize').applyTo" @change="updateRegionPurposeConfig('desensitize', 'applyTo', val($event))">
+                        <option value="text">文本</option>
+                        <option value="image">图像</option>
+                        <option value="both">文本+图像</option>
+                      </select>
+                    </div>
+                    <div class="prop-row">
+                      <div class="prop-field half">
+                        <label>保留前缀</label>
+                        <input class="prop-input" type="number" min="0" :value="regionPurposeConfig('desensitize').keepPrefix" @input="updateRegionPurposeConfig('desensitize', 'keepPrefix', intNum($event, 0))" />
+                      </div>
+                      <div class="prop-field half">
+                        <label>保留后缀</label>
+                        <input class="prop-input" type="number" min="0" :value="regionPurposeConfig('desensitize').keepSuffix" @input="updateRegionPurposeConfig('desensitize', 'keepSuffix', intNum($event, 0))" />
+                      </div>
+                    </div>
+                    <div class="prop-field" v-if="regionPurposeConfig('desensitize').method === 'replace'">
+                      <label>替换字符</label>
+                      <input class="prop-input" maxlength="1" :value="regionPurposeConfig('desensitize').replacementChar" @input="updateRegionPurposeConfig('desensitize', 'replacementChar', val($event))" />
+                    </div>
+                    <div class="prop-field" v-if="regionPurposeConfig('desensitize').method === 'blur'">
+                      <label>模糊半径(px)</label>
+                      <input class="prop-input" type="number" min="1" max="50" :value="regionPurposeConfig('desensitize').blurRadius" @input="updateRegionPurposeConfig('desensitize', 'blurRadius', intNum($event, 12))" />
+                    </div>
+                    <div class="prop-field" v-if="regionPurposeConfig('desensitize').method === 'pixelate'">
+                      <label>像素块大小(px)</label>
+                      <input class="prop-input" type="number" min="2" max="40" :value="regionPurposeConfig('desensitize').pixelateBlockSize" @input="updateRegionPurposeConfig('desensitize', 'pixelateBlockSize', intNum($event, 8))" />
+                    </div>
+                  </div>
+                </div>
+
+                <div v-if="purposeIsChecked('quality-check')" class="purpose-config-section">
+                  <div class="purpose-config-header" @click="purposeConfigExpanded['quality-check'] = !purposeConfigExpanded['quality-check']">
+                    <span class="purpose-config-chevron">{{ purposeConfigExpanded['quality-check'] ? '▾' : '▸' }}</span>
+                    质量检测 配置
+                  </div>
+                  <div v-show="purposeConfigExpanded['quality-check']" class="purpose-config-body">
+                    <div class="prop-field">
+                      <label>检测项</label>
+                      <div class="prop-row">
+                        <label class="prop-checkbox"><input type="checkbox" :checked="purposeConfigArrayIncludes('quality-check','checks','resolution')" @change="togglePurposeConfigArrayItem('quality-check','checks','resolution')" />分辨率</label>
+                        <label class="prop-checkbox"><input type="checkbox" :checked="purposeConfigArrayIncludes('quality-check','checks','contrast')" @change="togglePurposeConfigArrayItem('quality-check','checks','contrast')" />对比度</label>
+                        <label class="prop-checkbox"><input type="checkbox" :checked="purposeConfigArrayIncludes('quality-check','checks','blur')" @change="togglePurposeConfigArrayItem('quality-check','checks','blur')" />模糊度</label>
+                        <label class="prop-checkbox"><input type="checkbox" :checked="purposeConfigArrayIncludes('quality-check','checks','skew')" @change="togglePurposeConfigArrayItem('quality-check','checks','skew')" />倾斜度</label>
+                        <label class="prop-checkbox"><input type="checkbox" :checked="purposeConfigArrayIncludes('quality-check','checks','noise')" @change="togglePurposeConfigArrayItem('quality-check','checks','noise')" />噪点</label>
+                        <label class="prop-checkbox"><input type="checkbox" :checked="purposeConfigArrayIncludes('quality-check','checks','completeness')" @change="togglePurposeConfigArrayItem('quality-check','checks','completeness')" />完整度</label>
+                      </div>
+                    </div>
+                    <div class="prop-row">
+                      <div class="prop-field half">
+                        <label>最低DPI</label>
+                        <input class="prop-input" type="number" min="72" max="600" :value="regionPurposeConfig('quality-check').minDpi" @input="updateRegionPurposeConfig('quality-check', 'minDpi', intNum($event, 150))" />
+                      </div>
+                      <div class="prop-field half">
+                        <label>最低对比度</label>
+                        <input class="prop-input" type="number" min="0" max="10" step="0.5" :value="regionPurposeConfig('quality-check').minContrastRatio" @input="updateRegionPurposeConfig('quality-check', 'minContrastRatio', num($event))" />
+                      </div>
+                    </div>
+                    <div class="prop-row">
+                      <div class="prop-field half">
+                        <label>最大倾斜度(°)</label>
+                        <input class="prop-input" type="number" min="0" max="45" :value="regionPurposeConfig('quality-check').maxSkewDegrees" @input="updateRegionPurposeConfig('quality-check', 'maxSkewDegrees', num($event))" />
+                      </div>
+                      <div class="prop-field half">
+                        <label>完整度阈值(%)</label>
+                        <input class="prop-input" type="number" min="0" max="100" :value="regionPurposeConfig('quality-check').completenessThreshold" @input="updateRegionPurposeConfig('quality-check', 'completenessThreshold', intNum($event, 95))" />
+                      </div>
+                    </div>
+                    <div class="prop-field">
+                      <label>失败动作</label>
+                      <select class="prop-input" :value="regionPurposeConfig('quality-check').failAction" @change="updateRegionPurposeConfig('quality-check', 'failAction', val($event))">
+                        <option value="warn">警告</option>
+                        <option value="flag">标记</option>
+                        <option value="reject">拒绝</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </template>
+
               <template v-else-if="sel.type === 'image'">
                 <div class="prop-field">
                   <label>图片 URL</label>
@@ -1372,12 +2098,19 @@
                   </div>
                   <div class="prop-field half">
                     <label>填充颜色</label>
-                    <input
-                      class="prop-input"
-                      type="color"
-                      :value="sel.fillColor || '#ffffff'"
-                      @input="updateSel('fillColor', val($event))"
-                    />
+                    <div class="prop-color-row">
+                      <input
+                        class="prop-input prop-color-input"
+                        type="color"
+                        :value="sel.fillColor || '#ffffff'"
+                        @input="updateSel('fillColor', val($event))"
+                      />
+                      <button
+                        class="prop-color-clear"
+                        title="清除填充色"
+                        @click="updateSel('fillColor', '')"
+                      >✕</button>
+                    </div>
                   </div>
                 </div>
 
@@ -1408,17 +2141,87 @@
                 </div>
 
                 <div class="prop-field" v-if="sel.shapeType === 'roundRect'">
-                  <label>圆角</label>
+                  <label>圆角 <span class="prop-range-val">{{ sel.cornerRadius || 0 }}px</span></label>
+                  <input
+                    class="prop-range"
+                    type="range"
+                    min="0"
+                    max="64"
+                    :value="sel.cornerRadius || 0"
+                    @input="updateSel('cornerRadius', intNum($event, 0))"
+                  />
+                </div>
+              </template>
+            </div>
+
+            <div class="prop-section" v-if="sel.type !== 'shape' && sel.type !== 'table'">
+              <div class="prop-section-title">边框配置</div>
+
+              <div class="prop-row">
+                <div class="prop-field half">
+                  <label>粗细</label>
                   <input
                     class="prop-input"
                     type="number"
                     min="0"
-                    max="64"
-                    :value="sel.cornerRadius || 16"
-                    @input="updateSel('cornerRadius', intNum($event, 16))"
+                    max="20"
+                    step="1"
+                    :value="elementBorderConfig(sel).width"
+                    @input="updateBorderConfig('width', intNum($event, 0))"
                   />
                 </div>
-              </template>
+                <div class="prop-field half">
+                  <label>颜色</label>
+                  <input
+                    class="prop-input"
+                    type="color"
+                    :value="elementBorderConfig(sel).color"
+                    @input="updateBorderConfig('color', val($event))"
+                  />
+                </div>
+              </div>
+
+              <div class="prop-row">
+                <div class="prop-field half">
+                  <label>线条样式</label>
+                  <select
+                    class="prop-input"
+                    :value="elementBorderConfig(sel).style"
+                    @change="updateBorderConfig('style', val($event))"
+                  >
+                    <option value="solid">实线</option>
+                    <option value="dashed">虚线</option>
+                    <option value="dotted">点线</option>
+                  </select>
+                </div>
+                <div class="prop-field half">
+                  <label>边框位置</label>
+                  <select
+                    class="prop-input"
+                    :value="elementBorderConfig(sel).position"
+                    @change="updateBorderConfig('position', val($event))"
+                  >
+                    <option value="inside">内部</option>
+                    <option value="center">居中</option>
+                    <option value="outside">外部</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="prop-row">
+                <div class="prop-field">
+                  <label>边框间距 (px)</label>
+                  <input
+                    class="prop-input"
+                    type="number"
+                    min="0"
+                    max="50"
+                    step="1"
+                    :value="elementBorderConfig(sel).padding"
+                    @input="updateBorderConfig('padding', intNum($event, 0))"
+                  />
+                </div>
+              </div>
             </div>
 
             <div class="prop-section">
@@ -1646,7 +2449,7 @@
                 <div class="canvas-paper"></div>
 
                 <div
-                  v-for="el in page.elements"
+                  v-for="el in filterRenderableElements(page.elements)"
                   :key="'preview_' + page.id + '_' + el.id"
                   class="template-element preview-element"
                   :class="{ hidden: el.visible === false }"
@@ -1659,6 +2462,20 @@
                         :style="textContentStyle(el)"
                         v-html="el.content || '文本'"
                       ></div>
+                    </template>
+
+                    <template v-else-if="el.type === 'watermark'">
+                      <div class="watermark-element">
+                        <div class="watermark-grid" :style="watermarkGridStyle(el)">
+                          <div
+                            v-for="tile in watermarkTiles(el)"
+                            :key="`${page.id}_${el.id}_wm_${tile}`"
+                            class="watermark-tile"
+                            :style="watermarkTileStyle(el)"
+                            v-html="el.content || '水印'"
+                          ></div>
+                        </div>
+                      </div>
                     </template>
 
                     <template v-else-if="el.type === 'prefill'">
@@ -1735,6 +2552,14 @@
                         ></div>
                       </div>
                     </template>
+
+                    <template v-else-if="el.type === 'region'">
+                      <div class="region-element" :style="regionStyle(el)">
+                        <span class="region-label" :style="regionLabelStyle(el)">
+                          {{ el.regionCode || el.label || '区域' }}
+                        </span>
+                      </div>
+                    </template>
                   </div>
                 </div>
               </div>
@@ -1750,7 +2575,10 @@
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import interact from 'interactjs'
 import InlineTextEditor from './InlineTextEditor.vue'
+import QuillEditor from './QuillEditor.vue'
 import type {
+  BorderConfig,
+  CutoutShape,
   TemplateDefinition,
   TemplateElement,
   TemplateGuide,
@@ -1783,6 +2611,120 @@ const GUIDE_DELETE_MARGIN = 32
 const A4_WIDTH_CM = ref(21)
 const A4_HEIGHT_CM = ref(29.7)
 
+// 统一 px/cm 比率，保证水平/垂直标尺刻度一致
+const pxPerCm = computed(() => CANVAS_W.value / A4_WIDTH_CM.value)
+
+// 边缘提醒距离设置（可配置）
+const edgeWarningDistance = ref(20) // 默认 20 像素
+const edgeWarningUnit = ref<'px' | 'mm' | '%'>('px') // 单位
+
+// 计算实际的边缘提醒距离（转换为像素）
+const EDGE_DANGER_ZONE = computed(() => {
+  const unit = edgeWarningUnit.value
+  const value = edgeWarningDistance.value
+  
+  if (unit === 'px') {
+    return value
+  } else if (unit === 'mm') {
+    // 毫米转像素：假设 96 DPI，1 英寸 = 25.4 毫米
+    return value * 96 / 25.4
+  } else {
+    // 百分比：相对于画布短边
+    const shortSide = Math.min(CANVAS_W.value, CANVAS_H.value)
+    return shortSide * value / 100
+  }
+})
+
+const REGION_PURPOSE_OPTIONS = [
+  { value: 'ocr-text', label: 'OCR-文本', group: 'OCR识别' },
+  { value: 'ocr-table', label: 'OCR-表格', group: 'OCR识别' },
+  { value: 'ocr-template', label: 'OCR-模板', group: 'OCR识别' },
+  { value: 'stain-detect', label: '污渍识别' },
+  { value: 'tamper-detect', label: '篡改识别' },
+  { value: 'stamp-detect', label: '印章检测' },
+  { value: 'barcode', label: '条码/二维码识别' },
+  { value: 'signature-detect', label: '签名检测' },
+  { value: 'key-extraction', label: '关键字段提取' },
+  { value: 'desensitize', label: '脱敏区域' },
+  { value: 'quality-check', label: '质量检测' }
+]
+
+const REGION_PURPOSE_CONFIG_DEFAULTS: Record<string, Record<string, any>> = {
+  'ocr-text': {
+    language: 'mixed',
+    confidenceThreshold: 60,
+    textDirection: 'auto',
+    preprocessing: ['denoise', 'binarize'],
+    mergeLines: true
+  },
+  'ocr-table': {
+    language: 'mixed',
+    confidenceThreshold: 60,
+    detectHeader: true,
+    detectMergedCells: true,
+    outputFormat: 'json',
+    preprocessing: ['denoise']
+  },
+  'ocr-template': {
+    matchMode: 'fuzzy',
+    confidenceThreshold: 70,
+    allowPartialMatch: false
+  },
+  'stain-detect': {
+    stainTypes: ['general'],
+    sensitivity: 'medium',
+    minAreaPercent: 1,
+    reportMode: 'binary'
+  },
+  'tamper-detect': {
+    detectionMode: 'both',
+    sensitivity: 'medium',
+    checkMetadata: true,
+    checkPixelAnomaly: true,
+    checkFontConsistency: true
+  },
+  'stamp-detect': {
+    stampType: 'any',
+    detectColor: true,
+    extractText: true,
+    confidenceThreshold: 65
+  },
+  'barcode': {
+    barcodeTypes: ['qr', 'ean13', 'ean8', 'code128', 'code39', 'pdf417', 'datamatrix', 'upca'],
+    autoDetect: true,
+    minConfidence: 70
+  },
+  'signature-detect': {
+    detectionMode: 'presence',
+    confidenceThreshold: 60,
+    allowPrinted: false,
+    multiSignature: false
+  },
+  'key-extraction': {
+    fields: [],
+    extractionMode: 'regex',
+    postProcess: 'trim',
+    strictValidation: false
+  },
+  'desensitize': {
+    method: 'blur',
+    keepPrefix: 0,
+    keepSuffix: 0,
+    replacementChar: '*',
+    applyTo: 'text',
+    blurRadius: 12,
+    pixelateBlockSize: 8
+  },
+  'quality-check': {
+    checks: ['resolution', 'contrast', 'blur'],
+    minDpi: 150,
+    minContrastRatio: 3,
+    maxSkewDegrees: 2,
+    completenessThreshold: 95,
+    failAction: 'warn'
+  }
+}
+
 const CANVAS_PRESETS = {
   'A4-portrait': { w: 794, h: 1123, label: 'A4 纵向', cmW: 21, cmH: 29.7 },
   'A4-landscape': { w: 1123, h: 794, label: 'A4 横向', cmW: 29.7, cmH: 21 },
@@ -1805,11 +2747,14 @@ const EMPTY_IMAGE =
 const SVG_ICONS = {
   text: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 4h14M10 4v12M7 16h6"/></svg>',
   prefill: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="14" height="12" rx="2"/><path d="M6 10h8"/></svg>',
+  watermark: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5h12v10H4z"/><path d="M6 8h8M6 12h8" opacity="0.55"/><path d="M5 15 15 5" opacity="0.7"/></svg>',
   signature: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 14c2-2.5 4-4 5-2.4S10 15 11.2 13 13.6 7.8 15.3 6.2 17 5.4 17 7.2s-1 3.4-2.2 4.4-2.6 1.8-4 2.4"/></svg>',
   stamp: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="6.4"/><circle cx="10" cy="10" r="3"/><path d="M10 3.2v13.6M3.2 10h13.6"/></svg>',
   table: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.8" y="3.2" width="14.4" height="13.6" rx="1.2"/><path d="M2.8 8h14.4M8 3.2v13.6M13.2 3.2v13.6"/></svg>',
   image: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="3" width="15" height="14" rx="1.5"/><circle cx="7" cy="8" r="1.4"/><path d="M3.7 15l4-4.8 3.1 3 3.2-4.1 2.3 2.8"/></svg>',
-  divider: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 10h14"/></svg>'
+  divider: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 10h14"/></svg>',
+  shape: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.2" y="4" width="13.6" height="10" rx="2"/><path d="M5 15h10" opacity="0.5"/></svg>',
+  region: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="14" height="14" rx="1.6" stroke-dasharray="3 2"/><path d="M6 7h8M6 10h5" opacity="0.65"/></svg>'
 }
 
 const BTN_ICONS = {
@@ -1837,29 +2782,35 @@ const BTN_ICONS = {
   group: '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.8" y="5.5" width="6" height="6" rx="1"/><rect x="9.2" y="5.5" width="6" height="6" rx="1"/><path d="M8.8 8.5h0.4"/></svg>',
   ungroup: '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.8" y="5.5" width="4.8" height="6" rx="1"/><rect x="10.4" y="5.5" width="4.8" height="6" rx="1"/><path d="M8.6 8.5h0.8" stroke-dasharray="1.4 1.4"/></svg>',
   empty: '<svg viewBox="0 0 44 44" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5" y="7" width="34" height="30" rx="3"/><path d="M14 17h16M14 23h12M14 29h8"/></svg>',
-  orientation: '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="2" width="8" height="14" rx="1.2"/><circle cx="9" cy="13" r="1"/></svg>'
+  orientation: '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="2" width="8" height="14" rx="1.2"/><circle cx="9" cy="13" r="1"/></svg>',
+  orientationLandscape: '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="5" width="14" height="8" rx="1.2"/><circle cx="13" cy="9" r="1"/></svg>',
+  edgeWarnOn: '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 9a7 7 0 0 1 14 0"/><path d="M4 9a5 5 0 0 1 10 0"/><circle cx="9" cy="9" r="2.5" fill="currentColor"/><path d="M9 16v1"/></svg>',
+  edgeWarnOff: '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" opacity="0.45"><path d="M2 9a7 7 0 0 1 14 0"/><path d="M4 9a5 5 0 0 1 10 0"/><circle cx="9" cy="9" r="2.5"/><path d="M9 16v1"/><path d="M3 3l12 12"/></svg>'
 }
 
 const elementTypes = [
   { type: 'text', label: '文本', icon: SVG_ICONS.text },
-  { type: 'prefill', label: '预填', icon: SVG_ICONS.prefill },
+  { type: 'watermark', label: '水印', icon: SVG_ICONS.watermark },
   { type: 'signature', label: '签名', icon: SVG_ICONS.signature },
   { type: 'stamp', label: '盖章', icon: SVG_ICONS.stamp },
   { type: 'table', label: '表格', icon: SVG_ICONS.table },
   { type: 'image', label: '图片', icon: SVG_ICONS.image },
   { type: 'divider', label: '分隔线', icon: SVG_ICONS.divider },
-  { type: 'shape', label: '图形', icon: SVG_ICONS.table }
+  { type: 'shape', label: '图形', icon: SVG_ICONS.shape },
+  { type: 'region', label: '绘制区域', icon: SVG_ICONS.region }
 ]
 
 const typeLabelMap: Record<string, string> = {
   text: '文本',
   prefill: '预填',
+  watermark: '水印',
   signature: '签名区',
   stamp: '盖章区',
   table: '表格',
   image: '图片',
   divider: '分隔线',
-  shape: '图形'
+  shape: '图形',
+  region: '绘制区域'
 }
 
 const definitionMeta = ref<Partial<TemplateDefinition>>({
@@ -1880,6 +2831,8 @@ const undoStack = ref<string[]>([])
 const redoStack = ref<string[]>([])
 const previewVisible = ref(false)
 const dirty = ref(false)
+const showRegions = ref(true)
+const purposeConfigExpanded = ref<Record<string, boolean>>({})
 const canvasSizePreset = ref('A4-portrait')
 const canvasSizeCustom = ref<{ w: number; h: number } | null>(null)
 const showQrMarkers = ref(true)
@@ -1888,13 +2841,22 @@ const statusHint = ref('拖拽左侧元素到画布，双击文本直接编辑')
 const lastSavedAt = ref<string | null>(null)
 const renamingPageIdx = ref<number | null>(null)
 const pageNameDraft = ref('')
+const pageDropdownOpen = ref(false)
+const pageSearchQuery = ref('')
+const pageSearchInputRef = ref<HTMLInputElement | null>(null)
 const lastSyncedJson = ref('')
 const sidebarDragType = ref<string | null>(null)
 const guidesVisible = ref(true)
 const activeGuideId = ref<string | null>(null)
 const draftGuide = ref<TemplateGuide | null>(null)
 const guideSnapIndicator = ref<TemplateGuide | null>(null)
+const edgeDangerSide = ref<string | null>(null)
+const edgeWarningEnabled = ref(true)
+const selectedCutoutId = ref<string | null>(null)
+const draggingCutoutId = ref<string | null>(null)
+const cutoutDragStart = ref<{ elX: number; elY: number; mouseX: number; mouseY: number } | null>(null)
 const rulerUnit = ref<'percent' | 'px' | 'cm'>('cm')
+const propUnit = ref<'percent' | 'px' | 'cm'>('px')
 const selectionBox = ref<{
   left: number
   top: number
@@ -1917,6 +2879,9 @@ const elements = computed<TemplateElement[]>({
     }
   }
 })
+const canvasRenderableElements = computed(() =>
+  elements.value.filter(item => showRegions.value || item.type !== 'region')
+)
 const guides = computed<TemplateGuide[]>({
   get: () => currentPage.value?.guides ?? [],
   set: (value) => {
@@ -1975,8 +2940,19 @@ const ungroupedLayerItems = computed(() =>
   layerItems.value.filter(item => !item.groupId)
 )
 const zoomPercent = computed(() => `${Math.round(scale.value * 100)}%`)
+const isLandscape = computed(() => CANVAS_W.value > CANVAS_H.value)
 const currentPageLabel = computed(() => currentPage.value?.name || `第${currentPageIdx.value + 1}页`)
 const pageCountLabel = computed(() => `${pages.value.length} 页`)
+const filteredPages = computed(() => {
+  const q = pageSearchQuery.value.trim().toLowerCase()
+  if (!q) return pages.value.map((p, i) => ({ page: p, idx: i }))
+  return pages.value
+    .map((p, i) => ({ page: p, idx: i }))
+    .filter(item => {
+      const name = (item.page.name || `第${item.idx + 1}页`).toLowerCase()
+      return name.includes(q)
+    })
+})
 const splitPanelStyle = computed(() => ({
   gridTemplateRows: panelTreeCollapsed.value
     ? 'minmax(0, 1fr) auto'
@@ -2168,6 +3144,10 @@ function cloneData<T>(value: T): T {
   return JSON.parse(JSON.stringify(value))
 }
 
+function filterRenderableElements(items: TemplateElement[]) {
+  return items.filter(item => showRegions.value || item.type !== 'region')
+}
+
 function resetEditor() {
   definitionMeta.value = {
     version: 1,
@@ -2182,6 +3162,7 @@ function resetEditor() {
   renamingPageIdx.value = null
   pageNameDraft.value = ''
   guidesVisible.value = true
+  showRegions.value = true
   activeGuideId.value = null
   draftGuide.value = null
   guideSnapIndicator.value = null
@@ -2234,6 +3215,7 @@ function loadFromJson(json: string) {
     renamingPageIdx.value = null
     pageNameDraft.value = ''
     guidesVisible.value = true
+    showRegions.value = true
     activeGuideId.value = null
     draftGuide.value = null
     guideSnapIndicator.value = null
@@ -2294,9 +3276,7 @@ function formatRulerLabel(axis: 'x' | 'y', offset: number) {
     return String(offset)
   }
 
-  const baseCm = axis === 'x' ? A4_WIDTH_CM.value : A4_HEIGHT_CM.value
-  const basePx = axis === 'x' ? CANVAS_W.value : CANVAS_H.value
-  const value = (offset / basePx) * baseCm
+  const value = offset / pxPerCm.value
   return value.toFixed(value >= 10 ? 0 : 1)
 }
 
@@ -2306,9 +3286,9 @@ function buildRulerMarks(length: number, axis: 'x' | 'y') {
 
   if (unit === 'cm') {
     const cmTotal = axis === 'x' ? A4_WIDTH_CM.value : A4_HEIGHT_CM.value
-    const pxPerCm = length / cmTotal
+    const ppm = pxPerCm.value
     for (let cm = 0; ; cm++) {
-      const offset = cm * pxPerCm
+      const offset = cm * ppm
       if (offset > length) break
       marks.push({
         key: `${length}_${cm}cm`,
@@ -2317,15 +3297,26 @@ function buildRulerMarks(length: number, axis: 'x' | 'y') {
         major: true
       })
     }
-  } else {
-    const step = unit === 'px' ? 100 : length * 0.1
+  } else if (unit === 'px') {
+    // 只显示 50px 的大刻度
+    const step = 50
     for (let offset = 0; offset <= length; offset += step) {
-      const major = offset % (step * 2) === 0
       marks.push({
         key: `${length}_${offset}`,
         position: offset * scale.value,
-        label: major ? formatRulerLabel(axis, offset) : '',
-        major
+        label: formatRulerLabel(axis, offset),
+        major: true
+      })
+    }
+  } else {
+    // percent 模式：每 10% 一个刻度，全部显示标签
+    const step = length * 0.1
+    for (let offset = 0; offset <= length; offset += step) {
+      marks.push({
+        key: `${length}_${offset}`,
+        position: offset * scale.value,
+        label: formatRulerLabel(axis, offset),
+        major: true
       })
     }
   }
@@ -2339,6 +3330,39 @@ function cycleRulerUnit() {
       : rulerUnit.value === 'px'
         ? 'percent'
         : 'cm'
+}
+
+function cyclePropUnit() {
+  propUnit.value =
+    propUnit.value === 'px'
+      ? 'cm'
+      : propUnit.value === 'cm'
+        ? 'percent'
+        : 'px'
+}
+
+function percentToUnit(percent: number, axis: 'x' | 'y') {
+  const canvasDim = axis === 'x' ? CANVAS_W.value : CANVAS_H.value
+  if (propUnit.value === 'px') {
+    return +(percent * canvasDim / 100).toFixed(1)
+  }
+  if (propUnit.value === 'cm') {
+    const cmTotal = axis === 'x' ? A4_WIDTH_CM.value : A4_HEIGHT_CM.value
+    return +((percent / 100) * cmTotal).toFixed(2)
+  }
+  return +percent.toFixed(1)
+}
+
+function unitToPercent(value: number, axis: 'x' | 'y') {
+  if (propUnit.value === 'px') {
+    const canvasDim = axis === 'x' ? CANVAS_W.value : CANVAS_H.value
+    return (value / canvasDim) * 100
+  }
+  if (propUnit.value === 'cm') {
+    const cmTotal = axis === 'x' ? A4_WIDTH_CM.value : A4_HEIGHT_CM.value
+    return (value / cmTotal) * 100
+  }
+  return value
 }
 
 function snapshotPageState() {
@@ -2386,6 +3410,26 @@ function refreshInteract() {
   nextTick(() => {
     setupInteract()
   })
+}
+
+function togglePageDropdown() {
+  pageDropdownOpen.value = !pageDropdownOpen.value
+  if (pageDropdownOpen.value) {
+    pageSearchQuery.value = ''
+    nextTick(() => {
+      pageSearchInputRef.value?.focus()
+    })
+  }
+}
+
+function closePageDropdown() {
+  pageDropdownOpen.value = false
+  pageSearchQuery.value = ''
+}
+
+function selectPage(index: number) {
+  closePageDropdown()
+  switchPage(index)
 }
 
 function switchPage(index: number) {
@@ -2495,14 +3539,44 @@ function redo() {
 }
 
 function elementStyle(el: TemplateElement) {
-  return {
+  const baseOpacity = clamp(typeof el.opacity === 'number' ? el.opacity : 1, 0, 1)
+  const style: Record<string, string | number> = {
     left: `${el.x}%`,
     top: `${el.y}%`,
     width: `${el.w}%`,
     height: `${el.h}%`,
     zIndex: el.zIndex || 1,
-    opacity: el.visible === false ? 0.35 : 1
+    opacity: el.visible === false ? Math.min(baseOpacity, 0.35) : baseOpacity
   }
+
+  // 应用边框配置
+  const border = elementBorderConfig(el)
+  if ((border.width || 0) > 0 && el.type !== 'shape') {
+    if (border.position === 'inside') {
+      // 内部边框：solid 使用内阴影自动跟随圆角；dashed/dotted 降级为 border
+      if (border.style === 'solid') {
+        style.boxShadow = `inset 0 0 0 ${border.width}px ${border.color}`
+      } else {
+        style.border = `${border.width}px ${border.style} ${border.color}`
+      }
+      style.boxSizing = 'border-box'
+    } else if (border.position === 'outside') {
+      // 外部边框：统一使用 box-shadow，避免 outline 与 selected 状态冲突，且各浏览器兼容性最好
+      // 虚线/点线效果在"居中"或"内部"位置可用 border 属性渲染
+      style.boxShadow = `0 0 0 ${border.width}px ${border.color}`
+    } else {
+      // center: 标准 border 渲染
+      style.border = `${border.width}px ${border.style} ${border.color}`
+      style.boxSizing = 'border-box'
+    }
+
+    // 边框间距
+    if ((border.padding || 0) > 0) {
+      style.padding = `${border.padding}px`
+    }
+  }
+
+  return style
 }
 
 function textContentStyle(el: TemplateElement) {
@@ -2539,11 +3613,107 @@ function handwriteStyle(el: TemplateElement) {
   }
 }
 
+function stripHtml(html?: string) {
+  return String(html || '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function watermarkGapX(el: TemplateElement) {
+  return clamp(intNumFromValue(el.tileGapX, 48), 0, 400)
+}
+
+function watermarkGapY(el: TemplateElement) {
+  return clamp(intNumFromValue(el.tileGapY, 36), 0, 400)
+}
+
+function watermarkTileMetrics(el: TemplateElement) {
+  const fontSize = clamp(intNumFromValue(el.fontSize, 24), 8, 96)
+  const plainText = stripHtml(el.content)
+  const charCount = clamp(plainText.length || 4, 4, 16)
+  const boxWidth = Math.max(120, Math.round((el.w / 100) * CANVAS_W.value))
+  const boxHeight = Math.max(52, Math.round((el.h / 100) * CANVAS_H.value))
+  return {
+    width: clamp(Math.round(fontSize * charCount * 0.72), 120, boxWidth),
+    height: clamp(Math.round(fontSize * 3.1), 52, boxHeight)
+  }
+}
+
+function watermarkTiles(el: TemplateElement) {
+  const boxWidth = Math.max(1, Math.round((el.w / 100) * CANVAS_W.value))
+  const boxHeight = Math.max(1, Math.round((el.h / 100) * CANVAS_H.value))
+  const { width, height } = watermarkTileMetrics(el)
+  const gapX = watermarkGapX(el)
+  const gapY = watermarkGapY(el)
+  const columns = Math.max(1, Math.ceil((boxWidth + gapX) / (width + gapX)))
+  const rows = Math.max(1, Math.ceil((boxHeight + gapY) / (height + gapY)))
+  const total = Math.min(64, Math.max(1, (columns + 1) * (rows + 1)))
+  return Array.from({ length: total }, (_, index) => index)
+}
+
+function watermarkGridStyle(el: TemplateElement) {
+  return {
+    columnGap: `${watermarkGapX(el)}px`,
+    rowGap: `${watermarkGapY(el)}px`
+  }
+}
+
+function watermarkTileStyle(el: TemplateElement) {
+  const { width, height } = watermarkTileMetrics(el)
+  return {
+    width: `${width}px`,
+    minHeight: `${height}px`,
+    fontSize: `${clamp(intNumFromValue(el.fontSize, 24), 8, 96)}px`,
+    fontWeight: el.fontWeight || 'bold',
+    color: el.color || '#94a3b8',
+    textAlign: el.textAlign || 'center',
+    transform: `rotate(${clamp(intNumFromValue(el.rotation, -25), -360, 360)}deg)`
+  }
+}
+
+function rgbaColor(color: string | undefined, alpha: number) {
+  const fallback = `rgba(59, 130, 246, ${alpha})`
+  if (!color) {
+    return fallback
+  }
+
+  const hex = color.replace('#', '')
+  if (hex.length === 3) {
+    const [r, g, b] = hex.split('')
+    return `rgba(${parseInt(r + r, 16)}, ${parseInt(g + g, 16)}, ${parseInt(b + b, 16)}, ${alpha})`
+  }
+  if (hex.length === 6) {
+    return `rgba(${parseInt(hex.slice(0, 2), 16)}, ${parseInt(hex.slice(2, 4), 16)}, ${parseInt(hex.slice(4, 6), 16)}, ${alpha})`
+  }
+  return fallback
+}
+
+function regionColor(el: TemplateElement) {
+  return el.regionColor || '#3b82f6'
+}
+
+function regionStyle(el: TemplateElement) {
+  const color = regionColor(el)
+  return {
+    border: `2px dashed ${color}`,
+    background: rgbaColor(color, 0.08),
+    boxShadow: `inset 0 0 0 1px ${rgbaColor(color, 0.12)}`
+  }
+}
+
+function regionLabelStyle(el: TemplateElement) {
+  return {
+    background: regionColor(el)
+  }
+}
+
 function shapeStyle(el: TemplateElement) {
   const strokeColor = el.strokeColor || '#22324c'
   const strokeWidth = el.strokeWidth || 2
   const strokeStyle = el.strokeStyle || 'solid'
-  const fillColor = el.shapeType === 'line' ? 'transparent' : el.fillColor || '#ffffff'
+  const fillColor = el.shapeType === 'line' ? 'transparent' : (el.fillColor || 'transparent')
   const borderRadius =
     el.shapeType === 'circle'
       ? '999px'
@@ -2579,6 +3749,151 @@ function imageObjectFit(fit?: string) {
 
 function imageStyle(el: TemplateElement) {
   return `object-fit: ${imageObjectFit(el.fit)};`
+}
+
+/* ── 挖空区域 ── */
+
+function nextCutoutId() {
+  return `cut_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`
+}
+
+/** 复合 clip-path：外边界顺时针 + 每个挖空逆时针绕圈 → 形成洞 */
+function compoundClipPath(cutouts: CutoutShape[] | undefined): string | null {
+  if (!cutouts || cutouts.length === 0) return null
+  const pts: string[] = ['0% 0%', '100% 0%', '100% 100%', '0% 100%']
+  for (const co of cutouts) {
+    if (co.type === 'rect') {
+      const x1 = co.x, y1 = co.y, x2 = co.x + co.w, y2 = co.y + co.h
+      // 逆时针绕行 → 在 clip-path non-zero 规则下形成洞
+      pts.push(`${x1}% ${y1}%`, `${x2}% ${y1}%`, `${x2}% ${y2}%`, `${x1}% ${y2}%`)
+    } else if (co.type === 'circle') {
+      const cx = co.x + co.w / 2, cy = co.y + co.h / 2, rx = co.w / 2, ry = co.h / 2
+      const steps = 16
+      for (let i = steps; i >= 0; i--) {
+        const a = (i / steps) * Math.PI * 2
+        pts.push(`${(cx + rx * Math.cos(a)).toFixed(2)}% ${(cy + ry * Math.sin(a)).toFixed(2)}%`)
+      }
+    } else if (co.type === 'polygon' && co.polygon && co.polygon.length >= 3) {
+      const reversed = [...co.polygon].reverse()
+      for (const p of reversed) {
+        pts.push(`${(co.x + p.x * co.w / 100)}% ${(co.y + p.y * co.h / 100)}%`)
+      }
+    }
+  }
+  return `polygon(${pts.join(', ')})`
+}
+
+function addCutout(el: TemplateElement, type: CutoutShape['type']) {
+  if (!el.cutouts) el.cutouts = []
+  pushUndoSnapshot()
+  
+  // 判断应该放在左边还是右边（根据已有挖空交替放置）
+  const existingLeft = el.cutouts.filter((c: CutoutShape) => c.x < 50).length
+  const existingRight = el.cutouts.filter((c: CutoutShape) => c.x >= 50).length
+  
+  // 放在较少的一边
+  const isLeft = existingLeft <= existingRight
+  
+  const size = { w: 25, h: 35 }
+  const co: CutoutShape = {
+    id: nextCutoutId(),
+    type: 'rect',
+    x: isLeft ? 0 : 100 - size.w, // 紧贴左边缘或右边缘
+    y: 5 + (isLeft ? existingLeft : existingRight) * 25, // 垂直方向错开
+    w: size.w,
+    h: size.h
+  }
+  el.cutouts.push(co)
+  selectedCutoutId.value = co.id
+  markDirty('添加挖空区域')
+}
+
+function deleteCutout(el: TemplateElement, cutoutId: string) {
+  if (!el.cutouts) return
+  pushUndoSnapshot()
+  el.cutouts = el.cutouts.filter((c: CutoutShape) => c.id !== cutoutId)
+  if (selectedCutoutId.value === cutoutId) selectedCutoutId.value = null
+  markDirty('删除挖空')
+}
+
+// 计算挖空浮动元素的样式（用于文字环绕）
+// 关键：浮动元素必须紧贴边缘，margin-top 控制垂直位置
+function cutoutFloatStyle(el: TemplateElement, co: CutoutShape): Record<string, string> {
+  const isLeft = co.x < 50
+
+  // CSS margin-top 百分比相对于包含块宽度，但 co.y 是相对于元素高度的百分比
+  // 需转换为像素比：correctedMargin% = co.y * (elementHeightPx / elementWidthPx)
+  // elementHeightPx = el.h% * CANVAS_H, elementWidthPx = el.w% * CANVAS_W
+  const aspectCompensation = (el.h * CANVAS_H.value) / (el.w * CANVAS_W.value)
+  const correctedMarginTop = co.y * aspectCompensation
+
+  return {
+    float: isLeft ? 'left' : 'right',
+    width: `${co.w}%`,
+    height: `${co.h}%`,
+    marginTop: `${correctedMarginTop}%`,
+    background: 'transparent',
+    shapeOutside: 'border-box',
+    shapeMargin: '0px',
+    boxSizing: 'border-box'
+  }
+}
+
+// 判断是否需要在挖空之间清除浮动
+function shouldClearFloat(cutouts: CutoutShape[], currentIndex: number): boolean {
+  // 不再自动清除浮动，让布局更自然
+  return false
+}
+
+// 获取文本容器的样式（处理多个挖空的布局）
+function getTextWrapStyle(el: TemplateElement): Record<string, string> {
+  const style: Record<string, string> = {
+    width: '100%',
+    height: '100%'
+  }
+  
+  // 如果有挖空，确保容器可以正确处理浮动
+  if (el.cutouts && el.cutouts.length > 0) {
+    style.overflow = 'hidden'
+  }
+  
+  return style
+}
+
+function cutoutStyle(co: CutoutShape) {
+  return {
+    left: `${co.x}%`,
+    top: `${co.y}%`,
+    width: `${co.w}%`,
+    height: `${co.h}%`
+  }
+}
+
+function cutoutSvgPath(co: CutoutShape): string {
+  if (co.type === 'rect') {
+    return `M0 0 L100 0 L100 100 L0 100 Z`
+  } else if (co.type === 'circle') {
+    return `M50 0 A50 50 0 1 1 49.9 0 Z`
+  } else if (co.type === 'polygon' && co.polygon) {
+    return co.polygon.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x} ${p.y}`).join(' ') + ' Z'
+  }
+  return ''
+}
+
+function isConcavePolygon(pts: { x: number; y: number }[]): boolean {
+  if (pts.length < 3) return false
+  let sign = 0
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i]
+    const b = pts[(i + 1) % pts.length]
+    const c = pts[(i + 2) % pts.length]
+    const cross = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x)
+    if (cross !== 0) {
+      if (sign === 0) sign = cross > 0 ? 1 : -1
+      else if ((cross > 0 ? 1 : -1) !== sign) return true
+    }
+  }
+  return false
 }
 
 function nextGuideId(axis: 'x' | 'y') {
@@ -2625,14 +3940,13 @@ function getUnitSnapTargets(axis: 'x' | 'y', position: number): number[] {
   const range = GRID_SNAP_THRESHOLD
 
   if (unit === 'px') {
-    const nearest = Math.round(position / 50) * 50
+    const nearest = Math.round(position / 10) * 10
     if (Math.abs(nearest - position) <= range) targets.push(nearest)
   } else if (unit === 'cm') {
-    const pxTotal = axis === 'x' ? CANVAS_W.value : CANVAS_H.value
-    const cmTotal = axis === 'x' ? A4_WIDTH_CM.value : A4_HEIGHT_CM.value
-    const cm = (position / pxTotal) * cmTotal
+    const ppm = pxPerCm.value
+    const cm = position / ppm
     const nearestCm = Math.round(cm / 0.5) * 0.5
-    const nearestPx = (nearestCm / cmTotal) * pxTotal
+    const nearestPx = nearestCm * ppm
     if (Math.abs(nearestPx - position) <= range) targets.push(nearestPx)
   } else {
     const pxTotal = axis === 'x' ? CANVAS_W.value : CANVAS_H.value
@@ -2697,7 +4011,7 @@ function intersectRect(
 }
 
 function selectionHitIds(box: { left: number; top: number; right: number; bottom: number }) {
-  const matched = elements.value
+  const matched = canvasRenderableElements.value
     .filter(item => intersectRect(box, elementPixelBox(item)))
     .flatMap(item => getSelectionIdsForElement(item.id))
 
@@ -2730,7 +4044,7 @@ function collectGuideCandidates(axis: 'x' | 'y', excludeId?: string) {
     .filter(guide => guide.axis === axis && guide.id !== excludeId)
     .map(guide => guide.position)
 
-  for (const el of elements.value) {
+  for (const el of canvasRenderableElements.value) {
     if (excludeId && el.id === excludeId) {
       continue
     }
@@ -3070,6 +4384,13 @@ function selectElement(id: string, event?: MouseEvent) {
 }
 
 function selectElementFromPointer(id: string, event: MouseEvent) {
+  // 点击文本元素内非镂空区域时取消选中镂空
+  if (selectedCutoutId.value) {
+    const hit = (event.target as HTMLElement)?.closest('.cutout-shape')
+    if (!hit) {
+      selectedCutoutId.value = null
+    }
+  }
   selectElement(id, event)
 }
 
@@ -3115,19 +4436,33 @@ function createElement(type: string, posX?: number, posY?: number): TemplateElem
   const sizeMap: Record<string, { w: number; h: number }> = {
     text: { w: 32, h: 8 },
     prefill: { w: 28, h: 8 },
+    watermark: { w: 58, h: 42 },
     signature: { w: 28, h: 12 },
     stamp: { w: 20, h: 12 },
     table: { w: 56, h: 20 },
     image: { w: 26, h: 18 },
     divider: { w: 72, h: 1.2 },
-    shape: { w: 26, h: 16 }
+    shape: { w: 26, h: 16 },
+    region: { w: 28, h: 18 }
   }
 
   const count = elements.value.filter(item => item.type === type).length
   const size = sizeMap[type] || { w: 30, h: 10 }
   const defaults: Record<string, Partial<TemplateElement>> = {
-    text: { content: '文本内容', label: '文本' },
+    text: { content: '文本内容', cutouts: [], label: '文本' },
     prefill: { expr: '${field}', emptyPlaceholder: '_____________', label: '预填字段' },
+    watermark: {
+      content: '<p><strong>机密水印</strong></p>',
+      label: '水印',
+      fontSize: 24,
+      fontWeight: 'bold',
+      textAlign: 'center',
+      color: '#94a3b8',
+      opacity: 0.18,
+      rotation: -25,
+      tileGapX: 48,
+      tileGapY: 36
+    },
     signature: { required: true, borderColor: '#dd524c', label: '签名区' },
     stamp: { required: true, borderColor: '#dd524c', label: '盖章区' },
     table: {
@@ -3179,9 +4514,15 @@ function createElement(type: string, posX?: number, posY?: number): TemplateElem
       strokeColor: '#22324c',
       strokeWidth: 2,
       strokeStyle: 'solid',
-      fillColor: '#ffffff',
+      fillColor: '',
       cornerRadius: 16,
       lineDirection: 'horizontal'
+    },
+    region: {
+      label: '绘制区域',
+      regionCode: `REGION_${String(count + 1).padStart(2, '0')}`,
+      regionColor: '#3b82f6',
+      regionPurposes: []
     }
   }
 
@@ -3312,6 +4653,154 @@ function updateSel(key: string, value: any) {
   }
 }
 
+function toggleRegionPurpose(value: string) {
+  const target = sel.value
+  if (!target || target.type !== 'region') return
+  pushUndoSnapshot()
+  const purposes = target.regionPurposes || []
+  const idx = purposes.indexOf(value)
+  if (idx >= 0) {
+    purposes.splice(idx, 1)
+    if (target.purposeConfigs) {
+      delete target.purposeConfigs[value]
+      if (Object.keys(target.purposeConfigs).length === 0) {
+        delete target.purposeConfigs
+      }
+    }
+  } else {
+    purposes.push(value)
+  }
+  target.regionPurposes = [...purposes]
+  markDirty('已更新区域用途')
+}
+
+function purposeIsChecked(key: string) {
+  return sel.value?.type === 'region' && (sel.value.regionPurposes || []).includes(key)
+}
+
+function purposeLabel(key: string) {
+  const opt = REGION_PURPOSE_OPTIONS.find(o => o.value === key)
+  return opt ? opt.label : key
+}
+
+function regionPurposeConfig(purposeKey: string): Record<string, any> {
+  const defaults = REGION_PURPOSE_CONFIG_DEFAULTS[purposeKey] || {}
+  if (!sel.value || sel.value.type !== 'region') return { ...defaults }
+  const stored = sel.value.purposeConfigs?.[purposeKey] || {}
+  return { ...defaults, ...stored }
+}
+
+function updateRegionPurposeConfig(purposeKey: string, field: string, value: any) {
+  const target = sel.value
+  if (!target || target.type !== 'region') return
+
+  const current = regionPurposeConfig(purposeKey)
+  if (current[field] === value) return
+
+  pushUndoSnapshot()
+
+  if (!target.purposeConfigs) {
+    target.purposeConfigs = {}
+  }
+  if (!target.purposeConfigs[purposeKey]) {
+    target.purposeConfigs[purposeKey] = {}
+  }
+  target.purposeConfigs[purposeKey][field] = value
+  markDirty(`已更新${purposeLabel(purposeKey)}配置`)
+}
+
+function togglePurposeConfigArrayItem(purposeKey: string, field: string, item: string) {
+  const target = sel.value
+  if (!target || target.type !== 'region') return
+
+  pushUndoSnapshot()
+  if (!target.purposeConfigs) target.purposeConfigs = {}
+  if (!target.purposeConfigs[purposeKey]) target.purposeConfigs[purposeKey] = {}
+
+  const defaults = REGION_PURPOSE_CONFIG_DEFAULTS[purposeKey]?.[field] || []
+  const arr: string[] = target.purposeConfigs[purposeKey][field] || [...defaults]
+  const idx = arr.indexOf(item)
+  if (idx >= 0) arr.splice(idx, 1)
+  else arr.push(item)
+  target.purposeConfigs[purposeKey][field] = [...arr]
+  markDirty(`已更新${purposeLabel(purposeKey)}配置`)
+}
+
+function purposeConfigArrayIncludes(purposeKey: string, field: string, item: string): boolean {
+  const cfg = regionPurposeConfig(purposeKey)
+  const arr: string[] = cfg[field] || []
+  return arr.includes(item)
+}
+
+// 获取元素边框配置（合并简单配置和高级配置）
+function elementBorderConfig(el: TemplateElement): BorderConfig {
+  const defaults: BorderConfig = {
+    width: 0,
+    color: '#22324c',
+    style: 'solid',
+    position: 'inside',
+    padding: 0
+  }
+
+  // 如果有高级配置，优先使用
+  if (el.border) {
+    return { ...defaults, ...el.border }
+  }
+
+  // 向后兼容：使用简单配置
+  return {
+    ...defaults,
+    width: el.borderWidth ?? 0,
+    color: el.borderColor ?? '#22324c',
+    style: el.borderStyle ?? 'solid'
+  }
+}
+
+// 更新边框配置
+function updateBorderConfig(key: string, value: any) {
+  const target = sel.value
+  if (!target) {
+    return
+  }
+
+  const currentConfig = elementBorderConfig(target)
+  if ((currentConfig as any)[key] === value) {
+    return
+  }
+
+  pushUndoSnapshot()
+
+  // 确保 border 对象存在
+  if (!target.border) {
+    target.border = { ...currentConfig }
+  }
+
+  ;(target.border as any)[key] = value
+
+  // 同步更新简单配置（向后兼容）
+  if (key === 'width') target.borderWidth = value as number
+  if (key === 'color') target.borderColor = value as string
+  if (key === 'style') target.borderStyle = value as 'solid' | 'dashed' | 'dotted'
+
+  markDirty('已更新边框配置')
+}
+
+// 计算边框样式
+function elementBorderStyle(el: TemplateElement): Record<string, string> {
+  const border = elementBorderConfig(el)
+  if ((border.width || 0) === 0) {
+    return {}
+  }
+
+  const style: Record<string, string> = {
+    borderWidth: `${border.width}px`,
+    borderColor: border.color || '#22324c',
+    borderStyle: border.style || 'solid'
+  }
+
+  return style
+}
+
 function bringSelectedToFront() {
   if (selectedElements.value.length === 0) {
     return
@@ -3336,6 +4825,33 @@ function sendSelectedToBack() {
     item.zIndex = bottom + index
   })
   markDirty('已置底元素')
+}
+
+function moveSelectedUp() {
+  if (selectedElements.value.length === 0) {
+    return
+  }
+
+  pushUndoSnapshot()
+  const maxZ = Math.max(...elements.value.map(item => item.zIndex || 1))
+  selectedElements.value.forEach(item => {
+    const cur = item.zIndex || 1
+    item.zIndex = Math.min(cur + 1, maxZ + 1)
+  })
+  markDirty('已上移一层')
+}
+
+function moveSelectedDown() {
+  if (selectedElements.value.length === 0) {
+    return
+  }
+
+  pushUndoSnapshot()
+  selectedElements.value.forEach(item => {
+    const cur = item.zIndex || 1
+    item.zIndex = Math.max(0, cur - 1)
+  })
+  markDirty('已下移一层')
 }
 
 function groupSelected() {
@@ -3792,6 +5308,11 @@ function onTextEditorCancel(el: TemplateElement) {
   editingTextElementId.value = null
 }
 
+function cancelTextEdit() {
+  editingTextElementId.value = null
+  statusHint.value = dirty.value ? '有未保存修改' : '已取消文本编辑'
+}
+
 function toggleInspector() {
   inspectorCollapsed.value = !inspectorCollapsed.value
 }
@@ -3897,9 +5418,7 @@ function runGuideDragSession(
     const unit = rulerUnit.value
     let step = 1
     if (unit === 'cm') {
-      const pxTotal = axis === 'x' ? CANVAS_W.value : CANVAS_H.value
-      const cmTotal = axis === 'x' ? A4_WIDTH_CM.value : A4_HEIGHT_CM.value
-      step = 0.1 / cmTotal * pxTotal
+      step = 0.1 * pxPerCm.value
     } else if (unit === 'percent') {
       const pxTotal = axis === 'x' ? CANVAS_W.value : CANVAS_H.value
       step = 0.5 / 100 * pxTotal
@@ -4132,7 +5651,7 @@ function exportJson() {
 
 let dragState: {
   items: Array<{
-    id: string
+    item: TemplateElement
     startX: number
     startY: number
     startW: number
@@ -4140,6 +5659,8 @@ let dragState: {
   }>
   pageX: number
   pageY: number
+  rect?: { width: number; height: number }
+  _rafId?: number
 } | null = null
 
 function setupInteract() {
@@ -4160,66 +5681,112 @@ function setupInteract() {
           if (!target) {
             return
           }
+          // 点击挖空区域时不移动元素本身（使用 elementFromPoint 获取真实点击目标）
+          const hitEl = document.elementFromPoint(event.clientX, event.clientY)
+          if (hitEl?.closest('.cutout-shape') || hitEl?.closest('.cutout-add-btn')) {
+            return
+          }
 
           const movingIds = selectedIds.value.includes(target.id)
             ? selectedIds.value
             : getSelectionIdsForElement(target.id)
           setSelection(movingIds, target.id)
           pushUndoSnapshot()
+          const rect = canvasRef.value?.getBoundingClientRect()
           dragState = {
             items: movingIds
               .map(id => elementById(id))
               .filter(Boolean)
               .map(item => ({
-                id: item!.id,
+                item: item!,
                 startX: item!.x,
                 startY: item!.y,
                 startW: item!.w,
                 startH: item!.h
               })),
             pageX: event.pageX,
-            pageY: event.pageY
+            pageY: event.pageY,
+            rect: rect ? { width: rect.width, height: rect.height } : undefined
           }
         },
         move(event: any) {
-          const target = getElementFromEvent(event)
-          const rect = canvasRef.value?.getBoundingClientRect()
-          if (!target || !rect || !dragState || rect.width === 0 || rect.height === 0) {
-            return
-          }
+          if (!dragState || !dragState.rect) return
 
-          const activeStart = dragState.items.find(item => item.id === target.id)
-          if (!activeStart) {
-            return
-          }
+          const rect = dragState.rect
+          if (rect.width === 0 || rect.height === 0) return
+
+          if (dragState._rafId) cancelAnimationFrame(dragState._rafId)
 
           const deltaXPercent = ((event.pageX - dragState.pageX) / rect.width) * 100
           const deltaYPercent = ((event.pageY - dragState.pageY) / rect.height) * 100
+
+          const target = getElementFromEvent(event)
+          if (!target) return
+
+          const activeStart = dragState.items.find(ds => ds.item.id === target.id)
+          if (!activeStart) return
+
           const nextX = clamp(activeStart.startX + deltaXPercent, 0, 100 - target.w)
           const nextY = clamp(activeStart.startY + deltaYPercent, 0, 100 - target.h)
           const snapped = snapElementRect(nextX, nextY, target.w, target.h)
           const appliedDeltaX = snapped.x - activeStart.startX
           const appliedDeltaY = snapped.y - activeStart.startY
 
-          dragState.items.forEach(itemState => {
-            const item = elementById(itemState.id)
-            if (!item) {
-              return
-            }
-            item.x = clamp(itemState.startX + appliedDeltaX, 0, 100 - item.w)
-            item.y = clamp(itemState.startY + appliedDeltaY, 0, 100 - item.h)
-          })
+          const targetId = target.id
+          dragState._rafId = requestAnimationFrame(() => {
+            if (!dragState) return
 
-          setSelection(selectedIds.value, target.id)
-          dirty.value = true
-          setGuideSnapIndicator(
-            snapped.guideX ? 'x' : snapped.guideY ? 'y' : 'x',
-            snapped.guideX?.position ?? snapped.guideY?.position ?? null
-          )
+            // 合并边缘检测 + 位置更新到一个循环
+            let closestSide: string | null = null
+            let minDist = Infinity
+            const dangerSides: string[] = []
+
+            for (const itemState of dragState.items) {
+              const item = itemState.item
+              const movedX = itemState.startX + appliedDeltaX
+              const movedY = itemState.startY + appliedDeltaY
+              const cxPx = (movedX / 100) * CANVAS_W.value
+              const cyPx = (movedY / 100) * CANVAS_H.value
+              const cwPx = (item.w / 100) * CANVAS_W.value
+              const chPx = (item.h / 100) * CANVAS_H.value
+
+              if (cxPx < EDGE_DANGER_ZONE.value) dangerSides.push('left')
+              if (cyPx < EDGE_DANGER_ZONE.value) dangerSides.push('top')
+              if (CANVAS_W.value - (cxPx + cwPx) < EDGE_DANGER_ZONE.value) dangerSides.push('right')
+              if (CANVAS_H.value - (cyPx + chPx) < EDGE_DANGER_ZONE.value) dangerSides.push('bottom')
+
+              const distTop = cyPx
+              const distBottom = CANVAS_H.value - (cyPx + chPx)
+              const distLeft = cxPx
+              const distRight = CANVAS_W.value - (cxPx + cwPx)
+              if (distTop < minDist) { minDist = distTop; closestSide = 'top' }
+              if (distBottom < minDist) { minDist = distBottom; closestSide = 'bottom' }
+              if (distLeft < minDist) { minDist = distLeft; closestSide = 'left' }
+              if (distRight < minDist) { minDist = distRight; closestSide = 'right' }
+
+              item.x = clamp(itemState.startX + appliedDeltaX, 0, 100 - item.w)
+              item.y = clamp(itemState.startY + appliedDeltaY, 0, 100 - item.h)
+            }
+
+            if (edgeWarningEnabled.value && minDist < EDGE_DANGER_ZONE.value && closestSide) {
+              edgeDangerSide.value = dangerSides.join(' ')
+            } else {
+              edgeDangerSide.value = null
+            }
+
+            setSelection(selectedIds.value, targetId)
+            dirty.value = true
+            setGuideSnapIndicator(
+              snapped.guideX ? 'x' : snapped.guideY ? 'y' : 'x',
+              snapped.guideX?.position ?? snapped.guideY?.position ?? null
+            )
+          })
         },
         end() {
+          if (dragState?._rafId) cancelAnimationFrame(dragState._rafId)
           dragState = null
           setGuideSnapIndicator('x', null)
+          edgeDangerSide.value = null
         }
       }
     })
@@ -4240,31 +5807,47 @@ function setupInteract() {
           if (!target) {
             return
           }
+          // 点击挖空区域时不调整元素大小
+          const hitEl = document.elementFromPoint(event.clientX, event.clientY)
+          if (hitEl?.closest('.cutout-shape') || hitEl?.closest('.cutout-add-btn')) {
+            return
+          }
+          // 指针必须在元素边缘 8px 内才触发大小调整，避免小元素误触
+          const elDom = (event.target as HTMLElement)?.closest('.template-element')
+          if (elDom) {
+            const r = elDom.getBoundingClientRect()
+            const mx = event.clientX - r.left, my = event.clientY - r.top
+            const edgeThreshold = 8
+            const nearEdge = mx < edgeThreshold || mx > r.width - edgeThreshold ||
+                             my < edgeThreshold || my > r.height - edgeThreshold
+            if (!nearEdge) return
+          }
 
           pushUndoSnapshot()
+          const rect = canvasRef.value?.getBoundingClientRect()
           dragState = {
             items: [{
-              id: target.id,
+              item: target,
               startX: target.x,
               startY: target.y,
               startW: target.w,
               startH: target.h
             }],
             pageX: event.pageX,
-            pageY: event.pageY
+            pageY: event.pageY,
+            rect: rect ? { width: rect.width, height: rect.height } : undefined
           }
         },
         move(event: any) {
-          const target = getElementFromEvent(event)
-          const rect = canvasRef.value?.getBoundingClientRect()
-          if (!dragState || !target || !rect || rect.width === 0 || rect.height === 0) {
-            return
-          }
+          if (!dragState || !dragState.rect) return
+
+          const rect = dragState.rect
+          if (rect.width === 0 || rect.height === 0) return
+
+          if (dragState._rafId) cancelAnimationFrame(dragState._rafId)
 
           const resizeState = dragState.items[0]
-          if (!resizeState) {
-            return
-          }
+          if (!resizeState) return
 
           const deltaX = ((event.pageX - dragState.pageX) / rect.width) * 100
           const deltaY = ((event.pageY - dragState.pageY) / rect.height) * 100
@@ -4289,78 +5872,81 @@ function setupInteract() {
             nextH = resizeState.startH + deltaY
           }
 
+          // Shift 约束：保持正方形/正圆（像素等比例，而非百分比等比例）
+          if (event.shiftKey) {
+            let wPx = (nextW / 100) * CANVAS_W.value
+            let hPx = (nextH / 100) * CANVAS_H.value
+            const targetPx = Math.max(wPx, hPx)
+            const dwPx = targetPx - wPx
+            const dhPx = targetPx - hPx
+            if (event.edges.left) nextX -= (dwPx / CANVAS_W.value) * 100
+            if (event.edges.top) nextY -= (dhPx / CANVAS_H.value) * 100
+            nextW = (targetPx / CANVAS_W.value) * 100
+            nextH = (targetPx / CANVAS_H.value) * 100
+          }
+
           nextW = clamp(nextW, 1, 100)
           nextH = clamp(nextH, 0.5, 100)
           nextX = clamp(nextX, 0, 100 - nextW)
           nextY = clamp(nextY, 0, 100 - nextH)
 
-          let leftPx = (nextX / 100) * CANVAS_W.value
-          let topPx = (nextY / 100) * CANVAS_H.value
-          let rightPx = leftPx + (nextW / 100) * CANVAS_W.value
-          let bottomPx = topPx + (nextH / 100) * CANVAS_H.value
-          let matchedXGuide: TemplateGuide | null = null
-          let matchedYGuide: TemplateGuide | null = null
+          const target = resizeState.item
+          const edges = event.edges
+          const shiftKey = event.shiftKey
+          dragState._rafId = requestAnimationFrame(() => {
+            if (!dragState) return
 
-          if (event.edges.left) {
-            const snapped = snapValueToGuides('x', leftPx)
-            if (snapped.guide) {
-              leftPx = snapped.value
-              matchedXGuide = snapped.guide
-            }
-          }
-          if (event.edges.right) {
-            const snapped = snapValueToGuides('x', rightPx)
-            if (snapped.guide) {
-              rightPx = snapped.value
-              matchedXGuide = snapped.guide
-            }
-          }
-          if (event.edges.top) {
-            const snapped = snapValueToGuides('y', topPx)
-            if (snapped.guide) {
-              topPx = snapped.value
-              matchedYGuide = snapped.guide
-            }
-          }
-          if (event.edges.bottom) {
-            const snapped = snapValueToGuides('y', bottomPx)
-            if (snapped.guide) {
-              bottomPx = snapped.value
-              matchedYGuide = snapped.guide
-            }
-          }
+            let leftPx = (nextX / 100) * CANVAS_W.value
+            let topPx = (nextY / 100) * CANVAS_H.value
+            let rightPx = leftPx + (nextW / 100) * CANVAS_W.value
+            let bottomPx = topPx + (nextH / 100) * CANVAS_H.value
+            let matchedXGuide: TemplateGuide | null = null
+            let matchedYGuide: TemplateGuide | null = null
 
-          leftPx = clamp(leftPx, 0, CANVAS_W.value)
-          topPx = clamp(topPx, 0, CANVAS_H.value)
-          rightPx = clamp(rightPx, 0, CANVAS_W.value)
-          bottomPx = clamp(bottomPx, 0, CANVAS_H.value)
-
-          if (rightPx - leftPx < 8) {
-            if (event.edges.left && !event.edges.right) {
-              leftPx = rightPx - 8
-            } else {
-              rightPx = leftPx + 8
+            if (edges.left) {
+              const snapped = snapValueToGuides('x', leftPx)
+              if (snapped.guide) { leftPx = snapped.value; matchedXGuide = snapped.guide }
             }
-          }
-          if (bottomPx - topPx < 6) {
-            if (event.edges.top && !event.edges.bottom) {
-              topPx = bottomPx - 6
-            } else {
-              bottomPx = topPx + 6
+            if (edges.right) {
+              const snapped = snapValueToGuides('x', rightPx)
+              if (snapped.guide) { rightPx = snapped.value; matchedXGuide = snapped.guide }
             }
-          }
+            if (edges.top) {
+              const snapped = snapValueToGuides('y', topPx)
+              if (snapped.guide) { topPx = snapped.value; matchedYGuide = snapped.guide }
+            }
+            if (edges.bottom) {
+              const snapped = snapValueToGuides('y', bottomPx)
+              if (snapped.guide) { bottomPx = snapped.value; matchedYGuide = snapped.guide }
+            }
 
-          target.w = clamp(((rightPx - leftPx) / CANVAS_W.value) * 100, 1, 100)
-          target.h = clamp(((bottomPx - topPx) / CANVAS_H.value) * 100, 0.5, 100)
-          target.x = clamp((leftPx / CANVAS_W.value) * 100, 0, 100 - target.w)
-          target.y = clamp((topPx / CANVAS_H.value) * 100, 0, 100 - target.h)
-          dirty.value = true
-          setGuideSnapIndicator(
-            matchedXGuide ? 'x' : matchedYGuide ? 'y' : 'x',
-            matchedXGuide?.position ?? matchedYGuide?.position ?? null
-          )
+            leftPx = clamp(leftPx, 0, CANVAS_W.value)
+            topPx = clamp(topPx, 0, CANVAS_H.value)
+            rightPx = clamp(rightPx, 0, CANVAS_W.value)
+            bottomPx = clamp(bottomPx, 0, CANVAS_H.value)
+
+            if (rightPx - leftPx < 8) {
+              if (edges.left && !edges.right) leftPx = rightPx - 8
+              else rightPx = leftPx + 8
+            }
+            if (bottomPx - topPx < 6) {
+              if (edges.top && !edges.bottom) topPx = bottomPx - 6
+              else bottomPx = topPx + 6
+            }
+
+            target.w = clamp(((rightPx - leftPx) / CANVAS_W.value) * 100, 1, 100)
+            target.h = clamp(((bottomPx - topPx) / CANVAS_H.value) * 100, 0.5, 100)
+            target.x = clamp((leftPx / CANVAS_W.value) * 100, 0, 100 - target.w)
+            target.y = clamp((topPx / CANVAS_H.value) * 100, 0, 100 - target.h)
+            dirty.value = true
+            setGuideSnapIndicator(
+              matchedXGuide ? 'x' : matchedYGuide ? 'y' : 'x',
+              matchedXGuide?.position ?? matchedYGuide?.position ?? null
+            )
+          })
         },
         end() {
+          if (dragState?._rafId) cancelAnimationFrame(dragState._rafId)
           dragState = null
           setGuideSnapIndicator('x', null)
         }
@@ -4380,6 +5966,168 @@ function getElementFromEvent(event: any) {
   }
 
   return elements.value.find(item => item.id === id) || null
+}
+
+/* ── 多边形锚点交互 ── */
+/* ── 挖空拖拽交互 ── */
+function onCutoutMouseDown(cutoutId: string, event: MouseEvent) {
+  event.stopPropagation()
+  selectedCutoutId.value = cutoutId
+  const el = sel.value
+  if (!el || !el.cutouts) return
+  const co = el.cutouts.find((c: CutoutShape) => c.id === cutoutId)
+  if (!co) return
+
+  draggingCutoutId.value = cutoutId
+  cutoutDragStart.value = { elX: co.x, elY: co.y, mouseX: event.clientX, mouseY: event.clientY }
+  
+  // 记录初始边缘位置（左边缘还是右边缘）
+  const initialIsLeft = co.x < 50
+
+  const onMove = (moveEvent: MouseEvent) => {
+    if (!draggingCutoutId.value || !cutoutDragStart.value || !el.cutouts) return
+    const c = el.cutouts.find((cc: CutoutShape) => cc.id === draggingCutoutId.value)
+    if (!c) return
+
+    const parentEl = sel.value
+    if (!parentEl) return
+    const parentDom = document.querySelector(`[data-element-id="${parentEl.id}"]`)
+    if (!parentDom) return
+    const rect = parentDom.getBoundingClientRect()
+    if (rect.width === 0 || rect.height === 0) return
+
+    const dxPx = moveEvent.clientX - cutoutDragStart.value.mouseX
+    const dyPx = moveEvent.clientY - cutoutDragStart.value.mouseY
+    const dxPct = (dxPx / rect.width) * 100
+    const dyPct = (dyPx / rect.height) * 100
+
+    // 限制只能移动到左右边缘
+    // 如果水平移动超过 50%，切换到另一边
+    const newX = cutoutDragStart.value.elX + dxPct
+    if (newX < 50) {
+      // 左边缘：x 必须为 0
+      c.x = 0
+    } else {
+      // 右边缘：x 必须为 100 - w
+      c.x = 100 - c.w
+    }
+    
+    // 垂直方向正常移动
+    c.y = clamp(cutoutDragStart.value.elY + dyPct, 0, 100 - c.h)
+    dirty.value = true
+  }
+
+  const onUp = () => {
+    draggingCutoutId.value = null
+    cutoutDragStart.value = null
+    window.removeEventListener('mousemove', onMove)
+    window.removeEventListener('mouseup', onUp)
+  }
+
+  window.addEventListener('mousemove', onMove)
+  window.addEventListener('mouseup', onUp)
+}
+
+function onCutoutResizeStart(cutoutId: string, event: MouseEvent, edge: string) {
+  event.stopPropagation()
+  selectedCutoutId.value = cutoutId
+}
+
+// 点击挖空外部区域时取消挖空选中
+function onCutoutOverlayMouseDown(event: MouseEvent) {
+  // 只有直接点击 overlay 背景时才取消选中
+  if (event.target === event.currentTarget) {
+    selectedCutoutId.value = null
+  }
+}
+
+// 挖空调整大小
+function startCutoutResize(el: TemplateElement, co: CutoutShape, handle: string, event: MouseEvent) {
+  event.stopPropagation()
+  event.preventDefault()
+  
+  pushUndoSnapshot()
+  
+  const startX = event.clientX
+  const startY = event.clientY
+  const startCoX = co.x
+  const startCoY = co.y
+  const startCoW = co.w
+  const startCoH = co.h
+  
+  // 判断当前是左边缘还是右边缘
+  const isLeft = co.x < 50
+  
+  const parentDom = document.querySelector(`[data-element-id="${el.id}"]`)
+  if (!parentDom) return
+  const rect = parentDom.getBoundingClientRect()
+  
+  const minSize = 5 // 最小尺寸
+  
+  const onMove = (moveEvent: MouseEvent) => {
+    const dxPx = moveEvent.clientX - startX
+    const dyPx = moveEvent.clientY - startY
+    const dxPct = (dxPx / rect.width) * 100
+    const dyPct = (dyPx / rect.height) * 100
+    
+    let newX = startCoX
+    let newY = startCoY
+    let newW = startCoW
+    let newH = startCoH
+    
+    // 左边缘挖空：只能从右边调整宽度，左边固定 x=0
+    // 右边缘挖空：只能从左边调整宽度，右边固定 x=100-w
+    if (isLeft) {
+      // 左边缘：x 始终为 0
+      newX = 0
+      // 宽度只能通过右边调整
+      if (handle.includes('e')) {
+        newW = clamp(startCoW + dxPct, minSize, 50) // 限制宽度不超过50%
+      }
+    } else {
+      // 右边缘：右边固定
+      // 宽度只能通过左边调整
+      if (handle.includes('w')) {
+        const delta = clamp(dxPct, -(startCoW - minSize), startCoW - minSize)
+        newW = startCoW - delta
+      }
+      newX = 100 - newW // x 始终紧贴右边缘
+    }
+    
+    // 垂直方向调整（上下两边）
+    if (handle.includes('n')) {
+      const delta = clamp(dyPct, -startCoY, startCoH - minSize)
+      newY = startCoY + delta
+      newH = startCoH - delta
+    }
+    if (handle.includes('s')) {
+      newH = clamp(startCoH + dyPct, minSize, 100 - startCoY)
+    }
+    
+    // 应用限制
+    co.x = isLeft ? 0 : 100 - newW
+    co.y = clamp(newY, 0, 100 - minSize)
+    co.w = clamp(newW, minSize, isLeft ? 50 : 50)
+    co.h = clamp(newH, minSize, 100 - co.y)
+    
+    dirty.value = true
+    
+    // 允许贴边
+    co.x = clamp(newX, 0, 100 - minSize)
+    co.y = clamp(newY, 0, 100 - minSize)
+    co.w = clamp(newW, minSize, 100 - co.x)
+    co.h = clamp(newH, minSize, 100 - co.y)
+    
+    dirty.value = true
+  }
+  
+  const onUp = () => {
+    window.removeEventListener('mousemove', onMove)
+    window.removeEventListener('mouseup', onUp)
+  }
+  
+  window.addEventListener('mousemove', onMove)
+  window.addEventListener('mouseup', onUp)
 }
 
 function onKeydown(event: KeyboardEvent) {
@@ -4520,6 +6268,19 @@ onUnmounted(() => {
   background: rgba(23, 32, 51, 0.04);
 }
 
+.toolbar-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px;
+  font-size: 12px;
+  color: var(--text-main);
+}
+
+.toolbar-check input {
+  margin: 0;
+}
+
 .toolbar-select {
   height: 28px;
   padding: 0 8px;
@@ -4533,6 +6294,45 @@ onUnmounted(() => {
 }
 .toolbar-select:hover {
   background: rgba(23, 32, 51, 0.06);
+}
+
+.toolbar-select-small {
+  height: 24px;
+  padding: 0 4px;
+  border: 1px solid rgba(23, 32, 51, 0.15);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--text-main);
+  font-size: 10px;
+  cursor: pointer;
+  outline: none;
+}
+
+.toolbar-input-small {
+  width: 48px;
+  height: 24px;
+  padding: 0 4px;
+  border: 1px solid rgba(23, 32, 51, 0.15);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--text-main);
+  font-size: 11px;
+  text-align: center;
+  outline: none;
+}
+.toolbar-input-small:focus {
+  border-color: var(--accent);
+}
+
+.toolbar-label {
+  font-size: 11px;
+  color: var(--text-sub);
+  white-space: nowrap;
+}
+
+.edge-warning-group {
+  align-items: center;
+  gap: 4px;
 }
 
 .toolbar-group--meta {
@@ -4642,10 +6442,18 @@ onUnmounted(() => {
   gap: 6px;
 }
 
-.toolbar-page-name {
+.toolbar-page-switcher {
+  position: relative;
+}
+
+.toolbar-page-dropdown {
+  position: relative;
+}
+
+.toolbar-page-name-btn {
   display: inline-flex;
   align-items: center;
-  max-width: 150px;
+  gap: 6px;
   min-height: 28px;
   padding: 0 10px;
   border: 1px solid #d8e0ea;
@@ -4654,22 +6462,173 @@ onUnmounted(() => {
   color: var(--text-main);
   font-size: 12px;
   font-weight: 600;
+  cursor: pointer;
   white-space: nowrap;
+  max-width: 160px;
   overflow: hidden;
-  text-overflow: ellipsis;
+  transition: border-color 0.15s ease;
 }
 
-.toolbar-page-name-btn {
-  border: none;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-  padding: 0;
-  max-width: 100%;
+.toolbar-page-name-btn:hover {
+  border-color: var(--accent);
+}
+
+.page-dropdown-label {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.page-dropdown-arrow {
+  font-size: 10px;
+  color: var(--text-sub);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.toolbar-page-dropdown.open .page-dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.page-dropdown-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+}
+
+.page-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 220px;
+  max-height: 320px;
+  background: #fff;
+  border: 1px solid #d8e0ea;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  z-index: 101;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.page-dropdown-search {
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-bottom: 1px solid #e2e8f0;
+  outline: none;
+  font-size: 12px;
+  color: var(--text-main);
+  background: #f8fafc;
+  box-sizing: border-box;
+}
+
+.page-dropdown-search::placeholder {
+  color: #94a3b8;
+}
+
+.page-dropdown-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px;
+  max-height: 240px;
+}
+
+.page-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+  text-align: left;
+}
+
+.page-dropdown-item:hover {
+  background: #f1f5f9;
+}
+
+.page-dropdown-item.active {
+  background: rgba(23, 105, 224, 0.08);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.page-dropdown-idx {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.page-dropdown-item.active .page-dropdown-idx {
+  background: rgba(23, 105, 224, 0.16);
+  color: var(--accent);
+}
+
+.page-dropdown-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.page-dropdown-rename-btn {
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.page-dropdown-item:hover .page-dropdown-rename-btn {
+  opacity: 1;
+}
+
+.page-dropdown-rename-btn:hover {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.page-dropdown-rename-input {
+  flex: 1;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 12px;
+  outline: none;
+  background: #fff;
+  color: var(--text-main);
+}
+
+.page-dropdown-empty {
+  padding: 20px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 12px;
 }
 
 .toolbar-page-input {
@@ -5198,6 +7157,65 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.7);
 }
 
+.watermark-element {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.watermark-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.watermark-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  color: #94a3b8;
+  line-height: 1.4;
+  word-break: break-word;
+  overflow: hidden;
+  text-align: center;
+  pointer-events: none;
+}
+
+.watermark-tile :deep(p) {
+  margin: 0;
+}
+
+.region-element {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+
+.region-label {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: inline-flex;
+  align-items: center;
+  max-width: calc(100% - 16px);
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .prefill-element {
   display: flex;
   align-items: center;
@@ -5570,6 +7588,25 @@ onUnmounted(() => {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.prop-unit-btn {
+  border: none;
+  background: rgba(23, 105, 224, 0.08);
+  color: var(--accent);
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.prop-unit-btn:hover {
+  background: rgba(23, 105, 224, 0.16);
 }
 
 .prop-row {
@@ -5614,6 +7651,84 @@ onUnmounted(() => {
   padding: 4px;
 }
 
+.prop-color-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.prop-color-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.prop-color-clear {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #ced7e2;
+  border-radius: 6px;
+  background: #fff;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.prop-color-clear:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: #fef2f2;
+}
+
+.prop-range {
+  width: 100%;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #e2e8f0;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+  margin: 4px 0;
+}
+
+.prop-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+
+.prop-range::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.prop-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}
+
+.prop-range-val {
+  font-weight: 400;
+  color: var(--text-sub);
+  font-size: 10px;
+  margin-left: 4px;
+}
+
 .prop-textarea {
   resize: vertical;
   min-height: 72px;
@@ -5649,6 +7764,62 @@ onUnmounted(() => {
   gap: 6px;
   color: var(--text-main);
   font-size: 13px;
+}
+
+.purpose-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.purpose-group-label {
+  margin-top: 4px;
+  color: var(--text-sub);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: none;
+}
+
+.purpose-item {
+  margin-left: 0;
+}
+
+.purpose-sub {
+  margin-left: 12px;
+}
+
+.purpose-config-section {
+  margin-top: 8px;
+  border-top: 1px solid #edf1f6;
+  padding-top: 8px;
+}
+
+.purpose-config-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
+  color: var(--text-sub);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+
+.purpose-config-header:hover {
+  color: var(--accent);
+}
+
+.purpose-config-chevron {
+  font-size: 10px;
+  width: 10px;
+  flex-shrink: 0;
+}
+
+.purpose-config-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .prop-section-subtitle {
@@ -6209,5 +8380,229 @@ onUnmounted(() => {
   .preview-overlay {
     padding: 16px;
   }
+}
+
+/* ── 边缘红光 ── */
+.canvas-edge-glow {
+  position: absolute;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+.canvas-edge-glow.active {
+  opacity: 1;
+  animation: edgeGlowPulse 0.5s ease-in-out infinite alternate;
+}
+.canvas-edge-glow.top {
+  top: 0; left: 0; right: 0; height: 6px;
+  background: linear-gradient(to bottom, rgba(207, 63, 73, 0.7), transparent);
+  box-shadow: 0 0 20px 6px rgba(207, 63, 73, 0.6);
+}
+.canvas-edge-glow.bottom {
+  bottom: 0; left: 0; right: 0; height: 6px;
+  background: linear-gradient(to top, rgba(207, 63, 73, 0.7), transparent);
+  box-shadow: 0 0 20px 6px rgba(207, 63, 73, 0.6);
+}
+.canvas-edge-glow.left {
+  top: 0; left: 0; bottom: 0; width: 6px;
+  background: linear-gradient(to right, rgba(207, 63, 73, 0.7), transparent);
+  box-shadow: 0 0 20px 6px rgba(207, 63, 73, 0.6);
+}
+.canvas-edge-glow.right {
+  top: 0; right: 0; bottom: 0; width: 6px;
+  background: linear-gradient(to left, rgba(207, 63, 73, 0.7), transparent);
+  box-shadow: 0 0 20px 6px rgba(207, 63, 73, 0.6);
+}
+
+@keyframes edgeGlowPulse {
+  0% { 
+    opacity: 0.5;
+    filter: blur(1px);
+  }
+  100% { 
+    opacity: 1;
+    filter: blur(2px);
+  }
+}
+
+.template-element.edge-danger {
+  box-shadow: 0 0 16px 6px rgba(207, 63, 73, 0.45) !important;
+  transition: box-shadow 0.1s ease;
+}
+
+/* ── 文本裁剪区域 ── */
+.text-content-area {
+  width: 100%;
+  height: 100%;
+}
+
+/* 文字环绕容器 */
+.text-wrap-container {
+  position: relative;
+  overflow: hidden;
+}
+
+/* 挖空浮动形状 - 用于文字环绕 */
+.cutout-float-shape {
+  float: left;
+  shape-margin: 8px;
+  background: transparent;
+  pointer-events: none;
+  clear: none;
+}
+
+/* 清除浮动 */
+.clear-float {
+  clear: both;
+  height: 0;
+  overflow: hidden;
+}
+
+/* ── 挖空区域 ── */
+.cutout-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+.cutout-shape {
+  position: absolute;
+  cursor: move;
+  user-select: none;
+  pointer-events: auto;
+  box-sizing: border-box;
+  z-index: 2;
+}
+.cutout-shape-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.cutout-shape-fill {
+  fill: rgba(255, 255, 255, 0.9);
+  stroke: none;
+}
+.cutout-shape-stroke {
+  fill: none;
+  stroke: #3b82f6;
+  stroke-width: 1;
+  stroke-dasharray: 4 2;
+}
+.cutout-shape.cutout-selected .cutout-shape-stroke {
+  stroke: #ef4444;
+  stroke-dasharray: none;
+  stroke-width: 1.5;
+}
+.cutout-shape.cutout-selected .cutout-shape-fill {
+  fill: rgba(255, 255, 255, 0.95);
+}
+/* 挖空删除按钮（和文本元素一致） */
+.cutout-shape .element-delete-btn {
+  position: absolute;
+  top: -12px;
+  right: 12px;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(207, 63, 73, 0.28);
+  z-index: 5;
+}
+.cutout-shape .element-delete-btn:hover {
+  background: #dc2626;
+}
+/* 挖空缩放手柄（和文本元素一致） */
+.cutout-shape .resize-handle {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border: 2px solid #fff;
+  border-radius: 3px;
+  background: var(--accent);
+  box-shadow: 0 3px 12px rgba(23, 105, 224, 0.2);
+  pointer-events: auto;
+  z-index: 4;
+}
+.cutout-shape .resize-handle.handle-nw { top: -4px; left: -4px; cursor: nwse-resize; }
+.cutout-shape .resize-handle.handle-n { top: -4px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+.cutout-shape .resize-handle.handle-ne { top: -4px; right: -4px; cursor: nesw-resize; }
+.cutout-shape .resize-handle.handle-w { top: 50%; left: -4px; transform: translateY(-50%); cursor: ew-resize; }
+.cutout-shape .resize-handle.handle-e { top: 50%; right: -4px; transform: translateY(-50%); cursor: ew-resize; }
+.cutout-shape .resize-handle.handle-sw { bottom: -4px; left: -4px; cursor: nesw-resize; }
+.cutout-shape .resize-handle.handle-s { bottom: -4px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+.cutout-shape .resize-handle.handle-se { bottom: -4px; right: -4px; cursor: nwse-resize; }
+.cutout-add-bar {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+  pointer-events: none;
+}
+.cutout-add-icon {
+  pointer-events: auto;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.cutout-add-icon:hover {
+  background: #fff;
+  transform: scale(1.1);
+}
+.cutout-overlay:hover .cutout-add-bar {
+  opacity: 1;
+}
+.cutout-add-btn {
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: rgba(255,255,255,0.85);
+  color: var(--accent);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+}
+.cutout-add-btn:hover {
+  background: var(--accent-soft);
+}
+.cutout-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.cutout-list-item:hover {
+  background: var(--panel-soft);
+}
+.cutout-list-item.active {
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 </style>

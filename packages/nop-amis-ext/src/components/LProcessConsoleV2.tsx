@@ -2515,13 +2515,15 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
           executorDefId?: string
           executorCode?: string
           executorName?: string
+          displayLabel?: string
+          sourceMode?: string
         }>(await callApi(props, {
-          url: '@query:ExecutorDef__findList',
+          url: '@query:LProcessConsole__listAvailableExecutorSources',
           method: 'post',
           data: {
             limit: 200,
           },
-          'gql:selection': 'executorDefId,executorCode,executorName',
+          'gql:selection': 'executorDefId,executorCode,executorName,displayLabel,sourceMode',
         }, {
           limit: 200,
         }))
@@ -2531,9 +2533,10 @@ function LProcessConsoleV2View(props: LProcessConsoleV2Props) {
 
         setExecutorOptions(list.map(item => ({
           value: String(item.executorDefId || ''),
-          label: item.executorCode
-            ? `${item.executorCode}${item.executorName ? ` | ${item.executorName}` : ''}`
-            : String(item.executorDefId || ''),
+          label: item.displayLabel
+            || (item.executorCode
+              ? `${item.executorCode}${item.executorName ? ` | ${item.executorName}` : ''}`
+              : String(item.executorDefId || '')),
         })).filter(item => item.value))
       }
       catch {

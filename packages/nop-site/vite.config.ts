@@ -101,21 +101,21 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
       proxy: createProxy(VITE_PROXY),
     },
     build: {
-      //minify: 'esbuild',
-      //target: 'es2015',
-      //cssTarget: 'chrome80',
+      minify: 'esbuild',
+      target: 'es2015',
+      cssTarget: 'chrome80',
       outDir: OUTPUT_DIR,
       // Turning off brotliSize display can slightly reduce packaging time
       reportCompressedSize: false,
-      chunkSizeWarningLimit: 20000,
+      chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {
           chunkFileNames: 'js/[name]-[hash].js', // 引入文件名的名称
           entryFileNames: 'js/[name]-[hash].js', // 包的入口文件名称
           manualChunks(id) {
                  // console.log("id="+id)
-             const libs = ["amis-editor","monaco-editor","tinymce","codemirror",
-                       "froala-editor","exceljs","xlsx","office-viewer","ant-design-vue","element-plus"];
+             const libs = ["amis-editor","monaco-editor","codemirror",
+                       "exceljs","xlsx","office-viewer","ant-design-vue","element-plus"];
              for(let lib of libs){
           	   if(id.includes("node_modules/"+lib+'/'))
           		  return lib
@@ -168,6 +168,10 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
                     return "nop-sdk";
                   }
                   if (id.includes('/packages/nop-site/src/') && !id.includes('/.pnpm/')) {
+                    // Let Vite handle view components via dynamic imports (route-level splitting)
+                    if (id.includes('/views/') || id.includes('/components/')) {
+                      return undefined;
+                    }
                     return "nop-site";
                   }
           	//console.log("app,id="+id);

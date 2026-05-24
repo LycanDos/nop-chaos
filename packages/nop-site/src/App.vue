@@ -14,13 +14,15 @@
       @close="showAmisDialog = false"
     />
     <!-- DIY样式编辑器弹窗 -->
-    <DiyStyleDialog 
-      v-if="showDiyStyleDialog" 
-      :visible="showDiyStyleDialog" 
+    <DiyStyleDialog
+      v-if="showDiyStyleDialog"
+      :visible="showDiyStyleDialog"
       :element="diyStyleElement"
       @update:visible="showDiyStyleDialog = false"
       @save="handleDiyStyleSave"
     />
+    <!-- AI Copilot 全局浮窗 -->
+    <AiCopilot v-if="copilotEnabled" ref="aiCopilotRef" />
   </ConfigProvider>
 </template>
 
@@ -44,8 +46,13 @@
   const MethodDialog = defineAsyncComponent(() => import('./components/MethodDialog/MethodDialog.vue'));
   const AmisEditDialog = defineAsyncComponent(() => import('./components/AmisEditDialog.vue'));
   const DiyStyleDialog = defineAsyncComponent(() => import('./components/DiyStyleDialog.vue'));
+  const AiCopilot = defineAsyncComponent(() => import('./components/AiCopilot/AiCopilot.vue'));
 
   console.log('nop-site App.vue setup executed');
+
+  // AI Copilot 开关（可通过 localStorage 或远程配置控制）
+  const copilotEnabled = ref(true);
+  const aiCopilotRef = ref();
 
   const showAmisDialog = ref(false);
   const amisDialogOptions = reactive({

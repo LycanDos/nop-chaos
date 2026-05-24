@@ -1,4 +1,4 @@
-import { PopupEditorControl } from "./index-c9997c13.js";
+import { PopupEditorControl } from "./index-23dd5bd9.js";
 import "amis-core";
 import "react";
 import "amis-ui";
