@@ -4,6 +4,7 @@ import { CancelToken } from 'axios';
 import { Component } from 'vue';
 import { Match } from 'path-to-regexp';
 import { Options } from 'lru-cache';
+import { PageRuntimeContext } from '@nop-chaos/sdk';
 import { Pinia } from 'pinia';
 import { Ref } from 'vue';
 import { Router } from 'vue-router';
@@ -337,6 +338,26 @@ export declare type FetcherResult = {
     headers: any;
 };
 
+export declare function findMatchingFields(formSchema: {
+    fields: Array<{
+        name: string;
+        label: string;
+        type: string;
+        required: boolean;
+        readonly?: boolean;
+        value?: any;
+    }>;
+}, params: {
+    fieldType?: string;
+    fieldPattern?: string;
+    fieldName?: string;
+    fieldLabel?: string;
+    fieldRequired?: boolean;
+}): Array<{
+    name: string;
+    label: string;
+}>;
+
 export declare function format(msg: string, placeholderStart: string, placeholdeEnd: string, resolver: ResolveFunction): string;
 
 export declare function getSchemaProcessorType(typeName: string): SchemaProcessorType;
@@ -491,6 +512,27 @@ export declare function processXuiValue(json: any, processor: XuiValueProcessor)
 
 export declare function providePage(page: PageObject): void;
 
+/**
+ * 向 AI Copilot 注册当前页面的运行时上下文和操作处理函数。
+ * 在页面的 onMounted 中调用。
+ *
+ * state 应为已 materialize 的快照（非函数），必要时在调用前自行捕获。
+ * 过渡期仍支持 getState 函数，AiCopilot 会在请求发送前调用它并合并到 state。
+ *
+ * @example
+ * ```ts
+ * providePageContext({
+ *   pageType: 'bpmn-designer',
+ *   route: '/bpmn-designer/example',
+ *   state: { processName: currentName.value },
+ *   actions: {
+ *     addNode: async (params) => { ... },
+ *   },
+ * })
+ * ```
+ */
+export declare function providePageContext(context: PageRuntimeContext): void;
+
 export declare function provideScoped(scoped: any): void;
 
 export declare function provideScopedStore(store: any): void;
@@ -613,6 +655,11 @@ export declare function treeToCondition(node: any): {
     children?: undefined;
 };
 
+/**
+ * 从当前页面注销上下文（页面卸载时自动清理）
+ */
+export declare function unregisterPageContext(pageType: string): void;
+
 export declare function unregisterXuiComponent(type: string): void;
 
 export declare function useAdapter(): {
@@ -727,6 +774,7 @@ import { Ref } from 'vue';
 import { RegisterPage } from '@nop-chaos/nop-core';
 import { RendererData } from 'amis-core';
 import { RendererElement } from 'vue';
+import { RendererEvent } from 'amis';
 import { RendererNode } from 'vue';
 import { ShallowRef } from 'vue';
 import { VNode } from 'vue';
@@ -780,6 +828,8 @@ export declare class AmisVueComponent extends default_2.Component<VueControlProp
     constructor(props: any);
     doAction(action: ActionObject, data: RendererData, throwErrors?: boolean): void;
     dispatchChangeEvent(eventData?: any): Promise<void>;
+    dispatchRendererEvent(eventName: string, eventData?: any): Promise<RendererEvent<any>>;
+    dispatchNamedEvent(eventName: string, eventData?: any): Promise<RendererEvent<any>>;
     render(): default_2.DetailedReactHTMLElement<{
         style: {
             color: "red";
@@ -815,6 +865,14 @@ declare interface VueControlProps extends FormControlProps {
 }
 
 export declare const XuiLoading: DefineComponent<    {}, {}, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, {}, string, PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, ComponentProvideOptions, true, {}, any>;
+
+export declare const XuiLoadingNext: DefineComponent<    {}, {
+taglines: {
+icon: string;
+text: string;
+}[];
+carouselIndex: Ref<number, number>;
+}, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, {}, string, PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, ComponentProvideOptions, true, {}, any>;
 
 /**
  * 在AmisSchemaPage的基础上增加AmisDebugger调试功能，以及根据path动态加载schema的功能

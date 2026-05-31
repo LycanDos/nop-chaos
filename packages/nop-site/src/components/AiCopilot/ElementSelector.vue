@@ -1,6 +1,6 @@
 <script lang="ts">
 import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue'
-import type { ElementInfo } from './types'
+import type { ElementInfo, FieldOption } from './types'
 
 export default defineComponent({
   name: 'ElementSelector',
@@ -98,7 +98,7 @@ export default defineComponent({
         }
       }
 
-      return {
+      const baseInfo: ElementInfo = {
         tag: el.tagName.toLowerCase(),
         id: el.id || '',
         className: typeof el.className === 'string' ? el.className : '',
@@ -106,6 +106,263 @@ export default defineComponent({
         dataset,
         domPath,
       }
+
+      // 提取语义字段信息
+      return enrichWithSemanticInfo(el, baseInfo)
+    }
+
+    function enrichWithSemanticInfo(el: HTMLElement, base: ElementInfo): ElementInfo {
+      // 检测是否为操作按钮
+      const actionBtn = findActionButton(el)
+      if (actionBtn) {
+        return { ...base, ...actionBtn }
+      }
+
+      // 检测是否为表单字段
+      const fieldInfo = findFieldInfo(el)
+      if (fieldInfo) {
+        return { ...base, ...fieldInfo }
+      }
+
+      return base
+    }
+
+    function findActionButton(el: HTMLElement): Partial<ElementInfo> | null {
+      let node: HTMLElement | null = el
+      while (node) {
+        if (node.tagName === 'BUTTON' || node.getAttribute('role') === 'button') {
+          const actionName =
+            node.getAttribute('data-action') ||
+            node.getAttribute('data-action-name') ||
+            node.getAttribute('name') ||
+            (node.textContent || '').trim().slice(0, 30)
+          return {
+            actionName,
+            label: (node.textContent || '').trim().slice(0, 50),
+            fieldType: 'action',
+          }
+        }
+        if (node.classList.contains('btn') || node.classList.contains('amis-button')) {
+          const actionName =
+            node.getAttribute('data-action') ||
+            node.getAttribute('data-action-name') ||
+            node.getAttribute('name') ||
+            (node.textContent || '').trim().slice(0, 30)
+          return {
+            actionName,
+            label: (node.textContent || '').trim().slice(0, 50),
+            fieldType: 'action',
+          }
+        }
+        if (node === document.body) break
+        node = node.parentElement
+      }
+      return null
+    }
+
+    function findFieldInfo(el: HTMLElement): Partial<ElementInfo> | null {
+      // 1. 查找表单控件
+      const control = findClosestFormControl(el)
+      if (!control) return null
+
+      // 2. 提取字段名
+      const fieldName =
+        control.getAttribute('name') ||
+        control.getAttribute('data-name') ||
+        control.getAttribute('data-field') ||
+        control.getAttribute('id') ||
+        ''
+
+      // 3. 提取标签文字（查找最近的 label 或 .field-label）
+      const label = findFieldLabel(control, fieldName)
+
+      // 4. 提取当前值
+      const value = extractControlValue(control)
+
+      // 5. 提取控件类型
+      const fieldType = extractControlType(control)
+
+      // 6. 检查只读/禁用状态
+      const readonly = control.hasAttribute('readonly') || control.hasAttribute('disabled')
+      const required = control.hasAttribute('required') || control.getAttribute('aria-required') === 'true'
+
+      // 7. 查找校验错误信息
+      const validationErrors = findValidationErrors(control)
+
+      // 8. 查找选项（select/radio/checkbox）
+      const options = extractControlOptions(control)
+
+      return {
+        fieldName,
+        label,
+        value,
+        fieldType,
+        readonly,
+        required,
+        validationErrors: validationErrors.length > 0 ? validationErrors : undefined,
+        options: options && options.length > 0 ? options : undefined,
+      }
+    }
+
+    function findClosestFormControl(el: HTMLElement): HTMLElement | null {
+      const controlTags = new Set(['INPUT', 'SELECT', 'TEXTAREA', 'OPTION'])
+      let node: HTMLElement | null = el
+
+      while (node && node !== document.body) {
+        if (controlTags.has(node.tagName)) return node
+
+        // AMIS 控件容器
+        if (
+          node.classList.contains('amis-form-group') ||
+          node.classList.contains('amis-form-item') ||
+          node.classList.contains('amis-control') ||
+          node.getAttribute('data-name') ||
+          node.getAttribute('data-field')
+        ) {
+          // 在此容器内查找实际控件
+          const inner = node.querySelector('input, select, textarea')
+          if (inner) return inner as HTMLElement
+          return node
+        }
+
+        node = node.parentElement
+      }
+      return null
+    }
+
+    function findFieldLabel(control: HTMLElement, fieldName: string): string {
+      // 查找同表单组内的 label
+      let parent: HTMLElement | null = control.parentElement
+      while (parent && parent !== document.body) {
+        const label = parent.querySelector('label')
+        if (label && label.textContent?.trim()) {
+          return label.textContent.trim().slice(0, 100)
+        }
+        if (parent.classList.contains('amis-form-group') || parent.classList.contains('amis-form-item')) {
+          break
+        }
+        parent = parent.parentElement
+      }
+
+      // 查找关联的 label[for]
+      const controlId = control.getAttribute('id')
+      if (controlId) {
+        const labelFor = document.querySelector(`label[for="${controlId}"]`)
+        if (labelFor && labelFor.textContent?.trim()) {
+          return labelFor.textContent.trim().slice(0, 100)
+        }
+      }
+
+      // 使用 placeholder 作为退化
+      const placeholder = control.getAttribute('placeholder')
+      if (placeholder) return placeholder
+
+      return fieldName || ''
+    }
+
+    function extractControlValue(control: HTMLElement): any {
+      if (control instanceof HTMLInputElement) {
+        if (control.type === 'checkbox' || control.type === 'radio') {
+          return control.checked
+        }
+        return control.value || ''
+      }
+      if (control instanceof HTMLSelectElement) {
+        return control.value || ''
+      }
+      if (control instanceof HTMLTextAreaElement) {
+        return control.value || ''
+      }
+      // 尝试从 data-value 取值
+      const dataValue = control.getAttribute('data-value')
+      if (dataValue !== null) return dataValue
+      // 尝试取 textContent
+      const text = (control.textContent || '').trim()
+      if (text && text.length < 200) return text
+      return ''
+    }
+
+    function extractControlType(control: HTMLElement): string {
+      if (control instanceof HTMLInputElement) {
+        const type = control.type || 'text'
+        switch (type) {
+          case 'number': return 'number'
+          case 'email': return 'email'
+          case 'password': return 'password'
+          case 'tel': return 'phone'
+          case 'date': case 'datetime-local': return 'date'
+          case 'checkbox': return 'boolean'
+          case 'radio': return 'select'
+          default: return 'text'
+        }
+      }
+      if (control instanceof HTMLSelectElement) return 'select'
+      if (control instanceof HTMLTextAreaElement) return 'textarea'
+      if (control.classList.contains('switch') || control.getAttribute('role') === 'switch') return 'boolean'
+      return 'text'
+    }
+
+    function findValidationErrors(control: HTMLElement): string[] {
+      const errors: string[] = []
+
+      // 检查控件的 validation state
+      if (control.getAttribute('aria-invalid') === 'true') {
+        const ariaErr = control.getAttribute('aria-errormessage')
+        if (ariaErr) {
+          const errEl = document.getElementById(ariaErr)
+          if (errEl && errEl.textContent?.trim()) {
+            errors.push(errEl.textContent.trim())
+          }
+        }
+      }
+
+      // 查找 AMIS 校验错误容器
+      let parent: HTMLElement | null = control.parentElement
+      while (parent && parent !== document.body) {
+        const errorEls = parent.querySelectorAll('.form-error, .field-error, .has-error, .amis-form-error, .text-danger')
+        errorEls.forEach(el => {
+          const text = (el.textContent || '').trim()
+          if (text && !errors.includes(text)) errors.push(text)
+        })
+        if (parent.classList.contains('amis-form-group') || parent.classList.contains('amis-form-item')) {
+          break
+        }
+        parent = parent.parentElement
+      }
+
+      // 检查控件自身的 has-error class
+      if (control.classList.contains('has-error') || control.classList.contains('is-invalid')) {
+        const title = control.getAttribute('title')
+        if (title && title.trim()) errors.push(title.trim())
+      }
+
+      return errors
+    }
+
+    function extractControlOptions(control: HTMLElement): FieldOption[] | undefined {
+      if (control instanceof HTMLSelectElement) {
+        const opts: FieldOption[] = []
+        for (let i = 0; i < control.options.length; i++) {
+          const opt = control.options[i]
+          opts.push({ label: opt.text || opt.value, value: opt.value })
+        }
+        return opts.length > 0 ? opts : undefined
+      }
+
+      // 查找同组的 radio/checkbox 选项
+      const name = control.getAttribute('name')
+      if (name && (control instanceof HTMLInputElement) && (control.type === 'radio' || control.type === 'checkbox')) {
+        const siblings = document.querySelectorAll(`input[name="${CSS.escape(name)}"]`)
+        const opts: FieldOption[] = []
+        siblings.forEach(sib => {
+          const label = findFieldLabel(sib as HTMLElement, name)
+          const val = (sib as HTMLInputElement).value
+          opts.push({ label: label || val, value: val })
+        })
+        return opts.length > 0 ? opts : undefined
+      }
+
+      return undefined
     }
 
     onMounted(() => {

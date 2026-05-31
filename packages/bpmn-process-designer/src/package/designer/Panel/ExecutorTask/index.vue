@@ -123,6 +123,27 @@ const methodEditorField = computed<MethodSchemaFieldItem | undefined>(() => {
 // 使用新的入参 Clar (可通过配置切换)
 const useInputClar = ref(true)
 
+/** 当前选中的执行器是否为内置（Path B/embedded）执行器 */
+const isEmbeddedExecutor = computed(() => {
+  if (!bindingForm.executorDefId) return false
+  const executor = executorList.value.find(e => e.executorDefId === bindingForm.executorDefId)
+  if (!executor?.versionRuleJson) return false
+  try {
+    const meta = JSON.parse(executor.versionRuleJson)
+    return meta.sourceMode === 'embedded'
+  } catch {
+    return false
+  }
+})
+
+/** 内置执行器只允许 LATEST 策略（无版本概念） */
+const availableVersionStrategies = computed(() => {
+  if (isEmbeddedExecutor.value) {
+    return [{ label: 'LATEST（内置执行器）', value: 'LATEST' }]
+  }
+  return versionStrategyOptions
+})
+
 // ========== 选项 ==========
 const versionStrategyOptions = [
   { label: 'LATEST（最新版本）', value: 'LATEST' },
@@ -154,6 +175,11 @@ async function loadExecutors() {
   loading.value = true
   try {
     executorList.value = await api.fetchExecutorList()
+    // 如果当前已绑定内置执行器，强制 LATEST 策略并跳过版本加载
+    if (isEmbeddedExecutor.value) {
+      bindingForm.versionStrategy = 'LATEST'
+      releaseList.value = []
+    }
   } catch (e) {
     console.warn('[ExecutorTask] 加载执行器列表失败:', e)
     executorList.value = []
@@ -241,6 +267,17 @@ const methodTagType = computed(() => {
 })
 
 // ========== 事件处理 ==========
+/** 判断下拉选项是否为内置执行器 */
+function isOptionEmbedded(item: ExecutorDefItem): boolean {
+  if (!item.versionRuleJson) return false
+  try {
+    const meta = JSON.parse(item.versionRuleJson)
+    return meta.sourceMode === 'embedded'
+  } catch {
+    return false
+  }
+}
+
 function handleExecutorChange(executorDefId: string) {
   const executor = executorList.value.find(e => e.executorDefId === executorDefId)
   bindingForm.executorCode = executor?.executorCode || ''
@@ -255,7 +292,14 @@ function handleExecutorChange(executorDefId: string) {
   methodList.value = []
   selectedMethodInputs.value = []
   selectedMethodOutputs.value = []
-  loadReleases(executorDefId)
+
+  // 内置执行器无版本概念，跳过版本加载
+  if (isEmbeddedExecutor.value) {
+    bindingForm.versionStrategy = 'LATEST'
+    releaseList.value = []
+  } else {
+    loadReleases(executorDefId)
+  }
   saveBindingToElement()
 }
 
@@ -575,7 +619,10 @@ onMounted(() => {
         >
           <div style="display: flex; justify-content: space-between; align-items: center">
             <span>{{ item.executorName }}</span>
-            <el-tag size="small" type="info">{{ item.executorCode }}</el-tag>
+            <span style="display: flex; gap: 4px">
+              <el-tag v-if="isOptionEmbedded(item)" size="small" type="success">内置</el-tag>
+              <el-tag size="small" type="info">{{ item.executorCode }}</el-tag>
+            </span>
           </div>
         </el-option>
       </el-select>
@@ -586,10 +633,11 @@ onMounted(() => {
       <el-select
         v-model="bindingForm.versionStrategy"
         style="width: 100%"
+        :disabled="isEmbeddedExecutor"
         @change="handleVersionStrategyChange"
       >
         <el-option
-          v-for="opt in versionStrategyOptions"
+          v-for="opt in availableVersionStrategies"
           :key="opt.value"
           :label="opt.label"
           :value="opt.value"

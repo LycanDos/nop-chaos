@@ -54,14 +54,9 @@ export function useMenuSearch(refs: Ref<HTMLElement[]>, scrollWrap: Ref<ElRef>, 
       return;
     }
     const reg = createSearchReg(unref(keyword));
-    const filterMenu = filter(menuList, (item) => {
-      // 【issues/33】包含子菜单时，不添加到搜索队列
-      if (Array.isArray(item.children)) {
-        return false;
-      }
-      return reg.test(item.name) && !item.hideMenu;
-    });
-    searchResult.value = handlerSearchResult(filterMenu, reg);
+    // 直接对所有菜单进行搜索，不预先过滤有子菜单的节点
+    // handlerSearchResult 会递归处理所有层级
+    searchResult.value = handlerSearchResult(menuList, reg);
     activeIndex.value = 0;
   }
 
@@ -69,15 +64,35 @@ export function useMenuSearch(refs: Ref<HTMLElement[]>, scrollWrap: Ref<ElRef>, 
     const ret: SearchResult[] = [];
     filterMenu.forEach((item) => {
       const { name, path, icon, children, hideMenu, meta } = item;
-      if (!hideMenu && reg.test(name) && (!children?.length || meta?.hideChildrenInMenu)) {
-        ret.push({
-          name: parent?.name ? `${parent.name} > ${name}` : name,
-          path,
-          icon,
-        });
+      
+      // 当前节点匹配且不是隐藏菜单
+      if (!hideMenu && reg.test(name)) {
+        // 如果有子菜单且没有设置 hideChildrenInMenu，只展示路径但不作为可跳转项
+        // 如果是叶子节点或设置了 hideChildrenInMenu，则可以跳转
+        const isLeaf = !children?.length || meta?.hideChildrenInMenu;
+        if (isLeaf && path) {
+          ret.push({
+            name: parent?.name ? `${parent.name} > ${name}` : name,
+            path,
+            icon,
+          });
+        } else if (!isLeaf && path) {
+          // 非叶子节点但匹配了搜索词，也添加到结果中（可跳转到该菜单）
+          ret.push({
+            name: parent?.name ? `${parent.name} > ${name}` : name,
+            path,
+            icon,
+          });
+        }
       }
+      
+      // 递归处理子菜单
       if (!meta?.hideChildrenInMenu && Array.isArray(children) && children.length) {
-        ret.push(...handlerSearchResult(children, reg, item));
+        const mergedParent = {
+          ...item,
+          name: parent?.name ? `${parent.name} > ${item.name}` : item.name,
+        };
+        ret.push(...handlerSearchResult(children, reg, mergedParent));
       }
     });
     return ret;

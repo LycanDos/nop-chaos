@@ -1,7 +1,7 @@
 <script lang="tsx">
   import type { PropType, CSSProperties } from 'vue';
 
-  import { computed, defineComponent, unref, toRef } from 'vue';
+  import { computed, defineComponent, unref, toRef, Teleport } from 'vue';
   import { BasicMenu } from '/@/components/Menu';
   import { SimpleMenu } from '/@/components/SimpleMenu';
   import { AppLogo } from '/@/components/Application';
@@ -23,11 +23,9 @@
   import { useDesign } from '/@/hooks/web/useDesign';
   import { useLocaleStore } from '/@/store/modules/locale';
 
-  import { ref, onMounted } from 'vue'
-  import { getMenus } from '/@/router/menus'
+  import { ref } from 'vue'
   const showAllFunctions = ref(false)
   const search = ref('')
-  const groups = ref([])
   const menuRef = ref<HTMLElement | null>(null);
   const searchInputRef = ref<HTMLElement | null>(null);
 
@@ -70,23 +68,156 @@
     );
   }
 
-  onMounted(async () => {
-    const menus = await getMenus()
-    groups.value = menus.map(group => ({
-      name: group.meta.title,
-      items: (group.children || []).flatMap(flattenMenu)
-    }))
-  })
-  function flattenMenu(menu) {
-    if (!menu.children || !menu.children.length) return [menu]
-    return menu.children.flatMap(flattenMenu)
+  // 递归搜索菜单树，保留所有匹配分支的完整层级结构
+  function searchMenuTree(menu, keyword: string): any | null {
+    const name = menu.meta?.title || menu.name || '';
+    const selfMatch = name.includes(keyword);
+    const children = menu.children || [];
+    const filteredChildren = children.length > 0
+      ? children.map((c: any) => searchMenuTree(c, keyword)).filter(Boolean)
+      : [];
+
+    if (selfMatch || filteredChildren.length > 0) {
+      return {
+        ...menu,
+        children: selfMatch ? children : filteredChildren,
+        _match: selfMatch,
+      };
+    }
+    return null;
   }
-  const filteredGroups = computed(() =>
-    groups.value.map(g => ({
-      ...g,
-      items: g.items.filter(i => i.meta.title.includes(search.value))
-    })).filter(g => g.items.length)
-  )
+
+  // 递归渲染菜单树：父节点全宽展示，子节点按 2 列网格排列
+  function renderMenuTree(items: any[], depth: number, keyword: string): any {
+    const indent = 12 + depth * 16;
+
+    return items.map((item: any) => {
+      const hasChildren = item.children && item.children.length > 0;
+      const itemTitle = item.meta?.title || item.name || '';
+
+      return (
+        <div key={item.path || item.name}>
+          {/* 父节点全宽行 */}
+          <div
+            style={{
+              padding: `6px 10px 6px ${indent}px`,
+              fontSize: '13px',
+              fontWeight: depth === 0 ? 500 : 400,
+              color: item._match ? '#1d4ed8' : '#374151',
+              cursor: 'pointer',
+              borderRadius: '6px',
+              transition: 'background 0.15s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              overflow: 'hidden',
+            }}
+            onMouseenter={(e: any) => { e.currentTarget.style.background = '#f3f4f6'; }}
+            onMouseleave={(e: any) => { e.currentTarget.style.background = 'transparent'; }}
+            onClick={() => {
+              handleMenuClick(item.path, item);
+              showAllFunctions.value = false;
+              search.value = '';
+            }}
+          >
+            {item.icon && <Icon icon={item.icon} size={14} />}
+            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {highlightMatch(itemTitle, keyword)}
+            </span>
+          </div>
+          {/* 子节点 2 列网格，缩进展示 */}
+          {hasChildren && (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '4px',
+              padding: `0 4px 0 ${indent + 16}px`,
+            }}>
+              {renderGridItems(item.children, depth + 1, keyword)}
+            </div>
+          )}
+        </div>
+      );
+    });
+  }
+
+  // 在网格内渲染子项：有后代的节点跨全宽，叶节点占 1 列
+  function renderGridItems(items: any[], depth: number, keyword: string): any {
+    return items.map((item: any) => {
+      const hasChildren = item.children && item.children.length > 0;
+      const itemTitle = item.meta?.title || item.name || '';
+      const indent = depth * 16;
+
+      if (hasChildren) {
+        return (
+          <div key={item.path} style={{ gridColumn: '1 / -1' }}>
+            <div
+              style={{
+                padding: `6px 10px 6px 0px`,
+                fontSize: '13px',
+                fontWeight: 500,
+                color: item._match ? '#1d4ed8' : '#374151',
+                cursor: 'pointer',
+                borderRadius: '6px',
+                transition: 'background 0.15s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                overflow: 'hidden',
+              }}
+              onMouseenter={(e: any) => { e.currentTarget.style.background = '#f3f4f6'; }}
+              onMouseleave={(e: any) => { e.currentTarget.style.background = 'transparent'; }}
+              onClick={() => {
+                handleMenuClick(item.path, item);
+                showAllFunctions.value = false;
+                search.value = '';
+              }}
+            >
+              {item.icon && <Icon icon={item.icon} size={14} />}
+              <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {highlightMatch(itemTitle, keyword)}
+              </span>
+            </div>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '4px',
+              paddingLeft: `${indent + 16}px`,
+            }}>
+              {renderGridItems(item.children, depth + 1, keyword)}
+            </div>
+          </div>
+        );
+      }
+
+      // 叶节点：占 1 列
+      return (
+        <div
+          key={item.path}
+          style={{
+            padding: '6px 10px',
+            fontSize: '13px',
+            color: item._match ? '#1d4ed8' : '#374151',
+            cursor: 'pointer',
+            borderRadius: '6px',
+            transition: 'background 0.15s',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+          onMouseenter={(e: any) => { e.currentTarget.style.background = '#f3f4f6'; }}
+          onMouseleave={(e: any) => { e.currentTarget.style.background = 'transparent'; }}
+          onClick={() => {
+            handleMenuClick(item.path, item);
+            showAllFunctions.value = false;
+            search.value = '';
+          }}
+        >
+          {highlightMatch(itemTitle, keyword)}
+        </div>
+      );
+    });
+  }
 
   export default defineComponent({
     name: 'LayoutMenu',
@@ -124,6 +255,32 @@
       const { prefixCls } = useDesign('layout-menu');
 
       const { menusRef } = useSplitMenu(toRef(props, 'splitType'));
+
+      // 搜索时递归过滤保留所有层级；无搜索词时展示完整树
+      const filteredGroups = computed(() => {
+        const keyword = search.value;
+        const groups = unref(menusRef);
+
+        return groups.map(group => {
+          const groupNameMatch = !keyword || (group.name || '').includes(keyword);
+          const children = group.children || [];
+
+          if (!keyword) {
+            return { ...group, children, _groupMatch: false };
+          }
+
+          if (groupNameMatch) {
+            return { ...group, children, _groupMatch: true };
+          }
+
+          const filteredChildren = children
+            .map((c: any) => searchMenuTree(c, keyword))
+            .filter(Boolean);
+
+          if (filteredChildren.length === 0) return null;
+          return { ...group, children: filteredChildren, _groupMatch: false };
+        }).filter(Boolean);
+      });
 
       const { getIsMobile } = useAppInject();
 
@@ -272,9 +429,9 @@
               )}
             </div>
 
-            {/* 右侧弹出面板 */}
+            {/* 右侧弹出面板 — 通过 Teleport 移到 body 下避免被侧边栏层叠上下文遮挡 */}
             {isOpen && (
-              <>
+              <Teleport to="body">
                 {/* 遮罩层 */}
                 <div
                   style={{
@@ -315,18 +472,17 @@
                   )}
                   {/* 面板内容 */}
                   <div style={{ flex: 1, overflow: 'auto', padding: '16px' }}>
-                    {unref(menusRef).map(group => {
-                      const children = (group.children || []).filter(
-                        item => !search.value || item.meta?.title?.includes(search.value)
-                      );
+                    {unref(filteredGroups).map((group: any) => {
+                      const children = group.children || [];
                       if (children.length === 0) return null;
                       return (
-                        <div key={group.path} style={{ marginBottom: '20px' }}>
+                        <div key={group.path} style={{ marginBottom: '16px' }}>
                           <div style={{
                             fontWeight: 600,
-                            fontSize: '13px',
-                            color: '#6b7280',
-                            marginBottom: '8px',
+                            fontSize: '12px',
+                            color: group._groupMatch ? '#1d4ed8' : '#6b7280',
+                            marginBottom: '4px',
+                            padding: '0 10px',
                             display: 'flex',
                             alignItems: 'center',
                             gap: '6px',
@@ -334,53 +490,21 @@
                             letterSpacing: '0.5px',
                           }}>
                             {group.icon && <Icon icon={group.icon} size={14} />}
-                            {group.name}
+                            {highlightMatch(group.name, search.value)}
                           </div>
-                          <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(2, 1fr)',
-                            gap: '4px',
-                          }}>
-                            {children.map(item => (
-                              <div
-                                key={item.path}
-                                style={{
-                                  padding: '8px 10px',
-                                  fontSize: '13px',
-                                  color: '#374151',
-                                  cursor: 'pointer',
-                                  borderRadius: '6px',
-                                  transition: 'background 0.15s',
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                }}
-                                onMouseenter={(e: any) => { e.currentTarget.style.background = '#f3f4f6'; }}
-                                onMouseleave={(e: any) => { e.currentTarget.style.background = 'transparent'; }}
-                                onClick={() => {
-                                  handleMenuClick(item.path, item);
-                                  showAllFunctions.value = false;
-                                  search.value = '';
-                                }}
-                              >
-                                {highlightMatch(item.meta?.title || item.name || '', search.value)}
-                              </div>
-                            ))}
-                          </div>
+                          {renderMenuTree(children, 0, search.value)}
                         </div>
                       );
                     })}
                     {/* 无结果提示 */}
-                    {search.value && unref(menusRef).every(g =>
-                      !(g.children || []).some(item => item.meta?.title?.includes(search.value))
-                    ) && (
+                    {search.value && unref(filteredGroups).length === 0 && (
                       <div style={{ textAlign: 'center', color: '#9ca3af', padding: '40px 0', fontSize: '13px' }}>
                         未找到匹配的功能
                       </div>
                     )}
                   </div>
                 </div>
-              </>
+              </Teleport>
             )}
           </div>
         );

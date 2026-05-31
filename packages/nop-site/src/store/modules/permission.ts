@@ -23,6 +23,8 @@ import { getPermCode } from '/@/api/sys/user';
 
 import { useMessage } from '/@/hooks/web/useMessage';
 import { PageEnum } from '/@/enums/pageEnum';
+import { getAuthCache, setAuthCache } from '/@/utils/auth';
+import { BACK_MENU_KEY } from '/@/enums/cacheEnum';
 
 // 系统权限
 interface AuthItem {
@@ -78,7 +80,7 @@ export const usePermissionStore = defineStore({
       return this.permCodeList;
     },
     getBackMenuList(): Menu[] {
-      return this.backMenuList;
+      return this.backMenuList.length > 0 ? this.backMenuList : getAuthCache<Menu[]>(BACK_MENU_KEY) || [];
     },
     getFrontMenuList(): Menu[] {
       return this.frontMenuList;
@@ -103,6 +105,7 @@ export const usePermissionStore = defineStore({
 
     setBackMenuList(list: Menu[]) {
       this.backMenuList = list;
+      setAuthCache(BACK_MENU_KEY, list);
       list?.length > 0 && this.setLastBuildMenuTime();
     },
 

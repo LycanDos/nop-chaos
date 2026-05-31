@@ -60,7 +60,10 @@ export default defineReactPageComponent((props: {actions?: Record<string,Functio
             page.getAction('cancel')?.()
           }
         },
-        scopeRef: scoped => { amisScoped = scoped },
+        scopeRef: scoped => {
+          amisScoped = scoped
+          ;(window as any).__amisScoped__ = scoped
+        },
         locale: locale, // amis内部会自动替换zh_CN为zh-CN
         theme: 'cxd'
       };

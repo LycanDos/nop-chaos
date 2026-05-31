@@ -8,12 +8,15 @@ import type { PageRuntimeContext, ActionHandler } from '@nop-chaos/sdk'
  * 向 AI Copilot 注册当前页面的运行时上下文和操作处理函数。
  * 在页面的 onMounted 中调用。
  *
+ * state 应为已 materialize 的快照（非函数），必要时在调用前自行捕获。
+ * 过渡期仍支持 getState 函数，AiCopilot 会在请求发送前调用它并合并到 state。
+ *
  * @example
  * ```ts
  * providePageContext({
  *   pageType: 'bpmn-designer',
  *   route: '/bpmn-designer/example',
- *   getState: () => ({ processName: currentName.value }),
+ *   state: { processName: currentName.value },
  *   actions: {
  *     addNode: async (params) => { ... },
  *   },
@@ -44,11 +47,19 @@ export function unregisterPageContext(pageType: string): void {
   if (copilotApp && typeof copilotApp.unregisterPage === 'function') {
     copilotApp.unregisterPage(pageType)
   }
+
+  // 同时通过 custom event 通知
+  window.dispatchEvent(
+    new CustomEvent('copilot:page-unregister', {
+      detail: { pageType },
+      bubbles: false,
+    }),
+  )
 }
 
 // 表单字段匹配工具
 export function findMatchingFields(
-  formSchema: { fields: Array<{ name: string; label: string; type: string; required: boolean; value?: any }> },
+  formSchema: { fields: Array<{ name: string; label: string; type: string; required: boolean; readonly?: boolean; value?: any }> },
   params: { fieldType?: string; fieldPattern?: string; fieldName?: string; fieldLabel?: string; fieldRequired?: boolean },
 ): Array<{ name: string; label: string }> {
   const { fieldType, fieldPattern, fieldName, fieldLabel, fieldRequired } = params

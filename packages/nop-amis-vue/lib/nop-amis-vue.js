@@ -299,6 +299,7 @@ const AmisSchemaPage = defineReactPageComponent((props) => {
         },
         scopeRef: (scoped) => {
           amisScoped = scoped;
+          window.__amisScoped__ = scoped;
         },
         locale,
         // amis内部会自动替换zh_CN为zh-CN
@@ -741,13 +742,325 @@ const _sfc_main$1 = defineComponent({
     function registerPage(p) {
       var _a;
       (_a = props.registerPage) == null ? void 0 : _a.call(props, p);
+      registerCopilotContext(props.path, p);
     }
     watchEffect(() => {
       getPage(props.path).then((res) => {
         res.__baseUrl = props.path;
         updateSchema(res);
+        registerCopilotFromSchema(props.path, res);
       });
     });
+    function registerCopilotFromSchema(path, schema) {
+      try {
+        const pageType = extractPageType(path);
+        const isCrudPage = hasPageType(schema, "crud") || hasPageType(schema, "page") && findComponentInSchema(schema, "crud");
+        const isFormPage = hasPageType(schema, "form");
+        if (isCrudPage) {
+          const entityName = extractEntityName(schema, path);
+          const crudContext = extractCrudContext(schema, entityName);
+          const actions2 = buildCrudPageActions(crudContext, schema);
+          window.dispatchEvent(new CustomEvent("copilot:page-context", {
+            detail: {
+              pageType,
+              route: path,
+              pageKind: "crud",
+              entityName,
+              crudContext,
+              state: { entity: entityName },
+              actions: actions2
+            },
+            bubbles: false
+          }));
+        } else if (isFormPage) {
+          const fields = extractFormFields(schema);
+          const actions2 = buildFormPageActions();
+          window.dispatchEvent(new CustomEvent("copilot:page-context", {
+            detail: {
+              pageType,
+              route: path,
+              pageKind: "form",
+              state: {},
+              formSchema: { fields },
+              actions: actions2
+            },
+            bubbles: false
+          }));
+        } else {
+          const entityName = extractEntityName(schema, path);
+          window.dispatchEvent(new CustomEvent("copilot:page-context", {
+            detail: {
+              pageType,
+              route: path,
+              pageKind: "page",
+              entityName,
+              state: { entity: entityName }
+            },
+            bubbles: false
+          }));
+        }
+      } catch (e) {
+      }
+    }
+    function registerCopilotContext(path, pageObj) {
+      try {
+        const pageType = extractPageType(path);
+        const entityName = extractEntityName(pageObj, path);
+        window.__copilotPageType__ = pageType;
+        window.__copilotPageEntity__ = entityName;
+      } catch (e) {
+      }
+    }
+    function extractPageType(path) {
+      if (path.includes("FlowNodeDef"))
+        return "FlowNodeDef";
+      if (path.includes("NopSysClusterLeader"))
+        return "NopSysClusterLeader";
+      if (path.includes("NopAi"))
+        return "NopAiChatRequest";
+      const entityMatch = path.match(/Nop[A-Z][a-zA-Z]+/);
+      if (entityMatch)
+        return entityMatch[0];
+      return path.replace(/^.*\/([^/]+)$/, "$1");
+    }
+    function extractEntityName(schema, path) {
+      var _a;
+      if ((_a = schema == null ? void 0 : schema.api) == null ? void 0 : _a.url) {
+        const m = schema.api.url.match(/Nop[A-Za-z]+/);
+        if (m)
+          return m[0];
+      }
+      return extractPageType(path);
+    }
+    function hasPageType(schema, type) {
+      if (!schema)
+        return false;
+      if (schema.type === type)
+        return true;
+      if (schema.body) {
+        return hasPageType(schema.body, type);
+      }
+      return false;
+    }
+    function findComponentInSchema(schema, type) {
+      if (!schema)
+        return false;
+      if (schema.type === type)
+        return true;
+      if (Array.isArray(schema)) {
+        return schema.some((s) => findComponentInSchema(s, type));
+      }
+      if (typeof schema === "object") {
+        return Object.values(schema).some((v) => findComponentInSchema(v, type));
+      }
+      return false;
+    }
+    function extractFormFields(schema) {
+      const fields = [];
+      function walk(node) {
+        var _a, _b;
+        if (!node || typeof node !== "object")
+          return;
+        if (Array.isArray(node)) {
+          node.forEach(walk);
+          return;
+        }
+        if (node.type && (node.name || node.label)) {
+          const controlTypes = ["input-text", "input-number", "input-email", "input-password", "select", "textarea", "input-date", "switch", "checkbox", "radio", "input-file", "input-image"];
+          if (controlTypes.includes(node.type) || ((_a = node.type) == null ? void 0 : _a.startsWith("input-"))) {
+            fields.push({
+              name: node.name || "",
+              label: node.label || node.name || "",
+              type: mapAmisType(node.type),
+              required: node.required || ((_b = node.validations) == null ? void 0 : _b.required) || false
+            });
+          }
+        }
+        for (const key of ["body", "controls", "columns", "tabs", "fields", "form"]) {
+          if (node[key])
+            walk(node[key]);
+        }
+      }
+      walk(schema);
+      return fields;
+    }
+    function extractCrudContext(schema, entityName) {
+      const context = {
+        entityName,
+        canCreate: false,
+        canEdit: false,
+        canDelete: false
+      };
+      function findCrudConfig(node) {
+        if (!node || typeof node !== "object")
+          return null;
+        if (node.type === "crud")
+          return node;
+        if (Array.isArray(node)) {
+          for (const item of node) {
+            const found = findCrudConfig(item);
+            if (found)
+              return found;
+          }
+        }
+        if (typeof node === "object") {
+          for (const key of ["body", "controls", "columns", "tabs", "panel"]) {
+            const found = findCrudConfig(node[key]);
+            if (found)
+              return found;
+          }
+        }
+        return null;
+      }
+      const crudConfig = findCrudConfig(schema);
+      if (crudConfig) {
+        if (crudConfig.api)
+          ;
+        if (crudConfig.columns) {
+          context.visibleColumns = (Array.isArray(crudConfig.columns) ? crudConfig.columns : []).filter((col) => col && col.name).map((col) => col.name);
+        }
+        const hasCreate = findComponentInSchema(crudConfig, "create") || crudConfig.createAction;
+        const hasEdit = findComponentInSchema(crudConfig, "edit") || crudConfig.editAction;
+        const hasDelete = findComponentInSchema(crudConfig, "delete") || crudConfig.deleteAction;
+        context.canCreate = !!hasCreate;
+        context.canEdit = !!hasEdit;
+        context.canDelete = !!hasDelete;
+      }
+      return context;
+    }
+    function mapAmisType(amisType) {
+      switch (amisType) {
+        case "input-text":
+          return "text";
+        case "input-number":
+          return "number";
+        case "input-email":
+          return "email";
+        case "input-password":
+          return "password";
+        case "input-date":
+        case "input-datetime":
+          return "date";
+        case "input-tel":
+          return "phone";
+        case "select":
+          return "select";
+        case "textarea":
+          return "textarea";
+        case "switch":
+          return "boolean";
+        default:
+          return (amisType == null ? void 0 : amisType.replace("input-", "")) || "text";
+      }
+    }
+    function findAndClickAmisButton(labels) {
+      var _a;
+      for (const label of labels) {
+        const btn = document.querySelector(`[data-tooltip="${label}"]`);
+        if (btn) {
+          btn.click();
+          return { found: true };
+        }
+      }
+      const buttons = document.querySelectorAll('button, .btn, [role="button"], .cxd-Button');
+      for (const btn of buttons) {
+        const text = ((_a = btn.textContent) == null ? void 0 : _a.trim()) || "";
+        if (labels.some((l) => text === l)) {
+          btn.click();
+          return { found: true };
+        }
+      }
+      return { found: false, error: `找不到按钮: ${labels.join(", ")}` };
+    }
+    function reloadCrud() {
+      var _a, _b, _c, _d, _e;
+      const scoped = window.__amisScoped__;
+      if (!scoped)
+        return { found: false, error: "AMIS scoped 不可用" };
+      try {
+        const comps = scoped.getComponents();
+        for (const comp of comps) {
+          if (((_a = comp == null ? void 0 : comp.props) == null ? void 0 : _a.type) === "crud") {
+            if (typeof comp.reload === "function") {
+              comp.reload();
+              return { found: true };
+            }
+          }
+          if (((_c = (_b = comp == null ? void 0 : comp.props) == null ? void 0 : _b.body) == null ? void 0 : _c.type) === "crud") {
+            const bodyComp = (_e = (_d = comp.context) == null ? void 0 : _d.getComponentByName) == null ? void 0 : _e.call(_d, comp.props.body.name);
+            if (bodyComp && typeof bodyComp.reload === "function") {
+              bodyComp.reload();
+              return { found: true };
+            }
+          }
+        }
+        return { found: false, error: "找不到 CRUD 组件" };
+      } catch (e) {
+        return { found: false, error: e.message };
+      }
+    }
+    function buildCrudPageActions(crudCtx, _schema) {
+      const actions2 = {};
+      if (crudCtx.canCreate) {
+        actions2.add = async () => {
+          const r = findAndClickAmisButton(["新增", "新建", "添加", "创建"]);
+          if (!r.found)
+            throw new Error(r.error);
+          await new Promise((resolve) => setTimeout(resolve, 400));
+          return r;
+        };
+      }
+      if (crudCtx.canEdit) {
+        actions2.edit = async () => {
+          const r = findAndClickAmisButton(["编辑", "修改"]);
+          if (!r.found)
+            throw new Error(r.error);
+          await new Promise((resolve) => setTimeout(resolve, 400));
+          return r;
+        };
+      }
+      if (crudCtx.canDelete) {
+        actions2.delete = async () => {
+          const r = findAndClickAmisButton(["删除"]);
+          if (!r.found)
+            throw new Error(r.error);
+          return r;
+        };
+      }
+      actions2.query = async () => {
+        const r = findAndClickAmisButton(["查询", "搜索"]);
+        if (!r.found) {
+          const rr = reloadCrud();
+          if (!rr.found)
+            throw new Error(rr.error);
+          return rr;
+        }
+        return r;
+      };
+      actions2.reload = async () => {
+        const r = reloadCrud();
+        if (!r.found)
+          throw new Error(r.error);
+        return r;
+      };
+      actions2.submitForm = async () => {
+        const r = findAndClickAmisButton(["提交", "保存", "确定"]);
+        if (!r.found)
+          throw new Error(r.error);
+        return r;
+      };
+      return actions2;
+    }
+    function buildFormPageActions() {
+      const actions2 = {};
+      actions2.submitForm = async () => {
+        const r = findAndClickAmisButton(["提交", "保存", "确定"]);
+        if (!r.found)
+          throw new Error(r.error);
+        return r;
+      };
+      return actions2;
+    }
     function updateSchema(value) {
       pageSchema.value = value;
     }

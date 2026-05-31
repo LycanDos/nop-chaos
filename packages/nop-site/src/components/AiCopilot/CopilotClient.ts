@@ -2,34 +2,37 @@
 // SSE 通信客户端
 // ============================================================
 
-import type { ChatRequest } from './types'
-import {
-  dispatchCopilotEvent,
-  SseEventParser,
-  type StreamCallbacks,
-} from './sse'
+import type { ChatRequest } from './types';
+import { dispatchCopilotEvent, SseEventParser, type StreamCallbacks } from './sse';
 
 export class CopilotClient {
-  private baseUrl = '/sse/r/NopCopilot__chatStream'
-  private abortController: AbortController | null = null
-  private sessionId: string
+  private baseUrl = '/sse/r/NopCopilot__chatStream';
+  private abortController: AbortController | null = null;
+  private sessionId: string;
 
   constructor(sessionId?: string) {
-    this.sessionId = sessionId || this.generateSessionId()
+    this.sessionId = sessionId || this.generateSessionId();
   }
 
   getSessionId(): string {
-    return this.sessionId
+    return this.sessionId;
   }
 
-  async sendMessage(
-    request: ChatRequest,
-    callbacks: StreamCallbacks,
-  ): Promise<void> {
-    this.cancel()
+  setSessionId(sessionId: string): void {
+    this.sessionId = sessionId || this.generateSessionId();
+  }
 
-    request.sessionId = this.sessionId
-    this.abortController = new AbortController()
+  createSessionId(): string {
+    const sessionId = this.generateSessionId();
+    this.sessionId = sessionId;
+    return sessionId;
+  }
+
+  async sendMessage(request: ChatRequest, callbacks: StreamCallbacks): Promise<void> {
+    this.cancel();
+
+    request.sessionId = this.sessionId;
+    this.abortController = new AbortController();
 
     try {
       const response = await fetch(this.baseUrl, {
@@ -40,53 +43,53 @@ export class CopilotClient {
         },
         body: JSON.stringify(request),
         signal: this.abortController.signal,
-      })
+      });
 
       if (!response.ok) {
-        callbacks.onError(`HTTP ${response.status}: ${response.statusText}`)
-        return
+        callbacks.onError(`HTTP ${response.status}: ${response.statusText}`);
+        return;
       }
 
-      const reader = response.body?.getReader()
+      const reader = response.body?.getReader();
       if (!reader) {
-        callbacks.onError('Stream not available')
-        return
+        callbacks.onError('Stream not available');
+        return;
       }
 
-      const decoder = new TextDecoder()
-      const parser = new SseEventParser()
+      const decoder = new TextDecoder();
+      const parser = new SseEventParser();
 
       while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
+        const { done, value } = await reader.read();
+        if (done) break;
 
-        const text = decoder.decode(value, { stream: true })
+        const text = decoder.decode(value, { stream: true });
         for (const event of parser.feed(text)) {
-          dispatchCopilotEvent(event.event, event.data, callbacks)
+          dispatchCopilotEvent(event.event, event.data, callbacks);
         }
       }
 
-      const tail = decoder.decode()
+      const tail = decoder.decode();
       for (const event of parser.feed(tail)) {
-        dispatchCopilotEvent(event.event, event.data, callbacks)
+        dispatchCopilotEvent(event.event, event.data, callbacks);
       }
       for (const event of parser.flush()) {
-        dispatchCopilotEvent(event.event, event.data, callbacks)
+        dispatchCopilotEvent(event.event, event.data, callbacks);
       }
     } catch (err: any) {
-      if (err.name === 'AbortError') return
-      callbacks.onError(err.message || 'Network error')
+      if (err.name === 'AbortError') return;
+      callbacks.onError(err.message || 'Network error');
     }
   }
 
   cancel(): void {
     if (this.abortController) {
-      this.abortController.abort()
-      this.abortController = null
+      this.abortController.abort();
+      this.abortController = null;
     }
   }
 
   private generateSessionId(): string {
-    return `sess_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
+    return `sess_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
   }
 }

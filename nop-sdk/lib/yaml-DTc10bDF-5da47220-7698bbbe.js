@@ -1,4 +1,4 @@
-import { u4 } from "./index-dbece035.js";
+import { u4 } from "./index-5916b475.js";
 import "amis-core";
 import "react";
 import "amis-ui";

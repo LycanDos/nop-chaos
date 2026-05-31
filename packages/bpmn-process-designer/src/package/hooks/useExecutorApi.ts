@@ -92,7 +92,7 @@ function extractItems(res: any): any[] {
 
 export const nopGraphQLAdapter: ExecutorApiAdapter = {
   async fetchExecutorList() {
-    const selection = 'executorDefId,executorCode,executorName,language,status,description,currentReleaseId'
+    const selection = 'executorDefId,executorCode,executorName,language,status,description,currentReleaseId,versionRuleJson'
     const res = await nopRestPost(
       `/r/ExecutorDef__findList?@selection=${selection}`,
       {

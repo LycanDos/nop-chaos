@@ -22,7 +22,7 @@ export function setCopilotInstance(instance: any): void {
  * providePageContext({
  *   pageType: 'bpmn-designer',
  *   route: '/bpmn-designer/example',
- *   getState: () => ({ processName: currentName.value }),
+ *   state: { processName: 'current' },
  *   actions: {
  *     addNode: async (params) => { ... },
  *     updateNode: async (params) => { ... },
@@ -36,6 +36,14 @@ export function providePageContext(context: PageRuntimeContext): void {
   if (copilotInstance && copilotInstance.setPageContext) {
     copilotInstance.setPageContext(context)
   }
+
+  // 同时通过 unified CustomEvent 通道广播（与 nop-core/ai-copilot.ts 协议一致）
+  window.dispatchEvent(
+    new CustomEvent('copilot:page-context', {
+      detail: context,
+      bubbles: false,
+    }),
+  )
 }
 
 /**

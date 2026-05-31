@@ -12,6 +12,8 @@ export interface ExecutorDefItem {
   status?: string
   description?: string
   currentReleaseId?: string
+  /** JSON 字符串，如 {"sourceMode":"embedded"} 表示内置执行器 */
+  versionRuleJson?: string
 }
 
 /** 执行器发布版本 */

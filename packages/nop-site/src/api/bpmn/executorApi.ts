@@ -20,7 +20,7 @@ export const nopSiteExecutorApi: ExecutorApiAdapter = {
   async fetchExecutorList() {
     try {
       const res = await ajaxRequest({
-        url: '/r/ExecutorDef__findList?@selection=executorDefId,executorCode,executorName,language,status,description,currentReleaseId',
+        url: '/r/ExecutorDef__findList?@selection=executorDefId,executorCode,executorName,language,status,description,currentReleaseId,versionRuleJson',
         data: {
           query: {
             filter: { $type: 'eq', name: 'status', value: 'enabled' },

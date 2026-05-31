@@ -650,6 +650,46 @@ function createPage(options) {
   };
   return page;
 }
+function providePageContext(context) {
+  const copilotApp = window.__copilotApp__;
+  if (copilotApp && typeof copilotApp.setPageContext === "function") {
+    copilotApp.setPageContext(context);
+  }
+  window.dispatchEvent(
+    new CustomEvent("copilot:page-context", {
+      detail: context,
+      bubbles: false
+    })
+  );
+}
+function unregisterPageContext(pageType) {
+  const copilotApp = window.__copilotApp__;
+  if (copilotApp && typeof copilotApp.unregisterPage === "function") {
+    copilotApp.unregisterPage(pageType);
+  }
+  window.dispatchEvent(
+    new CustomEvent("copilot:page-unregister", {
+      detail: { pageType },
+      bubbles: false
+    })
+  );
+}
+function findMatchingFields(formSchema, params) {
+  const { fieldType, fieldPattern, fieldName, fieldLabel, fieldRequired } = params;
+  return formSchema.fields.filter((f) => {
+    if (fieldName && f.name === fieldName)
+      return true;
+    if (fieldLabel && f.label === fieldLabel)
+      return true;
+    if (fieldType && f.type === fieldType)
+      return true;
+    if (fieldPattern && f.label.includes(fieldPattern))
+      return true;
+    if (fieldRequired !== void 0 && f.required === fieldRequired)
+      return true;
+    return false;
+  }).map((f) => ({ name: f.name, label: f.label }));
+}
 function handleGraphQL(config, graphqlUrl, options) {
   let url = config.url;
   const [type, path] = splitPrefixUrl(url) || [];
@@ -1709,6 +1749,7 @@ const NopCore = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePrope
   deleteDynamicModules,
   deletePageCache,
   fetcherOk,
+  findMatchingFields,
   format,
   getSchemaProcessorType,
   handleGraphQL,
@@ -1719,6 +1760,7 @@ const NopCore = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePrope
   processXuiDirective,
   processXuiValue,
   providePage,
+  providePageContext,
   provideScoped,
   provideScopedStore,
   refHolder,
@@ -1732,6 +1774,7 @@ const NopCore = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePrope
   splitPrefixUrl,
   transformPageJson,
   treeToCondition,
+  unregisterPageContext,
   unregisterXuiComponent,
   useAdapter,
   useDebug,
@@ -1782,6 +1825,7 @@ export {
   deleteDynamicModules,
   deletePageCache,
   fetcherOk,
+  findMatchingFields,
   format,
   getSchemaProcessorType,
   handleGraphQL,
@@ -1792,6 +1836,7 @@ export {
   processXuiDirective,
   processXuiValue,
   providePage,
+  providePageContext,
   provideScoped,
   provideScopedStore,
   refHolder,
@@ -1805,6 +1850,7 @@ export {
   splitPrefixUrl,
   transformPageJson,
   treeToCondition,
+  unregisterPageContext,
   unregisterXuiComponent,
   useAdapter,
   useDebug,

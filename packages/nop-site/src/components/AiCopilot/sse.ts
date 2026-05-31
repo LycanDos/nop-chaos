@@ -2,6 +2,7 @@ import type {
   CopilotStreamEventType,
   CopilotUsage,
   FrontendInstruction,
+  TraceStep,
 } from './types'
 
 export interface ParsedSseEvent {
@@ -21,6 +22,7 @@ export interface StreamCallbacks {
   onClarification?: (text: string) => void
   onDone: (usage?: CopilotUsage) => void
   onError: (error: string) => void
+  onTrace?: (steps: TraceStep[]) => void
 }
 
 export class SseEventParser {
@@ -167,6 +169,11 @@ export function dispatchCopilotEvent(
     case 'error':
       callbacks.onError(readErrorPayload(parsed))
       break
+    case 'trace':
+      if (callbacks.onTrace) {
+        callbacks.onTrace(parsed?.trace || [])
+      }
+      break
     default:
       break
   }
@@ -180,6 +187,7 @@ function normalizeEventType(eventType: string): CopilotStreamEventType | null {
     case 'clarification':
     case 'done':
     case 'error':
+    case 'trace':
       return eventType
     case 'action':
       return 'instruction'

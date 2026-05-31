@@ -31,6 +31,8 @@ export const APP_SESSION_CACHE_KEY = 'COMMON__SESSION__KEY__';
 export const TENANT_ID = 'TENANT_ID';
 // login info key
 export const LOGIN_INFO_KEY = 'LOGIN__INFO__';
+// back menu key
+export const BACK_MENU_KEY = 'BACK__MENU__KEY__';
 
 export enum CacheTypeEnum {
   SESSION,

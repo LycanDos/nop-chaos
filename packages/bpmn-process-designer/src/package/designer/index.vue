@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, customRef, markRaw, onBeforeUnmount, provide, ref, shallowRef } from 'vue'
+import { computed, customRef, markRaw, nextTick, onBeforeUnmount, onMounted, provide, ref, shallowRef } from 'vue'
 // CSS 依赖由使用方（如 nop-site）自行导入，避免库构建后字体路径断裂
 // 使用方需要导入：
 //   import 'bpmn-js/dist/assets/diagram-js.css'
@@ -249,6 +249,7 @@ const modelerReady = async (bpmnModeler: BpmnModeler) => {
     issuesList.value = Object.values(issues).flat()
   })
   restart()
+  setupMinimapTitlebar()
   // await bpmnModeler.createDiagram()
 }
 const toggleMockVisible = () => {
@@ -303,6 +304,72 @@ provide('ProcessDesigner', {
 if (props.executorApi) {
   provide(EXECUTOR_API_KEY, props.executorApi)
 }
+
+// 给 minimap 添加可拖动标题栏（含关闭/收起按钮）
+function setupMinimapTitlebar() {
+  nextTick(() => {
+    setTimeout(() => {
+      const minimap = document.querySelector('.djs-minimap') as HTMLElement
+      if (!minimap || minimap.querySelector('.minimap-titlebar')) return
+      minimap.classList.add('has-titlebar')
+
+      const titlebar = document.createElement('div')
+      titlebar.className = 'minimap-titlebar'
+      titlebar.innerHTML = `
+        <span class="minimap-titlebar__drag"></span>
+        <span class="minimap-titlebar__actions">
+          <button class="minimap-btn minimap-btn--minimize" title="收起">−</button>
+          <button class="minimap-btn minimap-btn--close" title="关闭">×</button>
+        </span>
+      `
+      minimap.insertBefore(titlebar, minimap.firstChild)
+
+      // 收起/展开
+      const minimizeBtn = titlebar.querySelector('.minimap-btn--minimize') as HTMLElement
+      let minimized = false
+      minimizeBtn.addEventListener('click', (e) => {
+        e.stopPropagation()
+        minimized = !minimized
+        let sibling = titlebar.nextElementSibling as HTMLElement | null
+        while (sibling) {
+          sibling.style.display = minimized ? 'none' : ''
+          sibling = sibling.nextElementSibling as HTMLElement | null
+        }
+        minimizeBtn.textContent = minimized ? '+' : '−'
+        minimap.style.maxHeight = minimized ? '22px' : '200px'
+      })
+
+      // 关闭
+      const closeBtn = titlebar.querySelector('.minimap-btn--close') as HTMLElement
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation()
+        try { modeler.value?.get('minimap').toggle(false) } catch (_) { /* */ }
+      })
+
+      // 拖动
+      let isDragging = false, startX = 0, startY = 0, origX = 0, origY = 0
+      titlebar.addEventListener('mousedown', (e) => {
+        if ((e.target as HTMLElement).closest('.minimap-btn')) return
+        isDragging = true
+        startX = e.clientX; startY = e.clientY
+        const rect = minimap.getBoundingClientRect()
+        const parent = (minimap.offsetParent || document.body).getBoundingClientRect()
+        origX = rect.left - parent.left; origY = rect.top - parent.top
+        e.preventDefault()
+      })
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return
+        minimap.style.position = 'absolute'
+        minimap.style.left = (origX + e.clientX - startX) + 'px'
+        minimap.style.top = (origY + e.clientY - startY) + 'px'
+        minimap.style.right = 'auto'
+        minimap.style.bottom = 'auto'
+      })
+      document.addEventListener('mouseup', () => { isDragging = false })
+    }, 1000)
+  })
+}
+
 defineExpose({
   loadXml,
   getXml,
@@ -524,5 +591,103 @@ defineExpose({
     background-color: var(--el-color-primary-light-9);
     color: var(--el-color-primary);
   }
+}
+</style>
+
+<style lang="scss">
+/* minimap 标题栏样式（非 scoped，因为 .djs-minimap 在组件外） */
+.djs-minimap {
+  box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.25);
+  border: none;
+  background-color: #fff;
+  border-radius: 4px;
+  overflow: hidden;
+  width: 260px !important;
+  height: auto !important;
+  max-height: 200px;
+  padding-top: 0;
+
+  > .map {
+    width: 260px !important;
+    height: 150px !important;
+    overflow: hidden;
+    position: relative;
+  }
+}
+
+.minimap-titlebar {
+  height: 22px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  cursor: move;
+  user-select: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+}
+
+.minimap-titlebar__drag {
+  flex: 1;
+  height: 100%;
+}
+
+.minimap-titlebar__actions {
+  display: flex;
+  gap: 2px;
+}
+
+.minimap-btn {
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  color: #999;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  position: relative;
+  z-index: 31;
+
+  &:hover {
+    background: #e0e0e0;
+    color: #333;
+  }
+}
+
+.djs-minimap .viewport-dom {
+  z-index: 8;
+}
+
+.djs-minimap.open .overlay {
+  z-index: 7;
+}
+
+.djs-minimap.has-titlebar > .map {
+  margin-top: 22px;
+  position: relative;
+}
+
+.djs-minimap.has-titlebar .viewport-dom {
+  top: 22px !important;
+  transform: none !important;
+}
+
+.djs-minimap.has-titlebar.open .overlay {
+  top: 22px !important;
+}
+
+.djs-minimap:not(.open) {
+  display: none !important;
 }
 </style>

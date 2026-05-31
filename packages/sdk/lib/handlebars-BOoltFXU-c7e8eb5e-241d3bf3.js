@@ -1,4 +1,4 @@
-import { u4 } from "./index-dbece035.js";
+import { u4 } from "./index-5916b475.js";
 import "amis-core";
 import "react";
 import "amis-ui";
@@ -17,14 +17,14 @@ import "veaury";
  * Released under the MIT license
  * https://github.com/microsoft/monaco-editor/blob/main/LICENSE.txt
  *-----------------------------------------------------------------------------*/
-var s = Object.defineProperty, c = Object.getOwnPropertyDescriptor, l = Object.getOwnPropertyNames, d = Object.prototype.hasOwnProperty, p = (t, e, o, n) => {
+var i = Object.defineProperty, s = Object.getOwnPropertyDescriptor, d = Object.getOwnPropertyNames, c = Object.prototype.hasOwnProperty, p = (t, e, r, m) => {
   if (e && typeof e == "object" || typeof e == "function")
-    for (let r of l(e))
-      !d.call(t, r) && r !== o && s(t, r, { get: () => e[r], enumerable: !(n = c(e, r)) || n.enumerable });
+    for (let n of d(e))
+      !c.call(t, n) && n !== r && i(t, n, { get: () => e[n], enumerable: !(m = s(e, n)) || m.enumerable });
   return t;
-}, h = (t, e, o) => (p(t, e, "default"), o), a = {};
+}, h = (t, e, r) => (p(t, e, "default"), r), a = {};
 h(a, u4);
-var i = [
+var o = [
   "area",
   "base",
   "br",
@@ -41,14 +41,15 @@ var i = [
   "source",
   "track",
   "wbr"
-], b = {
-  wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\s]+)/g,
+], u = {
+  wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\s]+)/g,
   comments: {
-    blockComment: ["<!--", "-->"]
+    blockComment: ["{{!--", "--}}"]
   },
   brackets: [
     ["<!--", "-->"],
     ["<", ">"],
+    ["{{", "}}"],
     ["{", "}"],
     ["(", ")"]
   ],
@@ -60,14 +61,14 @@ var i = [
     { open: "'", close: "'" }
   ],
   surroundingPairs: [
+    { open: "<", close: ">" },
     { open: '"', close: '"' },
-    { open: "'", close: "'" },
-    { open: "<", close: ">" }
+    { open: "'", close: "'" }
   ],
   onEnterRules: [
     {
       beforeText: new RegExp(
-        `<(?!(?:${i.join("|")}))(\\w[\\w\\d]*)([^/>]*(?!/)>)[^<]*$`,
+        `<(?!(?:${o.join("|")}))(\\w[\\w\\d]*)([^/>]*(?!/)>)[^<]*$`,
         "i"
       ),
       afterText: /^<\/(\w[\w\d]*)\s*>$/i,
@@ -77,7 +78,7 @@ var i = [
     },
     {
       beforeText: new RegExp(
-        `<(?!(?:${i.join("|")}))(\\w[\\w\\d]*)([^/>]*(?!/)>)[^<]*$`,
+        `<(?!(?:${o.join("|")}))(\\w[\\w\\d]*)([^/>]*(?!/)>)[^<]*$`,
         "i"
       ),
       action: { indentAction: a.languages.IndentAction.Indent }
@@ -90,35 +91,60 @@ var i = [
   // The main tokenizer for our languages
   tokenizer: {
     root: [
-      [/@@@@/],
-      // text
-      [/@[^@]/, { token: "@rematch", switchTo: "@razorInSimpleState.root" }],
+      [/\{\{!--/, "comment.block.start.handlebars", "@commentBlock"],
+      [/\{\{!/, "comment.start.handlebars", "@comment"],
+      [/\{\{/, { token: "@rematch", switchTo: "@handlebarsInSimpleState.root" }],
       [/<!DOCTYPE/, "metatag.html", "@doctype"],
-      [/<!--/, "comment.html", "@comment"],
-      [/(<)([\w\-]+)(\/>)/, ["delimiter.html", "tag.html", "delimiter.html"]],
+      [/<!--/, "comment.html", "@commentHtml"],
+      [/(<)(\w+)(\/>)/, ["delimiter.html", "tag.html", "delimiter.html"]],
       [/(<)(script)/, ["delimiter.html", { token: "tag.html", next: "@script" }]],
       [/(<)(style)/, ["delimiter.html", { token: "tag.html", next: "@style" }]],
-      [/(<)([:\w\-]+)/, ["delimiter.html", { token: "tag.html", next: "@otherTag" }]],
-      [/(<\/)([\w\-]+)/, ["delimiter.html", { token: "tag.html", next: "@otherTag" }]],
+      [/(<)([:\w]+)/, ["delimiter.html", { token: "tag.html", next: "@otherTag" }]],
+      [/(<\/)(\w+)/, ["delimiter.html", { token: "tag.html", next: "@otherTag" }]],
       [/</, "delimiter.html"],
-      [/[ \t\r\n]+/],
-      // whitespace
-      [/[^<@]+/]
+      [/\{/, "delimiter.html"],
+      [/[^<{]+/]
       // text
     ],
     doctype: [
-      [/@[^@]/, { token: "@rematch", switchTo: "@razorInSimpleState.comment" }],
+      [
+        /\{\{/,
+        {
+          token: "@rematch",
+          switchTo: "@handlebarsInSimpleState.comment"
+        }
+      ],
       [/[^>]+/, "metatag.content.html"],
       [/>/, "metatag.html", "@pop"]
     ],
     comment: [
-      [/@[^@]/, { token: "@rematch", switchTo: "@razorInSimpleState.comment" }],
+      [/\}\}/, "comment.end.handlebars", "@pop"],
+      [/./, "comment.content.handlebars"]
+    ],
+    commentBlock: [
+      [/--\}\}/, "comment.block.end.handlebars", "@pop"],
+      [/./, "comment.content.handlebars"]
+    ],
+    commentHtml: [
+      [
+        /\{\{/,
+        {
+          token: "@rematch",
+          switchTo: "@handlebarsInSimpleState.comment"
+        }
+      ],
       [/-->/, "comment.html", "@pop"],
       [/[^-]+/, "comment.content.html"],
       [/./, "comment.content.html"]
     ],
     otherTag: [
-      [/@[^@]/, { token: "@rematch", switchTo: "@razorInSimpleState.otherTag" }],
+      [
+        /\{\{/,
+        {
+          token: "@rematch",
+          switchTo: "@handlebarsInSimpleState.otherTag"
+        }
+      ],
       [/\/?>/, "delimiter.html", "@pop"],
       [/"([^"]*)"/, "attribute.value"],
       [/'([^']*)'/, "attribute.value"],
@@ -130,7 +156,13 @@ var i = [
     // -- BEGIN <script> tags handling
     // After <script
     script: [
-      [/@[^@]/, { token: "@rematch", switchTo: "@razorInSimpleState.script" }],
+      [
+        /\{\{/,
+        {
+          token: "@rematch",
+          switchTo: "@handlebarsInSimpleState.script"
+        }
+      ],
       [/type/, "attribute.name", "@scriptAfterType"],
       [/"([^"]*)"/, "attribute.value"],
       [/'([^']*)'/, "attribute.value"],
@@ -154,10 +186,10 @@ var i = [
     // After <script ... type
     scriptAfterType: [
       [
-        /@[^@]/,
+        /\{\{/,
         {
           token: "@rematch",
-          switchTo: "@razorInSimpleState.scriptAfterType"
+          switchTo: "@handlebarsInSimpleState.scriptAfterType"
         }
       ],
       [/=/, "delimiter", "@scriptAfterTypeEquals"],
@@ -177,10 +209,10 @@ var i = [
     // After <script ... type =
     scriptAfterTypeEquals: [
       [
-        /@[^@]/,
+        /\{\{/,
         {
           token: "@rematch",
-          switchTo: "@razorInSimpleState.scriptAfterTypeEquals"
+          switchTo: "@handlebarsInSimpleState.scriptAfterTypeEquals"
         }
       ],
       [
@@ -213,10 +245,10 @@ var i = [
     // After <script ... type = $S2
     scriptWithCustomType: [
       [
-        /@[^@]/,
+        /\{\{/,
         {
           token: "@rematch",
-          switchTo: "@razorInSimpleState.scriptWithCustomType.$S2"
+          switchTo: "@handlebarsInSimpleState.scriptWithCustomType.$S2"
         }
       ],
       [
@@ -237,10 +269,10 @@ var i = [
     ],
     scriptEmbedded: [
       [
-        /@[^@]/,
+        /\{\{/,
         {
           token: "@rematch",
-          switchTo: "@razorInEmbeddedState.scriptEmbedded.$S2",
+          switchTo: "@handlebarsInEmbeddedState.scriptEmbedded.$S2",
           nextEmbedded: "@pop"
         }
       ],
@@ -250,7 +282,13 @@ var i = [
     // -- BEGIN <style> tags handling
     // After <style
     style: [
-      [/@[^@]/, { token: "@rematch", switchTo: "@razorInSimpleState.style" }],
+      [
+        /\{\{/,
+        {
+          token: "@rematch",
+          switchTo: "@handlebarsInSimpleState.style"
+        }
+      ],
       [/type/, "attribute.name", "@styleAfterType"],
       [/"([^"]*)"/, "attribute.value"],
       [/'([^']*)'/, "attribute.value"],
@@ -274,10 +312,10 @@ var i = [
     // After <style ... type
     styleAfterType: [
       [
-        /@[^@]/,
+        /\{\{/,
         {
           token: "@rematch",
-          switchTo: "@razorInSimpleState.styleAfterType"
+          switchTo: "@handlebarsInSimpleState.styleAfterType"
         }
       ],
       [/=/, "delimiter", "@styleAfterTypeEquals"],
@@ -297,10 +335,10 @@ var i = [
     // After <style ... type =
     styleAfterTypeEquals: [
       [
-        /@[^@]/,
+        /\{\{/,
         {
           token: "@rematch",
-          switchTo: "@razorInSimpleState.styleAfterTypeEquals"
+          switchTo: "@handlebarsInSimpleState.styleAfterTypeEquals"
         }
       ],
       [
@@ -333,10 +371,10 @@ var i = [
     // After <style ... type = $S2
     styleWithCustomType: [
       [
-        /@[^@]/,
+        /\{\{/,
         {
           token: "@rematch",
-          switchTo: "@razorInSimpleState.styleWithCustomType.$S2"
+          switchTo: "@handlebarsInSimpleState.styleWithCustomType.$S2"
         }
       ],
       [
@@ -357,212 +395,43 @@ var i = [
     ],
     styleEmbedded: [
       [
-        /@[^@]/,
+        /\{\{/,
         {
           token: "@rematch",
-          switchTo: "@razorInEmbeddedState.styleEmbedded.$S2",
+          switchTo: "@handlebarsInEmbeddedState.styleEmbedded.$S2",
           nextEmbedded: "@pop"
         }
       ],
       [/<\/style/, { token: "@rematch", next: "@pop", nextEmbedded: "@pop" }]
     ],
     // -- END <style> tags handling
-    razorInSimpleState: [
-      [/@\*/, "comment.cs", "@razorBlockCommentTopLevel"],
-      [/@[{(]/, "metatag.cs", "@razorRootTopLevel"],
-      [/(@)(\s*[\w]+)/, ["metatag.cs", { token: "identifier.cs", switchTo: "@$S2.$S3" }]],
-      [/[})]/, { token: "metatag.cs", switchTo: "@$S2.$S3" }],
-      [/\*@/, { token: "comment.cs", switchTo: "@$S2.$S3" }]
+    handlebarsInSimpleState: [
+      [/\{\{\{?/, "delimiter.handlebars"],
+      [/\}\}\}?/, { token: "delimiter.handlebars", switchTo: "@$S2.$S3" }],
+      { include: "handlebarsRoot" }
     ],
-    razorInEmbeddedState: [
-      [/@\*/, "comment.cs", "@razorBlockCommentTopLevel"],
-      [/@[{(]/, "metatag.cs", "@razorRootTopLevel"],
+    handlebarsInEmbeddedState: [
+      [/\{\{\{?/, "delimiter.handlebars"],
       [
-        /(@)(\s*[\w]+)/,
-        [
-          "metatag.cs",
-          {
-            token: "identifier.cs",
-            switchTo: "@$S2.$S3",
-            nextEmbedded: "$S3"
-          }
-        ]
-      ],
-      [
-        /[})]/,
+        /\}\}\}?/,
         {
-          token: "metatag.cs",
+          token: "delimiter.handlebars",
           switchTo: "@$S2.$S3",
           nextEmbedded: "$S3"
         }
       ],
-      [
-        /\*@/,
-        {
-          token: "comment.cs",
-          switchTo: "@$S2.$S3",
-          nextEmbedded: "$S3"
-        }
-      ]
+      { include: "handlebarsRoot" }
     ],
-    razorBlockCommentTopLevel: [
-      [/\*@/, "@rematch", "@pop"],
-      [/[^*]+/, "comment.cs"],
-      [/./, "comment.cs"]
-    ],
-    razorBlockComment: [
-      [/\*@/, "comment.cs", "@pop"],
-      [/[^*]+/, "comment.cs"],
-      [/./, "comment.cs"]
-    ],
-    razorRootTopLevel: [
-      [/\{/, "delimiter.bracket.cs", "@razorRoot"],
-      [/\(/, "delimiter.parenthesis.cs", "@razorRoot"],
-      [/[})]/, "@rematch", "@pop"],
-      { include: "razorCommon" }
-    ],
-    razorRoot: [
-      [/\{/, "delimiter.bracket.cs", "@razorRoot"],
-      [/\(/, "delimiter.parenthesis.cs", "@razorRoot"],
-      [/\}/, "delimiter.bracket.cs", "@pop"],
-      [/\)/, "delimiter.parenthesis.cs", "@pop"],
-      { include: "razorCommon" }
-    ],
-    razorCommon: [
-      [
-        /[a-zA-Z_]\w*/,
-        {
-          cases: {
-            "@razorKeywords": { token: "keyword.cs" },
-            "@default": "identifier.cs"
-          }
-        }
-      ],
-      // brackets
-      [/[\[\]]/, "delimiter.array.cs"],
-      // whitespace
-      [/[ \t\r\n]+/],
-      // comments
-      [/\/\/.*$/, "comment.cs"],
-      [/@\*/, "comment.cs", "@razorBlockComment"],
-      // strings
-      [/"([^"]*)"/, "string.cs"],
-      [/'([^']*)'/, "string.cs"],
-      // simple html
-      [/(<)([\w\-]+)(\/>)/, ["delimiter.html", "tag.html", "delimiter.html"]],
-      [/(<)([\w\-]+)(>)/, ["delimiter.html", "tag.html", "delimiter.html"]],
-      [/(<\/)([\w\-]+)(>)/, ["delimiter.html", "tag.html", "delimiter.html"]],
-      // delimiters
-      [/[\+\-\*\%\&\|\^\~\!\=\<\>\/\?\;\:\.\,]/, "delimiter.cs"],
-      // numbers
-      [/\d*\d+[eE]([\-+]?\d+)?/, "number.float.cs"],
-      [/\d*\.\d+([eE][\-+]?\d+)?/, "number.float.cs"],
-      [/0[xX][0-9a-fA-F']*[0-9a-fA-F]/, "number.hex.cs"],
-      [/0[0-7']*[0-7]/, "number.octal.cs"],
-      [/0[bB][0-1']*[0-1]/, "number.binary.cs"],
-      [/\d[\d']*/, "number.cs"],
-      [/\d/, "number.cs"]
+    handlebarsRoot: [
+      [/"[^"]*"/, "string.handlebars"],
+      [/[#/][^\s}]+/, "keyword.helper.handlebars"],
+      [/else\b/, "keyword.helper.handlebars"],
+      [/[\s]+/],
+      [/[^}]/, "variable.parameter.handlebars"]
     ]
-  },
-  razorKeywords: [
-    "abstract",
-    "as",
-    "async",
-    "await",
-    "base",
-    "bool",
-    "break",
-    "by",
-    "byte",
-    "case",
-    "catch",
-    "char",
-    "checked",
-    "class",
-    "const",
-    "continue",
-    "decimal",
-    "default",
-    "delegate",
-    "do",
-    "double",
-    "descending",
-    "explicit",
-    "event",
-    "extern",
-    "else",
-    "enum",
-    "false",
-    "finally",
-    "fixed",
-    "float",
-    "for",
-    "foreach",
-    "from",
-    "goto",
-    "group",
-    "if",
-    "implicit",
-    "in",
-    "int",
-    "interface",
-    "internal",
-    "into",
-    "is",
-    "lock",
-    "long",
-    "nameof",
-    "new",
-    "null",
-    "namespace",
-    "object",
-    "operator",
-    "out",
-    "override",
-    "orderby",
-    "params",
-    "private",
-    "protected",
-    "public",
-    "readonly",
-    "ref",
-    "return",
-    "switch",
-    "struct",
-    "sbyte",
-    "sealed",
-    "short",
-    "sizeof",
-    "stackalloc",
-    "static",
-    "string",
-    "select",
-    "this",
-    "throw",
-    "true",
-    "try",
-    "typeof",
-    "uint",
-    "ulong",
-    "unchecked",
-    "unsafe",
-    "ushort",
-    "using",
-    "var",
-    "virtual",
-    "volatile",
-    "void",
-    "when",
-    "while",
-    "where",
-    "yield",
-    "model",
-    "inject"
-    // Razor specific
-  ],
-  escapes: /\\(?:[abfnrtv\\"']|x[0-9A-Fa-f]{1,4}|u[0-9A-Fa-f]{4}|U[0-9A-Fa-f]{8})/
+  }
 };
 export {
-  b as conf,
+  u as conf,
   y as language
 };

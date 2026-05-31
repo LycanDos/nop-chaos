@@ -326,6 +326,7 @@
         <button
           v-for="item in elementTypes"
           :key="item.type"
+          type="button"
           class="sidebar-item"
           :title="item.label"
           draggable="true"
@@ -1623,9 +1624,12 @@
 
                 <div class="prop-field">
                   <label>区域用途</label>
+                  <div class="purpose-search-wrapper">
+                    <input class="prop-input purpose-search" v-model="purposeSearch" placeholder="搜索用途..." />
+                  </div>
                   <div class="purpose-checkbox-group">
-                    <template v-for="opt in REGION_PURPOSE_OPTIONS" :key="opt.value">
-                      <div v-if="opt.group && opt.group !== (REGION_PURPOSE_OPTIONS[REGION_PURPOSE_OPTIONS.indexOf(opt) - 1]?.group || '')" class="purpose-group-label">
+                    <template v-for="(opt, idx) in filteredPurposeOptions" :key="opt.value">
+                      <div v-if="opt.group && opt.group !== (filteredPurposeOptions[idx - 1]?.group || '')" class="purpose-group-label">
                         {{ opt.group }}
                       </div>
                       <label class="prop-checkbox purpose-item" :class="{ 'purpose-sub': !!opt.group }">
@@ -1636,12 +1640,9 @@
                         />
                         {{ opt.label }}
                       </label>
-                    </template>
-                  </div>
-                </div>
 
                 <!-- per-purpose config sections -->
-                <div v-if="purposeIsChecked('ocr-text')" class="purpose-config-section">
+                <div v-if="opt.value === 'ocr-text' && purposeIsChecked('ocr-text')" class="purpose-config-inline">
                   <div class="purpose-config-header" @click="purposeConfigExpanded['ocr-text'] = !purposeConfigExpanded['ocr-text']">
                     <span class="purpose-config-chevron">{{ purposeConfigExpanded['ocr-text'] ? '▾' : '▸' }}</span>
                     OCR-文本 配置
@@ -1696,7 +1697,7 @@
                   </div>
                 </div>
 
-                <div v-if="purposeIsChecked('ocr-table')" class="purpose-config-section">
+                <div v-if="opt.value === 'ocr-table' && purposeIsChecked('ocr-table')" class="purpose-config-inline">
                   <div class="purpose-config-header" @click="purposeConfigExpanded['ocr-table'] = !purposeConfigExpanded['ocr-table']">
                     <span class="purpose-config-chevron">{{ purposeConfigExpanded['ocr-table'] ? '▾' : '▸' }}</span>
                     OCR-表格 配置
@@ -1735,7 +1736,7 @@
                   </div>
                 </div>
 
-                <div v-if="purposeIsChecked('ocr-template')" class="purpose-config-section">
+                <div v-if="opt.value === 'ocr-template' && purposeIsChecked('ocr-template')" class="purpose-config-inline">
                   <div class="purpose-config-header" @click="purposeConfigExpanded['ocr-template'] = !purposeConfigExpanded['ocr-template']">
                     <span class="purpose-config-chevron">{{ purposeConfigExpanded['ocr-template'] ? '▾' : '▸' }}</span>
                     OCR-模板 配置
@@ -1761,7 +1762,7 @@
                   </div>
                 </div>
 
-                <div v-if="purposeIsChecked('stain-detect')" class="purpose-config-section">
+                <div v-if="opt.value === 'stain-detect' && purposeIsChecked('stain-detect')" class="purpose-config-inline">
                   <div class="purpose-config-header" @click="purposeConfigExpanded['stain-detect'] = !purposeConfigExpanded['stain-detect']">
                     <span class="purpose-config-chevron">{{ purposeConfigExpanded['stain-detect'] ? '▾' : '▸' }}</span>
                     污渍识别 配置
@@ -1803,7 +1804,7 @@
                   </div>
                 </div>
 
-                <div v-if="purposeIsChecked('tamper-detect')" class="purpose-config-section">
+                <div v-if="opt.value === 'tamper-detect' && purposeIsChecked('tamper-detect')" class="purpose-config-inline">
                   <div class="purpose-config-header" @click="purposeConfigExpanded['tamper-detect'] = !purposeConfigExpanded['tamper-detect']">
                     <span class="purpose-config-chevron">{{ purposeConfigExpanded['tamper-detect'] ? '▾' : '▸' }}</span>
                     篡改识别 配置
@@ -1831,7 +1832,7 @@
                   </div>
                 </div>
 
-                <div v-if="purposeIsChecked('stamp-detect')" class="purpose-config-section">
+                <div v-if="opt.value === 'stamp-detect' && purposeIsChecked('stamp-detect')" class="purpose-config-inline">
                   <div class="purpose-config-header" @click="purposeConfigExpanded['stamp-detect'] = !purposeConfigExpanded['stamp-detect']">
                     <span class="purpose-config-chevron">{{ purposeConfigExpanded['stamp-detect'] ? '▾' : '▸' }}</span>
                     印章检测 配置
@@ -1855,7 +1856,7 @@
                   </div>
                 </div>
 
-                <div v-if="purposeIsChecked('barcode')" class="purpose-config-section">
+                <div v-if="opt.value === 'barcode' && purposeIsChecked('barcode')" class="purpose-config-inline">
                   <div class="purpose-config-header" @click="purposeConfigExpanded['barcode'] = !purposeConfigExpanded['barcode']">
                     <span class="purpose-config-chevron">{{ purposeConfigExpanded['barcode'] ? '▾' : '▸' }}</span>
                     条码识别 配置
@@ -1882,7 +1883,7 @@
                   </div>
                 </div>
 
-                <div v-if="purposeIsChecked('signature-detect')" class="purpose-config-section">
+                <div v-if="opt.value === 'signature-detect' && purposeIsChecked('signature-detect')" class="purpose-config-inline">
                   <div class="purpose-config-header" @click="purposeConfigExpanded['signature-detect'] = !purposeConfigExpanded['signature-detect']">
                     <span class="purpose-config-chevron">{{ purposeConfigExpanded['signature-detect'] ? '▾' : '▸' }}</span>
                     签名检测 配置
@@ -1905,7 +1906,7 @@
                   </div>
                 </div>
 
-                <div v-if="purposeIsChecked('key-extraction')" class="purpose-config-section">
+                <div v-if="opt.value === 'key-extraction' && purposeIsChecked('key-extraction')" class="purpose-config-inline">
                   <div class="purpose-config-header" @click="purposeConfigExpanded['key-extraction'] = !purposeConfigExpanded['key-extraction']">
                     <span class="purpose-config-chevron">{{ purposeConfigExpanded['key-extraction'] ? '▾' : '▸' }}</span>
                     关键字段提取 配置
@@ -1934,7 +1935,7 @@
                   </div>
                 </div>
 
-                <div v-if="purposeIsChecked('desensitize')" class="purpose-config-section">
+                <div v-if="opt.value === 'desensitize' && purposeIsChecked('desensitize')" class="purpose-config-inline">
                   <div class="purpose-config-header" @click="purposeConfigExpanded['desensitize'] = !purposeConfigExpanded['desensitize']">
                     <span class="purpose-config-chevron">{{ purposeConfigExpanded['desensitize'] ? '▾' : '▸' }}</span>
                     脱敏区域 配置
@@ -1982,7 +1983,7 @@
                   </div>
                 </div>
 
-                <div v-if="purposeIsChecked('quality-check')" class="purpose-config-section">
+                <div v-if="opt.value === 'quality-check' && purposeIsChecked('quality-check')" class="purpose-config-inline">
                   <div class="purpose-config-header" @click="purposeConfigExpanded['quality-check'] = !purposeConfigExpanded['quality-check']">
                     <span class="purpose-config-chevron">{{ purposeConfigExpanded['quality-check'] ? '▾' : '▸' }}</span>
                     质量检测 配置
@@ -2027,6 +2028,9 @@
                         <option value="reject">拒绝</option>
                       </select>
                     </div>
+                  </div>
+                </div>
+                    </template>
                   </div>
                 </div>
               </template>
@@ -2833,6 +2837,17 @@ const previewVisible = ref(false)
 const dirty = ref(false)
 const showRegions = ref(true)
 const purposeConfigExpanded = ref<Record<string, boolean>>({})
+const purposeSearch = ref('')
+
+const filteredPurposeOptions = computed(() => {
+  if (!purposeSearch.value.trim()) return REGION_PURPOSE_OPTIONS
+  const q = purposeSearch.value.trim().toLowerCase()
+  return REGION_PURPOSE_OPTIONS.filter(o =>
+    o.label.toLowerCase().includes(q) ||
+    o.value.toLowerCase().includes(q) ||
+    (o.group && o.group.toLowerCase().includes(q))
+  )
+})
 const canvasSizePreset = ref('A4-portrait')
 const canvasSizeCustom = ref<{ w: number; h: number } | null>(null)
 const showQrMarkers = ref(true)
@@ -7772,6 +7787,29 @@ onUnmounted(() => {
   gap: 4px;
 }
 
+.purpose-search-wrapper {
+  margin-bottom: 10px;
+}
+
+.purpose-search {
+  font-size: 12px !important;
+  padding: 6px 10px !important;
+  border-radius: 6px !important;
+  background: #f7f8fa;
+  border: 1px solid #e4e8ed;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.purpose-search:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.15);
+  background: #fff;
+}
+
+.purpose-search::placeholder {
+  color: #a0a8b4;
+}
+
 .purpose-group-label {
   margin-top: 4px;
   color: var(--text-sub);
@@ -7788,10 +7826,18 @@ onUnmounted(() => {
   margin-left: 12px;
 }
 
-.purpose-config-section {
-  margin-top: 8px;
-  border-top: 1px solid #edf1f6;
-  padding-top: 8px;
+.purpose-config-inline {
+  margin: 2px 0 4px 8px;
+  padding: 8px 10px;
+  background: #f8f9fb;
+  border-left: 3px solid var(--accent, #4a90d9);
+  border-radius: 0 6px 6px 0;
+  animation: purposeConfigSlideIn 0.18s ease;
+}
+
+@keyframes purposeConfigSlideIn {
+  from { opacity: 0; max-height: 0; overflow: hidden; }
+  to { opacity: 1; max-height: 600px; }
 }
 
 .purpose-config-header {

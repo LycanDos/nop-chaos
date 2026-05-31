@@ -34,7 +34,9 @@ function transformMenu(resources: any) {
   if (!resources)
     return
 
-  return resources.map(r => {
+  return resources
+    .filter(r => r.routePath != null)
+    .map(r => {
     let children = transformMenu(r.children)
     let menu = {
       id: r.id,
