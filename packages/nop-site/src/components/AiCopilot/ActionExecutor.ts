@@ -10,7 +10,6 @@ export interface ActionResult {
   error?: string
 }
 
-type ActionType = string
 type PageType = string
 type ActionName = string
 
@@ -20,12 +19,18 @@ export class ActionExecutor {
   private pageContexts: Map<PageType, PageRuntimeContext> = new Map()
 
   /**
-   * 注册页面的 action handlers 和运行时上下文
+   * 注册页面的 action handlers 和运行时上下文。
+   * 支持增量合并：新 context 的 actions 为空时会保留已注册的 handlers。
    */
   registerPageActions(pageType: string, context: PageRuntimeContext): void {
+    // 增量合并：保留已有 handlers（预注册时 actions 为空，正式注册时补充）
+    const existingContext = this.pageContexts.get(pageType)
+    if (existingContext && (!context.actions || Object.keys(context.actions).length === 0)) {
+      context = { ...context, actions: existingContext.actions || {} }
+    }
     this.pageContexts.set(pageType, context)
     if (context.actions) {
-      const handlerMap = new Map<string, ActionHandler>()
+      const handlerMap = this.handlers.get(pageType) || new Map<string, ActionHandler>()
       for (const [name, handler] of Object.entries(context.actions)) {
         handlerMap.set(name, handler)
       }
@@ -47,9 +52,17 @@ export class ActionExecutor {
   async execute(instruction: FrontendInstruction): Promise<ActionResult[]> {
     const results: ActionResult[] = []
 
+    // Resolve pageType: instruction.targetPage.pageType > first action's pageType > search all registered
+    let resolvedPageType = instruction.targetPage?.pageType
+    if (!resolvedPageType && instruction.actions.length > 0) {
+      resolvedPageType = instruction.actions[0].pageType
+    }
+
     for (const action of instruction.actions) {
       try {
-        const result = await this.executeAction(action, instruction.targetPage?.pageType)
+        // Per-action pageType overrides the resolved one
+        const pageType = action.pageType || resolvedPageType
+        const result = await this.executeAction(action, pageType)
         results.push(result)
       } catch (err: any) {
         results.push({ success: false, error: err.message || 'Execution failed' })
@@ -61,13 +74,38 @@ export class ActionExecutor {
     return results
   }
 
+  /**
+   * 带重试的执行方法，用于应对 handler 异步注册或 DOM 元素延迟渲染。
+   * 仅对 "No handler" 和 "Element not found" 错误进行重试（指数退避）。
+   */
+  async executeWithRetry(
+    instruction: FrontendInstruction,
+    maxRetries: number = 3,
+    baseDelayMs: number = 300,
+  ): Promise<ActionResult[]> {
+    let lastResults: ActionResult[] = []
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      if (attempt > 0) {
+        await sleep(baseDelayMs * Math.pow(2, attempt - 1))
+      }
+      lastResults = await this.execute(instruction)
+      const retryable = lastResults.some(
+        (r) => !r.success && (r.error?.includes('No handler') || r.error?.includes('Element not found')),
+      )
+      if (!retryable) break
+    }
+
+    return lastResults
+  }
+
   private async executeAction(
     action: FrontendAction,
     pageType?: string,
   ): Promise<ActionResult> {
     switch (action.type) {
       case 'navigate':
-        return this.handleNavigate(action)
+        return this.handleNavigate(action, pageType)
       case 'call':
         return this.handleCall(action, pageType)
       case 'fillForm':
@@ -102,30 +140,59 @@ export class ActionExecutor {
   ): Promise<ActionResult> {
     // 1. 优先使用页面注册的 action handler
     const actionName = action.actionName || action.target
-    const handler = this.findRegisteredHandler(actionName, pageType)
+    let handler = this.findRegisteredHandler(actionName, pageType)
     if (handler) {
       try {
         await handler(action.params)
         // 给弹窗/UI 渲染留出时间
         await sleep(200)
-        return { success: true }
+        return { success: true, data: { type: action.type, target: actionName } }
       } catch (err: any) {
         return { success: false, error: err.message }
       }
     }
 
-    // 2. 语义路径：通过 actionName 定位按钮（DOM 兜底）
+    // 1a. 全局搜索所有已注册页面（仅 pageType 未知时兜底，避免串页误点）
+    if (actionName && !pageType) {
+      for (const [, handlerMap] of this.handlers.entries()) {
+        const h = handlerMap.get(actionName)
+        if (h) {
+          handler = h
+          break
+        }
+      }
+      if (handler) {
+        try {
+          await handler(action.params)
+          await sleep(200)
+          return { success: true, data: { type: action.type, target: actionName } }
+        } catch (err: any) {
+          return { success: false, error: err.message }
+        }
+      }
+    }
+
+    // 2. 尝试通过 AMIS __amisScoped__ 桥接分发（绕过 DOM）
+    if (actionName) {
+      const amisResult = this.dispatchViaAmisScope(actionName)
+      if (amisResult) {
+        await sleep(200)
+        return amisResult
+      }
+    }
+
+    // 3. 语义路径：通过 actionName 定位按钮（DOM 兜底）
     let element: HTMLElement | null = null
     if (action.actionName) {
       element = this.findActionButton(action.actionName)
     }
 
-    // 3. DOM selector 路径
+    // 4. DOM selector 路径
     if (!element && action.domSelector) {
       element = document.querySelector(action.domSelector)
     }
 
-    // 4. target 字段兼容（仅 CSS selector 形式）
+    // 5. target 字段兼容（仅 CSS selector 形式）
     if (!element && action.target && (action.target.startsWith('#') || action.target.startsWith('.') || action.target.startsWith('['))) {
       element = document.querySelector(action.target)
     }
@@ -137,7 +204,57 @@ export class ActionExecutor {
     element.click()
     // 给后续操作留出渲染时间
     await sleep(200)
-    return { success: true }
+    return { success: true, data: { type: action.type, target: action.actionName || action.target } }
+  }
+
+  /**
+   * 通过 AMIS __amisScoped__ 分发 CRUD action（列表页 add/edit/delete 等）。
+   * 完全绕过 DOM 操作，直接调用 AMIS 内部的 doAction → handleAction 链路。
+   * @returns ActionResult 或 null（表示 AMIS scoped 不可用或未找到 CRUD 组件）
+   */
+  private dispatchViaAmisScope(name: string): ActionResult | null {
+    try {
+      const scoped = (window as any).__amisScoped__
+      if (!scoped) return null
+
+      const comps = scoped.getComponents?.()
+      if (!comps || !comps.length) return null
+
+      // 查找 CRUD 组件
+      let crud: any = null
+      for (const comp of comps) {
+        if (comp?.props?.type === 'crud') { crud = comp; break }
+      }
+      if (!crud) {
+        for (const comp of comps) {
+          const body = comp?.props?.body
+          if (body?.type === 'crud') {
+            crud = comp.context?.getComponentByName?.(body.name)
+            if (crud) break
+          }
+        }
+      }
+      if (!crud) return null
+
+      // 从 CRUD props 查找匹配的 action 定义
+      const listActions = crud.props?.listActions || []
+      const rowActions = crud.props?.rowActions || []
+      const allActions = [...listActions, ...rowActions]
+
+      const actionDef = allActions.find((a: any) =>
+        a.id === name ||
+        (name === 'add' && (a.id?.includes('add') || a.id?.includes('create'))) ||
+        (name === 'edit' && a.id?.includes('update')) ||
+        (name === 'delete' && a.id?.includes('delete'))
+      )
+      if (!actionDef) return null
+
+      const storeData = crud.props?.store?.data ?? {}
+      crud.doAction?.(actionDef, storeData, false)
+      return { success: true, data: { type: 'click', target: name } }
+    } catch {
+      return null
+    }
   }
 
   private async handleFillForm(
@@ -153,7 +270,12 @@ export class ActionExecutor {
     const handler = this.findRegisteredHandler('fillForm', pageType)
     if (handler) {
       try {
-        await handler(action.params)
+        await handler({
+          value,
+          fieldName: action.fieldName,
+          label: action.label,
+          domSelector: action.domSelector,
+        })
         return { success: true }
       } catch (err: any) {
         return { success: false, error: err.message }
@@ -192,8 +314,6 @@ export class ActionExecutor {
         HTMLSelectElement.prototype, 'value',
       )!.set!
       nativeSetter!.call(element, strValue)
-    } else {
-      element.value = strValue
     }
 
     element.dispatchEvent(new Event('input', { bubbles: true }))
@@ -230,8 +350,8 @@ export class ActionExecutor {
 
     // 按按钮文本匹配
     if (!btn) {
-      const buttons = document.querySelectorAll('button, .btn, [role="button"], .cxd-Button')
-      for (const b of buttons) {
+      const buttons = document.querySelectorAll('button, .btn, [role="button"], .cxd-Button, .ant-btn')
+      for (const b of Array.from(buttons)) {
         const text = b.textContent?.trim() || ''
         if (labels.some(l => text === l)) {
           btn = b as HTMLElement
@@ -242,9 +362,9 @@ export class ActionExecutor {
 
     // 在弹窗内查找（modal/dialog 容器内优先）
     if (!btn) {
-      const modal = document.querySelector('.cxd-Modal--open, .amis-dialog, [role="dialog"]')
+      const modal = document.querySelector('.ant-modal-wrap, .ant-modal, .cxd-Modal--open, .amis-dialog')
       if (modal) {
-        const confirmBtn = modal.querySelector('.cxd-Modal-footer button:last-child, .cxd-Dialog-footer button:last-child') as HTMLElement
+        const confirmBtn = modal.querySelector('.ant-modal-footer button:last-child, .cxd-Modal-footer button:last-child, .cxd-Dialog-footer button:last-child') as HTMLElement
         if (confirmBtn) btn = confirmBtn
       }
     }
@@ -257,51 +377,131 @@ export class ActionExecutor {
     return { success: true }
   }
 
-  private async handleNavigate(action: FrontendAction): Promise<ActionResult> {
+  private async handleNavigate(
+    action: FrontendAction,
+    pageType?: string,
+  ): Promise<ActionResult> {
     const router = (window as any).__router__
     if (!router) {
       return { success: false, error: 'Router not available' }
     }
     await router.push(action.target || action.route)
-    return { success: true }
+    if (pageType) {
+      const ready = await this.waitForPageContext(pageType)
+      if (!ready) {
+        return { success: false, error: `Target page not ready: ${pageType}` }
+      }
+    }
+    return {
+      success: true,
+      data: {
+        type: action.type,
+        target: action.target || action.route || pageType || 'navigate',
+      },
+    }
+  }
+
+  private async waitForPageContext(
+    pageType: string,
+    timeoutMs: number = 5000,
+  ): Promise<boolean> {
+    const start = Date.now()
+    while (Date.now() - start < timeoutMs) {
+      if (this.pageContexts.has(pageType)) {
+        return true
+      }
+      await sleep(100)
+    }
+    return false
   }
 
   private async handleCall(
     action: FrontendAction,
     pageType?: string,
   ): Promise<ActionResult> {
-    if (!pageType) {
-      return { success: false, error: 'No target pageType specified' }
+    const targetName = action.actionName || action.target
+    if (!targetName) {
+      return { success: false, error: 'call action missing actionName/target' }
     }
-    const handlerMap = this.handlers.get(pageType)
-    if (!handlerMap) {
-      return { success: false, error: `No handlers registered for page: ${pageType}` }
+
+    // Resolve pageType: given pageType → search all registered pages → error
+    let handler: ActionHandler | null = null
+    let resolvedPageType = pageType
+
+    if (resolvedPageType) {
+      const handlerMap = this.handlers.get(resolvedPageType)
+      handler = handlerMap?.get(targetName) || null
     }
-    const handler = handlerMap.get(action.target)
+
     if (!handler) {
-      return { success: false, error: `No handler for action: ${action.target}` }
+      // Search all registered pages for a matching handler
+      for (const [pt, handlerMap] of this.handlers.entries()) {
+        const h = handlerMap.get(targetName)
+        if (h) {
+          handler = h
+          resolvedPageType = pt
+          break
+        }
+      }
     }
+
+    if (!handler) {
+      // Fallback: 没有注册 handler 时，退化为 click 行为（DOM 查找按钮）
+      // 适用于 AMIS CRUD 页面等没有注册 Vue handler 的场景
+      const clickAction = { ...action, type: 'click' as const }
+      const clickResult = await this.handleClick(clickAction, pageType)
+      if (clickResult.success) {
+        return clickResult
+      }
+
+      const registeredPages = Array.from(this.handlers.keys()).join(', ')
+      return {
+        success: false,
+        error: `No handler '${targetName}' found. ` +
+          (registeredPages
+            ? `Registered pages: ${registeredPages}`
+            : 'No pages have registered action handlers'),
+      }
+    }
+
     const result = await handler(action.params)
     return { success: true, data: result }
   }
 
   private findFormField(action: FrontendAction): HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null {
+    // 弹窗内优先搜索
+    const dialog = document.querySelector('.ant-modal-wrap, .ant-modal, .cxd-Modal--open')
     if (action.fieldName) {
-      const el = this.findFieldByName(action.fieldName)
+      const el = this.findFieldByName(action.fieldName, action.label, dialog as HTMLElement)
       if (el) return el
     }
     if (action.domSelector) {
-      const el = document.querySelector(action.domSelector) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+      const scope = (dialog || document) as HTMLElement
+      const el = scope.querySelector(action.domSelector) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
       if (el) return el
     }
     if (action.target && (action.target.startsWith('#') || action.target.startsWith('.') || action.target.startsWith('['))) {
-      const el = document.querySelector(action.target) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+      const scope = (dialog || document) as HTMLElement
+      const el = scope.querySelector(action.target) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
       if (el) return el
     }
     return null
   }
 
-  private findFieldByName(fieldName: string): HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null {
+  private findFieldByName(
+    fieldName: string,
+    label?: string,
+    scope?: HTMLElement | null,
+  ): HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null {
+    const container = scope || document
+    // name 属性优先匹配 input/textarea/select
+    if (fieldName) {
+      const nameEl = container.querySelector(
+        `input[name="${fieldName}"], textarea[name="${fieldName}"], select[name="${fieldName}"]`,
+      ) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+      if (nameEl) return nameEl
+    }
+    // 通用选择器（可能匹配到容器 div）
     const selectors = [
       `[name="${fieldName}"]`,
       `[data-field="${fieldName}"]`,
@@ -309,20 +509,37 @@ export class ActionExecutor {
       `[data-fieldname="${fieldName}"]`,
     ]
     for (const sel of selectors) {
-      const el = document.querySelector(sel) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-      if (el) return el
+      const el = container.querySelector(sel)
+      if (!el) continue
+      // 目标元素就是表单控件
+      if (el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement) {
+        return el
+      }
+      // 匹配到容器元素，查找内部的 input/select/textarea
+      if (el instanceof HTMLElement) {
+        const inner = el.querySelector('input, select, textarea') as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null
+        if (inner) return inner
+      }
     }
-    const labels = document.querySelectorAll('label')
-    for (const label of labels) {
-      if (label.textContent?.trim() === fieldName) {
-        const forId = label.getAttribute('for')
+    // label 文本匹配（支持 fieldName 和 label）
+    const labels = container.querySelectorAll('label')
+    for (const labelEl of Array.from(labels)) {
+      const text = labelEl.textContent?.trim() || ''
+      const matchName = fieldName && (text === fieldName || text.includes(fieldName))
+      const matchLabel = label && (
+        text.includes(label) ||
+        (label.includes(text) && text.length >= 3)
+      )
+      if (matchName || matchLabel) {
+        const forId = labelEl.getAttribute('for')
         if (forId) {
-          const el = document.getElementById(forId) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+          const el = container.querySelector(`#${forId.replace(/"/g, '\\"')}`) as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null
           if (el) return el
         }
-        const parent = label.closest('.amis-form-group') || label.closest('.form-group')
-        if (parent) {
-          const input = parent.querySelector('input, select, textarea') as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+        // AMIS form item: label → .cxd-FormItem → input
+        const formItem = labelEl.closest('.ant-form-item, .cxd-FormItem, .amis-form-group, .form-group')
+        if (formItem) {
+          const input = formItem.querySelector('input, select, textarea') as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
           if (input) return input
         }
       }
@@ -350,9 +567,9 @@ export class ActionExecutor {
     }
 
     // 通过按钮文本匹配
-    const buttons = document.querySelectorAll('button, .btn, [role="button"], .cxd-Button')
+    const buttons = document.querySelectorAll('button, .btn, [role="button"], .cxd-Button, .ant-btn')
     const lowerName = actionName.toLowerCase()
-    for (const btn of buttons) {
+    for (const btn of Array.from(buttons)) {
       const text = btn.textContent?.trim() || ''
       const title = (btn as HTMLElement).getAttribute('data-tooltip') || ''
       // 精确匹配英文
@@ -414,6 +631,8 @@ function getAmisActionLabels(actionName: string): string[] {
   const map: Record<string, string[]> = {
     add: ['新增', '新建', '添加', '创建'],
     create: ['新增', '新建', '添加', '创建'],
+    createRecord: ['新增', '新建', '添加', '创建'],
+    deleteRecord: ['删除'],
     edit: ['编辑', '修改'],
     update: ['编辑', '修改'],
     delete: ['删除'],

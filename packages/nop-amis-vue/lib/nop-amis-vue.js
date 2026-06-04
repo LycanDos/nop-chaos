@@ -303,7 +303,7 @@ const AmisSchemaPage = defineReactPageComponent((props) => {
         },
         locale,
         // amis内部会自动替换zh_CN为zh-CN
-        theme: "cxd"
+        theme: "antd"
       };
       setDefaultLocale(locale);
       schema = await transformPageJson(schema.__baseUrl, schema);
@@ -751,6 +751,17 @@ const _sfc_main$1 = defineComponent({
         registerCopilotFromSchema(props.path, res);
       });
     });
+    const preliminaryPageType = extractPageType(props.path);
+    window.dispatchEvent(new CustomEvent("copilot:page-context", {
+      detail: {
+        pageType: preliminaryPageType,
+        route: props.path,
+        pageKind: "pending",
+        state: {},
+        actions: {}
+      },
+      bubbles: false
+    }));
     function registerCopilotFromSchema(path, schema) {
       try {
         const pageType = extractPageType(path);
@@ -919,9 +930,12 @@ const _sfc_main$1 = defineComponent({
         if (crudConfig.columns) {
           context.visibleColumns = (Array.isArray(crudConfig.columns) ? crudConfig.columns : []).filter((col) => col && col.name).map((col) => col.name);
         }
-        const hasCreate = findComponentInSchema(crudConfig, "create") || crudConfig.createAction;
-        const hasEdit = findComponentInSchema(crudConfig, "edit") || crudConfig.editAction;
-        const hasDelete = findComponentInSchema(crudConfig, "delete") || crudConfig.deleteAction;
+        const listActions = Array.isArray(crudConfig.listActions) ? crudConfig.listActions : [];
+        const rowActions = Array.isArray(crudConfig.rowActions) ? crudConfig.rowActions : [];
+        const hasActionId = (actions2, ids) => actions2.some((action) => action && ids.includes(action.id));
+        const hasCreate = findComponentInSchema(crudConfig, "create") || crudConfig.createAction || hasActionId(listActions, ["add-button", "add", "create-button"]);
+        const hasEdit = findComponentInSchema(crudConfig, "edit") || crudConfig.editAction || hasActionId(rowActions, ["row-update-button", "edit", "update-button"]);
+        const hasDelete = findComponentInSchema(crudConfig, "delete") || crudConfig.deleteAction || hasActionId(listActions, ["batch-delete-button", "delete-button"]) || hasActionId(rowActions, ["row-delete-button", "delete"]);
         context.canCreate = !!hasCreate;
         context.canEdit = !!hasEdit;
         context.canDelete = !!hasDelete;
@@ -962,7 +976,7 @@ const _sfc_main$1 = defineComponent({
           return { found: true };
         }
       }
-      const buttons = document.querySelectorAll('button, .btn, [role="button"], .cxd-Button');
+      const buttons = document.querySelectorAll('button, .btn, [role="button"], .cxd-Button, .ant-btn');
       for (const btn of buttons) {
         const text = ((_a = btn.textContent) == null ? void 0 : _a.trim()) || "";
         if (labels.some((l) => text === l)) {
@@ -972,61 +986,162 @@ const _sfc_main$1 = defineComponent({
       }
       return { found: false, error: `找不到按钮: ${labels.join(", ")}` };
     }
-    function reloadCrud() {
-      var _a, _b, _c, _d, _e;
-      const scoped = window.__amisScoped__;
-      if (!scoped)
-        return { found: false, error: "AMIS scoped 不可用" };
-      try {
-        const comps = scoped.getComponents();
-        for (const comp of comps) {
-          if (((_a = comp == null ? void 0 : comp.props) == null ? void 0 : _a.type) === "crud") {
-            if (typeof comp.reload === "function") {
-              comp.reload();
-              return { found: true };
-            }
-          }
-          if (((_c = (_b = comp == null ? void 0 : comp.props) == null ? void 0 : _b.body) == null ? void 0 : _c.type) === "crud") {
-            const bodyComp = (_e = (_d = comp.context) == null ? void 0 : _d.getComponentByName) == null ? void 0 : _e.call(_d, comp.props.body.name);
-            if (bodyComp && typeof bodyComp.reload === "function") {
-              bodyComp.reload();
-              return { found: true };
+    function findAndFillAmisField(fieldName, label, value) {
+      var _a;
+      const modal = document.querySelector(".ant-modal-wrap, .ant-modal, .cxd-Modal--open");
+      const container = modal || document;
+      let input = null;
+      if (fieldName) {
+        input = container.querySelector(
+          `input[name="${fieldName}"], textarea[name="${fieldName}"], select[name="${fieldName}"]`
+        );
+      }
+      if (!input && fieldName) {
+        const wrapper = container.querySelector(`[data-name="${fieldName}"]`);
+        if (wrapper) {
+          input = wrapper.querySelector("input, textarea, select");
+        }
+      }
+      if (!input && label) {
+        const items = container.querySelectorAll(".ant-form-item, .cxd-FormItem");
+        for (const item of items) {
+          const labelEl = item.querySelector(".ant-form-item-label > label, .cxd-FormItem-label, label");
+          if (labelEl) {
+            const text = ((_a = labelEl.textContent) == null ? void 0 : _a.trim()) || "";
+            if (text.includes(label) || label.includes(text) && text.length >= 3) {
+              input = item.querySelector("input, textarea, select");
+              if (input)
+                break;
             }
           }
         }
+      }
+      if (!input)
+        return { found: false, error: `未找到表单字段: ${label || fieldName}` };
+      const strValue = String(value);
+      if (input instanceof HTMLInputElement) {
+        const nativeSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
+        nativeSetter.call(input, strValue);
+      } else if (input instanceof HTMLTextAreaElement) {
+        const nativeSetter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value").set;
+        nativeSetter.call(input, strValue);
+      } else if (input instanceof HTMLSelectElement) {
+        const nativeSetter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value").set;
+        nativeSetter.call(input, strValue);
+      } else {
+        input.value = strValue;
+      }
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      return { found: true };
+    }
+    function findAmisCrudComponent() {
+      var _a, _b, _c, _d;
+      const scoped = window.__amisScoped__;
+      if (!scoped)
+        return null;
+      try {
+        const comps = scoped.getComponents();
+        for (const comp of comps) {
+          if (((_a = comp == null ? void 0 : comp.props) == null ? void 0 : _a.type) === "crud")
+            return comp;
+        }
+        for (const comp of comps) {
+          const body = (_b = comp.props) == null ? void 0 : _b.body;
+          if ((body == null ? void 0 : body.type) === "crud") {
+            const bc = (_d = (_c = comp.context) == null ? void 0 : _c.getComponentByName) == null ? void 0 : _d.call(_c, body.name);
+            if (bc)
+              return bc;
+          }
+        }
+      } catch {
+      }
+      return null;
+    }
+    function dispatchAmisCrudAction(actionId) {
+      var _a, _b, _c, _d, _e;
+      const crud = findAmisCrudComponent();
+      if (!crud)
         return { found: false, error: "找不到 CRUD 组件" };
+      const listActions = ((_a = crud.props) == null ? void 0 : _a.listActions) || [];
+      const rowActions = ((_b = crud.props) == null ? void 0 : _b.rowActions) || [];
+      const allActions = [...listActions, ...rowActions];
+      const actionDef = allActions.find(
+        (a) => {
+          var _a2, _b2, _c2;
+          return a.id === actionId || actionId === "add" && (((_a2 = a.id) == null ? void 0 : _a2.includes("add")) || a.actionType === "dialog") || actionId === "edit" && ((_b2 = a.id) == null ? void 0 : _b2.includes("update")) || actionId === "delete" && ((_c2 = a.id) == null ? void 0 : _c2.includes("delete"));
+        }
+      );
+      if (!actionDef)
+        return { found: false, error: `找不到 action: ${actionId}` };
+      try {
+        const storeData = ((_d = (_c = crud.props) == null ? void 0 : _c.store) == null ? void 0 : _d.data) ?? {};
+        (_e = crud.doAction) == null ? void 0 : _e.call(crud, actionDef, storeData, false);
+        return { found: true };
       } catch (e) {
         return { found: false, error: e.message };
       }
     }
-    function buildCrudPageActions(crudCtx, _schema) {
+    function reloadCrud() {
+      const crud = findAmisCrudComponent();
+      if (!crud)
+        return { found: false, error: "找不到 CRUD 组件" };
+      try {
+        if (typeof crud.reload === "function") {
+          crud.reload();
+          return { found: true };
+        }
+        return { found: false, error: "CRUD 组件没有 reload 方法" };
+      } catch (e) {
+        return { found: false, error: e.message };
+      }
+    }
+    function buildCrudPageActions(_crudCtx, _schema) {
       const actions2 = {};
-      if (crudCtx.canCreate) {
-        actions2.add = async () => {
-          const r = findAndClickAmisButton(["新增", "新建", "添加", "创建"]);
-          if (!r.found)
-            throw new Error(r.error);
-          await new Promise((resolve) => setTimeout(resolve, 400));
-          return r;
-        };
+      async function ensureDialogOpened(timeoutMs = 3e3) {
+        const start = Date.now();
+        while (Date.now() - start < timeoutMs) {
+          const modal = document.querySelector(".ant-modal-wrap, .ant-modal, .cxd-Modal--open");
+          if (modal)
+            return;
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+        throw new Error("新增对话框未打开");
       }
-      if (crudCtx.canEdit) {
-        actions2.edit = async () => {
-          const r = findAndClickAmisButton(["编辑", "修改"]);
-          if (!r.found)
-            throw new Error(r.error);
-          await new Promise((resolve) => setTimeout(resolve, 400));
-          return r;
-        };
+      async function openAddDialog() {
+        const r = dispatchAmisCrudAction("add");
+        if (r.found) {
+          await ensureDialogOpened();
+          return;
+        }
+        const domR = findAndClickAmisButton(["新增", "新建", "添加", "创建"]);
+        if (!domR.found)
+          throw new Error(domR.error);
+        await ensureDialogOpened();
       }
-      if (crudCtx.canDelete) {
-        actions2.delete = async () => {
-          const r = findAndClickAmisButton(["删除"]);
-          if (!r.found)
-            throw new Error(r.error);
-          return r;
-        };
-      }
+      actions2.add = async () => {
+        await openAddDialog();
+        return { actionType: "add" };
+      };
+      actions2.edit = async () => {
+        const r = dispatchAmisCrudAction("edit");
+        if (!r.found) {
+          const domR = findAndClickAmisButton(["编辑", "修改"]);
+          if (!domR.found)
+            throw new Error(domR.error);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        return { actionType: "edit" };
+      };
+      actions2.delete = async () => {
+        const r = dispatchAmisCrudAction("delete");
+        if (!r.found) {
+          const domR = findAndClickAmisButton(["删除"]);
+          if (!domR.found)
+            throw new Error(domR.error);
+        }
+        return { actionType: "delete" };
+      };
       actions2.query = async () => {
         const r = findAndClickAmisButton(["查询", "搜索"]);
         if (!r.found) {
@@ -1044,10 +1159,30 @@ const _sfc_main$1 = defineComponent({
         return r;
       };
       actions2.submitForm = async () => {
+        await ensureDialogOpened();
         const r = findAndClickAmisButton(["提交", "保存", "确定"]);
         if (!r.found)
           throw new Error(r.error);
         return r;
+      };
+      actions2.fillForm = async (params) => {
+        const fieldName = (params == null ? void 0 : params.__fieldName) || (params == null ? void 0 : params.fieldName);
+        const label = (params == null ? void 0 : params.__label) || (params == null ? void 0 : params.label);
+        const value = params == null ? void 0 : params.value;
+        if (value === void 0)
+          throw new Error("缺少填充值");
+        let modal = document.querySelector(".ant-modal-wrap, .ant-modal, .cxd-Modal--open");
+        if (!modal) {
+          await openAddDialog();
+        }
+        for (let attempt = 0; attempt < 5; attempt++) {
+          if (attempt > 0)
+            await new Promise((r2) => setTimeout(r2, 300));
+          const r = findAndFillAmisField(fieldName, label, value);
+          if (r.found)
+            return r;
+        }
+        throw new Error(`未找到表单字段: ${label || fieldName}`);
       };
       return actions2;
     }
@@ -1058,6 +1193,21 @@ const _sfc_main$1 = defineComponent({
         if (!r.found)
           throw new Error(r.error);
         return r;
+      };
+      actions2.fillForm = async (params) => {
+        const fieldName = (params == null ? void 0 : params.__fieldName) || (params == null ? void 0 : params.fieldName);
+        const label = (params == null ? void 0 : params.__label) || (params == null ? void 0 : params.label);
+        const value = params == null ? void 0 : params.value;
+        if (value === void 0)
+          throw new Error("缺少填充值");
+        for (let attempt = 0; attempt < 5; attempt++) {
+          if (attempt > 0)
+            await new Promise((r2) => setTimeout(r2, 300));
+          const r = findAndFillAmisField(fieldName, label, value);
+          if (r.found)
+            return r;
+        }
+        throw new Error(`未找到表单字段: ${label || fieldName}`);
       };
       return actions2;
     }
@@ -1198,15 +1348,66 @@ class VueControl extends React__default.Component {
       onChange(resetValue);
     }
   }
+  normalizeEventData(eventData = {}) {
+    if (Array.isArray(eventData)) {
+      if (eventData.length === 1) {
+        return this.normalizeEventData(eventData[0]);
+      }
+      return { value: eventData };
+    }
+    if (eventData && typeof eventData === "object") {
+      if ("detail" in eventData && eventData.detail !== void 0) {
+        return this.normalizeEventData(eventData.detail);
+      }
+      return { ...eventData };
+    }
+    return { value: eventData };
+  }
   async dispatchChangeEvent(eventData = {}) {
+    if (this.props.vueComponent === "template-canvas") {
+      console.log(
+        "[AmisVueComponent] dispatchChangeEvent, templateJson length:",
+        typeof eventData === "string" ? eventData.length : JSON.stringify(eventData).length
+      );
+    }
     const rendererEvent = await this.dispatchRendererEvent("change", {
       value: eventData
     });
     if (rendererEvent == null ? void 0 : rendererEvent.prevented) {
       return;
     }
-    const { onChange } = this.props;
-    onChange && onChange(eventData);
+    this.syncAmisValue(eventData);
+  }
+  syncAmisValue(nextValue) {
+    const props = this.props;
+    const { name, onChange, onBulkChange, formStore, store, formItem } = props;
+    const values = name ? { [name]: nextValue } : void 0;
+    if (values && typeof onBulkChange === "function") {
+      onBulkChange(values, false);
+    }
+    if (name && formStore) {
+      if (typeof formStore.setValueByName === "function") {
+        formStore.setValueByName(name, nextValue);
+      } else if (typeof formStore.setValues === "function") {
+        formStore.setValues(values);
+      }
+    }
+    if (name && store) {
+      if (typeof store.changeValue === "function") {
+        store.changeValue(name, nextValue);
+      } else if (typeof store.updateData === "function") {
+        store.updateData(values);
+      } else if (typeof store.setValues === "function") {
+        store.setValues(values);
+      }
+    }
+    if (typeof onChange === "function") {
+      if (name && !formItem) {
+        onChange(nextValue, name, false);
+      } else {
+        onChange(nextValue);
+      }
+    }
   }
   async dispatchRendererEvent(eventName, eventData = {}) {
     const { dispatchEvent, data } = this.props;
@@ -1215,12 +1416,71 @@ class VueControl extends React__default.Component {
       createObject(data, eventData)
     );
   }
+  async saveTemplateCanvas(templateJson) {
+    const props = this.props;
+    const { data, env } = props;
+    const id = (data == null ? void 0 : data.id) || (data == null ? void 0 : data.sid);
+    const fetcher = env == null ? void 0 : env.fetcher;
+    console.log(
+      "[AmisVueComponent] saveTemplateCanvas called, templateJson length:",
+      typeof templateJson === "string" ? templateJson.length : JSON.stringify(templateJson).length,
+      ", id:",
+      id
+    );
+    if (props.vueComponent !== "template-canvas" || typeof fetcher !== "function") {
+      return false;
+    }
+    const requestData = id ? { id, templateJson } : {
+      templateId: (data == null ? void 0 : data.templateId) || "DEMO_TEMPLATE",
+      templateName: (data == null ? void 0 : data.templateName) || "新模板",
+      templateVersion: (data == null ? void 0 : data.templateVersion) || 1,
+      status: (data == null ? void 0 : data.status) || 0,
+      templateJson
+    };
+    console.log("[AmisVueComponent] saveTemplateCanvas request data keys:", Object.keys(requestData), "templateJson length:", typeof templateJson === "string" ? templateJson.length : 0);
+    await fetcher({
+      url: id ? "@mutation:NopTemplateDefinition__update" : "@mutation:NopTemplateDefinition__save",
+      method: "post",
+      data: requestData,
+      "gql:selection": "sid,templateId,templateName,templateVersion,templateJson"
+    });
+    return true;
+  }
   async dispatchNamedEvent(eventName, eventData = {}) {
-    const normalizedData = eventData && typeof eventData === "object" && !Array.isArray(eventData) ? eventData : { value: eventData };
-    const nextValue = normalizedData.templateJson ?? normalizedData.value;
+    const normalizedData = this.normalizeEventData(eventData);
+    const { name } = this.props;
+    const nextValue = name && normalizedData[name] !== void 0 ? normalizedData[name] : normalizedData.templateJson ?? normalizedData.value;
     if (nextValue !== void 0) {
-      const { onChange } = this.props;
-      onChange && onChange(nextValue);
+      console.log(
+        "[AmisVueComponent] dispatchNamedEvent",
+        eventName,
+        ", name:",
+        name,
+        ", nextValue length:",
+        typeof nextValue === "string" ? nextValue.length : JSON.stringify(nextValue).length
+      );
+      if (name && normalizedData[name] === void 0) {
+        normalizedData[name] = nextValue;
+      }
+      if (normalizedData.value === void 0) {
+        normalizedData.value = nextValue;
+      }
+      if (normalizedData.modelValue === void 0) {
+        normalizedData.modelValue = nextValue;
+      }
+      if (normalizedData.templateJson === void 0) {
+        normalizedData.templateJson = nextValue;
+      }
+      if (normalizedData.result === void 0) {
+        normalizedData.result = nextValue;
+      }
+      this.syncAmisValue(nextValue);
+    }
+    if (eventName === "saved" && nextValue !== void 0) {
+      const savedByComponent = await this.saveTemplateCanvas(nextValue);
+      if (savedByComponent) {
+        return;
+      }
     }
     return this.dispatchRendererEvent(eventName, normalizedData);
   }
@@ -1243,7 +1503,11 @@ class VueControl extends React__default.Component {
       store,
       ...props,
       value,
+      modelValue: value,
       "onUpdate:value": (value2) => this.dispatchChangeEvent(value2),
+      "onUpdate:modelValue": (value2) => this.dispatchChangeEvent(value2),
+      onUpdateTemplateJson: (value2) => this.dispatchChangeEvent(value2),
+      onSaveTemplate: (value2) => this.saveTemplateCanvas(value2),
       onSaved: (payload) => this.dispatchNamedEvent("saved", payload),
       onPreview: (payload) => this.dispatchNamedEvent("preview", payload)
     };

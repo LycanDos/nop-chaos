@@ -33,19 +33,76 @@ export default class VueControl extends React.Component<VueControlProps, any> {
           onChange(resetValue);
         }
       }
+
+      normalizeEventData(eventData: any = {}) {
+        if (Array.isArray(eventData)) {
+          if (eventData.length === 1) {
+            return this.normalizeEventData(eventData[0]);
+          }
+          return {value: eventData};
+        }
+
+        if (eventData && typeof eventData === 'object') {
+          if ('detail' in eventData && (eventData as any).detail !== undefined) {
+            return this.normalizeEventData((eventData as any).detail);
+          }
+          return {...eventData};
+        }
+
+        return {value: eventData};
+      }
     
     
       async dispatchChangeEvent(eventData: any = {}) {
+        if ((this.props as any).vueComponent === 'template-canvas') {
+          console.log('[AmisVueComponent] dispatchChangeEvent, templateJson length:',
+            typeof eventData === 'string' ? eventData.length : JSON.stringify(eventData).length);
+        }
         const rendererEvent = await this.dispatchRendererEvent('change', {
           value: eventData
         });
-    
+
         if (rendererEvent?.prevented) {
           return;
         }
-    
-        const {onChange} = this.props;
-        onChange && onChange(eventData);
+
+        this.syncAmisValue(eventData);
+      }
+
+      syncAmisValue(nextValue: any) {
+        const props = this.props as any;
+        const {name, onChange, onBulkChange, formStore, store, formItem} = props;
+        const values = name ? {[name]: nextValue} : undefined;
+
+        if (values && typeof onBulkChange === 'function') {
+          onBulkChange(values, false);
+        }
+
+        if (name && formStore) {
+          if (typeof formStore.setValueByName === 'function') {
+            formStore.setValueByName(name, nextValue);
+          } else if (typeof formStore.setValues === 'function') {
+            formStore.setValues(values);
+          }
+        }
+
+        if (name && store) {
+          if (typeof store.changeValue === 'function') {
+            store.changeValue(name, nextValue);
+          } else if (typeof store.updateData === 'function') {
+            store.updateData(values);
+          } else if (typeof store.setValues === 'function') {
+            store.setValues(values);
+          }
+        }
+
+        if (typeof onChange === 'function') {
+          if (name && !formItem) {
+            onChange(nextValue, name, false);
+          } else {
+            onChange(nextValue);
+          }
+        }
       }
 
       async dispatchRendererEvent(eventName: string, eventData: any = {}) {
@@ -56,16 +113,74 @@ export default class VueControl extends React.Component<VueControlProps, any> {
         );
       }
 
-      async dispatchNamedEvent(eventName: string, eventData: any = {}) {
-        const normalizedData =
-          eventData && typeof eventData === 'object' && !Array.isArray(eventData)
-            ? eventData
-            : { value: eventData };
+      async saveTemplateCanvas(templateJson: any) {
+        const props = this.props as any;
+        const {data, env} = props;
+        const id = data?.id || data?.sid;
+        const fetcher = env?.fetcher;
 
-        const nextValue = normalizedData.templateJson ?? normalizedData.value;
+        console.log('[AmisVueComponent] saveTemplateCanvas called, templateJson length:',
+          typeof templateJson === 'string' ? templateJson.length : JSON.stringify(templateJson).length,
+          ', id:', id);
+
+        if (props.vueComponent !== 'template-canvas' || typeof fetcher !== 'function') {
+          return false;
+        }
+
+        const requestData = id
+          ? { id, templateJson }
+          : {
+              templateId: data?.templateId || 'DEMO_TEMPLATE',
+              templateName: data?.templateName || '新模板',
+              templateVersion: data?.templateVersion || 1,
+              status: data?.status || 0,
+              templateJson
+            };
+        console.log('[AmisVueComponent] saveTemplateCanvas request data keys:', Object.keys(requestData), 'templateJson length:', typeof templateJson === 'string' ? templateJson.length : 0);
+
+        await fetcher({
+          url: id ? '@mutation:NopTemplateDefinition__update' : '@mutation:NopTemplateDefinition__save',
+          method: 'post',
+          data: requestData,
+          'gql:selection': 'sid,templateId,templateName,templateVersion,templateJson'
+        });
+        return true;
+      }
+
+      async dispatchNamedEvent(eventName: string, eventData: any = {}) {
+        const normalizedData = this.normalizeEventData(eventData);
+
+        const {name} = this.props as any;
+        const nextValue =
+          name && normalizedData[name] !== undefined
+            ? normalizedData[name]
+            : normalizedData.templateJson ?? normalizedData.value;
         if (nextValue !== undefined) {
-          const {onChange} = this.props;
-          onChange && onChange(nextValue);
+          console.log('[AmisVueComponent] dispatchNamedEvent', eventName, ', name:', name, ', nextValue length:',
+            typeof nextValue === 'string' ? nextValue.length : JSON.stringify(nextValue).length);
+          if (name && normalizedData[name] === undefined) {
+            normalizedData[name] = nextValue;
+          }
+          if (normalizedData.value === undefined) {
+            normalizedData.value = nextValue;
+          }
+          if (normalizedData.modelValue === undefined) {
+            normalizedData.modelValue = nextValue;
+          }
+          if (normalizedData.templateJson === undefined) {
+            normalizedData.templateJson = nextValue;
+          }
+          if (normalizedData.result === undefined) {
+            normalizedData.result = nextValue;
+          }
+          this.syncAmisValue(nextValue);
+        }
+
+        if (eventName === 'saved' && nextValue !== undefined) {
+          const savedByComponent = await this.saveTemplateCanvas(nextValue);
+          if (savedByComponent) {
+            return;
+          }
         }
 
         return this.dispatchRendererEvent(eventName, normalizedData);
@@ -92,7 +207,11 @@ export default class VueControl extends React.Component<VueControlProps, any> {
             env, store,
             ...props,
             value,
+            modelValue: value,
             'onUpdate:value': ((value: any) => this.dispatchChangeEvent(value)),
+            'onUpdate:modelValue': ((value: any) => this.dispatchChangeEvent(value)),
+            onUpdateTemplateJson: ((value: any) => this.dispatchChangeEvent(value)),
+            onSaveTemplate: ((value: any) => this.saveTemplateCanvas(value)),
             onSaved: ((payload: any) => this.dispatchNamedEvent('saved', payload)),
             onPreview: ((payload: any) => this.dispatchNamedEvent('preview', payload))
         }

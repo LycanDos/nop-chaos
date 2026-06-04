@@ -12,111 +12,107 @@
     :style="{ width: collapsed ? '40px' : '360px' }"
   >
     <!-- 折叠状态 -->
-    <div v-if="collapsed" class="method-binding-panel__toggle" @click="$emit('expand')">
-      <el-tooltip content="展开方法绑定面板" placement="left">
-        <el-icon :size="18"><DArrowLeft /></el-icon>
-      </el-tooltip>
+    <div v-if="collapsed" class="method-binding-panel__toggle" @click="$emit('expand')" title="展开方法绑定面板">
+      ◀
     </div>
 
     <!-- 展开状态 -->
     <template v-else>
       <div class="method-binding-panel__header">
         <span class="method-binding-panel__title">方法绑定</span>
-        <el-icon class="method-binding-panel__collapse-btn" :size="18" @click="$emit('collapse')">
-          <DArrowRight />
-        </el-icon>
+        <span class="method-binding-panel__collapse-btn" @click="$emit('collapse')">▶</span>
       </div>
 
       <!-- 节点信息 -->
       <div class="method-binding-panel__section">
         <div class="method-binding-panel__section-title">节点信息</div>
-        <el-form label-width="80px" size="small">
-          <el-form-item label="节点 ID">
+        <a-form label-width="80px" size="small">
+          <a-form-item label="节点 ID">
             <span>{{ nodeInfo.id }}</span>
-          </el-form-item>
-          <el-form-item label="节点名称">
+          </a-form-item>
+          <a-form-item label="节点名称">
             <span>{{ nodeInfo.name || '(未命名)' }}</span>
-          </el-form-item>
-          <el-form-item label="节点类型">
-            <el-tag size="small" type="info">{{ nodeInfo.type }}</el-tag>
-          </el-form-item>
-        </el-form>
+          </a-form-item>
+          <a-form-item label="节点类型">
+            <a-tag size="small" color="blue">{{ nodeInfo.type }}</a-tag>
+          </a-form-item>
+        </a-form>
       </div>
 
       <!-- 绑定配置 -->
       <div class="method-binding-panel__section">
         <div class="method-binding-panel__section-title">绑定配置</div>
-        <el-form label-width="80px" size="small">
-          <el-form-item label="执行器">
-            <el-select
+        <a-form label-width="80px" size="small">
+          <a-form-item label="执行器">
+            <a-select
               v-model="bindingForm.executorDefId"
-              filterable
+              showSearch
               clearable
               placeholder="选择执行器"
               style="width: 100%"
               @change="handleExecutorChange"
             >
-              <el-option
+              <a-select-option
                 v-for="item in executorList"
                 :key="item.id"
                 :label="item.label"
                 :value="item.id"
               />
-            </el-select>
-          </el-form-item>
+            </a-select>
+          </a-form-item>
 
-          <el-form-item label="方法">
-            <el-select
+          <a-form-item label="方法">
+            <a-select
               v-model="bindingForm.methodCode"
-              filterable
+              showSearch
               clearable
               :disabled="!bindingForm.executorDefId"
               placeholder="选择方法"
               style="width: 100%"
             >
-              <el-option
+              <a-select-option
                 v-for="item in methodList"
                 :key="item.code"
                 :label="item.label"
                 :value="item.code"
               />
-            </el-select>
-          </el-form-item>
+            </a-select>
+          </a-form-item>
 
-          <el-form-item label="版本约束">
-            <el-select v-model="bindingForm.versionConstraintType" style="width: 100%">
-              <el-option label="LATEST（最新版本）" value="LATEST" />
-              <el-option label="EXACT（精确版本）" value="EXACT" />
-              <el-option label="RANGE（版本范围）" value="RANGE" />
-            </el-select>
-          </el-form-item>
+          <a-form-item label="版本约束">
+            <a-select v-model="bindingForm.versionConstraintType" style="width: 100%">
+              <a-select-option label="LATEST（最新版本）" value="LATEST" />
+              <a-select-option label="EXACT（精确版本）" value="EXACT" />
+              <a-select-option label="RANGE（版本范围）" value="RANGE" />
+            </a-select>
+          </a-form-item>
 
-          <el-form-item v-if="bindingForm.versionConstraintType !== 'LATEST'" label="版本表达式">
-            <el-input v-model="bindingForm.versionConstraintExpr" placeholder="版本表达式" />
-          </el-form-item>
+          <a-form-item v-if="bindingForm.versionConstraintType !== 'LATEST'" label="版本表达式">
+            <a-input v-model="bindingForm.versionConstraintExpr" placeholder="版本表达式" />
+          </a-form-item>
 
-          <el-form-item label="超时(ms)">
-            <el-input-number
+          <a-form-item label="超时(ms)">
+            <a-input-number
               v-model="bindingForm.timeoutMs"
               :min="0"
               :step="1000"
-              controls-position="right"
+              
               style="width: 100%"
             />
-          </el-form-item>
+          </a-form-item>
 
-          <el-form-item label="异步执行">
-            <el-switch v-model="bindingForm.asyncFlag" />
-          </el-form-item>
-        </el-form>
+          <a-form-item label="异步执行">
+            <a-switch v-model="bindingForm.asyncFlag" />
+          </a-form-item>
+        </a-form>
 
         <div class="method-binding-panel__actions">
-          <el-button type="primary" size="small" :disabled="!bindingForm.methodCode" @click="saveBinding">
+          <a-button type="primary" size="small" :disabled="!bindingForm.methodCode" @click="saveBinding">
             保存绑定
-          </el-button>
-          <el-button type="danger" size="small" plain @click="clearBinding">
+          </a-button>
+          <a-button type="danger" size="small" ghost @click="clearBinding">
             清除绑定
-          </el-button>
+          </a-button>
         </div>
       </div>
     </template>
@@ -125,8 +121,10 @@
 
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+// (Element Plus 已移除 — 图标替换为 Unicode 字符，消息使用 console.warn/error)
+function notify(msg: string, type?: string) { console.log(`[MethodBinding] ${msg}`) }
+function warn(msg: string) { console.warn(`[MethodBinding] ${msg}`) }
+function error(msg: string) { console.error(`[MethodBinding] ${msg}`) }
 import type BpmnModeler from 'bpmn-js/lib/Modeler'
 import type { Element } from 'bpmn-js/lib/model/Types'
 
@@ -208,7 +206,7 @@ function readBindingFromElement() {
 
 function saveBinding() {
   if (!bindingForm.methodCode) {
-    ElMessage.warning('请先选择方法')
+    warn('请先选择方法')
     return
   }
   try {
@@ -226,11 +224,11 @@ function saveBinding() {
     )
     extensionElements.values.push(methodBinding)
     modeling.updateProperties(props.element, { extensionElements })
-    ElMessage.success('绑定已保存')
+    notify('绑定已保存')
     emit('binding-saved', { ...bindingForm })
   } catch (err) {
     console.error('[MethodBindingPanel] 保存失败:', err)
-    ElMessage.error('保存失败')
+    error('保存失败')
   }
 }
 
@@ -251,11 +249,11 @@ function clearBinding() {
       timeoutMs: 30000,
       asyncFlag: false,
     })
-    ElMessage.success('绑定已清除')
+    notify('绑定已清除')
     emit('binding-cleared')
   } catch (err) {
     console.error('[MethodBindingPanel] 清除失败:', err)
-    ElMessage.error('清除失败')
+    error('清除失败')
   }
 }
 

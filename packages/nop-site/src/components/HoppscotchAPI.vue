@@ -7,46 +7,44 @@
     <div class="api-content">
       <!-- URL输入 -->
       <div class="url-section">
-        <el-input
-          v-model="requestUrl"
+        <a-input
+          v-model:value="requestUrl"
           placeholder="请输入API URL"
           @keyup.enter="sendRequest"
         >
-          <template #prepend>
-            <el-select v-model="currentMethod" style="width: 100px">
-              <el-option 
-                v-for="method in httpMethods" 
-                :key="method" 
-                :label="method" 
-                :value="method" 
-              />
-            </el-select>
+          <template #addonBefore>
+            <a-select v-model:value="currentMethod" style="width: 100px">
+              <a-select-option
+                v-for="method in httpMethods"
+                :key="method"
+                :value="method"
+              >{{ method }}</a-select-option>
+            </a-select>
           </template>
-          <template #append>
-            <el-button type="primary" @click="sendRequest" :loading="loading">
+          <template #addonAfter>
+            <a-button type="primary" @click="sendRequest" :loading="loading">
               发送
-            </el-button>
+            </a-button>
           </template>
-        </el-input>
+        </a-input>
       </div>
 
       <!-- 响应结果 -->
       <div v-if="response" class="response-section">
         <h3>响应结果</h3>
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="状态码">
-            <el-tag :type="response.status < 400 ? 'success' : 'danger'">
+        <a-descriptions :column="2" bordered>
+          <a-descriptions-item label="状态码">
+            <a-tag :color="response.status < 400 ? 'success' : 'error'">
               {{ response.status }} {{ response.statusText }}
-            </el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="响应时间">
+            </a-tag>
+          </a-descriptions-item>
+          <a-descriptions-item label="响应时间">
             {{ responseTime }}ms
-          </el-descriptions-item>
-        </el-descriptions>
+          </a-descriptions-item>
+        </a-descriptions>
 
-        <el-input
-          v-model="responseBody"
-          type="textarea"
+        <a-textarea
+          v-model:value="responseBody"
           :rows="15"
           readonly
           placeholder="响应内容将显示在这里"
@@ -58,7 +56,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { ElMessage } from 'element-plus'
+import { message } from 'ant-design-vue'
 import axios from 'axios'
 
 // 响应式数据
@@ -82,7 +80,7 @@ const responseBody = computed(() => {
 // 方法
 const sendRequest = async () => {
   if (!requestUrl.value) {
-    ElMessage.warning('请输入请求URL')
+    message.warning('请输入请求URL')
     return
   }
 
@@ -98,14 +96,14 @@ const sendRequest = async () => {
     
     response.value = result
     responseTime.value = Date.now() - startTime
-    ElMessage.success('请求发送成功')
+    message.success('请求发送成功')
   } catch (error: any) {
     if (error.response) {
       response.value = error.response
       responseTime.value = Date.now() - startTime
-      ElMessage.warning(`请求失败: ${error.response.status}`)
+      message.warning(`请求失败: ${error.response.status}`)
     } else {
-      ElMessage.error(`请求失败: ${error.message}`)
+      message.error(`请求失败: ${error.message}`)
     }
   } finally {
     loading.value = false

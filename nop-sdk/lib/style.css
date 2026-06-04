@@ -460,11 +460,11 @@ body.is-modalOpened .ant-popover{
 }
 
 /** 修正pager的大小 */
-.cxd-Pagination>li>a, .cxd-Pagination>li>span{
+.antd-Pagination>li>a, .antd-Pagination>li>span{
     height:auto;
 }
 
-.cxd-Table--autoFillHeight .cxd-Table-footToolbar{
+.antd-Table--autoFillHeight .antd-Table-footToolbar{
     padding:0
 }
 
@@ -472,17 +472,31 @@ body.is-modalOpened .ant-popover{
 /**
  * 不显示表单的heading。heading内部包含title
  */
-.cxd-Panel.no-heading > .cxd-Panel-heading { 
+.antd-Panel.no-heading > .antd-Panel-heading { 
     display: none;
 }
 
-.cxd-Panel.actions-center > .cxd-Panel-footerWrap > .cxd-Panel-btnToolbar{
+.antd-Panel.actions-center > .antd-Panel-footerWrap > .antd-Panel-btnToolbar{
     text-align: center;
 }
 
 /**
  * amis的Tree缺省设置了最大高度
  */
-.cxd-TreeControl.h-full > .cxd-Tree {
+.antd-TreeControl.h-full > .antd-Tree {
     max-height: none;
+}
+
+/**
+ * 修正操作栏中 dropdown-button 与普通 button 的对齐
+ * .antd-OperationField > .antd-Button 有 margin: 0.1875rem
+ * 但 .antd-DropDown（actionGroup转换后的dropdown-button包装器）未被覆盖
+ */
+.antd-OperationField > .antd-DropDown {
+    margin: 0.1875rem;
+}
+
+/** 修正表格工具栏中 dropdown-button 与普通 button 的对齐 */
+.antd-Table-toolbar > .antd-DropDown {
+    vertical-align: middle;
 }

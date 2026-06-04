@@ -1,12 +1,10 @@
-// 调试器使用了element的组件
-import 'element-plus/dist/index.css'
-
 // Amis内置的调试器需要这里的css
 import 'amis/lib/helper.css';
 
 import '@fortawesome/fontawesome-free/css/all.css';
 import '@fortawesome/fontawesome-free/css/v4-shims.css';
-import 'amis/lib/themes/cxd.css';
+import 'amis/lib/themes/antd.css';
+import './amis-fix.css';
 
 //import 'amis/sdk/iconfont.css';
 import 'amis-ui/lib/locale/en-US';

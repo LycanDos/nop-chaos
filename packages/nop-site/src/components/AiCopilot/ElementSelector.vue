@@ -68,13 +68,94 @@ export default defineComponent({
     }
 
     function buildElementTag(el: HTMLElement): string {
-      const parts: string[] = [el.tagName.toLowerCase()]
-      if (el.id) parts.push(`#${el.id}`)
-      if (el.className && typeof el.className === 'string') {
-        const cls = el.className.split(' ').slice(0, 2).join('.')
-        if (cls) parts.push(`.${cls}`)
+      // 优先显示语义信息：按钮文字 / 字段标签
+      const semantic = getSemanticLabel(el)
+      if (semantic) return semantic
+
+      // 退化：简化的元素描述
+      const tag = el.tagName.toLowerCase()
+      const id = el.id ? `#${el.id}` : ''
+      const text = (el.textContent || '').trim().slice(0, 30)
+      if (text && text.length < 30 && text !== el.tagName) {
+        return `「${text}」<${tag}${id}>`
       }
-      return parts.join('')
+      return `<${tag}${id}>`
+    }
+
+    /** 获取用户友好的语义标签 */
+    function getSemanticLabel(el: HTMLElement): string | null {
+      // 检测按钮
+      let node: HTMLElement | null = el
+      while (node && node !== document.body) {
+        if (node.tagName === 'BUTTON' || node.getAttribute('role') === 'button') {
+          const label = (node.textContent || '').trim().slice(0, 20)
+          return label ? `按钮: ${label}` : '按钮'
+        }
+        if (node.classList.contains('btn') || node.classList.contains('amis-button')) {
+          const label = (node.textContent || '').trim().slice(0, 20)
+          return label ? `按钮: ${label}` : '按钮'
+        }
+        node = node.parentElement
+      }
+
+      // 检测表单控件
+      const control = findControlInElement(el)
+      if (control) {
+        const label = findFieldLabel(control, control.getAttribute('name') || '')
+        const typeName = getTypeDisplayName(control)
+        if (label) {
+          return `${label} · ${typeName}`
+        }
+        const name = control.getAttribute('name') || control.getAttribute('data-name')
+        if (name) {
+          return `${name} · ${typeName}`
+        }
+        return `${typeName}`
+      }
+
+      return null
+    }
+
+    /** 在元素及其父级中查找表单控件 */
+    function findControlInElement(el: HTMLElement): HTMLElement | null {
+      const controlTags = new Set(['INPUT', 'SELECT', 'TEXTAREA'])
+      if (controlTags.has(el.tagName)) return el
+
+      // 向上查找 AMIS 容器，再向内查找控件
+      let node: HTMLElement | null = el
+      while (node && node !== document.body) {
+        if (
+          node.classList.contains('amis-form-group') ||
+          node.classList.contains('amis-form-item') ||
+          node.classList.contains('amis-control')
+        ) {
+          const inner = node.querySelector('input, select, textarea')
+          if (inner) return inner as HTMLElement
+        }
+        node = node.parentElement
+      }
+      // 如果元素本身包含表单控件
+      const inner = el.querySelector('input, select, textarea')
+      if (inner) return inner as HTMLElement
+      return null
+    }
+
+    /** 获取控件类型的用户友好名称 */
+    function getTypeDisplayName(control: HTMLElement): string {
+      if (control instanceof HTMLInputElement) {
+        switch (control.type) {
+          case 'checkbox': return '复选框'
+          case 'radio': return '单选框'
+          case 'number': return '数字框'
+          case 'date': case 'datetime-local': return '日期框'
+          case 'email': return '邮箱框'
+          case 'password': return '密码框'
+          default: return '输入框'
+        }
+      }
+      if (control instanceof HTMLSelectElement) return '下拉框'
+      if (control instanceof HTMLTextAreaElement) return '文本框'
+      return '控件'
     }
 
     function captureElementInfo(el: HTMLElement): ElementInfo {
@@ -402,7 +483,7 @@ export default defineComponent({
     <div
       ref="labelRef"
       class="copilot-selector-label"
-      style="display:none;position:fixed;background:#1890ff;color:#fff;padding:2px 8px;font-size:12px;border-radius:3px;z-index:100000;pointer-events:none;white-space:nowrap;font-family:monospace;"
+      style="display:none;position:fixed;background:#1890ff;color:#fff;padding:4px 10px;font-size:12px;border-radius:4px;z-index:100000;pointer-events:none;white-space:nowrap;max-width:320px;overflow:hidden;text-overflow:ellipsis;box-shadow:0 2px 8px rgba(0,0,0,0.15);"
     />
   </Teleport>
 </template>

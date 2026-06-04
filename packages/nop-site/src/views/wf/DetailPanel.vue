@@ -3,21 +3,21 @@
     <div v-if="visible" class="detail-panel-content">
       <div class="detail-panel-header">
         <span class="detail-panel-title">节点详情</span>
-        <el-button text size="small" @click="$emit('close')">
-          <template #icon><el-icon><Close /></el-icon></template>
-        </el-button>
+        <a-button type="text" size="small" @click="$emit('close')">
+          <CloseOutlined />
+        </a-button>
       </div>
 
       <template v-if="stepInfo">
         <div class="detail-node-title">
           <span class="detail-node-name">{{ stepInfo.displayName }}</span>
-          <el-tag :type="statusTagType(stepInfo.status)" size="small" effect="dark">
+          <a-tag :color="statusTagColor(stepInfo.status)" size="small">
             {{ statusLabel(stepInfo.status) }}
-          </el-tag>
+          </a-tag>
         </div>
 
-        <el-tabs v-model="activeTab" class="detail-tabs">
-          <el-tab-pane label="基本信息" name="basic">
+        <a-tabs v-model:activeKey="activeTab" class="detail-tabs">
+          <a-tab-pane tab="基本信息" key="basic">
             <div class="detail-section">
               <div class="detail-row">
                 <span class="detail-label">节点类型</span>
@@ -48,13 +48,13 @@
                 <span class="detail-value code">{{ stepInfo.stepId }}</span>
               </div>
             </div>
-          </el-tab-pane>
+          </a-tab-pane>
 
-          <el-tab-pane label="动作历史" name="actions">
+          <a-tab-pane tab="动作历史" key="actions">
             <div v-if="stepInfo.actions.length > 0" class="detail-section">
               <div v-for="(action, idx) in stepInfo.actions" :key="idx" class="action-item">
                 <div class="action-header">
-                  <el-tag size="small" type="primary">{{ action.actionName }}</el-tag>
+                  <a-tag size="small" color="blue">{{ action.actionName }}</a-tag>
                   <span class="action-actor">{{ action.actorName }}</span>
                   <span class="action-time">{{ action.actionTime }}</span>
                 </div>
@@ -64,9 +64,9 @@
               </div>
             </div>
             <div v-else class="empty-state">暂无动作记录</div>
-          </el-tab-pane>
+          </a-tab-pane>
 
-          <el-tab-pane label="日志" name="logs">
+          <a-tab-pane tab="日志" key="logs">
             <div v-if="stepInfo.logs.length > 0" class="detail-section log-section">
               <div v-for="(log, idx) in stepInfo.logs" :key="idx" class="log-item">
                 <span class="log-level" :class="logLevelClass(log.logLevel)">{{ log.logLevel }}</span>
@@ -75,12 +75,12 @@
               </div>
             </div>
             <div v-else class="empty-state">暂无日志记录</div>
-          </el-tab-pane>
-        </el-tabs>
+          </a-tab-pane>
+        </a-tabs>
       </template>
 
       <div v-else class="detail-empty">
-        <el-icon :size="48" color="#d9d9d9"><InfoFilled /></el-icon>
+        <InfoCircleFilled :style="{ fontSize: '48px', color: '#d9d9d9' }" />
         <p>请点击节点查看详情</p>
       </div>
     </div>
@@ -89,7 +89,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { Close, InfoFilled } from '@element-plus/icons-vue'
+import { CloseOutlined, InfoCircleFilled } from '@ant-design/icons-vue'
 import type { StepRuntimeInfo } from './RuntimeDataProvider'
 
 const props = defineProps<{
@@ -108,14 +108,14 @@ watch(() => props.stepInfo, () => {
   activeTab.value = 'basic'
 })
 
-function statusTagType(status: string) {
+function statusTagColor(status: string) {
   switch (status) {
     case 'completed': return 'success'
-    case 'active': return 'primary'
-    case 'failed': return 'danger'
+    case 'active': return 'processing'
+    case 'failed': return 'error'
     case 'rejected': return 'warning'
-    case 'killed': return 'info'
-    default: return 'info'
+    case 'killed': return 'default'
+    default: return 'default'
   }
 }
 

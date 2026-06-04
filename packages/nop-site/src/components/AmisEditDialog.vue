@@ -1,18 +1,14 @@
 <template>
-  <el-dialog
-    v-model="visibleLocal"
-    :destroy-on-close="true"
-    class="page-full-screen"
-    :mask-closable="false"
-    :append-to-body="true"
+  <a-modal
+    v-model:visible="visibleLocal"
+    :destroyOnClose="true"
+    wrap-class-name="page-full-screen"
+    :maskClosable="false"
     width="100%"
-    height="100%"
-    :align-center="true"
-    :fullscreen="true"
     :footer="null"
     :closable="false"
     :keyboard="false"
-    @close="handleClose"
+    @cancel="handleClose"
   >
     <XuiPageEditorDialog
       v-if="visibleLocal"
@@ -22,7 +18,7 @@
       :rollback-page-source="props.rollbackPageSource"
       @update:model-value="handleClose"
     />
-  </el-dialog>
+  </a-modal>
 </template>
 
 <script setup lang="ts">
@@ -63,12 +59,22 @@ function handleClose() {
 </script>
 
 <style scoped>
-.page-full-screen .el-dialog__body {
+.page-full-screen .ant-modal-body {
   height: 100%;
   margin: 0;
   padding: 0;
 }
-.page-full-screen .el-dialog__header {
+.page-full-screen .ant-modal-header {
   display: none;
+}
+/* Full-screen modal: body fills the entire viewport */
+.page-full-screen {
+  top: 0;
+  padding-bottom: 0;
+}
+.page-full-screen .ant-modal-content {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 </style> 

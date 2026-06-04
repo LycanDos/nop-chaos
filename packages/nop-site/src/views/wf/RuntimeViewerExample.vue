@@ -6,10 +6,10 @@
           <h3>工作流运行时示例</h3>
           <p class="page-desc">基于 Flowable BPMN 示例流程的运行时视图演示，展示各状态节点颜色、进度条、徽章及侧边详情面板</p>
         </div>
-        <el-select v-model="selectedExample" @change="switchExample" style="width:220px">
-          <el-option label="采购订单审批" value="purchase" />
-          <el-option label="请假审批流程" value="leave" />
-        </el-select>
+        <a-select v-model:value="selectedExample" @change="switchExample" style="width:220px">
+          <a-select-option value="purchase">采购订单审批</a-select-option>
+          <a-select-option value="leave">请假审批流程</a-select-option>
+        </a-select>
       </div>
     </ContentWrap>
     <ContentWrap>

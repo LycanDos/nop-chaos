@@ -4,39 +4,39 @@
     <template v-if="mode === 'list'">
       <ContentWrap>
         <h3 style="margin-bottom:16px;font-weight:bold;">流程实例列表</h3>
-        <el-form :inline="true" :model="queryParams" class="mb-16px">
-          <el-form-item label="状态">
-            <el-select v-model="queryParams.status" placeholder="全部" clearable style="width:150px">
-              <el-option label="运行中" value="running" />
-              <el-option label="已完成" value="completed" />
-              <el-option label="已失败" value="failed" />
-              <el-option label="已终止" value="terminated" />
-            </el-select>
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="loadList">搜索</el-button>
-            <el-button @click="resetQuery">重置</el-button>
-          </el-form-item>
-        </el-form>
+        <a-form layout="inline" :model="queryParams" class="mb-16px">
+          <a-form-item label="状态">
+            <a-select v-model:value="queryParams.status" placeholder="全部" allowClear style="width:150px">
+              <a-select-option value="running">运行中</a-select-option>
+              <a-select-option value="completed">已完成</a-select-option>
+              <a-select-option value="failed">已失败</a-select-option>
+              <a-select-option value="terminated">已终止</a-select-option>
+            </a-select>
+          </a-form-item>
+          <a-form-item>
+            <a-button type="primary" @click="loadList">搜索</a-button>
+            <a-button @click="resetQuery">重置</a-button>
+          </a-form-item>
+        </a-form>
       </ContentWrap>
 
       <ContentWrap>
-        <el-table v-loading="listLoading" :data="instanceList" stripe>
-          <el-table-column label="流程实例 ID" align="center" prop="wfId" min-width="200" />
-          <el-table-column label="流程定义" align="center" prop="wfName" min-width="180" />
-          <el-table-column label="业务键" align="center" prop="bizKey" min-width="120" />
-          <el-table-column label="状态" align="center" min-width="100">
-            <template #default="{ row }">
-              <el-tag :type="statusTagType(row.status)">{{ row.status }}</el-tag>
+        <a-table :loading="listLoading" :dataSource="instanceList" :pagination="false">
+          <a-table-column title="流程实例 ID" align="center" dataIndex="wfId" :minWidth="200" />
+          <a-table-column title="流程定义" align="center" dataIndex="wfName" :minWidth="180" />
+          <a-table-column title="业务键" align="center" dataIndex="bizKey" :minWidth="120" />
+          <a-table-column title="状态" align="center" :minWidth="100">
+            <template #default="{ record }">
+              <a-tag :color="statusTagColor(record.status)">{{ record.status }}</a-tag>
             </template>
-          </el-table-column>
-          <el-table-column label="开始时间" align="center" prop="createdTime" min-width="160" />
-          <el-table-column label="操作" align="center" min-width="100" fixed="right">
-            <template #default="{ row }">
-              <el-button type="primary" link @click="viewInstance(row.wfId)">查看</el-button>
+          </a-table-column>
+          <a-table-column title="开始时间" align="center" dataIndex="createdTime" :minWidth="160" />
+          <a-table-column title="操作" align="center" :minWidth="100" fixed="right">
+            <template #default="{ record }">
+              <a-button type="link" @click="viewInstance(record.wfId)">查看</a-button>
             </template>
-          </el-table-column>
-        </el-table>
+          </a-table-column>
+        </a-table>
         <div v-if="!listLoading && instanceList.length === 0" class="empty-list">
           暂无流程实例数据
         </div>
@@ -47,10 +47,10 @@
     <template v-else>
       <ContentWrap>
         <div class="viewer-header">
-          <el-button text @click="backToList">
-            <el-icon><ArrowLeft /></el-icon>
+          <a-button type="text" @click="backToList">
+            <ArrowLeftOutlined />
             返回列表
-          </el-button>
+          </a-button>
         </div>
       </ContentWrap>
       <ContentWrap>
@@ -66,8 +66,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { ArrowLeft } from '@element-plus/icons-vue'
+import { message } from 'ant-design-vue'
+import { ArrowLeftOutlined } from '@ant-design/icons-vue'
 import { ajaxRequest } from '@nop-chaos/sdk'
 import RuntimeViewer from './RuntimeViewer.vue'
 import { fetchRuntimeData, demoData } from './RuntimeDataProvider'
@@ -145,7 +145,7 @@ async function loadRuntimeView(wfId: string) {
     console.warn('加载运行时数据失败，使用示例数据:', e)
     // 使用示例数据作为降级
     runtimeData.value = demoData
-    ElMessage.warning('加载失败，已切换至示例数据')
+    message.warning('加载失败，已切换至示例数据')
   }
 }
 
@@ -166,13 +166,13 @@ function resetQuery() {
   loadList()
 }
 
-function statusTagType(status: string) {
+function statusTagColor(status: string) {
   const s = String(status || '')
-  if (s.includes('ACTIVATED') || s.includes('30')) return 'primary'
+  if (s.includes('ACTIVATED') || s.includes('30')) return 'processing'
   if (s.includes('COMPLETED') || s.includes('40')) return 'success'
-  if (s.includes('FAILED') || s.includes('60')) return 'danger'
+  if (s.includes('FAILED') || s.includes('60')) return 'error'
   if (s.includes('KILLED') || s.includes('70')) return 'warning'
-  return 'info'
+  return 'default'
 }
 </script>
 

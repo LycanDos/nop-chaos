@@ -15,8 +15,6 @@ import { registerGlobComp } from '/@/components/registerGlobComp';
 import { registerThirdComp } from '/@/settings/registerThirdComp';
 import { useSso } from '/@/hooks/web/useSso';
 import { registerPackages } from '/@/utils/monorepo/registerPackages';
-import ElementPlus from 'element-plus';
-
 
 import {initNopApp} from './nop/initNopApp'
 
@@ -38,6 +36,17 @@ document.head.appendChild(style);
 // 在开发环境引入 ant-design-vue 的 less 文件
 if (import.meta.env.DEV) {
   import('ant-design-vue/dist/antd.less');
+
+  // 抑制 AMIS 第三方库已知的 React 18 兼容性警告（AMIS 上游尚未修复）
+  const originalWarn = console.warn.bind(console);
+  console.warn = (...args: any[]) => {
+    const msg = args[0];
+    if (typeof msg === 'string' && (
+      msg.includes('ReactDOM.render is no longer supported') ||
+      msg.includes('findDOMNode is deprecated')
+    )) return;
+    originalWarn(...args);
+  };
 }
 function reportProgress(pct: number) {
   const fn = (window as any).__setLoadProgress__;
@@ -75,8 +84,6 @@ async function bootstrap() {
   // 当路由准备好时再执行挂载( https://next.router.vuejs.org/api/#isready)
   await router.isReady();
   reportProgress(95);
-
-  app.use(ElementPlus);
 
   // 过渡：loading 淡出 + Vue 淡入，消除割裂感
   reportProgress(100);

@@ -5,10 +5,10 @@
       <template v-if="panelMode === 'element'">
         <div class="element-header">
           <span class="element-id">{{ selectedElementId }}</span>
-          <el-tag size="small" type="info" effect="plain">{{ elementTypeLabel }}</el-tag>
-          <el-button size="small" text @click="$emit('select-element', null)">
+          <a-tag size="small" type="info" >{{ elementTypeLabel }}</a-tag>
+          <a-button size="small" text @click="$emit('select-element', null)">
             返回全局
-          </el-button>
+          </a-button>
         </div>
       </template>
       <template v-else>
@@ -18,20 +18,20 @@
 
     <!-- ======== Element Mode ======== -->
     <div v-if="panelMode === 'element'" class="panel-body">
-      <el-form label-width="80px" size="small" label-position="left">
+      <a-form label-width="80px" size="small" label-position="left">
 
         <!-- 主题色 -->
-        <el-form-item label="主题色">
+        <a-form-item label="主题色">
           <div class="color-row">
-            <el-color-picker
-              :model-value="elementAccentColor"
-              @update:model-value="setElementAccent($event)"
+            <ColorPicker
+              :value="elementAccentColor"
+              @update:value="setElementAccent($event)"
               :predefine="PREDEFINE_COLORS"
               size="small"
             />
-            <el-button size="small" @click="clearElementAccent" v-if="elementAccentColor">清除</el-button>
+            <a-button size="small" @click="clearElementAccent" v-if="elementAccentColor">清除</a-button>
           </div>
-        </el-form-item>
+        </a-form-item>
 
         <!-- 状态覆盖 -->
         <div class="section-title">状态覆盖</div>
@@ -40,80 +40,80 @@
             <div class="state-override-header" @click="toggleOverrideState(st.key)">
               <span class="state-dot" :style="{ background: paletteColor(st.key) }"></span>
               <span class="state-label">{{ st.label }}</span>
-              <el-tag v-if="hasStateOverride(st.key)" size="small" type="warning" effect="plain">已覆盖</el-tag>
-              <el-tag v-else size="small" type="info" effect="plain">继承全局</el-tag>
+              <a-tag v-if="hasStateOverride(st.key)" size="small" type="warning" >已覆盖</a-tag>
+              <a-tag v-else size="small" type="info" >继承全局</a-tag>
               <span class="expand-icon">{{ expandedOverrideStates.includes(st.key) ? '▼' : '▶' }}</span>
             </div>
             <div v-if="expandedOverrideStates.includes(st.key)" class="state-override-body">
-              <el-form label-width="70px" size="small">
-                <el-form-item label="边框粗">
-                  <el-input-number
-                    :model-value="getOverrideStateProp(st.key, 'strokeWidth', 2)"
-                    @update:model-value="setOverrideStateProp(st.key, 'strokeWidth', $event)"
+              <a-form label-width="70px" size="small">
+                <a-form-item label="边框粗">
+                  <a-input-number
+                    :value="getOverrideStateProp(st.key, 'strokeWidth', 2)"
+                    @update:value="setOverrideStateProp(st.key, 'strokeWidth', $event)"
                     :min="0" :max="10" size="small" style="width:80px"
                   />
-                </el-form-item>
-                <el-form-item label="透明度">
-                  <el-slider
-                    :model-value="getOverrideStateProp(st.key, 'opacity', 1)"
-                    @update:model-value="setOverrideStateProp(st.key, 'opacity', $event)"
+                </a-form-item>
+                <a-form-item label="透明度">
+                  <a-slider
+                    :value="getOverrideStateProp(st.key, 'opacity', 1)"
+                    @update:value="setOverrideStateProp(st.key, 'opacity', $event)"
                     :min="0" :max="1" :step="0.05" style="width:120px"
                   />
                   <span class="value-hint">{{ getOverrideStateProp(st.key, 'opacity', 1) }}</span>
-                </el-form-item>
-                <el-form-item label="圆角">
-                  <el-input-number
-                    :model-value="getOverrideStateProp(st.key, 'borderRadius', 4)"
-                    @update:model-value="setOverrideStateProp(st.key, 'borderRadius', $event)"
+                </a-form-item>
+                <a-form-item label="圆角">
+                  <a-input-number
+                    :value="getOverrideStateProp(st.key, 'borderRadius', 4)"
+                    @update:value="setOverrideStateProp(st.key, 'borderRadius', $event)"
                     :min="0" :max="30" size="small" style="width:80px"
                   />
-                </el-form-item>
-                <el-form-item label="虚线">
-                  <el-select
-                    :model-value="getOverrideStateProp(st.key, 'strokeDashstyle', 'solid')"
-                    @update:model-value="setOverrideStateProp(st.key, 'strokeDashstyle', $event)"
+                </a-form-item>
+                <a-form-item label="虚线">
+                  <a-select
+                    :value="getOverrideStateProp(st.key, 'strokeDashstyle', 'solid')"
+                    @update:value="setOverrideStateProp(st.key, 'strokeDashstyle', $event)"
                     style="width:90px"
                   >
-                    <el-option label="实线" value="solid" />
-                    <el-option label="虚线" value="dashed" />
-                    <el-option label="点线" value="dotted" />
-                  </el-select>
-                </el-form-item>
-                <el-divider content-position="left">特效</el-divider>
-                <el-form-item label="脉冲">
-                  <el-switch
-                    :model-value="getOverrideStateProp(st.key, 'pulsing', false)"
-                    @update:model-value="setOverrideStateProp(st.key, 'pulsing', $event)"
+                    <a-select-option label="实线" value="solid" />
+                    <a-select-option label="虚线" value="dashed" />
+                    <a-select-option label="点线" value="dotted" />
+                  </a-select>
+                </a-form-item>
+                <a-divider orientation="left">特效</a-divider>
+                <a-form-item label="脉冲">
+                  <a-switch
+                    :value="getOverrideStateProp(st.key, 'pulsing', false)"
+                    @update:value="setOverrideStateProp(st.key, 'pulsing', $event)"
                   />
-                </el-form-item>
-                <el-form-item label="边框特效">
+                </a-form-item>
+                <a-form-item label="边框特效">
                   <div class="border-effect-row">
-                    <el-select
-                      :model-value="getOverrideBorderEffectType(st.key)"
-                      @update:model-value="setOverrideBorderEffectType(st.key, $event)"
+                    <a-select
+                      :value="getOverrideBorderEffectType(st.key)"
+                      @update:value="setOverrideBorderEffectType(st.key, $event)"
                       style="width:90px"
                     >
-                      <el-option v-for="o in BORDER_EFFECT_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
-                    </el-select>
+                      <a-select-option v-for="o in BORDER_EFFECT_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
+                    </a-select>
                     <template v-if="getOverrideBorderEffectType(st.key)">
-                      <el-color-picker
-                        :model-value="getOverrideBorderEffectProp(st.key, 'color', '#1890ff')"
-                        @update:model-value="setOverrideBorderEffectProp(st.key, 'color', $event)"
+                      <ColorPicker
+                        :value="getOverrideBorderEffectProp(st.key, 'color', '#1890ff')"
+                        @update:value="setOverrideBorderEffectProp(st.key, 'color', $event)"
                         size="small"
                       />
-                      <el-input-number
-                        :model-value="getOverrideBorderEffectProp(st.key, 'speed', 800)"
-                        @update:model-value="setOverrideBorderEffectProp(st.key, 'speed', $event)"
+                      <a-input-number
+                        :value="getOverrideBorderEffectProp(st.key, 'speed', 800)"
+                        @update:value="setOverrideBorderEffectProp(st.key, 'speed', $event)"
                         :min="200" :max="3000" :step="100" size="small" style="width:70px"
                       />
                       <span class="value-hint">ms</span>
                     </template>
                   </div>
-                </el-form-item>
-              </el-form>
-              <el-button size="small" @click="clearOverrideState(st.key)" class="clear-override-btn">
+                </a-form-item>
+              </a-form>
+              <a-button size="small" @click="clearOverrideState(st.key)" class="clear-override-btn">
                 清除此状态覆盖
-              </el-button>
+              </a-button>
             </div>
           </div>
         </div>
@@ -121,7 +121,7 @@
         <!-- 挂件列表 -->
         <div class="section-title">
           挂件
-          <el-button size="small" type="primary" link @click="addWidget">+ 添加</el-button>
+          <a-button size="small" type="primary" link @click="addWidget">+ 添加</a-button>
         </div>
         <div v-if="elementWidgets.length === 0" class="empty-hint">暂无挂件，点击上方添加</div>
         <div v-for="(w, idx) in elementWidgets" :key="idx" class="widget-item">
@@ -129,437 +129,438 @@
             <span class="widget-type-badge">{{ getWidgetIcon(w.type) }} {{ widgetTypeLabel(w.type) }}</span>
             <span class="widget-pos">{{ w.anchor }}</span>
             <span class="expand-icon">{{ expandedWidgets.includes(idx) ? '▼' : '▶' }}</span>
-            <el-button size="small" text type="danger" @click.stop="removeWidget(idx)">✕</el-button>
+            <a-button size="small" text type="danger" @click.stop="removeWidget(idx)">✕</a-button>
           </div>
           <div v-if="expandedWidgets.includes(idx)" class="widget-body">
-            <el-form label-width="70px" size="small">
-              <el-form-item label="类型">
-                <el-select v-model="w.type" style="width:110px">
-                  <el-option v-for="o in WIDGET_TYPE_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
-                </el-select>
-              </el-form-item>
-              <el-form-item label="锚点">
-                <el-select v-model="w.anchor" style="width:110px">
-                  <el-option v-for="o in ANCHOR_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
-                </el-select>
-              </el-form-item>
-              <el-form-item label="挂载层">
-                <el-radio-group v-model="w.layer">
-                  <el-radio value="overlay">节点上层</el-radio>
-                  <el-radio value="inner">节点内部</el-radio>
-                </el-radio-group>
-              </el-form-item>
-              <el-form-item label="透明度">
-                <el-slider v-model="w.opacity" :min="0" :max="1" :step="0.05" style="width:160px" />
+            <a-form label-width="70px" size="small">
+              <a-form-item label="类型">
+                <a-select v-model:checked="w.type" style="width:110px">
+                  <a-select-option v-for="o in WIDGET_TYPE_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
+                </a-select>
+              </a-form-item>
+              <a-form-item label="锚点">
+                <a-select v-model:checked="w.anchor" style="width:110px">
+                  <a-select-option v-for="o in ANCHOR_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
+                </a-select>
+              </a-form-item>
+              <a-form-item label="挂载层">
+                <a-radio-group v-model:checked="w.layer">
+                  <a-radio value="overlay">节点上层</a-radio>
+                  <a-radio value="inner">节点内部</a-radio>
+                </a-radio-group>
+              </a-form-item>
+              <a-form-item label="透明度">
+                <a-slider v-model:checked="w.opacity" :min="0" :max="1" :step="0.05" style="width:160px" />
                 <span class="value-hint">{{ w.opacity }}</span>
-              </el-form-item>
+              </a-form-item>
 
-              <el-divider content-position="left">可见性</el-divider>
-              <el-form-item label="修饰键">
-                <el-select v-model="w.visibility.modifier" style="width:110px" clearable placeholder="始终显示">
-                  <el-option label="Ctrl按下时" value="ctrl" />
-                  <el-option label="Shift按下时" value="shift" />
-                  <el-option label="Alt按下时" value="alt" />
-                </el-select>
-              </el-form-item>
+              <a-divider orientation="left">可见性</a-divider>
+              <a-form-item label="修饰键">
+                <a-select v-model:checked="w.visibility.modifier" style="width:110px" clearable placeholder="始终显示">
+                  <a-select-option label="Ctrl按下时" value="ctrl" />
+                  <a-select-option label="Shift按下时" value="shift" />
+                  <a-select-option label="Alt按下时" value="alt" />
+                </a-select>
+              </a-form-item>
 
-              <el-divider content-position="left">类型配置</el-divider>
+              <a-divider orientation="left">类型配置</a-divider>
               <!-- badge -->
               <template v-if="w.type === 'badge'">
-                <el-form-item label="文本">
-                  <el-input v-model="w.config.text" placeholder="如: {{count}}" size="small" />
-                </el-form-item>
-                <el-form-item label="颜色">
-                  <el-color-picker v-model="w.config.color" size="small" />
-                </el-form-item>
+                <a-form-item label="文本">
+                  <a-input v-model:checked="w.config.text" placeholder="如: {{count}}" size="small" />
+                </a-form-item>
+                <a-form-item label="颜色">
+                  <ColorPicker v-model="w.config.color" size="small" />
+                </a-form-item>
               </template>
               <!-- label -->
               <template v-else-if="w.type === 'label'">
-                <el-form-item label="文本">
-                  <el-input v-model="w.config.text" placeholder="标签文字" size="small" />
-                </el-form-item>
-                <el-form-item label="链接">
-                  <el-input v-model="w.config.link" placeholder="点击跳转URL" size="small" />
-                </el-form-item>
+                <a-form-item label="文本">
+                  <a-input v-model:checked="w.config.text" placeholder="标签文字" size="small" />
+                </a-form-item>
+                <a-form-item label="链接">
+                  <a-input v-model:checked="w.config.link" placeholder="点击跳转URL" size="small" />
+                </a-form-item>
               </template>
               <!-- rich-text -->
               <template v-else-if="w.type === 'rich-text'">
-                <el-form-item label="内容">
-                  <el-input v-model="w.config.html" type="textarea" :rows="3" placeholder="HTML内容" size="small" />
-                </el-form-item>
+                <a-form-item label="内容">
+                  <a-input v-model:checked="w.config.html" type="textarea" :rows="3" placeholder="HTML内容" size="small" />
+                </a-form-item>
               </template>
               <!-- image -->
               <template v-else-if="w.type === 'image'">
-                <el-form-item label="图片URL">
-                  <el-input v-model="w.config.src" placeholder="https://..." size="small" />
-                </el-form-item>
-                <el-form-item label="尺寸">
-                  <el-input-number v-model="w.config.width" :min="16" :max="200" size="small" style="width:80px" />
+                <a-form-item label="图片URL">
+                  <a-input v-model:checked="w.config.src" placeholder="https://..." size="small" />
+                </a-form-item>
+                <a-form-item label="尺寸">
+                  <a-input-number v-model:checked="w.config.width" :min="16" :max="200" size="small" style="width:80px" />
                   <span style="margin:0 4px">×</span>
-                  <el-input-number v-model="w.config.height" :min="16" :max="200" size="small" style="width:80px" />
-                </el-form-item>
+                  <a-input-number v-model:checked="w.config.height" :min="16" :max="200" size="small" style="width:80px" />
+                </a-form-item>
               </template>
               <!-- status-dot -->
               <template v-else-if="w.type === 'status-dot'">
-                <el-form-item label="直径">
-                  <el-input-number v-model="w.config.size" :min="6" :max="24" size="small" style="width:80px" />
-                </el-form-item>
+                <a-form-item label="直径">
+                  <a-input-number v-model:checked="w.config.size" :min="6" :max="24" size="small" style="width:80px" />
+                </a-form-item>
               </template>
               <!-- timer -->
               <template v-else-if="w.type === 'timer'">
-                <el-form-item label="格式">
-                  <el-select v-model="w.config.format" style="width:110px">
-                    <el-option label="mm:ss" value="mm:ss" />
-                    <el-option label="hh:mm:ss" value="hh:mm:ss" />
-                    <el-option label="已用时间" value="elapsed" />
-                  </el-select>
-                </el-form-item>
+                <a-form-item label="格式">
+                  <a-select v-model:checked="w.config.format" style="width:110px">
+                    <a-select-option label="mm:ss" value="mm:ss" />
+                    <a-select-option label="hh:mm:ss" value="hh:mm:ss" />
+                    <a-select-option label="已用时间" value="elapsed" />
+                  </a-select>
+                </a-form-item>
               </template>
-            </el-form>
+            </a-form>
           </div>
         </div>
 
         <!-- 删除覆盖 -->
         <div v-if="hasElementOverride" class="element-actions">
-          <el-button size="small" type="danger" plain @click="removeElementOverride">
+          <a-button size="small" type="danger" plain @click="removeElementOverride">
             删除此节点覆盖
-          </el-button>
+          </a-button>
         </div>
-      </el-form>
+      </a-form>
     </div>
 
     <!-- ======== Global Mode ======== -->
     <div v-else class="panel-body">
-      <el-tabs v-model="globalTab" tab-position="top" class="global-tabs">
+      <a-tabs v-model:activeKey="globalTab" tab-position="top" class="global-tabs">
         <!-- 基本信息 -->
-        <el-tab-pane label="基本信息" name="basic">
-          <el-form label-width="100px" label-position="right" size="small">
-            <el-form-item label="皮肤编码">
-              <el-input v-model="form.templateCode" placeholder="唯一编码" />
-            </el-form-item>
-            <el-form-item label="皮肤名称">
-              <el-input v-model="form.templateName" placeholder="如: 审批流蓝色主题" />
-            </el-form-item>
-            <el-form-item label="分类">
-              <el-select v-model="form.category" clearable style="width:120px">
-                <el-option label="基础" value="basic" />
-                <el-option label="审批" value="approval" />
-                <el-option label="警告" value="warning" />
-                <el-option label="自定义" value="custom" />
-              </el-select>
-            </el-form-item>
-            <el-form-item label="适用节点">
-              <el-select v-model="form.bpmnBaseType" style="width:140px">
-                <el-option label="全部任务" value="bpmn:Task" />
-                <el-option label="用户任务" value="bpmn:UserTask" />
-                <el-option label="服务任务" value="bpmn:ServiceTask" />
-                <el-option label="开始事件" value="bpmn:StartEvent" />
-                <el-option label="结束事件" value="bpmn:EndEvent" />
-              </el-select>
-            </el-form-item>
-            <el-form-item label="状态">
-              <el-select v-model="form.status" style="width:100px">
-                <el-option label="草稿" value="draft" />
-                <el-option label="已启用" value="enabled" />
-                <el-option label="已禁用" value="disabled" />
-              </el-select>
-            </el-form-item>
-          </el-form>
-        </el-tab-pane>
+        <a-tab-pane tab="基本信息" name="basic">
+          <a-form label-width="100px" label-position="right" size="small">
+            <a-form-item label="皮肤编码">
+              <a-input v-model:checked="form.templateCode" placeholder="唯一编码" />
+            </a-form-item>
+            <a-form-item label="皮肤名称">
+              <a-input v-model:checked="form.templateName" placeholder="如: 审批流蓝色主题" />
+            </a-form-item>
+            <a-form-item label="分类">
+              <a-select v-model:checked="form.category" clearable style="width:120px">
+                <a-select-option label="基础" value="basic" />
+                <a-select-option label="审批" value="approval" />
+                <a-select-option label="警告" value="warning" />
+                <a-select-option label="自定义" value="custom" />
+              </a-select>
+            </a-form-item>
+            <a-form-item label="适用节点">
+              <a-select v-model:checked="form.bpmnBaseType" style="width:140px">
+                <a-select-option label="全部任务" value="bpmn:Task" />
+                <a-select-option label="用户任务" value="bpmn:UserTask" />
+                <a-select-option label="服务任务" value="bpmn:ServiceTask" />
+                <a-select-option label="开始事件" value="bpmn:StartEvent" />
+                <a-select-option label="结束事件" value="bpmn:EndEvent" />
+              </a-select>
+            </a-form-item>
+            <a-form-item label="状态">
+              <a-select v-model:checked="form.status" style="width:100px">
+                <a-select-option label="草稿" value="draft" />
+                <a-select-option label="已启用" value="enabled" />
+                <a-select-option label="已禁用" value="disabled" />
+              </a-select>
+            </a-form-item>
+          </a-form>
+        </a-tab-pane>
 
         <!-- 调色板 -->
-        <el-tab-pane label="调色板" name="palette">
+        <a-tab-pane tab="调色板" name="palette">
           <div class="section-title">状态色板</div>
           <div v-for="item in PALETTE_ITEMS" :key="item.key" class="color-row">
             <span class="color-label">{{ item.label }}</span>
-            <el-color-picker
-              :model-value="skinJson.variables.palette[item.key]"
-              @update:model-value="setPaletteColor(item.key, $event)"
+            <ColorPicker
+              :value="skinJson.variables.palette[item.key]"
+              @update:value="setPaletteColor(item.key, $event)"
               :predefine="PREDEFINE_COLORS"
               size="small"
             />
             <span class="color-hex">{{ skinJson.variables.palette[item.key] }}</span>
           </div>
-          <el-divider />
+          <a-divider />
           <div class="section-title">语义色（运行时一致性）</div>
           <div class="color-row">
             <span class="color-label">Error 失败</span>
-            <el-color-picker
-              :model-value="semanticColor('error')"
-              @update:model-value="setSemanticColor('error', $event)"
+            <ColorPicker
+              :value="semanticColor('error')"
+              @update:value="setSemanticColor('error', $event)"
               :predefine="PREDEFINE_COLORS" size="small"
             />
             <span class="color-hex">{{ semanticColor('error') }}</span>
           </div>
           <div class="color-row">
             <span class="color-label">Success 成功</span>
-            <el-color-picker
-              :model-value="semanticColor('success')"
-              @update:model-value="setSemanticColor('success', $event)"
+            <ColorPicker
+              :value="semanticColor('success')"
+              @update:value="setSemanticColor('success', $event)"
               :predefine="PREDEFINE_COLORS" size="small"
             />
             <span class="color-hex">{{ semanticColor('success') }}</span>
           </div>
           <div class="color-row">
             <span class="color-label">Running 运行</span>
-            <el-color-picker
-              :model-value="semanticColor('running')"
-              @update:model-value="setSemanticColor('running', $event)"
+            <ColorPicker
+              :value="semanticColor('running')"
+              @update:value="setSemanticColor('running', $event)"
               :predefine="PREDEFINE_COLORS" size="small"
             />
             <span class="color-hex">{{ semanticColor('running') }}</span>
           </div>
           <div class="color-row">
             <span class="color-label">Warning 警告</span>
-            <el-color-picker
-              :model-value="semanticColor('warning')"
-              @update:model-value="setSemanticColor('warning', $event)"
+            <ColorPicker
+              :value="semanticColor('warning')"
+              @update:value="setSemanticColor('warning', $event)"
               :predefine="PREDEFINE_COLORS" size="small"
             />
             <span class="color-hex">{{ semanticColor('warning') }}</span>
           </div>
-        </el-tab-pane>
+        </a-tab-pane>
 
         <!-- 状态样式 -->
-        <el-tab-pane label="状态样式" name="states">
-          <el-collapse v-model="expandedGlobalState" accordion>
-            <el-collapse-item v-for="st in STATE_DEFS" :key="st.key" :name="st.key">
+        <a-tab-pane tab="状态样式" name="states">
+          <a-collapse v-model:activeKey="expandedGlobalState" accordion>
+            <a-collapse-item v-for="st in STATE_DEFS" :key="st.key" :name="st.key">
               <template #title>
                 <span :style="{ color: paletteColor(st.key), fontWeight: 600 }">{{ st.label }}</span>
               </template>
-              <el-form label-width="80px" size="small">
-                <el-form-item label="边框粗">
-                  <el-input-number
-                    :model-value="getGlobalStateProp(st.key, 'strokeWidth', 2)"
-                    @update:model-value="setGlobalStateProp(st.key, 'strokeWidth', $event)"
+              <a-form label-width="80px" size="small">
+                <a-form-item label="边框粗">
+                  <a-input-number
+                    :value="getGlobalStateProp(st.key, 'strokeWidth', 2)"
+                    @update:value="setGlobalStateProp(st.key, 'strokeWidth', $event)"
                     :min="0" :max="10" size="small" style="width:100px"
                   />
-                </el-form-item>
-                <el-form-item label="透明度">
-                  <el-slider
-                    :model-value="getGlobalStateProp(st.key, 'opacity', 1)"
-                    @update:model-value="setGlobalStateProp(st.key, 'opacity', $event)"
+                </a-form-item>
+                <a-form-item label="透明度">
+                  <a-slider
+                    :value="getGlobalStateProp(st.key, 'opacity', 1)"
+                    @update:value="setGlobalStateProp(st.key, 'opacity', $event)"
                     :min="0" :max="1" :step="0.05" style="width:160px"
                   />
                   <span class="value-hint">{{ getGlobalStateProp(st.key, 'opacity', 1) }}</span>
-                </el-form-item>
-                <el-form-item label="圆角">
-                  <el-input-number
-                    :model-value="getGlobalStateProp(st.key, 'borderRadius', 4)"
-                    @update:model-value="setGlobalStateProp(st.key, 'borderRadius', $event)"
+                </a-form-item>
+                <a-form-item label="圆角">
+                  <a-input-number
+                    :value="getGlobalStateProp(st.key, 'borderRadius', 4)"
+                    @update:value="setGlobalStateProp(st.key, 'borderRadius', $event)"
                     :min="0" :max="30" size="small" style="width:100px"
                   />
-                </el-form-item>
-                <el-form-item label="边框">
-                  <el-select
-                    :model-value="getGlobalStateProp(st.key, 'strokeDashstyle', 'solid')"
-                    @update:model-value="setGlobalStateProp(st.key, 'strokeDashstyle', $event)"
+                </a-form-item>
+                <a-form-item label="边框">
+                  <a-select
+                    :value="getGlobalStateProp(st.key, 'strokeDashstyle', 'solid')"
+                    @update:value="setGlobalStateProp(st.key, 'strokeDashstyle', $event)"
                     style="width:100px"
                   >
-                    <el-option label="实线" value="solid" />
-                    <el-option label="虚线" value="dashed" />
-                    <el-option label="点线" value="dotted" />
-                  </el-select>
-                </el-form-item>
-                <el-form-item label="文字色">
-                  <el-color-picker
-                    :model-value="getGlobalStateProp(st.key, 'textColor', '#ffffff')"
-                    @update:model-value="setGlobalStateProp(st.key, 'textColor', $event)"
+                    <a-select-option label="实线" value="solid" />
+                    <a-select-option label="虚线" value="dashed" />
+                    <a-select-option label="点线" value="dotted" />
+                  </a-select>
+                </a-form-item>
+                <a-form-item label="文字色">
+                  <ColorPicker
+                    :value="getGlobalStateProp(st.key, 'textColor', '#ffffff')"
+                    @update:value="setGlobalStateProp(st.key, 'textColor', $event)"
                     :predefine="PREDEFINE_COLORS" size="small"
                   />
-                </el-form-item>
-                <el-divider content-position="left">特效</el-divider>
-                <el-form-item label="脉冲">
-                  <el-switch
-                    :model-value="getGlobalStateProp(st.key, 'pulsing', false)"
-                    @update:model-value="setGlobalStateProp(st.key, 'pulsing', $event)"
+                </a-form-item>
+                <a-divider orientation="left">特效</a-divider>
+                <a-form-item label="脉冲">
+                  <a-switch
+                    :value="getGlobalStateProp(st.key, 'pulsing', false)"
+                    @update:value="setGlobalStateProp(st.key, 'pulsing', $event)"
                   />
-                </el-form-item>
-                <el-form-item label="跑马灯">
-                  <el-switch
-                    :model-value="getGlobalStateProp(st.key, 'marquee', false)"
-                    @update:model-value="setGlobalStateProp(st.key, 'marquee', $event)"
+                </a-form-item>
+                <a-form-item label="跑马灯">
+                  <a-switch
+                    :value="getGlobalStateProp(st.key, 'marquee', false)"
+                    @update:value="setGlobalStateProp(st.key, 'marquee', $event)"
                   />
-                </el-form-item>
-                <el-form-item label="边框特效">
+                </a-form-item>
+                <a-form-item label="边框特效">
                   <div class="border-effect-row">
-                    <el-select
-                      :model-value="getGlobalBorderEffectType(st.key)"
-                      @update:model-value="setGlobalBorderEffectType(st.key, $event)"
+                    <a-select
+                      :value="getGlobalBorderEffectType(st.key)"
+                      @update:value="setGlobalBorderEffectType(st.key, $event)"
                       style="width:100px"
                     >
-                      <el-option v-for="o in BORDER_EFFECT_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
-                    </el-select>
+                      <a-select-option v-for="o in BORDER_EFFECT_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
+                    </a-select>
                     <template v-if="getGlobalBorderEffectType(st.key)">
-                      <el-color-picker
-                        :model-value="getGlobalBorderEffectProp(st.key, 'color', paletteColor(st.key))"
-                        @update:model-value="setGlobalBorderEffectProp(st.key, 'color', $event)"
+                      <ColorPicker
+                        :value="getGlobalBorderEffectProp(st.key, 'color', paletteColor(st.key))"
+                        @update:value="setGlobalBorderEffectProp(st.key, 'color', $event)"
                         size="small"
                       />
-                      <el-input-number
-                        :model-value="getGlobalBorderEffectProp(st.key, 'speed', 800)"
-                        @update:model-value="setGlobalBorderEffectProp(st.key, 'speed', $event)"
+                      <a-input-number
+                        :value="getGlobalBorderEffectProp(st.key, 'speed', 800)"
+                        @update:value="setGlobalBorderEffectProp(st.key, 'speed', $event)"
                         :min="200" :max="3000" :step="100" size="small" style="width:70px"
                       />
                       <span class="value-hint">ms</span>
                     </template>
                   </div>
-                </el-form-item>
-                <el-form-item label="阴影">
-                  <el-switch
-                    :model-value="isShadowEnabled(st.key)"
-                    @update:model-value="toggleShadow(st.key, $event)"
+                </a-form-item>
+                <a-form-item label="阴影">
+                  <a-switch
+                    :value="isShadowEnabled(st.key)"
+                    @update:value="toggleShadow(st.key, $event)"
                   />
-                </el-form-item>
+                </a-form-item>
                 <template v-if="isShadowEnabled(st.key)">
-                  <el-form-item label="颜色">
-                    <el-color-picker
-                      :model-value="getShadowProp(st.key, 'color', '#000000')"
-                      @update:model-value="setShadowProp(st.key, 'color', $event)"
+                  <a-form-item label="颜色">
+                    <ColorPicker
+                      :value="getShadowProp(st.key, 'color', '#000000')"
+                      @update:value="setShadowProp(st.key, 'color', $event)"
                       :predefine="PREDEFINE_COLORS" size="small"
                     />
-                  </el-form-item>
-                  <el-form-item label="模糊">
-                    <el-input-number
-                      :model-value="getShadowProp(st.key, 'blur', 4)"
-                      @update:model-value="setShadowProp(st.key, 'blur', $event)"
+                  </a-form-item>
+                  <a-form-item label="模糊">
+                    <a-input-number
+                      :value="getShadowProp(st.key, 'blur', 4)"
+                      @update:value="setShadowProp(st.key, 'blur', $event)"
                       :min="0" :max="20" size="small" style="width:80px"
                     />
-                  </el-form-item>
-                  <el-form-item label="偏移">
-                    <el-input-number
-                      :model-value="getShadowProp(st.key, 'offsetX', 2)"
-                      @update:model-value="setShadowProp(st.key, 'offsetX', $event)"
+                  </a-form-item>
+                  <a-form-item label="偏移">
+                    <a-input-number
+                      :value="getShadowProp(st.key, 'offsetX', 2)"
+                      @update:value="setShadowProp(st.key, 'offsetX', $event)"
                       :min="-10" :max="10" size="small" style="width:70px"
                     />
                     <span style="margin:0 4px">×</span>
-                    <el-input-number
-                      :model-value="getShadowProp(st.key, 'offsetY', 2)"
-                      @update:model-value="setShadowProp(st.key, 'offsetY', $event)"
+                    <a-input-number
+                      :value="getShadowProp(st.key, 'offsetY', 2)"
+                      @update:value="setShadowProp(st.key, 'offsetY', $event)"
                       :min="-10" :max="10" size="small" style="width:70px"
                     />
-                  </el-form-item>
+                  </a-form-item>
                 </template>
-              </el-form>
-            </el-collapse-item>
-          </el-collapse>
-        </el-tab-pane>
+              </a-form>
+            </a-collapse-item>
+          </a-collapse>
+        </a-tab-pane>
 
         <!-- 进度条 -->
-        <el-tab-pane label="进度条" name="progress">
-          <el-form label-width="80px" size="small">
-            <el-form-item label="显示">
-              <el-switch v-model="skinJson.progress.show" />
-            </el-form-item>
-            <el-form-item label="位置">
-              <el-select v-model="skinJson.progress.position" style="width:90px">
-                <el-option label="底部" value="bottom" />
-                <el-option label="顶部" value="top" />
-              </el-select>
-            </el-form-item>
-            <el-form-item label="高度">
-              <el-input-number v-model="skinJson.progress.height" :min="1" :max="20" size="small" style="width:80px" />
-            </el-form-item>
-            <el-form-item label="条颜色">
-              <el-color-picker v-model="skinJson.progress.colors.bar" :predefine="PREDEFINE_COLORS" size="small" />
-            </el-form-item>
-            <el-form-item label="轨颜色">
-              <el-color-picker v-model="skinJson.progress.colors.trail" :predefine="PREDEFINE_COLORS" size="small" />
-            </el-form-item>
-            <el-form-item label="X偏移">
-              <el-input-number v-model="skinJson.progress.offsetX" :min="-50" :max="50" size="small" style="width:80px" />
-            </el-form-item>
-            <el-form-item label="Y偏移">
-              <el-input-number v-model="skinJson.progress.offsetY" :min="-50" :max="50" size="small" style="width:80px" />
-            </el-form-item>
-          </el-form>
-        </el-tab-pane>
+        <a-tab-pane tab="进度条" name="progress">
+          <a-form label-width="80px" size="small">
+            <a-form-item label="显示">
+              <a-switch v-model:checked="skinJson.progress.show" />
+            </a-form-item>
+            <a-form-item label="位置">
+              <a-select v-model:checked="skinJson.progress.position" style="width:90px">
+                <a-select-option label="底部" value="bottom" />
+                <a-select-option label="顶部" value="top" />
+              </a-select>
+            </a-form-item>
+            <a-form-item label="高度">
+              <a-input-number v-model:checked="skinJson.progress.height" :min="1" :max="20" size="small" style="width:80px" />
+            </a-form-item>
+            <a-form-item label="条颜色">
+              <ColorPicker v-model="skinJson.progress.colors.bar" :predefine="PREDEFINE_COLORS" size="small" />
+            </a-form-item>
+            <a-form-item label="轨颜色">
+              <ColorPicker v-model="skinJson.progress.colors.trail" :predefine="PREDEFINE_COLORS" size="small" />
+            </a-form-item>
+            <a-form-item label="X偏移">
+              <a-input-number v-model:checked="skinJson.progress.offsetX" :min="-50" :max="50" size="small" style="width:80px" />
+            </a-form-item>
+            <a-form-item label="Y偏移">
+              <a-input-number v-model:checked="skinJson.progress.offsetY" :min="-50" :max="50" size="small" style="width:80px" />
+            </a-form-item>
+          </a-form>
+        </a-tab-pane>
 
         <!-- 画布挂件 -->
-        <el-tab-pane label="画布挂件" name="decorations">
+        <a-tab-pane tab="画布挂件" name="decorations">
           <div v-if="decorations.length === 0" class="empty-hint">暂无画布挂件</div>
           <div v-for="(dec, idx) in decorations" :key="dec.id" class="decoration-item-panel">
             <div class="decoration-header">
               <span class="decoration-type-tag">{{ dec.type }}</span>
               <span class="decoration-coords">({{ dec.x }}, {{ dec.y }})</span>
               <div style="flex:1" />
-              <el-button size="small" text @click="toggleDecLock(idx)">
+              <a-button size="small" text @click="toggleDecLock(idx)">
                 {{ dec.locked ? '🔒' : '🔓' }}
-              </el-button>
-              <el-button size="small" text type="danger" @click="removeDecoration(idx)">✕</el-button>
+              </a-button>
+              <a-button size="small" text type="danger" @click="removeDecoration(idx)">✕</a-button>
             </div>
             <div class="decoration-body">
-              <el-form label-width="60px" size="small">
-                <el-form-item label="类型">
-                  <el-select v-model="dec.type" style="width:120px">
-                    <el-option v-for="o in CANVAS_DECORATION_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
-                  </el-select>
-                </el-form-item>
-                <el-form-item label="位置 X">
-                  <el-input-number v-model="dec.x" :min="0" :max="2000" size="small" style="width:100px" />
-                </el-form-item>
-                <el-form-item label="位置 Y">
-                  <el-input-number v-model="dec.y" :min="0" :max="2000" size="small" style="width:100px" />
-                </el-form-item>
-                <el-form-item label="宽">
-                  <el-input-number v-model="dec.width" :min="20" :max="800" size="small" style="width:100px" :disabled="dec.type==='image' && !dec.config.src" />
-                </el-form-item>
-                <el-form-item label="高">
-                  <el-input-number v-model="dec.height" :min="20" :max="600" size="small" style="width:100px" />
-                </el-form-item>
-                <el-form-item label="层级">
-                  <el-input-number v-model="dec.zIndex" :min="1" :max="100" size="small" style="width:80px" />
-                </el-form-item>
-                <el-form-item label="透明度">
-                  <el-slider v-model="dec.opacity" :min="0" :max="1" :step="0.05" style="width:160px" />
-                </el-form-item>
-                <el-form-item label="锁定">
-                  <el-switch v-model="dec.locked" />
-                </el-form-item>
+              <a-form label-width="60px" size="small">
+                <a-form-item label="类型">
+                  <a-select v-model:checked="dec.type" style="width:120px">
+                    <a-select-option v-for="o in CANVAS_DECORATION_OPTIONS" :key="o.value" :label="o.label" :value="o.value" />
+                  </a-select>
+                </a-form-item>
+                <a-form-item label="位置 X">
+                  <a-input-number v-model:checked="dec.x" :min="0" :max="2000" size="small" style="width:100px" />
+                </a-form-item>
+                <a-form-item label="位置 Y">
+                  <a-input-number v-model:checked="dec.y" :min="0" :max="2000" size="small" style="width:100px" />
+                </a-form-item>
+                <a-form-item label="宽">
+                  <a-input-number v-model:checked="dec.width" :min="20" :max="800" size="small" style="width:100px" :disabled="dec.type==='image' && !dec.config.src" />
+                </a-form-item>
+                <a-form-item label="高">
+                  <a-input-number v-model:checked="dec.height" :min="20" :max="600" size="small" style="width:100px" />
+                </a-form-item>
+                <a-form-item label="层级">
+                  <a-input-number v-model:checked="dec.zIndex" :min="1" :max="100" size="small" style="width:80px" />
+                </a-form-item>
+                <a-form-item label="透明度">
+                  <a-slider v-model:checked="dec.opacity" :min="0" :max="1" :step="0.05" style="width:160px" />
+                </a-form-item>
+                <a-form-item label="锁定">
+                  <a-switch v-model:checked="dec.locked" />
+                </a-form-item>
                 <!-- 类型特定配置 -->
                 <template v-if="dec.type === 'image'">
-                  <el-form-item label="URL">
-                    <el-input v-model="dec.config.src" placeholder="图片URL" size="small" />
-                  </el-form-item>
+                  <a-form-item label="URL">
+                    <a-input v-model:checked="dec.config.src" placeholder="图片URL" size="small" />
+                  </a-form-item>
                 </template>
                 <template v-else-if="dec.type === 'iframe'">
-                  <el-form-item label="URL">
-                    <el-input v-model="dec.config.url" placeholder="https://..." size="small" />
-                  </el-form-item>
+                  <a-form-item label="URL">
+                    <a-input v-model:checked="dec.config.url" placeholder="https://..." size="small" />
+                  </a-form-item>
                 </template>
                 <template v-else-if="dec.type === 'web-component'">
-                  <el-form-item label="标签名">
-                    <el-input v-model="dec.config.tag" placeholder="如 my-weather" size="small" />
-                  </el-form-item>
+                  <a-form-item label="标签名">
+                    <a-input v-model:checked="dec.config.tag" placeholder="如 my-weather" size="small" />
+                  </a-form-item>
                 </template>
                 <template v-else-if="dec.type === 'html'">
-                  <el-form-item label="HTML">
-                    <el-input v-model="dec.config.content" type="textarea" :rows="2" size="small" />
-                  </el-form-item>
+                  <a-form-item label="HTML">
+                    <a-input v-model:checked="dec.config.content" type="textarea" :rows="2" size="small" />
+                  </a-form-item>
                 </template>
-              </el-form>
+              </a-form>
             </div>
           </div>
-          <el-button size="small" class="add-btn" @click="addDecoration">+ 添加画布挂件</el-button>
-        </el-tab-pane>
+          <a-button size="small" class="add-btn" @click="addDecoration">+ 添加画布挂件</a-button>
+        </a-tab-pane>
 
         <!-- 高级 JSON -->
-        <el-tab-pane label="高级" name="advanced">
-          <el-alert type="warning" :closable="false" show-icon title="编辑原始 JSON" description="此处修改直接覆盖全部皮肤定义" />
+        <a-tab-pane tab="高级" name="advanced">
+          <a-alert type="warning" :closable="false" show-icon title="编辑原始 JSON" description="此处修改直接覆盖全部皮肤定义" />
           <div class="advanced-actions">
-            <el-button size="small" @click="syncFormToJson">同步到 JSON</el-button>
-            <el-button size="small" @click="syncJsonToForm">应用到表单</el-button>
+            <a-button size="small" @click="syncFormToJson">同步到 JSON</a-button>
+            <a-button size="small" @click="syncJsonToForm">应用到表单</a-button>
           </div>
-          <el-input v-model="jsonString" type="textarea" :rows="12" class="json-editor"
+          <a-input v-model:checked="jsonString" type="textarea" :rows="12" class="json-editor"
             placeholder="Delta V2 格式皮肤定义 JSON..." />
-        </el-tab-pane>
-      </el-tabs>
+        </a-tab-pane>
+      </a-tabs>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, inject, reactive } from 'vue'
+import ColorPicker from '/@/components/ColorPicker/index.vue'
 import type {
   SkinJson, SkinForm, StateKey, WidgetConfig, CanvasDecoration,
   BorderEffect, StateStyle, ShadowConfig, CanvasDecorationType,

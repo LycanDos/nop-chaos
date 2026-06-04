@@ -7,11 +7,11 @@
           <p class="page-desc">展示 bpmn-js 流程设计器的完整功能，包含节点编辑、属性配置、执行器绑定等</p>
         </div>
         <div class="header-actions">
-          <el-select v-model="selectedExample" @change="switchExample" style="width:200px">
-            <el-option label="采购审批流程" value="purchase" />
-            <el-option label="请假审批流程" value="leave" />
-            <el-option label="空白流程" value="empty" />
-          </el-select>
+          <a-select v-model:value="selectedExample" @change="switchExample" style="width:200px">
+            <a-select-option value="purchase">采购审批流程</a-select-option>
+            <a-select-option value="leave">请假审批流程</a-select-option>
+            <a-select-option value="empty">空白流程</a-select-option>
+          </a-select>
         </div>
       </div>
     </ContentWrap>
@@ -148,7 +148,7 @@ function switchExample(val: string) {
 }
 
 // ====== AI Copilot 页面上下文注册 ======
-import { providePageContext } from '@/components/AiCopilot/usePageContext'
+import { providePageContext } from '@/components/AiCopilot/usePageContext.ts'
 
 onMounted(() => {
   // 注册 AI Copilot 页面上下文

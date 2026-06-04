@@ -67,9 +67,12 @@ export declare class AmisVueComponent extends default_2.Component<VueControlProp
     vueComponent: any;
     constructor(props: any);
     doAction(action: ActionObject, data: RendererData, throwErrors?: boolean): void;
+    normalizeEventData(eventData?: any): any;
     dispatchChangeEvent(eventData?: any): Promise<void>;
+    syncAmisValue(nextValue: any): void;
     dispatchRendererEvent(eventName: string, eventData?: any): Promise<RendererEvent<any>>;
-    dispatchNamedEvent(eventName: string, eventData?: any): Promise<RendererEvent<any>>;
+    saveTemplateCanvas(templateJson: any): Promise<boolean>;
+    dispatchNamedEvent(eventName: string, eventData?: any): Promise<RendererEvent<any> | undefined>;
     render(): default_2.DetailedReactHTMLElement<{
         style: {
             color: "red";

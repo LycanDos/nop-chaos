@@ -1,16 +1,16 @@
 <template>
-  <el-dialog
-    :model-value="visible"
-    @update:model-value="$emit('update:visible', $event)"
+  <a-modal
+    v-model:visible="visible"
+    @update:visible="$emit('update:visible', $event)"
     title="AMIS内容编辑器"
     width="80%"
-    :before-close="handleClose"
-    destroy-on-close
+    @cancel="handleClose"
+    :destroyOnClose="true"
     class="body-only-amis-editor-dialog"
   >
     <div class="editor-container">
-      <el-tabs v-model="activeTab" type="card">
-        <el-tab-pane label="可视化编辑" name="visual">
+      <a-tabs v-model:activeKey="activeTab" type="card">
+        <a-tab-pane tab="可视化编辑" key="visual">
           <div class="visual-editor" style="height: 400px;">
             <iframe
               ref="editorRef"
@@ -19,30 +19,29 @@
               v-if="showEditor"
             ></iframe>
           </div>
-        </el-tab-pane>
-        <el-tab-pane label="源码编辑" name="code">
-          <el-input
-            v-model="bodySchemaJson"
-            type="textarea"
+        </a-tab-pane>
+        <a-tab-pane tab="源码编辑" key="code">
+          <a-textarea
+            v-model:value="bodySchemaJson"
             :rows="15"
             placeholder="请输入AMIS Body内容的JSON格式"
             @input="handleBodySchemaChange"
           />
-        </el-tab-pane>
-      </el-tabs>
+        </a-tab-pane>
+      </a-tabs>
     </div>
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="handleClose">取消</el-button>
-        <el-button type="primary" @click="handleSave">保存并关闭</el-button>
+        <a-button @click="handleClose">取消</a-button>
+        <a-button type="primary" @click="handleSave">保存并关闭</a-button>
       </span>
     </template>
-  </el-dialog>
+  </a-modal>
 </template>
 
 <script setup>
 import { ref, onMounted, nextTick, toRefs, watch, onUnmounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { message } from 'ant-design-vue'
 
 const props = defineProps({
   visible: {
@@ -116,7 +115,7 @@ const handleEditorMessage = (event) => {
     // 接收到编辑器保存的Schema数据（从中提取body）
     if (data.data && data.data.body) {
       currentBodySchema.value = data.data.body
-      ElMessage.success('AMIS内容已更新')
+      message.success('AMIS内容已更新')
     }
   }
 }
@@ -170,7 +169,7 @@ const handleSave = () => {
     try {
       finalBodySchema = JSON.parse(bodySchemaJson.value)
     } catch (e) {
-      ElMessage.error('JSON格式错误，请检查输入')
+      message.error('JSON格式错误，请检查输入')
       return
     }
   }
@@ -233,12 +232,8 @@ onUnmounted(() => {
   min-height: 400px;
 }
 
-.body-only-amis-editor-dialog :deep(.el-dialog__body) {
+.body-only-amis-editor-dialog :deep(.ant-modal-body) {
   padding: 10px;
-}
-
-.body-only-amis-editor-dialog :deep(.el-dialog) {
-  --el-dialog-content-font-size: 14px;
 }
 
 .visual-editor {

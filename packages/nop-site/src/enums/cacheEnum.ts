@@ -22,6 +22,9 @@ export const MULTIPLE_TABS_KEY = 'MULTIPLE_TABS__KEY__';
 
 export const APP_DARK_MODE_KEY_ = '__APP__DARK__MODE__';
 
+// AI 助手窗口状态（位置、大小）
+export const COPILOT_WINDOW_STATE_KEY = '__COPILOT__WINDOW__STATE__';
+
 // base global local key
 export const APP_LOCAL_CACHE_KEY = 'COMMON__LOCAL__KEY__';
 

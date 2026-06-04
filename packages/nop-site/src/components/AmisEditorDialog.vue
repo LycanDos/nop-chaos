@@ -1,11 +1,11 @@
 <template>
-  <el-dialog
-    :model-value="visible"
-    @update:model-value="$emit('update:visible', $event)"
+  <a-modal
+    v-model:visible="visible"
+    @update:visible="$emit('update:visible', $event)"
     title="AMIS编辑器"
     width="90%"
-    :before-close="handleClose"
-    destroy-on-close
+    @cancel="handleClose"
+    :destroyOnClose="true"
     class="amis-editor-dialog"
   >
     <div class="amis-editor-container" style="height: 600px;">
@@ -18,16 +18,16 @@
     </div>
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="handleClose">取消</el-button>
-        <el-button type="primary" @click="handleSave">保存并关闭</el-button>
+        <a-button @click="handleClose">取消</a-button>
+        <a-button type="primary" @click="handleSave">保存并关闭</a-button>
       </span>
     </template>
-  </el-dialog>
+  </a-modal>
 </template>
 
 <script setup>
 import { ref, onMounted, nextTick, toRefs, watch, onUnmounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { message } from 'ant-design-vue'
 
 const props = defineProps({
   visible: {
@@ -105,18 +105,18 @@ const handleEditorMessage = (event) => {
   } else if (typeof data === 'object' && data.type === 'save') {
     // 接收到编辑器保存的Schema数据
     currentSchema.value = data.data
-    ElMessage.success('AMIS Schema 已保存到临时变量')
+    message.success('AMIS Schema 已保存到临时变量')
   } else if (typeof data === 'object' && data.type === 'saveSchema') {
     // 接收到编辑器保存的Schema数据
     currentSchema.value = data.data
-    ElMessage.success('AMIS Schema 已保存到临时变量')
+    message.success('AMIS Schema 已保存到临时变量')
   } else if (typeof data === 'object' && data.type === 'toast') {
     // 显示提示信息
     const level = data.level || 'info'
     if (level === 'info') {
-      ElMessage.info(data.message || '操作成功')
+      message.info(data.message || '操作成功')
     } else {
-      ElMessage.error(data.message || '操作失败')
+      message.error(data.message || '操作失败')
     }
   } else if (typeof data === 'object' && data.type === 'alert') {
     // 显示警告信息
@@ -154,7 +154,7 @@ const handleClose = () => {
 
 const handleSave = () => {
   if (!currentSchema.value) {
-    ElMessage.warning('请先编辑AMIS内容')
+    message.warning('请先编辑AMIS内容')
     return
   }
 
@@ -186,11 +186,7 @@ onUnmounted(() => {
   min-height: 500px;
 }
 
-.amis-editor-dialog :deep(.el-dialog__body) {
+.amis-editor-dialog :deep(.ant-modal-body) {
   padding: 10px;
-}
-
-.amis-editor-dialog :deep(.el-dialog) {
-  --el-dialog-content-font-size: 14px;
 }
 </style>

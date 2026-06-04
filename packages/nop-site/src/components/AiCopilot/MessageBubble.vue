@@ -81,9 +81,21 @@ function formatTime(ts: number): string {
     word-break: break-word;
 
     &.user {
-      background: #1890ff;
+      background: #1677ff;
       color: #fff;
       border-bottom-right-radius: 3px;
+
+      &::selection,
+      *::selection {
+        background: #fff;
+        color: #1677ff;
+      }
+
+      &::-moz-selection,
+      *::-moz-selection {
+        background: #fff;
+        color: #1677ff;
+      }
     }
 
     &.assistant {

@@ -23,13 +23,13 @@
     <!-- 可编辑模式 -->
     <section class="usage-section">
       <h3>3. 可编辑模式</h3>
-      <el-button
+      <a-button
         @click="toggleEditable"
         size="small"
         style="margin-bottom: 10px;"
       >
         {{ showEditable ? '隐藏编辑器' : '显示编辑器' }}
-      </el-button>
+      </a-button>
 
       <ContentDisplay
         :content="editableContent"
@@ -54,13 +54,13 @@
     <!-- 高级编辑模式 -->
     <section class="usage-section">
       <h3>5. 高级编辑模式 - 支持AMIS Schema</h3>
-      <el-button
+      <a-button
         @click="toggleAdvancedEditor"
         size="small"
         style="margin-bottom: 10px;"
       >
         {{ showAdvancedEditor ? '隐藏编辑器' : '显示AMIS编辑器' }}
-      </el-button>
+      </a-button>
 
       <ContentDisplay
         :content="advancedContent"

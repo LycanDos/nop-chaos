@@ -76,9 +76,6 @@ importers:
       '@codemirror/view':
         specifier: ^6.36.8
         version: 6.38.1
-      '@element-plus/icons-vue':
-        specifier: ^2.3.1
-        version: 2.3.1(vue@3.5.18(typescript@5.8.3))
       '@lezer/highlight':
         specifier: ^1.2.1
         version: 1.2.1
@@ -133,9 +130,6 @@ importers:
       didi:
         specifier: ^10.2.2
         version: 10.2.2
-      element-plus:
-        specifier: ^2.10.4
-        version: 2.10.4(vue@3.5.18(typescript@5.8.3))
       ids:
         specifier: ^1.0.5
         version: 1.0.5
@@ -222,17 +216,17 @@ importers:
         specifier: workspace:*
         version: link:../nop-graph-designer
       amis:
-        specifier: 6.12.0
-        version: 6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-ui@6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.5.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.5.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       amis-core:
-        specifier: 6.12.0
-        version: 6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1)
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       amis-formula:
-        specifier: 6.12.0
-        version: 6.12.0
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15
       amis-ui:
-        specifier: 6.12.0
-        version: 6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       ant-design-vue:
         specifier: ^3.2.12
         version: 3.2.20(vue@3.5.18(typescript@5.3.3))
@@ -292,23 +286,23 @@ importers:
         specifier: ^6.1.1
         version: 6.7.2
       amis:
-        specifier: 6.12.0
-        version: 6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-ui@6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       amis-core:
-        specifier: 6.12.0
-        version: 6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1)
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       amis-editor:
-        specifier: 6.12.0
-        version: 6.12.0(cedf34d4e5d9c1fc7c3f206b98d3b28d)
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15(36c88b05b37afaf23f03ab0a5c517446)
       amis-editor-core:
-        specifier: 6.12.0
-        version: 6.12.0(44cb3b598ea8c8456e99715a293c35be)
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15(10accbb0ba11a9e7f33ba98731c97870)
       amis-formula:
-        specifier: 6.12.0
-        version: 6.12.0
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15
       amis-ui:
-        specifier: 6.12.0
-        version: 6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       amis-widget:
         specifier: 3.2.0
         version: 3.2.0
@@ -395,17 +389,17 @@ importers:
         specifier: workspace:*
         version: link:../policy-studio
       amis:
-        specifier: 6.12.0
-        version: 6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-ui@6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       amis-core:
-        specifier: 6.12.0
-        version: 6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1)
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       amis-formula:
-        specifier: 6.12.0
-        version: 6.12.0
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15
       amis-ui:
-        specifier: 6.12.0
-        version: 6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       element-plus:
         specifier: ^2.10.4
         version: 2.10.4(vue@3.5.18(typescript@5.3.3))
@@ -471,17 +465,17 @@ importers:
         specifier: ^3.3.4
         version: 3.5.18
       amis:
-        specifier: 6.12.0
-        version: 6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-ui@6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       amis-core:
-        specifier: 6.12.0
-        version: 6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1)
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       amis-formula:
-        specifier: 6.12.0
-        version: 6.12.0
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15
       amis-ui:
-        specifier: 6.12.0
-        version: 6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       clipboard:
         specifier: ^2.0.8
         version: 2.0.11
@@ -1145,17 +1139,17 @@ importers:
         specifier: workspace:*
         version: link:../sdk
       amis:
-        specifier: ^3.4.2
-        version: 3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.4.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       amis-core:
-        specifier: ^3.4.2
-        version: 3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       amis-formula:
-        specifier: ^3.4.2
-        version: 3.6.4
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15
       amis-ui:
-        specifier: ^3.4.2
-        version: 3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       ant-design-vue:
         specifier: ^4.0.3
         version: 4.2.6(vue@3.5.18(typescript@5.3.3))
@@ -1293,9 +1287,6 @@ importers:
       '@ant-design/icons-vue':
         specifier: ^6.1.0
         version: 6.1.0(vue@3.5.18(typescript@4.9.5))
-      '@element-plus/icons-vue':
-        specifier: ^2.3.1
-        version: 2.3.1(vue@3.5.18(typescript@4.9.5))
       '@fortawesome/fontawesome-free':
         specifier: ^6.1.1
         version: 6.7.2
@@ -1330,17 +1321,17 @@ importers:
         specifier: ^3.0.3
         version: 3.0.4
       amis:
-        specifier: ^3.6.1
-        version: 3.6.4(amis-core@3.6.4(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@3.6.4(amis-core@3.6.4(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       amis-core:
-        specifier: ^3.6.1
-        version: 3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       amis-formula:
-        specifier: ^3.6.1
-        version: 3.6.4
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15
       amis-ui:
-        specifier: ^3.6.1
-        version: 3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       ant-design-vue:
         specifier: ^3.2.20
         version: 3.2.20(vue@3.5.18(typescript@4.9.5))
@@ -1392,9 +1383,6 @@ importers:
       echarts:
         specifier: ^5.4.3
         version: 5.6.0
-      element-plus:
-        specifier: ^2.10.4
-        version: 2.10.4(vue@3.5.18(typescript@4.9.5))
       emoji-mart-vue-fast:
         specifier: ^15.0.0
         version: 15.0.4(vue@3.5.18(typescript@4.9.5))
@@ -1802,6 +1790,9 @@ importers:
       interactjs:
         specifier: ^1.10.0
         version: 1.10.27
+      quill:
+        specifier: ^1.3.7
+        version: 1.3.7
       vue:
         specifier: ^3.4.0
         version: 3.5.18(typescript@5.8.3)
@@ -1901,17 +1892,17 @@ importers:
         specifier: ^3.3.4
         version: 3.5.18
       amis:
-        specifier: ^3.4.0
-        version: 3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       amis-core:
-        specifier: ^3.4.0
-        version: 3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       amis-formula:
-        specifier: ^3.4.0
-        version: 3.6.4
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15
       amis-ui:
-        specifier: ^3.4.0
-        version: 3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 6.14.0-beta.15
+        version: 6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       axios:
         specifier: ^0.26.1
         version: 0.26.1(debug@4.4.1)
@@ -6059,50 +6050,39 @@ packages:
   alien-signals@1.0.13:
     resolution: {integrity: sha512-OGj9yyTnJEttvzhTUWuscOvtqxq5vrhF7vL9oS0xJ2mK0ItPYP1/y+vCFebfxoEyAz0++1AIwJ5CMr+Fk3nDmg==}
 
-  amis-core@3.6.4:
-    resolution: {integrity: sha512-L5w2QffOsCNUX5sawKGPhnNWFLhfrbqkoXlPfWbi7y+8hwbH4a1u4ohmDkkDPqKqRDMAyaB9XXeDqBBe1spK6A==}
+  amis-core@6.14.0-beta.15:
+    resolution: {integrity: sha512-9r12OYSifxUZHWW8D4hjG6Qq4S3IJBhm3w8VJpwIeZr0r4WIoe0CUcWXr0DVGFQnvGbjXgd6k5Mq4wnqnrBtSA==}
     peerDependencies:
       amis-formula: '*'
       react: '>=16.8.6'
       react-dom: '>=16.8.6'
 
-  amis-core@6.12.0:
-    resolution: {integrity: sha512-52aZ9y/NX7AdPU/mruKxC/3Upj+tW08sjJ6sf+Ux56hidiiTqWO6lBRh72CRgje8vMQvgH0BHzU65ktDHqplCw==}
-    peerDependencies:
-      amis-formula: '*'
-      react: '>=16.8.6'
-      react-dom: '>=16.8.6'
-      react-is: '>=16.8.6'
-
-  amis-editor-core@6.12.0:
-    resolution: {integrity: sha512-LU0kUhflXP4kUkIbYzXfKwzpkMzBkMMnU0fU/ov6hrUQQiBuGkm2ZQlvFrbMRUqnskzWCqFggwWQPUiljZqvzA==}
+  amis-editor-core@6.14.0-beta.15:
+    resolution: {integrity: sha512-OS7f6s6vjUdzhrXmnN/rs7aiG19qZCOBOrQZDaVTdHLpiV1/scqPeA0mDpAsNVOeNTBx74DJ0x/uNDg0tmnWIw==}
     peerDependencies:
       amis: '*'
       amis-core: '*'
       amis-formula: '*'
       amis-theme-editor-helper: '*'
       amis-ui: '*'
-      i18n-runtime: '*'
+      i18n-runtime: 1.0.10
       react: '>=16.8.6'
       react-dom: '>=16.8.6'
 
-  amis-editor@6.12.0:
-    resolution: {integrity: sha512-uN/YP9wsieOuuWd5rkSNevQn5SZpMhjE3FDx2iwlXPvsnRdAzdHhJARwONhJwIikpnI+SrojjansGsdOivoMng==}
+  amis-editor@6.14.0-beta.15:
+    resolution: {integrity: sha512-eCm6SfrrZaf2HBK8SvEdQbFD9C9zm+9YTcMlgplckOqUq5oHYtH7BOgXJwP3j2c+ZGsJ0H7tWJNGN2Q+xgCSJg==}
     peerDependencies:
       amis: '*'
       amis-core: '*'
       amis-formula: '*'
       amis-theme-editor-helper: '*'
       amis-ui: '*'
-      i18n-runtime: '*'
+      i18n-runtime: 1.0.10
       react: '>=16.8.6'
       react-dom: '>=16.8.6'
 
-  amis-formula@3.6.4:
-    resolution: {integrity: sha512-zQuuwrRV8HtaJZTQBs4abHErW3M0m6uNLNuC4wkFBnLaWjXNvNq9rKlq7GJga6ZOoowcIrBCbD0SwC9hlZTwDQ==}
-
-  amis-formula@6.12.0:
-    resolution: {integrity: sha512-46jACrcsIvWR5BXLpFvdgVcXhMQ8+/mYVcBZLZC5vChQbRR6oR8In7MtFKjrXk4H88sS/9/pnbcdPVAfqK6+oQ==}
+  amis-formula@6.14.0-beta.15:
+    resolution: {integrity: sha512-vu9Ra6ik6EnyYSML7Zfoge0W+sHTJvT3/ZcE9jZvIv6O7QIrICBwHdaPcep4w2YxgJuBM/XiSbCE3yYH1qVGWA==}
 
   amis-postcss@1.0.0:
     resolution: {integrity: sha512-OeKbbTvsaIcOq2SZ1VV1GyshhF2fFbFXXc8IQ3ZTIu0uTtJBGFVYZ6sJ40nOznWeptEdfYpVdB/JEtBlXlSWag==}
@@ -6117,16 +6097,8 @@ packages:
       react: '>=16.8.6'
       react-dom: '>=16.8.6'
 
-  amis-ui@3.6.4:
-    resolution: {integrity: sha512-1kHrhkbXNRPiER//JGlNQAKXsT97Ecxt8T3UG/RZgLdKV3F4FAhNP/cJeoRRqiwwJC8ejgpXh0uFlswHbb9HXA==}
-    peerDependencies:
-      amis-core: '*'
-      amis-formula: '*'
-      react: '>=16.8.6'
-      react-dom: '>=16.8.6'
-
-  amis-ui@6.12.0:
-    resolution: {integrity: sha512-udV8EQepagXelCP7dND6dOm+uwVmywN6xnStIo90yTq6MnSI2KGTwUNIbbgiHX9kG1ktfSuF1wXDVuPuo6GkKw==}
+  amis-ui@6.14.0-beta.15:
+    resolution: {integrity: sha512-ei7ET0AknkhSVndiSsKviiq4cFXoRMUwcB2UaFGmwgxm3JzbcH4+f/zm0UxdUah158wg6RoP6k4Y/ITDTyFd0w==}
     peerDependencies:
       amis-core: '*'
       amis-formula: '*'
@@ -6137,17 +6109,8 @@ packages:
     resolution: {integrity: sha512-XrJMMSV1uUV/MPaVJVPQ+e2n6d/8mJrqtRhXOCyhLYoPkThR7+KJo8oCQ2FldixZxcRVKMU4cNvn9085cwPVBg==}
     engines: {amis-core: '>= 5.2.5', amis-editor-core: '>= 5.2.5', node: '>= 10.13.0', npm: '>= 6.4.1'}
 
-  amis@3.6.4:
-    resolution: {integrity: sha512-1DAlmwT0WdgktygB3J3so0YWMGQ7bwCZw7Al24qAGzvhsx3IjGnHuMbR+FWvRZXvhuAqye0oqZNBtRVqzoMoKQ==}
-    peerDependencies:
-      amis-core: '*'
-      amis-ui: '*'
-      office-viewer: '*'
-      react: '>=16.8.6'
-      react-dom: '>=16.8.6'
-
-  amis@6.12.0:
-    resolution: {integrity: sha512-rUhtOi2nVHJNHQ/S/m9qy8lpmiDxf3V5PGRHKWCkwvRHZoA18L4HQyPZ2PhJ2FTyYt307OMS1CAOPAMeji6zPg==}
+  amis@6.14.0-beta.15:
+    resolution: {integrity: sha512-tshMW1MLl4yBewmznVKUbeRvuDxcZ0vE5norVTx5dHOgHQpIkkPcZe4mJ/bHaHgXUryt/Dcd2xBBccWQb9YE4w==}
     peerDependencies:
       amis-core: '*'
       amis-ui: '*'
@@ -8105,9 +8068,6 @@ packages:
     peerDependencies:
       echarts: ^5.0.1
 
-  echarts@5.4.0:
-    resolution: {integrity: sha512-uPsO9VRUIKAdFOoH3B0aNg7NRVdN7aM39/OjovjO9MwmWsAkfGyeXJhK+dbRi51iDrQWliXV60/XwLA7kg3z0w==}
-
   echarts@5.5.1:
     resolution: {integrity: sha512-Fce8upazaAXUVUVsjgV6mBnGuqgO+JNDlcgF79Dksy4+wgGpQB2lmYoO4TSweFg/mZITdpGHomw/cNBJZj1icA==}
 
@@ -9340,6 +9300,7 @@ packages:
   glob@11.1.0:
     resolution: {integrity: sha512-vuNwKSaKiqm7g0THUBu2x7ckSs3XJLXE+2ssL7/MfTGPLLcrJQ/4Uq1CjPTtO5cCIiRxqvN6Twy1qOwhL0Xjcw==}
     engines: {node: 20 || >=22}
+    deprecated: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
     hasBin: true
 
   glob@7.1.2:
@@ -12456,15 +12417,10 @@ packages:
   pure-rand@8.4.0:
     resolution: {integrity: sha512-IoM8YF/jY0hiugFo/wOWqfmarlE6J0wc6fDK1PhftMk7MGhVZl88sZimmqBBFomLOCSmcCCpsfj7wXASCpvK9A==}
 
-  qrcode-react-next@0.0.4:
-    resolution: {integrity: sha512-m29i2Oru64mH/s1GF2evAvsN/KNPVTjx4icOrl6lDkS1Uj13uJsGqfaP+GMuHIRqyziOfFbEYRp/z2HUNbJVtA==}
+  qrcode-react-next@1.0.0:
+    resolution: {integrity: sha512-d8U0xudKLDJDGdUFWKyNivBcf0M0VSwbcXChIA8cfFHkB51SlxlCtrwbJYukzV1qVBexDtB0GfXm0oQvh0Pwdw==}
     peerDependencies:
-      react: '>16.8.0'
-
-  qrcode.react@3.2.0:
-    resolution: {integrity: sha512-YietHHltOHA4+l5na1srdaMx4sVSOjV9tamHs+mwiLWAMr6QVACRUw1Neax5CptFILcNoITctJY0Ipyn5enQ8g==}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+      react: '>16.0.0'
 
   qrcode@1.5.4:
     resolution: {integrity: sha512-1ca71Zgiu6ORjHqFBDpnSMTR2ReToX4l1Au1VFLyVeBTFavzQnv5JxMFr3ukHVKpSrSA2MCk0lNJSykjUfz7Zg==}
@@ -15818,9 +15774,6 @@ packages:
     resolution: {integrity: sha512-9qv4rlDiopXg4E69k+vMHjNN63YFMe9sZMrdlvKnCjlCRWeCBswPPMPUfx+ipsAWq1LXHe70RcbaHdJJpS6hyQ==}
     engines: {node: '>= 10'}
 
-  zrender@5.4.0:
-    resolution: {integrity: sha512-rOS09Z2HSVGFs2dn/TuYk5BlCaZcVe8UDLLjj1ySYF828LATKKdxuakSZMvrDz54yiKPDYVfjdKqcX8Jky3BIA==}
-
   zrender@5.6.0:
     resolution: {integrity: sha512-uzgraf4njmmHAbEUxMJ8Oxg+P3fT04O+9p7gY+wJRVxo8Ge+KmYv0WJev945EH4wFuc4OY2NLXz46FZrWS9xJg==}
 
@@ -18020,17 +17973,9 @@ snapshots:
       react: 18.3.1
       tslib: 2.8.1
 
-  '@element-plus/icons-vue@2.3.1(vue@3.5.18(typescript@4.9.5))':
-    dependencies:
-      vue: 3.5.18(typescript@4.9.5)
-
   '@element-plus/icons-vue@2.3.1(vue@3.5.18(typescript@5.3.3))':
     dependencies:
       vue: 3.5.18(typescript@5.3.3)
-
-  '@element-plus/icons-vue@2.3.1(vue@3.5.18(typescript@5.8.3))':
-    dependencies:
-      vue: 3.5.18(typescript@5.8.3)
 
   '@emotion/hash@0.8.0': {}
 
@@ -21378,32 +21323,12 @@ snapshots:
       '@vueuse/shared': 13.9.0(vue@3.5.18(typescript@5.8.3))
       vue: 3.5.18(typescript@5.8.3)
 
-  '@vueuse/core@9.13.0(vue@3.5.18(typescript@4.9.5))':
-    dependencies:
-      '@types/web-bluetooth': 0.0.16
-      '@vueuse/metadata': 9.13.0
-      '@vueuse/shared': 9.13.0(vue@3.5.18(typescript@4.9.5))
-      vue-demi: 0.14.10(vue@3.5.18(typescript@4.9.5))
-    transitivePeerDependencies:
-      - '@vue/composition-api'
-      - vue
-
   '@vueuse/core@9.13.0(vue@3.5.18(typescript@5.3.3))':
     dependencies:
       '@types/web-bluetooth': 0.0.16
       '@vueuse/metadata': 9.13.0
       '@vueuse/shared': 9.13.0(vue@3.5.18(typescript@5.3.3))
       vue-demi: 0.14.10(vue@3.5.18(typescript@5.3.3))
-    transitivePeerDependencies:
-      - '@vue/composition-api'
-      - vue
-
-  '@vueuse/core@9.13.0(vue@3.5.18(typescript@5.8.3))':
-    dependencies:
-      '@types/web-bluetooth': 0.0.16
-      '@vueuse/metadata': 9.13.0
-      '@vueuse/shared': 9.13.0(vue@3.5.18(typescript@5.8.3))
-      vue-demi: 0.14.10(vue@3.5.18(typescript@5.8.3))
     transitivePeerDependencies:
       - '@vue/composition-api'
       - vue
@@ -21425,23 +21350,9 @@ snapshots:
     dependencies:
       vue: 3.5.18(typescript@5.8.3)
 
-  '@vueuse/shared@9.13.0(vue@3.5.18(typescript@4.9.5))':
-    dependencies:
-      vue-demi: 0.14.10(vue@3.5.18(typescript@4.9.5))
-    transitivePeerDependencies:
-      - '@vue/composition-api'
-      - vue
-
   '@vueuse/shared@9.13.0(vue@3.5.18(typescript@5.3.3))':
     dependencies:
       vue-demi: 0.14.10(vue@3.5.18(typescript@5.3.3))
-    transitivePeerDependencies:
-      - '@vue/composition-api'
-      - vue
-
-  '@vueuse/shared@9.13.0(vue@3.5.18(typescript@5.8.3))':
-    dependencies:
-      vue-demi: 0.14.10(vue@3.5.18(typescript@5.8.3))
     transitivePeerDependencies:
       - '@vue/composition-api'
       - vue
@@ -21649,62 +21560,10 @@ snapshots:
 
   alien-signals@1.0.13: {}
 
-  amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
-    dependencies:
-      amis-formula: 3.6.4
-      classnames: 2.3.2
-      file-saver: 2.0.5
-      hoist-non-react-statics: 3.3.2
-      lodash: 4.17.21
-      match-sorter: 6.3.4
-      mobx: 4.15.7
-      mobx-react: 6.3.1(mobx@4.15.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      mobx-state-tree: 3.17.3(mobx@4.15.7)
-      moment: 2.30.1
-      papaparse: 5.5.3
-      path-to-regexp: 6.2.0
-      qs: 6.9.7
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-      react-intersection-observer: 9.5.2(react@18.3.1)
-      react-json-view: 1.21.3(@types/react@18.3.23)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      tslib: 2.8.1
-      uncontrollable: 7.2.1(react@18.3.1)
-    transitivePeerDependencies:
-      - '@types/react'
-      - encoding
-      - react-native
-
-  amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
-    dependencies:
-      amis-formula: 3.6.4
-      classnames: 2.3.2
-      file-saver: 2.0.5
-      hoist-non-react-statics: 3.3.2
-      lodash: 4.17.21
-      match-sorter: 6.3.4
-      mobx: 4.15.7
-      mobx-react: 6.3.1(mobx@4.15.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      mobx-state-tree: 3.17.3(mobx@4.15.7)
-      moment: 2.30.1
-      papaparse: 5.5.3
-      path-to-regexp: 6.2.0
-      qs: 6.9.7
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-      react-intersection-observer: 9.5.2(react@18.3.1)
-      react-json-view: 1.21.3(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      tslib: 2.8.1
-      uncontrollable: 7.2.1(react@18.3.1)
-    transitivePeerDependencies:
-      - '@types/react'
-      - encoding
-      - react-native
-
-  amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1):
+  amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@rc-component/mini-decimal': 1.1.0
-      amis-formula: 6.12.0
+      amis-formula: 6.14.0-beta.15
       classnames: 2.3.2
       cross-env: 7.0.3
       file-saver: 2.0.5
@@ -21731,16 +21590,16 @@ snapshots:
       - encoding
       - react-native
 
-  amis-editor-core@6.12.0(44cb3b598ea8c8456e99715a293c35be):
+  amis-editor-core@6.14.0-beta.15(10accbb0ba11a9e7f33ba98731c97870):
     dependencies:
-      amis: 6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-ui@6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      amis-core: 6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1)
-      amis-formula: 6.12.0
-      amis-theme-editor-helper: 2.0.27(feb6de8c09039057d64a98aaf40ebe3a)
-      amis-ui: 6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      amis: 6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      amis-core: 6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      amis-formula: 6.14.0-beta.15
+      amis-theme-editor-helper: 2.0.27(cdcee4f7f8627da34ed269f9760418b4)
+      amis-ui: 6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       axios: 0.21.1
       deep-diff: 1.0.2
-      i18n-runtime: 1.0.10(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))
+      i18n-runtime: 1.0.10(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
       json-ast-comments: 1.1.1
       lodash: 4.17.21
       mobx: 4.15.7
@@ -21758,17 +21617,17 @@ snapshots:
       - prop-types
       - react-native
 
-  amis-editor@6.12.0(cedf34d4e5d9c1fc7c3f206b98d3b28d):
+  amis-editor@6.14.0-beta.15(36c88b05b37afaf23f03ab0a5c517446):
     dependencies:
       '@webcomponents/webcomponentsjs': 2.8.0
-      amis: 6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-ui@6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      amis-core: 6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1)
-      amis-editor-core: 6.12.0(44cb3b598ea8c8456e99715a293c35be)
-      amis-formula: 6.12.0
+      amis: 6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      amis-core: 6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      amis-editor-core: 6.14.0-beta.15(10accbb0ba11a9e7f33ba98731c97870)
+      amis-formula: 6.14.0-beta.15
       amis-postcss: 1.0.0
-      amis-theme-editor-helper: 2.0.27(feb6de8c09039057d64a98aaf40ebe3a)
-      amis-ui: 6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      i18n-runtime: 1.0.10(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))
+      amis-theme-editor-helper: 2.0.27(cdcee4f7f8627da34ed269f9760418b4)
+      amis-ui: 6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      i18n-runtime: 1.0.10(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
       lodash: 4.17.21
       mobx-state-tree: 3.17.3(mobx@4.15.7)
       react: 18.3.1
@@ -21781,13 +21640,7 @@ snapshots:
       - prop-types
       - react-native
 
-  amis-formula@3.6.4:
-    dependencies:
-      lodash: 4.17.21
-      moment: 2.30.1
-      tslib: 2.8.1
-
-  amis-formula@6.12.0:
+  amis-formula@6.14.0-beta.15:
     dependencies:
       lodash: 4.17.21
       moment: 2.30.1
@@ -21795,156 +21648,21 @@ snapshots:
 
   amis-postcss@1.0.0: {}
 
-  amis-theme-editor-helper@2.0.27(feb6de8c09039057d64a98aaf40ebe3a):
+  amis-theme-editor-helper@2.0.27(cdcee4f7f8627da34ed269f9760418b4):
     dependencies:
-      amis: 6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-ui@6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      amis-core: 6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1)
-      amis-ui: 6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      i18n-runtime: 1.0.10(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))
+      amis: 6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      amis-core: 6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      amis-ui: 6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      i18n-runtime: 1.0.10(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       style-inject: 0.3.0
 
-  amis-ui@3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  amis-ui@6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@rc-component/mini-decimal': 1.1.0
-      amis-core: 3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      amis-formula: 3.6.4
-      classnames: 2.3.2
-      codemirror: 5.65.19
-      downshift: 6.1.12(react@18.3.1)
-      echarts: 5.4.0
-      froala-editor: 3.1.1
-      hoist-non-react-statics: 3.3.2
-      jsbarcode: 3.12.1
-      keycode: 2.2.1
-      lodash: 4.17.21
-      markdown-it: 12.3.2
-      markdown-it-html5-media: 0.7.1
-      match-sorter: 6.3.4
-      mobx: 4.15.7
-      mobx-react: 6.3.1(mobx@4.15.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      mobx-state-tree: 3.17.3(mobx@4.15.7)
-      moment: 2.30.1
-      monaco-editor: 0.30.1
-      prop-types: 15.8.1
-      rc-input-number: 7.4.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      rc-menu: 9.16.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      rc-progress: 3.4.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-color: 2.19.3(react@18.3.1)
-      react-dom: 18.3.1(react@18.3.1)
-      react-draggable: 4.5.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-hook-form: 7.39.0(react@18.3.1)
-      react-json-view: 1.21.3(@types/react@18.3.23)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-overlays: 5.1.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-textarea-autosize: 8.3.3(@types/react@18.3.23)(react@18.3.1)
-      react-transition-group: 4.4.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-visibility-sensor: 5.1.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      sortablejs: 1.15.0
-      tinymce: 6.8.6
-      tslib: 2.8.1
-      uncontrollable: 7.2.1(react@18.3.1)
-    transitivePeerDependencies:
-      - '@types/react'
-      - encoding
-      - react-native
-
-  amis-ui@3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@rc-component/mini-decimal': 1.1.0
-      amis-core: 3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      amis-formula: 3.6.4
-      classnames: 2.3.2
-      codemirror: 5.65.19
-      downshift: 6.1.12(react@18.3.1)
-      echarts: 5.4.0
-      froala-editor: 3.1.1
-      hoist-non-react-statics: 3.3.2
-      jsbarcode: 3.12.1
-      keycode: 2.2.1
-      lodash: 4.17.21
-      markdown-it: 12.3.2
-      markdown-it-html5-media: 0.7.1
-      match-sorter: 6.3.4
-      mobx: 4.15.7
-      mobx-react: 6.3.1(mobx@4.15.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      mobx-state-tree: 3.17.3(mobx@4.15.7)
-      moment: 2.30.1
-      monaco-editor: 0.30.1
-      prop-types: 15.8.1
-      rc-input-number: 7.4.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      rc-menu: 9.16.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      rc-progress: 3.4.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-color: 2.19.3(react@18.3.1)
-      react-dom: 18.3.1(react@18.3.1)
-      react-draggable: 4.5.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-hook-form: 7.39.0(react@18.3.1)
-      react-json-view: 1.21.3(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-overlays: 5.1.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-textarea-autosize: 8.3.3(@types/react@18.3.23)(react@18.3.1)
-      react-transition-group: 4.4.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-visibility-sensor: 5.1.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      sortablejs: 1.15.0
-      tinymce: 6.8.6
-      tslib: 2.8.1
-      uncontrollable: 7.2.1(react@18.3.1)
-    transitivePeerDependencies:
-      - '@types/react'
-      - encoding
-      - react-native
-
-  amis-ui@3.6.4(amis-core@3.6.4(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@rc-component/mini-decimal': 1.1.0
-      amis-core: 3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      amis-formula: 3.6.4
-      classnames: 2.3.2
-      codemirror: 5.65.19
-      downshift: 6.1.12(react@18.3.1)
-      echarts: 5.4.0
-      froala-editor: 3.1.1
-      hoist-non-react-statics: 3.3.2
-      jsbarcode: 3.12.1
-      keycode: 2.2.1
-      lodash: 4.17.21
-      markdown-it: 12.3.2
-      markdown-it-html5-media: 0.7.1
-      match-sorter: 6.3.4
-      mobx: 4.15.7
-      mobx-react: 6.3.1(mobx@4.15.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      mobx-state-tree: 3.17.3(mobx@4.15.7)
-      moment: 2.30.1
-      monaco-editor: 0.30.1
-      prop-types: 15.8.1
-      rc-input-number: 7.4.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      rc-menu: 9.16.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      rc-progress: 3.4.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react: 18.3.1
-      react-color: 2.19.3(react@18.3.1)
-      react-dom: 18.3.1(react@18.3.1)
-      react-draggable: 4.5.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-hook-form: 7.39.0(react@18.3.1)
-      react-json-view: 1.21.3(@types/react@18.3.23)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-overlays: 5.1.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-textarea-autosize: 8.3.3(@types/react@18.3.23)(react@18.3.1)
-      react-transition-group: 4.4.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-visibility-sensor: 5.1.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      sortablejs: 1.15.0
-      tinymce: 6.8.6
-      tslib: 2.8.1
-      uncontrollable: 7.2.1(react@18.3.1)
-    transitivePeerDependencies:
-      - '@types/react'
-      - encoding
-      - react-native
-
-  amis-ui@6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
-    dependencies:
-      '@rc-component/mini-decimal': 1.1.0
-      amis-core: 6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1)
-      amis-formula: 6.12.0
+      amis-core: 6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      amis-formula: 6.14.0-beta.15
       animate.css: 4.1.1
       classnames: 2.3.2
       codemirror: 5.65.19
@@ -21999,148 +21717,10 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  amis@3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.4.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  amis@6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.5.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
-      amis-core: 3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      amis-ui: 3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      attr-accept: 2.2.2
-      blueimp-canvastoblob: 2.1.0
-      classnames: 2.3.2
-      downshift: 6.1.12(react@18.3.1)
-      echarts: 5.4.0
-      echarts-stat: 1.2.0
-      echarts-wordcloud: 2.1.0(echarts@5.4.0)
-      exceljs: 4.4.0
-      file-saver: 2.0.5
-      hls.js: 1.1.3
-      hoist-non-react-statics: 3.3.2
-      hotkeys-js: 3.13.15
-      immutability-helper: 3.1.1
-      jsbarcode: 3.12.1
-      keycode: 2.2.1
-      lodash: 4.17.21
-      match-sorter: 6.3.4
-      mobx: 4.15.7
-      mobx-react: 6.3.1(mobx@4.15.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      mobx-state-tree: 3.17.3(mobx@4.15.7)
-      moment: 2.30.1
-      moment-timezone: 0.5.48
-      mpegts.js: 1.8.0
-      office-viewer: 0.3.14(echarts@5.4.0)
-      prop-types: 15.8.1
-      qrcode.react: 3.2.0(react@18.3.1)
-      react: 18.3.1
-      react-cropper: 2.3.3(react@18.3.1)
-      react-dom: 18.3.1(react@18.3.1)
-      react-dropzone: 11.7.1(react@18.3.1)
-      react-intersection-observer: 9.5.2(react@18.3.1)
-      react-json-view: 1.21.3(@types/react@18.3.23)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-transition-group: 4.4.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      sortablejs: 1.15.0
-      tslib: 2.8.1
-      video-react: 0.15.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      xlsx: 0.18.5
-    transitivePeerDependencies:
-      - '@types/react'
-      - encoding
-      - react-native
-
-  amis@3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
-    dependencies:
-      amis-core: 3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      amis-ui: 3.6.4(@types/react@18.3.23)(amis-core@3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      attr-accept: 2.2.2
-      blueimp-canvastoblob: 2.1.0
-      classnames: 2.3.2
-      downshift: 6.1.12(react@18.3.1)
-      echarts: 5.4.0
-      echarts-stat: 1.2.0
-      echarts-wordcloud: 2.1.0(echarts@5.4.0)
-      exceljs: 4.4.0
-      file-saver: 2.0.5
-      hls.js: 1.1.3
-      hoist-non-react-statics: 3.3.2
-      hotkeys-js: 3.13.15
-      immutability-helper: 3.1.1
-      jsbarcode: 3.12.1
-      keycode: 2.2.1
-      lodash: 4.17.21
-      match-sorter: 6.3.4
-      mobx: 4.15.7
-      mobx-react: 6.3.1(mobx@4.15.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      mobx-state-tree: 3.17.3(mobx@4.15.7)
-      moment: 2.30.1
-      moment-timezone: 0.5.48
-      mpegts.js: 1.8.0
-      office-viewer: 0.3.14(echarts@5.6.0)
-      prop-types: 15.8.1
-      qrcode.react: 3.2.0(react@18.3.1)
-      react: 18.3.1
-      react-cropper: 2.3.3(react@18.3.1)
-      react-dom: 18.3.1(react@18.3.1)
-      react-dropzone: 11.7.1(react@18.3.1)
-      react-intersection-observer: 9.5.2(react@18.3.1)
-      react-json-view: 1.21.3(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-transition-group: 4.4.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      sortablejs: 1.15.0
-      tslib: 2.8.1
-      video-react: 0.15.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      xlsx: 0.18.5
-    transitivePeerDependencies:
-      - '@types/react'
-      - encoding
-      - react-native
-
-  amis@3.6.4(amis-core@3.6.4(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@3.6.4(amis-core@3.6.4(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
-    dependencies:
-      amis-core: 3.6.4(@types/react@18.3.23)(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      amis-ui: 3.6.4(amis-core@3.6.4(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@3.6.4)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      attr-accept: 2.2.2
-      blueimp-canvastoblob: 2.1.0
-      classnames: 2.3.2
-      downshift: 6.1.12(react@18.3.1)
-      echarts: 5.4.0
-      echarts-stat: 1.2.0
-      echarts-wordcloud: 2.1.0(echarts@5.4.0)
-      exceljs: 4.4.0
-      file-saver: 2.0.5
-      hls.js: 1.1.3
-      hoist-non-react-statics: 3.3.2
-      hotkeys-js: 3.13.15
-      immutability-helper: 3.1.1
-      jsbarcode: 3.12.1
-      keycode: 2.2.1
-      lodash: 4.17.21
-      match-sorter: 6.3.4
-      mobx: 4.15.7
-      mobx-react: 6.3.1(mobx@4.15.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      mobx-state-tree: 3.17.3(mobx@4.15.7)
-      moment: 2.30.1
-      moment-timezone: 0.5.48
-      mpegts.js: 1.8.0
-      office-viewer: 0.3.14(echarts@5.6.0)
-      prop-types: 15.8.1
-      qrcode.react: 3.2.0(react@18.3.1)
-      react: 18.3.1
-      react-cropper: 2.3.3(react@18.3.1)
-      react-dom: 18.3.1(react@18.3.1)
-      react-dropzone: 11.7.1(react@18.3.1)
-      react-intersection-observer: 9.5.2(react@18.3.1)
-      react-json-view: 1.21.3(@types/react@18.3.23)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-transition-group: 4.4.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      sortablejs: 1.15.0
-      tslib: 2.8.1
-      video-react: 0.15.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      xlsx: 0.18.5
-    transitivePeerDependencies:
-      - '@types/react'
-      - encoding
-      - react-native
-
-  amis@6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-ui@6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.5.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
-    dependencies:
-      amis-core: 6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1)
-      amis-ui: 6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      amis-core: 6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      amis-ui: 6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       attr-accept: 2.2.2
       blueimp-canvastoblob: 2.1.0
       classnames: 2.3.2
@@ -22161,13 +21741,14 @@ snapshots:
       match-sorter: 6.3.4
       mobx: 4.15.7
       mobx-react: 6.3.1(mobx@4.15.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      mobx-react-lite: 2.2.2(mobx@4.15.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       mobx-state-tree: 3.17.3(mobx@4.15.7)
       moment: 2.30.1
       moment-timezone: 0.5.48
       mpegts.js: 1.8.0
       office-viewer: 0.3.14(echarts@5.5.1)
       prop-types: 15.8.1
-      qrcode-react-next: 0.0.4(react@18.3.1)
+      qrcode-react-next: 1.0.0(react@18.3.1)
       react: 18.3.1
       react-cropper: 2.3.3(react@18.3.1)
       react-dom: 18.3.1(react@18.3.1)
@@ -22184,10 +21765,10 @@ snapshots:
       - encoding
       - react-native
 
-  amis@6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-ui@6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  amis@6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-ui@6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(encoding@0.1.13)(office-viewer@0.3.14(echarts@5.6.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
-      amis-core: 6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1)
-      amis-ui: 6.12.0(@types/react@18.3.23)(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1))(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      amis-core: 6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      amis-ui: 6.14.0-beta.15(@types/react@18.3.23)(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       attr-accept: 2.2.2
       blueimp-canvastoblob: 2.1.0
       classnames: 2.3.2
@@ -22208,13 +21789,14 @@ snapshots:
       match-sorter: 6.3.4
       mobx: 4.15.7
       mobx-react: 6.3.1(mobx@4.15.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      mobx-react-lite: 2.2.2(mobx@4.15.7)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       mobx-state-tree: 3.17.3(mobx@4.15.7)
       moment: 2.30.1
       moment-timezone: 0.5.48
       mpegts.js: 1.8.0
       office-viewer: 0.3.14(echarts@5.6.0)
       prop-types: 15.8.1
-      qrcode-react-next: 0.0.4(react@18.3.1)
+      qrcode-react-next: 1.0.0(react@18.3.1)
       react: 18.3.1
       react-cropper: 2.3.3(react@18.3.1)
       react-dom: 18.3.1(react@18.3.1)
@@ -24822,18 +24404,9 @@ snapshots:
 
   echarts-stat@1.2.0: {}
 
-  echarts-wordcloud@2.1.0(echarts@5.4.0):
-    dependencies:
-      echarts: 5.4.0
-
   echarts-wordcloud@2.1.0(echarts@5.5.1):
     dependencies:
       echarts: 5.5.1
-
-  echarts@5.4.0:
-    dependencies:
-      tslib: 2.3.0
-      zrender: 5.4.0
 
   echarts@5.5.1:
     dependencies:
@@ -24865,27 +24438,6 @@ snapshots:
 
   electron-to-chromium@1.5.190: {}
 
-  element-plus@2.10.4(vue@3.5.18(typescript@4.9.5)):
-    dependencies:
-      '@ctrl/tinycolor': 3.6.1
-      '@element-plus/icons-vue': 2.3.1(vue@3.5.18(typescript@4.9.5))
-      '@floating-ui/dom': 1.7.2
-      '@popperjs/core': '@sxzz/popperjs-es@2.11.7'
-      '@types/lodash': 4.17.20
-      '@types/lodash-es': 4.17.12
-      '@vueuse/core': 9.13.0(vue@3.5.18(typescript@4.9.5))
-      async-validator: 4.2.5
-      dayjs: 1.11.13
-      escape-html: 1.0.3
-      lodash: 4.17.21
-      lodash-es: 4.17.21
-      lodash-unified: 1.0.3(@types/lodash-es@4.17.12)(lodash-es@4.17.21)(lodash@4.17.21)
-      memoize-one: 6.0.0
-      normalize-wheel-es: 1.2.0
-      vue: 3.5.18(typescript@4.9.5)
-    transitivePeerDependencies:
-      - '@vue/composition-api'
-
   element-plus@2.10.4(vue@3.5.18(typescript@5.3.3)):
     dependencies:
       '@ctrl/tinycolor': 3.6.1
@@ -24904,27 +24456,6 @@ snapshots:
       memoize-one: 6.0.0
       normalize-wheel-es: 1.2.0
       vue: 3.5.18(typescript@5.3.3)
-    transitivePeerDependencies:
-      - '@vue/composition-api'
-
-  element-plus@2.10.4(vue@3.5.18(typescript@5.8.3)):
-    dependencies:
-      '@ctrl/tinycolor': 3.6.1
-      '@element-plus/icons-vue': 2.3.1(vue@3.5.18(typescript@5.8.3))
-      '@floating-ui/dom': 1.7.2
-      '@popperjs/core': '@sxzz/popperjs-es@2.11.7'
-      '@types/lodash': 4.17.20
-      '@types/lodash-es': 4.17.12
-      '@vueuse/core': 9.13.0(vue@3.5.18(typescript@5.8.3))
-      async-validator: 4.2.5
-      dayjs: 1.11.13
-      escape-html: 1.0.3
-      lodash: 4.17.21
-      lodash-es: 4.17.21
-      lodash-unified: 1.0.3(@types/lodash-es@4.17.12)(lodash-es@4.17.21)(lodash@4.17.21)
-      memoize-one: 6.0.0
-      normalize-wheel-es: 1.2.0
-      vue: 3.5.18(typescript@5.8.3)
     transitivePeerDependencies:
       - '@vue/composition-api'
 
@@ -26928,9 +26459,9 @@ snapshots:
 
   husky@8.0.3: {}
 
-  i18n-runtime@1.0.10(amis-core@6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1)):
+  i18n-runtime@1.0.10(amis-core@6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)):
     dependencies:
-      amis-core: 6.12.0(@types/react@18.3.23)(amis-formula@6.12.0)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react-is@18.3.1)(react@18.3.1)
+      amis-core: 6.14.0-beta.15(@types/react@18.3.23)(amis-formula@6.14.0-beta.15)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
 
   iconv-lite@0.4.24:
     dependencies:
@@ -29677,13 +29208,6 @@ snapshots:
       node-fetch-native: 1.6.6
       ufo: 1.6.1
 
-  office-viewer@0.3.14(echarts@5.4.0):
-    dependencies:
-      echarts: 5.4.0
-      numfmt: 2.5.2
-      papaparse: 5.5.3
-      tslib: 2.8.1
-
   office-viewer@0.3.14(echarts@5.5.1):
     dependencies:
       echarts: 5.5.1
@@ -30447,11 +29971,7 @@ snapshots:
 
   pure-rand@8.4.0: {}
 
-  qrcode-react-next@0.0.4(react@18.3.1):
-    dependencies:
-      react: 18.3.1
-
-  qrcode.react@3.2.0(react@18.3.1):
+  qrcode-react-next@1.0.0(react@18.3.1):
     dependencies:
       react: 18.3.1
 
@@ -30811,7 +30331,7 @@ snapshots:
     dependencies:
       '@babel/runtime': 7.27.6
       '@rc-component/mini-decimal': 1.1.0
-      classnames: 2.3.2
+      classnames: 2.5.1
       rc-util: 5.44.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -31651,18 +31171,6 @@ snapshots:
   react-is@18.3.1: {}
 
   react-json-view@1.21.3(@types/react@18.3.23)(encoding@0.1.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
-    dependencies:
-      flux: 4.0.4(encoding@0.1.13)(react@18.3.1)
-      react: 18.3.1
-      react-base16-styling: 0.6.0
-      react-dom: 18.3.1(react@18.3.1)
-      react-lifecycles-compat: 3.0.4
-      react-textarea-autosize: 8.5.9(@types/react@18.3.23)(react@18.3.1)
-    transitivePeerDependencies:
-      - '@types/react'
-      - encoding
-
-  react-json-view@1.21.3(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       flux: 4.0.4(encoding@0.1.13)(react@18.3.1)
       react: 18.3.1
@@ -34163,7 +33671,7 @@ snapshots:
   video-react@0.15.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@babel/runtime': 7.27.6
-      classnames: 2.3.2
+      classnames: 2.5.1
       lodash.throttle: 4.1.1
       prop-types: 15.8.1
       react: 18.3.1
@@ -35261,10 +34769,6 @@ snapshots:
       archiver-utils: 3.0.4
       compress-commons: 4.1.2
       readable-stream: 3.6.2
-
-  zrender@5.4.0:
-    dependencies:
-      tslib: 2.3.0
 
   zrender@5.6.0:
     dependencies:

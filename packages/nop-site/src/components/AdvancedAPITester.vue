@@ -7,108 +7,104 @@
     <div class="tester-content">
       <!-- 接口选择 -->
       <div class="api-selector">
-        <el-select 
-          v-model="selectedApi" 
+        <a-select
+          v-model:value="selectedApi"
           placeholder="选择预定义接口"
           style="width: 100%"
           @change="loadApiConfig"
         >
-          <el-option 
-            v-for="api in predefinedApis" 
-            :key="api.id" 
-            :label="api.name" 
-            :value="api.id" 
-          />
-        </el-select>
+          <a-select-option
+            v-for="api in predefinedApis"
+            :key="api.id"
+            :value="api.id"
+          >{{ api.name }}</a-select-option>
+        </a-select>
       </div>
 
       <!-- 请求配置 -->
       <div class="request-config">
-        <el-form :model="requestForm" label-width="80px">
-          <el-form-item label="方法">
-            <el-select v-model="requestForm.method" style="width: 120px">
-              <el-option 
-                v-for="method in httpMethods" 
-                :key="method" 
-                :label="method" 
-                :value="method" 
-              />
-            </el-select>
-          </el-form-item>
+        <a-form :model="requestForm" label-width="80px">
+          <a-form-item label="方法">
+            <a-select v-model:value="requestForm.method" style="width: 120px">
+              <a-select-option
+                v-for="method in httpMethods"
+                :key="method"
+                :value="method"
+              >{{ method }}</a-select-option>
+            </a-select>
+          </a-form-item>
 
-          <el-form-item label="URL">
-            <el-input 
-              v-model="requestForm.url" 
+          <a-form-item label="URL">
+            <a-input
+              v-model:value="requestForm.url"
               placeholder="请输入请求URL"
               @keyup.enter="sendRequest"
             />
-          </el-form-item>
+          </a-form-item>
 
-          <el-form-item label="Headers">
+          <a-form-item label="Headers">
             <div class="headers-editor">
-              <div 
-                v-for="(value, key) in requestForm.headers" 
+              <div
+                v-for="(value, key) in requestForm.headers"
                 :key="key"
                 class="header-row"
               >
-                <el-input 
-                  v-model="headerKeys[key]" 
+                <a-input
+                  v-model:value="headerKeys[key]"
                   placeholder="Header Key"
                   style="width: 40%"
                 />
-                <el-input 
-                  v-model="requestForm.headers[key]" 
+                <a-input
+                  v-model:value="requestForm.headers[key]"
                   placeholder="Header Value"
                   style="width: 40%"
                 />
-                <el-button 
-                  type="danger" 
+                <a-button
+                  danger
                   size="small"
                   @click="removeHeader(key)"
                 >
                   删除
-                </el-button>
+                </a-button>
               </div>
-              <el-button type="primary" size="small" @click="addHeader">
+              <a-button type="primary" size="small" @click="addHeader">
                 添加Header
-              </el-button>
+              </a-button>
             </div>
-          </el-form-item>
+          </a-form-item>
 
-          <el-form-item label="Body">
-            <el-input
-              v-model="requestForm.data"
-              type="textarea"
+          <a-form-item label="Body">
+            <a-textarea
+              v-model:value="requestForm.data"
               :rows="8"
               placeholder="请输入请求体数据（JSON格式）"
             />
-          </el-form-item>
+          </a-form-item>
 
-          <el-form-item>
-            <el-button type="primary" @click="sendRequest" :loading="loading">
+          <a-form-item>
+            <a-button type="primary" @click="sendRequest" :loading="loading">
               发送请求
-            </el-button>
-          </el-form-item>
-        </el-form>
+            </a-button>
+          </a-form-item>
+        </a-form>
       </div>
 
       <!-- 响应结果 -->
       <div v-if="response" class="response-panel">
         <h3>响应结果</h3>
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="状态码">
-            <el-tag :type="response.status < 400 ? 'success' : 'danger'">
+        <a-descriptions :column="2" bordered>
+          <a-descriptions-item label="状态码">
+            <a-tag :color="response.status < 400 ? 'success' : 'error'">
               {{ response.status }} {{ response.statusText }}
-            </el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="响应时间">
+            </a-tag>
+          </a-descriptions-item>
+          <a-descriptions-item label="响应时间">
             {{ responseTime }}ms
-          </el-descriptions-item>
-        </el-descriptions>
+          </a-descriptions-item>
+        </a-descriptions>
 
-        <el-input
-          v-model="responseBody"
-          type="textarea"
+        <a-textarea
+          v-model:value="responseBody"
           :rows="15"
           readonly
           placeholder="响应内容将显示在这里"
@@ -120,7 +116,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
-import { ElMessage } from 'element-plus'
+import { message } from 'ant-design-vue'
 import axios from 'axios'
 
 // 响应式数据
@@ -242,7 +238,7 @@ const removeHeader = (key: string) => {
 
 const sendRequest = async () => {
   if (!requestForm.url) {
-    ElMessage.warning('请输入请求URL')
+    message.warning('请输入请求URL')
     return
   }
 
@@ -276,14 +272,14 @@ const sendRequest = async () => {
     const result = await axios(config)
     response.value = result
     responseTime.value = Date.now() - startTime
-    ElMessage.success('请求发送成功')
+    message.success('请求发送成功')
   } catch (error: any) {
     if (error.response) {
       response.value = error.response
       responseTime.value = Date.now() - startTime
-      ElMessage.warning(`请求失败: ${error.response.status}`)
+      message.warning(`请求失败: ${error.response.status}`)
     } else {
-      ElMessage.error(`请求失败: ${error.message}`)
+      message.error(`请求失败: ${error.message}`)
     }
   } finally {
     loading.value = false

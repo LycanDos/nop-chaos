@@ -8,14 +8,13 @@
 
       <div class="config-panel">
         <div class="node-selector">
-          <el-select v-model="selectedNode" placeholder="选择节点类型">
-            <el-option
+          <a-select v-model:value="selectedNode" placeholder="选择节点类型">
+            <a-select-option
               v-for="node in nodeTypes"
               :key="node.type"
-              :label="node.label"
               :value="node.type"
-            />
-          </el-select>
+            >{{ node.label }}</a-select-option>
+          </a-select>
         </div>
 
         <div class="content-config">
@@ -31,13 +30,13 @@
           />
 
           <div class="editor-controls">
-            <el-button
+            <a-button
               @click="toggleNodeEditor"
               size="small"
               type="primary"
             >
               {{ showNodeEditor ? '关闭编辑器' : '编辑内容' }}
-            </el-button>
+            </a-button>
           </div>
         </div>
       </div>

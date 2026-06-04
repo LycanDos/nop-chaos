@@ -87,138 +87,6 @@
     return null;
   }
 
-  // 递归渲染菜单树：父节点全宽展示，子节点按 2 列网格排列
-  function renderMenuTree(items: any[], depth: number, keyword: string): any {
-    const indent = 12 + depth * 16;
-
-    return items.map((item: any) => {
-      const hasChildren = item.children && item.children.length > 0;
-      const itemTitle = item.meta?.title || item.name || '';
-
-      return (
-        <div key={item.path || item.name}>
-          {/* 父节点全宽行 */}
-          <div
-            style={{
-              padding: `6px 10px 6px ${indent}px`,
-              fontSize: '13px',
-              fontWeight: depth === 0 ? 500 : 400,
-              color: item._match ? '#1d4ed8' : '#374151',
-              cursor: 'pointer',
-              borderRadius: '6px',
-              transition: 'background 0.15s',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              overflow: 'hidden',
-            }}
-            onMouseenter={(e: any) => { e.currentTarget.style.background = '#f3f4f6'; }}
-            onMouseleave={(e: any) => { e.currentTarget.style.background = 'transparent'; }}
-            onClick={() => {
-              handleMenuClick(item.path, item);
-              showAllFunctions.value = false;
-              search.value = '';
-            }}
-          >
-            {item.icon && <Icon icon={item.icon} size={14} />}
-            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {highlightMatch(itemTitle, keyword)}
-            </span>
-          </div>
-          {/* 子节点 2 列网格，缩进展示 */}
-          {hasChildren && (
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '4px',
-              padding: `0 4px 0 ${indent + 16}px`,
-            }}>
-              {renderGridItems(item.children, depth + 1, keyword)}
-            </div>
-          )}
-        </div>
-      );
-    });
-  }
-
-  // 在网格内渲染子项：有后代的节点跨全宽，叶节点占 1 列
-  function renderGridItems(items: any[], depth: number, keyword: string): any {
-    return items.map((item: any) => {
-      const hasChildren = item.children && item.children.length > 0;
-      const itemTitle = item.meta?.title || item.name || '';
-      const indent = depth * 16;
-
-      if (hasChildren) {
-        return (
-          <div key={item.path} style={{ gridColumn: '1 / -1' }}>
-            <div
-              style={{
-                padding: `6px 10px 6px 0px`,
-                fontSize: '13px',
-                fontWeight: 500,
-                color: item._match ? '#1d4ed8' : '#374151',
-                cursor: 'pointer',
-                borderRadius: '6px',
-                transition: 'background 0.15s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                overflow: 'hidden',
-              }}
-              onMouseenter={(e: any) => { e.currentTarget.style.background = '#f3f4f6'; }}
-              onMouseleave={(e: any) => { e.currentTarget.style.background = 'transparent'; }}
-              onClick={() => {
-                handleMenuClick(item.path, item);
-                showAllFunctions.value = false;
-                search.value = '';
-              }}
-            >
-              {item.icon && <Icon icon={item.icon} size={14} />}
-              <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {highlightMatch(itemTitle, keyword)}
-              </span>
-            </div>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '4px',
-              paddingLeft: `${indent + 16}px`,
-            }}>
-              {renderGridItems(item.children, depth + 1, keyword)}
-            </div>
-          </div>
-        );
-      }
-
-      // 叶节点：占 1 列
-      return (
-        <div
-          key={item.path}
-          style={{
-            padding: '6px 10px',
-            fontSize: '13px',
-            color: item._match ? '#1d4ed8' : '#374151',
-            cursor: 'pointer',
-            borderRadius: '6px',
-            transition: 'background 0.15s',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}
-          onMouseenter={(e: any) => { e.currentTarget.style.background = '#f3f4f6'; }}
-          onMouseleave={(e: any) => { e.currentTarget.style.background = 'transparent'; }}
-          onClick={() => {
-            handleMenuClick(item.path, item);
-            showAllFunctions.value = false;
-            search.value = '';
-          }}
-        >
-          {highlightMatch(itemTitle, keyword)}
-        </div>
-      );
-    });
-  }
-
   export default defineComponent({
     name: 'LayoutMenu',
     props: {
@@ -350,6 +218,138 @@
         }
         openWindow(path);
         return false;
+      }
+
+      // 递归渲染菜单树：父节点全宽展示，子节点按 2 列网格排列
+      function renderMenuTree(items: any[], depth: number, keyword: string): any {
+        const indent = 12 + depth * 16;
+
+        return items.map((item: any) => {
+          const hasChildren = item.children && item.children.length > 0;
+          const itemTitle = item.meta?.title || item.name || '';
+
+          return (
+            <div key={item.path || item.name}>
+              {/* 父节点全宽行 */}
+              <div
+                style={{
+                  padding: `6px 10px 6px ${indent}px`,
+                  fontSize: '13px',
+                  fontWeight: depth === 0 ? 500 : 400,
+                  color: item._match ? '#1d4ed8' : '#374151',
+                  cursor: 'pointer',
+                  borderRadius: '6px',
+                  transition: 'background 0.15s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  overflow: 'hidden',
+                }}
+                onMouseenter={(e: any) => { e.currentTarget.style.background = '#f3f4f6'; }}
+                onMouseleave={(e: any) => { e.currentTarget.style.background = 'transparent'; }}
+                onClick={() => {
+                  handleMenuClick(item.path, item);
+                  showAllFunctions.value = false;
+                  search.value = '';
+                }}
+              >
+                {item.icon && <Icon icon={item.icon} size={14} />}
+                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {highlightMatch(itemTitle, keyword)}
+                </span>
+              </div>
+              {/* 子节点 2 列网格，缩进展示 */}
+              {hasChildren && (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '4px',
+                  padding: `0 4px 0 ${indent + 16}px`,
+                }}>
+                  {renderGridItems(item.children, depth + 1, keyword)}
+                </div>
+              )}
+            </div>
+          );
+        });
+      }
+
+      // 在网格内渲染子项：有后代的节点跨全宽，叶节点占 1 列
+      function renderGridItems(items: any[], depth: number, keyword: string): any {
+        return items.map((item: any) => {
+          const hasChildren = item.children && item.children.length > 0;
+          const itemTitle = item.meta?.title || item.name || '';
+          const indent = depth * 16;
+
+          if (hasChildren) {
+            return (
+              <div key={item.path} style={{ gridColumn: '1 / -1' }}>
+                <div
+                  style={{
+                    padding: `6px 10px 6px 0px`,
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    color: item._match ? '#1d4ed8' : '#374151',
+                    cursor: 'pointer',
+                    borderRadius: '6px',
+                    transition: 'background 0.15s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    overflow: 'hidden',
+                  }}
+                  onMouseenter={(e: any) => { e.currentTarget.style.background = '#f3f4f6'; }}
+                  onMouseleave={(e: any) => { e.currentTarget.style.background = 'transparent'; }}
+                  onClick={() => {
+                    handleMenuClick(item.path, item);
+                    showAllFunctions.value = false;
+                    search.value = '';
+                  }}
+                >
+                  {item.icon && <Icon icon={item.icon} size={14} />}
+                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {highlightMatch(itemTitle, keyword)}
+                  </span>
+                </div>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '4px',
+                  paddingLeft: `${indent + 16}px`,
+                }}>
+                  {renderGridItems(item.children, depth + 1, keyword)}
+                </div>
+              </div>
+            );
+          }
+
+          // 叶节点：占 1 列
+          return (
+            <div
+              key={item.path}
+              style={{
+                padding: '6px 10px',
+                fontSize: '13px',
+                color: item._match ? '#1d4ed8' : '#374151',
+                cursor: 'pointer',
+                borderRadius: '6px',
+                transition: 'background 0.15s',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+              onMouseenter={(e: any) => { e.currentTarget.style.background = '#f3f4f6'; }}
+              onMouseleave={(e: any) => { e.currentTarget.style.background = 'transparent'; }}
+              onClick={() => {
+                handleMenuClick(item.path, item);
+                showAllFunctions.value = false;
+                search.value = '';
+              }}
+            >
+              {highlightMatch(itemTitle, keyword)}
+            </div>
+          );
+        });
       }
 
       function renderHeader() {

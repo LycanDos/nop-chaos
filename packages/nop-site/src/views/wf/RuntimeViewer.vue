@@ -6,30 +6,30 @@
         <span class="toolbar-title">流程运行时视图</span>
         <span v-if="instanceInfo" class="toolbar-instance-id">
           {{ instanceInfo.wfName }} / {{ instanceInfo.wfId }}
-          <el-tag :type="instanceStatusTag" size="small" effect="plain">
+          <a-tag :color="instanceStatusColor" size="small">
             {{ instanceInfo.status }}
-          </el-tag>
+          </a-tag>
         </span>
       </div>
       <div class="toolbar-right">
-        <el-tooltip content="缩小" placement="bottom">
-          <el-button size="small" text @click="zoomOut">
-            <el-icon><ZoomOut /></el-icon>
-          </el-button>
-        </el-tooltip>
+        <a-tooltip title="缩小" placement="bottom">
+          <a-button size="small" type="text" @click="zoomOut">
+            <ZoomOutOutlined />
+          </a-button>
+        </a-tooltip>
         <span class="zoom-level">{{ Math.round(zoomLevel * 100) }}%</span>
-        <el-tooltip content="放大" placement="bottom">
-          <el-button size="small" text @click="zoomIn">
-            <el-icon><ZoomIn /></el-icon>
-          </el-button>
-        </el-tooltip>
-        <el-divider direction="vertical" />
-        <el-tooltip content="重置视图" placement="bottom">
-          <el-button size="small" text @click="resetView">
-            <el-icon><FullScreen /></el-icon>
-          </el-button>
-        </el-tooltip>
-        <el-divider direction="vertical" />
+        <a-tooltip title="放大" placement="bottom">
+          <a-button size="small" type="text" @click="zoomIn">
+            <ZoomInOutlined />
+          </a-button>
+        </a-tooltip>
+        <a-divider type="vertical" />
+        <a-tooltip title="重置视图" placement="bottom">
+          <a-button size="small" type="text" @click="resetView">
+            <FullscreenOutlined />
+          </a-button>
+        </a-tooltip>
+        <a-divider type="vertical" />
         <!-- 状态指示器 -->
         <div class="status-indicators">
           <span class="indicator-item"><span class="dot completed"></span>已运行</span>
@@ -61,7 +61,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
-import { ZoomIn, ZoomOut, FullScreen } from '@element-plus/icons-vue'
+import { ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined } from '@ant-design/icons-vue'
 import BpmnViewer from 'bpmn-js/lib/NavigatedViewer'
 import DetailPanel from './DetailPanel.vue'
 import { applyStatusColors, renderExecBadges, clearExecBadges } from './StatusColorRenderer'
@@ -83,12 +83,12 @@ const currentData = ref<RuntimeViewerViewModel | null>(null)
 let popupHandler: ElementPopupHandler | null = null
 
 const instanceInfo = computed(() => currentData.value?.instanceInfo ?? null)
-const instanceStatusTag = computed(() => {
+const instanceStatusColor = computed(() => {
   const s = instanceInfo.value?.status || ''
-  if (s === 'ACTIVATED' || s === '30') return 'primary'
+  if (s === 'ACTIVATED' || s === '30') return 'processing'
   if (s === 'COMPLETED' || s === '40') return 'success'
-  if (s === 'FAILED' || s === '60') return 'danger'
-  return 'info'
+  if (s === 'FAILED' || s === '60') return 'error'
+  return 'default'
 })
 
 onMounted(() => {

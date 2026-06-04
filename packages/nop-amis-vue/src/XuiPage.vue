@@ -69,6 +69,20 @@ export default defineComponent({
       })
     });
 
+    // AI Copilot 预注册：pageType/route 已知，不等 schema 异步加载
+    // 确保 ActionExecutor 能立即识别当前页面，handler 在 schema 加载完成后补充
+    const preliminaryPageType = extractPageType(props.path)
+    window.dispatchEvent(new CustomEvent('copilot:page-context', {
+      detail: {
+        pageType: preliminaryPageType,
+        route: props.path,
+        pageKind: 'pending',
+        state: {},
+        actions: {},
+      },
+      bubbles: false,
+    }))
+
     // AI Copilot 自动注册
     function registerCopilotFromSchema(path: string, schema: any) {
       try {
@@ -241,9 +255,24 @@ export default defineComponent({
             .map((col: any) => col.name)
         }
         // 检查是否配置了新增/编辑/删除按钮
-        const hasCreate = findComponentInSchema(crudConfig, 'create') || crudConfig.createAction
-        const hasEdit = findComponentInSchema(crudConfig, 'edit') || crudConfig.editAction
-        const hasDelete = findComponentInSchema(crudConfig, 'delete') || crudConfig.deleteAction
+        const listActions = Array.isArray(crudConfig.listActions) ? crudConfig.listActions : []
+        const rowActions = Array.isArray(crudConfig.rowActions) ? crudConfig.rowActions : []
+        const hasActionId = (actions: any[], ids: string[]) =>
+          actions.some((action: any) => action && ids.includes(action.id))
+
+        const hasCreate =
+          findComponentInSchema(crudConfig, 'create') ||
+          crudConfig.createAction ||
+          hasActionId(listActions, ['add-button', 'add', 'create-button'])
+        const hasEdit =
+          findComponentInSchema(crudConfig, 'edit') ||
+          crudConfig.editAction ||
+          hasActionId(rowActions, ['row-update-button', 'edit', 'update-button'])
+        const hasDelete =
+          findComponentInSchema(crudConfig, 'delete') ||
+          crudConfig.deleteAction ||
+          hasActionId(listActions, ['batch-delete-button', 'delete-button']) ||
+          hasActionId(rowActions, ['row-delete-button', 'delete'])
         context.canCreate = !!hasCreate
         context.canEdit = !!hasEdit
         context.canDelete = !!hasDelete
@@ -277,7 +306,7 @@ export default defineComponent({
         if (btn) { btn.click(); return { found: true } }
       }
       // 通过按钮文本匹配
-      const buttons = document.querySelectorAll('button, .btn, [role="button"], .cxd-Button')
+      const buttons = document.querySelectorAll('button, .btn, [role="button"], .cxd-Button, .ant-btn')
       for (const btn of buttons) {
         const text = btn.textContent?.trim() || ''
         if (labels.some(l => text === l)) {
@@ -288,68 +317,186 @@ export default defineComponent({
       return { found: false, error: `找不到按钮: ${labels.join(', ')}` }
     }
 
-    /** CRUD 页面 handler：调用 AMIS CRUD 组件的 reload */
-    function reloadCrud(): { found: boolean; error?: string } {
-      const scoped = (window as any).__amisScoped__
-      if (!scoped) return { found: false, error: 'AMIS scoped 不可用' }
-      try {
-        const comps = scoped.getComponents()
-        for (const comp of comps) {
-          if (comp?.props?.type === 'crud') {
-            if (typeof comp.reload === 'function') {
-              comp.reload()
-              return { found: true }
-            }
-          }
-          if (comp?.props?.body?.type === 'crud') {
-            const bodyComp = comp.context?.getComponentByName?.(comp.props.body.name)
-            if (bodyComp && typeof bodyComp.reload === 'function') {
-              bodyComp.reload()
-              return { found: true }
+    /** 查找并填充 AMIS 表单字段（弹窗优先）。使用 native setter 绕过 React value 属性拦截 */
+    function findAndFillAmisField(fieldName: string, label: string, value: any): { found: boolean; error?: string } {
+      const modal = document.querySelector('.ant-modal-wrap, .ant-modal, .cxd-Modal--open')
+      const container = (modal || document) as HTMLElement
+
+      let input: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null = null
+
+      // 1. 按 name 属性直接在 input/textarea/select 上查找
+      if (fieldName) {
+        input = container.querySelector(
+          `input[name="${fieldName}"], textarea[name="${fieldName}"], select[name="${fieldName}"]`,
+        )
+      }
+
+      // 2. 按 AMIS data-name 包装元素查找
+      if (!input && fieldName) {
+        const wrapper = container.querySelector(`[data-name="${fieldName}"]`)
+        if (wrapper) {
+          input = wrapper.querySelector('input, textarea, select')
+        }
+      }
+
+      // 3. 按 label 文本查找（AMIS/antd FormItem）
+      if (!input && label) {
+        const items = container.querySelectorAll('.ant-form-item, .cxd-FormItem')
+        for (const item of items) {
+          const labelEl = item.querySelector('.ant-form-item-label > label, .cxd-FormItem-label, label')
+          if (labelEl) {
+            const text = labelEl.textContent?.trim() || ''
+            if (text.includes(label) || (label.includes(text) && text.length >= 3)) {
+              input = item.querySelector('input, textarea, select')
+              if (input) break
             }
           }
         }
-        return { found: false, error: '找不到 CRUD 组件' }
+      }
+
+      if (!input) return { found: false, error: `未找到表单字段: ${label || fieldName}` }
+
+      // 使用 native setter 绕过 React/AMIS 的 value 属性拦截
+      const strValue = String(value)
+      if (input instanceof HTMLInputElement) {
+        const nativeSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!
+        nativeSetter.call(input, strValue)
+      } else if (input instanceof HTMLTextAreaElement) {
+        const nativeSetter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!
+        nativeSetter.call(input, strValue)
+      } else if (input instanceof HTMLSelectElement) {
+        const nativeSetter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')!.set!
+        nativeSetter.call(input, strValue)
+      } else {
+        input.value = strValue
+      }
+
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+      input.dispatchEvent(new Event('change', { bubbles: true }))
+      return { found: true }
+    }
+
+    /** 从 __amisScoped__ 查找 CRUD 组件实例 */
+    function findAmisCrudComponent(): any {
+      const scoped = (window as any).__amisScoped__
+      if (!scoped) return null
+      try {
+        const comps = scoped.getComponents()
+        // 直接匹配 type === 'crud'
+        for (const comp of comps) {
+          if (comp?.props?.type === 'crud') return comp
+        }
+        // 嵌套 body（page body → crud）
+        for (const comp of comps) {
+          const body = comp.props?.body
+          if (body?.type === 'crud') {
+            const bc = comp.context?.getComponentByName?.(body.name)
+            if (bc) return bc
+          }
+        }
+      } catch { /* scoped 不可用 */ }
+      return null
+    }
+
+    /** 通过 AMIS CRUD 的 doAction API 分发 action，完全绕过 DOM */
+    function dispatchAmisCrudAction(actionId: string): { found: boolean; error?: string } {
+      const crud = findAmisCrudComponent()
+      if (!crud) return { found: false, error: '找不到 CRUD 组件' }
+
+      const listActions = crud.props?.listActions || []
+      const rowActions = crud.props?.rowActions || []
+      const allActions = [...listActions, ...rowActions]
+
+      const actionDef = allActions.find((a: any) =>
+        a.id === actionId ||
+        (actionId === 'add' && (a.id?.includes('add') || a.actionType === 'dialog')) ||
+        (actionId === 'edit' && a.id?.includes('update')) ||
+        (actionId === 'delete' && a.id?.includes('delete'))
+      )
+      if (!actionDef) return { found: false, error: `找不到 action: ${actionId}` }
+
+      try {
+        const storeData = crud.props?.store?.data ?? {}
+        crud.doAction?.(actionDef, storeData, false)
+        return { found: true }
+      } catch (e: any) {
+        return { found: false, error: e.message }
+      }
+    }
+
+    /** CRUD 页面 handler：调用 AMIS CRUD 组件的 reload */
+    function reloadCrud(): { found: boolean; error?: string } {
+      const crud = findAmisCrudComponent()
+      if (!crud) return { found: false, error: '找不到 CRUD 组件' }
+      try {
+        if (typeof crud.reload === 'function') {
+          crud.reload()
+          return { found: true }
+        }
+        return { found: false, error: 'CRUD 组件没有 reload 方法' }
       } catch (e: any) {
         return { found: false, error: e.message }
       }
     }
 
     /** 构建 CRUD 页面的 action handlers */
-    function buildCrudPageActions(crudCtx: any, _schema: any): Record<string, (params?: any) => Promise<any>> {
+    function buildCrudPageActions(_crudCtx: any, _schema: any): Record<string, (params?: any) => Promise<any>> {
       const actions: Record<string, (params?: any) => Promise<any>> = {}
 
-      if (crudCtx.canCreate) {
-        actions.add = async () => {
-          const r = findAndClickAmisButton(['新增', '新建', '添加', '创建'])
-          if (!r.found) throw new Error(r.error)
-          // 等弹窗渲染
-          await new Promise(resolve => setTimeout(resolve, 400))
-          return r
+      async function ensureDialogOpened(timeoutMs = 3000): Promise<void> {
+        const start = Date.now()
+        while (Date.now() - start < timeoutMs) {
+          const modal = document.querySelector('.ant-modal-wrap, .ant-modal, .cxd-Modal--open')
+          if (modal) return
+          await new Promise(resolve => setTimeout(resolve, 100))
         }
+        throw new Error('新增对话框未打开')
       }
 
-      if (crudCtx.canEdit) {
-        actions.edit = async () => {
-          const r = findAndClickAmisButton(['编辑', '修改'])
-          if (!r.found) throw new Error(r.error)
-          await new Promise(resolve => setTimeout(resolve, 400))
-          return r
+      /** 打开新增弹窗：优先 AMIS API，降级 DOM */
+      async function openAddDialog(): Promise<void> {
+        // 1. 优先通过 AMIS API dispatch
+        const r = dispatchAmisCrudAction('add')
+        if (r.found) {
+          await ensureDialogOpened()
+          return
         }
+        // 2. 降级到 DOM 查找按钮
+        const domR = findAndClickAmisButton(['新增', '新建', '添加', '创建'])
+        if (!domR.found) throw new Error(domR.error)
+        await ensureDialogOpened()
       }
 
-      if (crudCtx.canDelete) {
-        actions.delete = async () => {
-          const r = findAndClickAmisButton(['删除'])
-          if (!r.found) throw new Error(r.error)
-          return r
+      // add: 始终注册（不再依赖 canCreate）
+      actions.add = async () => {
+        await openAddDialog()
+        return { actionType: 'add' }
+      }
+
+      // edit: 优先 AMIS API
+      actions.edit = async () => {
+        const r = dispatchAmisCrudAction('edit')
+        if (!r.found) {
+          const domR = findAndClickAmisButton(['编辑', '修改'])
+          if (!domR.found) throw new Error(domR.error)
         }
+        await new Promise(resolve => setTimeout(resolve, 400))
+        return { actionType: 'edit' }
+      }
+
+      // delete
+      actions.delete = async () => {
+        const r = dispatchAmisCrudAction('delete')
+        if (!r.found) {
+          const domR = findAndClickAmisButton(['删除'])
+          if (!domR.found) throw new Error(domR.error)
+        }
+        return { actionType: 'delete' }
       }
 
       actions.query = async () => {
         const r = findAndClickAmisButton(['查询', '搜索'])
         if (!r.found) {
-          // 按钮查不到则直接 reload CRUD
           const rr = reloadCrud()
           if (!rr.found) throw new Error(rr.error)
           return rr
@@ -365,9 +512,33 @@ export default defineComponent({
 
       // submitForm: 在弹窗中查找提交按钮并点击
       actions.submitForm = async () => {
+        await ensureDialogOpened()
         const r = findAndClickAmisButton(['提交', '保存', '确定'])
         if (!r.found) throw new Error(r.error)
         return r
+      }
+
+      // fillForm: 在弹窗中查找字段并填写（自动打开弹窗）
+      actions.fillForm = async (params?: any) => {
+        const fieldName = params?.__fieldName || params?.fieldName
+        const label = params?.__label || params?.label
+        const value = params?.value
+        if (value === undefined) throw new Error('缺少填充值')
+
+        // 检查弹窗是否已打开
+        let modal = document.querySelector('.ant-modal-wrap, .ant-modal, .cxd-Modal--open')
+        if (!modal) {
+          await openAddDialog()
+        }
+
+        // 查找并填充字段（带重试）
+        for (let attempt = 0; attempt < 5; attempt++) {
+          if (attempt > 0) await new Promise(r => setTimeout(r, 300))
+          const r = findAndFillAmisField(fieldName, label, value)
+          if (r.found) return r
+        }
+
+        throw new Error(`未找到表单字段: ${label || fieldName}`)
       }
 
       return actions
@@ -381,6 +552,23 @@ export default defineComponent({
         const r = findAndClickAmisButton(['提交', '保存', '确定'])
         if (!r.found) throw new Error(r.error)
         return r
+      }
+
+      // fillForm: 在表单中查找字段并填写
+      actions.fillForm = async (params?: any) => {
+        const fieldName = params?.__fieldName || params?.fieldName
+        const label = params?.__label || params?.label
+        const value = params?.value
+        if (value === undefined) throw new Error('缺少填充值')
+
+        // 查找并填充字段（带重试）
+        for (let attempt = 0; attempt < 5; attempt++) {
+          if (attempt > 0) await new Promise(r => setTimeout(r, 300))
+          const r = findAndFillAmisField(fieldName, label, value)
+          if (r.found) return r
+        }
+
+        throw new Error(`未找到表单字段: ${label || fieldName}`)
       }
 
       return actions

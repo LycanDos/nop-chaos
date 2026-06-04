@@ -4,37 +4,37 @@
     <div v-if="editable && showEditor" class="editor-mode">
       <!-- 编辑器工具栏 -->
       <div class="editor-toolbar">
-        <el-radio-group
-          v-model="localContentType"
+        <a-radio-group
+          v-model:value="localContentType"
           @change="handleContentTypeChange"
           size="small"
           class="content-type-selector"
         >
-          <el-radio label="html" title="HTML内容">HTML</el-radio>
-          <el-radio label="amis" title="AMIS Schema">AMIS</el-radio>
-        </el-radio-group>
+          <a-radio value="html" title="HTML内容">HTML</a-radio>
+          <a-radio value="amis" title="AMIS Schema">AMIS</a-radio>
+        </a-radio-group>
 
         <div class="editor-actions">
-          <el-button
+          <a-button
             v-if="localContentType === 'amis'"
             type="primary"
             size="small"
             @click="openAmisEditor"
             title="使用AMIS可视化编辑器"
           >
-            <i class="el-icon-edit"></i>
+            <EditOutlined />
             AMIS编辑器
-          </el-button>
+          </a-button>
 
-          <el-button
-            type="info"
+          <a-button
             size="small"
             @click="togglePreviewMode"
             title="切换预览模式"
           >
-            <i :class="isPreviewMode ? 'el-icon-view' : 'el-icon-edit'"></i>
+            <EyeOutlined v-if="isPreviewMode" />
+            <EditOutlined v-else />
             {{ isPreviewMode ? '编辑' : '预览' }}
-          </el-button>
+          </a-button>
         </div>
       </div>
 
@@ -57,9 +57,8 @@
       <!-- 编辑器区域 -->
       <div v-if="!isPreviewMode" class="editor-area">
         <div v-if="localContentType === 'html'" class="html-editor">
-          <el-input
-            v-model="currentContent"
-            type="textarea"
+          <a-textarea
+            v-model:value="currentContent"
             :rows="10"
             :style="{ height: height }"
             placeholder="请输入HTML内容"
@@ -68,9 +67,8 @@
         </div>
 
         <div v-else class="amis-editor">
-          <el-input
-            v-model="currentContent"
-            type="textarea"
+          <a-textarea
+            v-model:value="currentContent"
             :rows="10"
             :style="{ height: height }"
             placeholder="请输入AMIS Schema JSON"
@@ -136,7 +134,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
-import { ElButton, ElInput, ElRadioGroup, ElRadio } from 'element-plus'
+import { EditOutlined, EyeOutlined } from '@ant-design/icons-vue'
 import AmisEditorDialog from '../AmisEditorDialog.vue'
 import BodyOnlyAmisEditor from './BodyOnlyAmisEditor.vue'
 import SimpleAmisRender from './SimpleAmisRender.vue'

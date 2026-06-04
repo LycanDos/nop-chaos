@@ -4,26 +4,26 @@
     <div class="designer-toolbar">
       <div class="toolbar-left">
         <span class="toolbar-title">皮肤设计器</span>
-        <el-select
-          v-model="selectedCode"
+        <a-select
+          v-model:checked="selectedCode"
           placeholder="选择已有皮肤继续编辑"
-          filterable clearable size="small"
+          showSearch clearable size="small"
           style="width: 220px"
           @change="onSkinSelect"
         >
-          <el-option v-for="s in skinList" :key="s.templateCode"
+          <a-select-option v-for="s in skinList" :key="s.templateCode"
             :label="s.templateName" :value="s.templateCode" />
-        </el-select>
+        </a-select>
       </div>
       <div class="toolbar-info" v-if="form.templateName">
         <span class="info-name">{{ form.templateName }}</span>
         <span class="info-code">{{ form.templateCode || '未保存' }}</span>
-        <el-tag :type="statusTagType" size="small" effect="plain">{{ statusLabel }}</el-tag>
+        <a-tag :color="statusTagType" size="small" >{{ statusLabel }}</a-tag>
       </div>
       <div class="toolbar-actions">
-        <el-button size="small" @click="handleNew">新建</el-button>
-        <el-button size="small" type="primary" @click="handleSave">保存</el-button>
-        <el-button size="small" @click="handleRefresh">刷新预览</el-button>
+        <a-button size="small" @click="handleNew">新建</a-button>
+        <a-button size="small" type="primary" @click="handleSave">保存</a-button>
+        <a-button size="small" @click="handleRefresh">刷新预览</a-button>
       </div>
     </div>
 
@@ -57,17 +57,17 @@
     <div class="preview-controls">
       <div class="control-group">
         <span class="control-label">经办人</span>
-        <el-input v-model="previewActor" placeholder="经办人" size="small" style="width:120px" />
+        <a-input v-model:checked="previewActor" placeholder="经办人" size="small" style="width:120px" />
       </div>
       <div class="control-group">
         <span class="control-label">进度</span>
-        <el-slider v-model="previewProgress" :min="0" :max="100" :step="5" style="width:140px" />
+        <a-slider v-model:checked="previewProgress" :min="0" :max="100" :step="5" style="width:140px" />
         <span class="control-value">{{ previewProgress }}%</span>
       </div>
       <div class="control-group" v-if="selectedElementId">
         <span class="control-label">选中</span>
         <span class="selected-id">{{ selectedElementId }}</span>
-        <el-button size="small" text @click="onSelectElement(null)">取消</el-button>
+        <a-button size="small" text @click="onSelectElement(null)">取消</a-button>
       </div>
     </div>
   </div>
@@ -76,7 +76,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted, provide, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { message } from 'ant-design-vue'
 import { ajaxRequest } from '@nop-chaos/sdk'
 import SkinPreview from './components/SkinPreview.vue'
 import SkinPropertyPanel from './components/SkinPropertyPanel.vue'
@@ -182,7 +182,7 @@ async function loadSkinDetail(code: string): Promise<void> {
     }
   } catch (e) {
     console.error('加载皮肤详情失败:', e)
-    ElMessage.error('加载皮肤详情失败')
+    message.error('加载皮肤详情失败')
   } finally {
     loading.value = false
   }
@@ -225,11 +225,11 @@ function ensureSkinJsonDefaults(): void {
 
 async function handleSave(): Promise<void> {
   if (!form.templateCode) {
-    ElMessage.warning('请填写皮肤编码')
+    message.warning('请填写皮肤编码')
     return
   }
   if (!form.templateName) {
-    ElMessage.warning('请填写皮肤名称')
+    message.warning('请填写皮肤名称')
     return
   }
   try {
@@ -246,11 +246,11 @@ async function handleSave(): Promise<void> {
       url: '@mutation:WfSkin__saveSkinDef',
       data: saveData,
     })
-    ElMessage.success('皮肤保存成功！')
+    message.success('皮肤保存成功！')
     await loadSkinList()
   } catch (e) {
     console.error('保存失败:', e)
-    ElMessage.error('皮肤保存失败')
+    message.error('皮肤保存失败')
   }
 }
 

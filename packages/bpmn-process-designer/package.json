@@ -35,7 +35,6 @@
     "@codemirror/lint": "^6.8.5",
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.36.8",
-    "@element-plus/icons-vue": "^2.3.1",
     "@lezer/highlight": "^1.2.1",
     "@nop-chaos/nop-core": "workspace:*",
     "@nop-chaos/policy-studio": "workspace:*",
@@ -65,7 +64,6 @@
     "vue-i18n": "^11.2.8"
   },
   "peerDependencies": {
-    "element-plus": "^2.10.4",
     "pinia": "^2.1.7 || ^3.0.0",
     "vue": "^3.5.12"
   },

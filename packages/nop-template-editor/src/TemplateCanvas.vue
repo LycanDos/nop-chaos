@@ -2,36 +2,50 @@
   <div ref="editorRootRef" class="template-editor">
     <div class="canvas-toolbar">
       <div class="toolbar-main">
+        <!-- 保存按钮组 - 最前面 -->
         <div class="toolbar-group">
-        <button
-          class="tool-btn"
-          :disabled="undoStack.length === 0"
-          title="撤销 Ctrl/Cmd+Z"
-          @click="undo"
-        >
-          <span v-html="BTN_ICONS.undo"></span>
+        <button class="tool-btn primary icon-only" title="保存 Ctrl/Cmd+S" @click="onSave">
+          <span v-html="BTN_ICONS.save"></span>
         </button>
-        <button
-          class="tool-btn"
-          :disabled="redoStack.length === 0"
-          title="重做 Ctrl/Cmd+Shift+Z"
-          @click="redo"
-        >
-          <span v-html="BTN_ICONS.redo"></span>
+        <button class="tool-btn icon-only" title="预览" @click="onPreview">
+          <span v-html="BTN_ICONS.preview"></span>
         </button>
-        <button
-          class="tool-btn"
-          :disabled="selectedElements.length === 0"
-          title="复制 Ctrl/Cmd+D"
-          @click="duplicateSelected"
-        >
-          <span v-html="BTN_ICONS.duplicate"></span>
+        <button class="tool-btn icon-only" :disabled="elements.length === 0" title="导出 JSON" @click="exportJson">
+          <span v-html="BTN_ICONS.export"></span>
         </button>
         </div>
 
         <div class="toolbar-separator"></div>
 
         <div class="toolbar-group">
+        <button class="tool-btn" :disabled="undoStack.length === 0" title="撤销 Ctrl/Cmd+Z" @click="undo">
+          <span v-html="BTN_ICONS.undo"></span>
+        </button>
+        <button class="tool-btn" :disabled="redoStack.length === 0" title="重做 Ctrl/Cmd+Shift+Z" @click="redo">
+          <span v-html="BTN_ICONS.redo"></span>
+        </button>
+        <button class="tool-btn" :disabled="selectedElements.length === 0" title="复制 Ctrl/Cmd+D" @click="duplicateSelected">
+          <span v-html="BTN_ICONS.duplicate"></span>
+        </button>
+        </div>
+
+        <div class="toolbar-separator"></div>
+
+        <!-- 页面尺寸下拉 (自定义按钮组) -->
+        <div class="toolbar-group">
+          <div class="canvas-size-picker" :class="{ open: sizeDropdownOpen }">
+            <button class="canvas-size-btn" @click="sizeDropdownOpen = !sizeDropdownOpen" title="页面尺寸">
+              <span class="canvas-size-label">{{ canvasSizeLabelSimple }}</span>
+              <span class="canvas-size-arrow">▾</span>
+            </button>
+            <div v-if="sizeDropdownOpen" class="canvas-size-menu" @click.stop>
+              <button v-for="opt in canvasSizeOptions" :key="opt.key"
+                class="canvas-size-option" :class="{ active: canvasSizePreset === opt.key }"
+                @click="selectCanvasSize(opt.key); sizeDropdownOpen = false">{{ opt.label }}</button>
+            </div>
+          </div>
+          <!-- 点击外部关闭 -->
+          <div v-if="sizeDropdownOpen" class="page-dropdown-backdrop" @click="sizeDropdownOpen = false"></div>
           <button class="tool-btn icon-only" @click="toggleOrientation" :title="isLandscape ? '切换为纵向' : '切换为横向'">
             <span v-html="isLandscape ? BTN_ICONS.orientationLandscape : BTN_ICONS.orientation"></span>
           </button>
@@ -40,36 +54,17 @@
         <div class="toolbar-separator"></div>
 
         <div class="toolbar-group">
-        <button
-          class="tool-btn icon-only"
-          :disabled="scale <= MIN_SCALE"
-          title="缩小"
-          @click="zoomOut"
-        >
+        <button class="tool-btn icon-only" :disabled="scale <= MIN_SCALE" title="缩小" @click="zoomOut">
           <span v-html="BTN_ICONS.zoomOut"></span>
         </button>
         <span class="zoom-label">{{ zoomPercent }}</span>
-        <button
-          class="tool-btn icon-only"
-          :disabled="scale >= MAX_SCALE"
-          title="放大"
-          @click="zoomIn"
-        >
+        <button class="tool-btn icon-only" :disabled="scale >= MAX_SCALE" title="放大" @click="zoomIn">
           <span v-html="BTN_ICONS.zoomIn"></span>
         </button>
-        <button
-          class="tool-btn icon-only"
-          :disabled="scale === 1"
-          title="100%"
-          @click="setScale(1)"
-        >
+        <button class="tool-btn icon-only" :disabled="scale === 1" title="100%" @click="setScale(1)">
           <span v-html="BTN_ICONS.zoomReset"></span>
         </button>
-        <button
-          class="tool-btn icon-only"
-          title="适应视口"
-          @click="fitToViewport"
-        >
+        <button class="tool-btn icon-only" title="适应视口" @click="fitToViewport">
           <span v-html="BTN_ICONS.fit"></span>
         </button>
         </div>
@@ -77,52 +72,26 @@
         <div class="toolbar-separator"></div>
 
         <div class="toolbar-group">
-        <button
-          class="tool-btn icon-only"
-          :title="guidesVisible ? '隐藏参考线' : '显示参考线'"
-          @click="toggleGuidesVisible"
-        >
+        <button class="tool-btn icon-only" :title="guidesVisible ? '隐藏参考线' : '显示参考线'" @click="toggleGuidesVisible">
           <span v-html="guidesVisible ? BTN_ICONS.guidesOn : BTN_ICONS.guidesOff"></span>
         </button>
-        <button
-          class="tool-btn icon-only"
-          :disabled="guides.length === 0"
-          title="清除参考线"
-          @click="clearGuides"
-        >
+        <button class="tool-btn icon-only" :disabled="guides.length === 0" title="清除参考线" @click="clearGuides">
           <span v-html="BTN_ICONS.clearGuides"></span>
         </button>
         </div>
 
         <div class="toolbar-group toolbar-region-switch">
           <label class="toolbar-check">
-            <input
-              type="checkbox"
-              :checked="showRegions"
-              @change="showRegions = checked($event)"
-            />
+            <input type="checkbox" :checked="showRegions" @change="showRegions = checked($event)"/>
             <span>显示区域</span>
           </label>
         </div>
 
         <div class="toolbar-group edge-warning-group">
-        <button
-          class="tool-btn icon-only"
-          :title="edgeWarningEnabled ? '关闭边缘提醒' : '开启边缘提醒'"
-          @click="edgeWarningEnabled = !edgeWarningEnabled"
-        >
+        <button class="tool-btn icon-only" :title="edgeWarningEnabled ? '关闭边缘提醒' : '开启边缘提醒'" @click="edgeWarningEnabled = !edgeWarningEnabled">
           <span v-html="edgeWarningEnabled ? BTN_ICONS.edgeWarnOn : BTN_ICONS.edgeWarnOff"></span>
         </button>
-        <input
-          v-if="edgeWarningEnabled"
-          class="toolbar-input-small"
-          type="number"
-          min="1"
-          max="100"
-          :value="edgeWarningDistance"
-          @input="edgeWarningDistance = intNum($event, 20)"
-          title="边缘提醒距离"
-        />
+        <input v-if="edgeWarningEnabled" class="toolbar-input-small" type="number" min="1" max="100" :value="edgeWarningDistance" @input="edgeWarningDistance = intNum($event, 20)" title="边缘提醒距离"/>
         <select v-if="edgeWarningEnabled" class="toolbar-select-small" v-model="edgeWarningUnit" title="单位">
           <option value="px">px</option>
           <option value="mm">mm</option>
@@ -133,111 +102,38 @@
         <div class="toolbar-separator"></div>
 
         <div class="toolbar-group">
-        <button
-          class="tool-btn icon-only"
-          :disabled="selectedElements.length < 2"
-          title="左对齐"
-          @click="alignSelected('left')"
-        >
+        <button class="tool-btn icon-only" :disabled="selectedElements.length < 2" title="左对齐" @click="alignSelected('left')">
           <span v-html="BTN_ICONS.alignLeft"></span>
         </button>
-        <button
-          class="tool-btn icon-only"
-          :disabled="selectedElements.length < 2"
-          title="水平居中"
-          @click="alignSelected('center')"
-        >
+        <button class="tool-btn icon-only" :disabled="selectedElements.length < 2" title="水平居中" @click="alignSelected('center')">
           <span v-html="BTN_ICONS.alignCenter"></span>
         </button>
-        <button
-          class="tool-btn icon-only"
-          :disabled="selectedElements.length < 2"
-          title="右对齐"
-          @click="alignSelected('right')"
-        >
+        <button class="tool-btn icon-only" :disabled="selectedElements.length < 2" title="右对齐" @click="alignSelected('right')">
           <span v-html="BTN_ICONS.alignRight"></span>
         </button>
-        <button
-          class="tool-btn icon-only"
-          :disabled="selectedElements.length < 2"
-          title="顶对齐"
-          @click="alignSelected('top')"
-        >
+        <button class="tool-btn icon-only" :disabled="selectedElements.length < 2" title="顶对齐" @click="alignSelected('top')">
           <span v-html="BTN_ICONS.alignTop"></span>
         </button>
-        <button
-          class="tool-btn icon-only"
-          :disabled="selectedElements.length < 2"
-          title="垂直居中"
-          @click="alignSelected('middle')"
-        >
+        <button class="tool-btn icon-only" :disabled="selectedElements.length < 2" title="垂直居中" @click="alignSelected('middle')">
           <span v-html="BTN_ICONS.alignMiddle"></span>
         </button>
-        <button
-          class="tool-btn icon-only"
-          :disabled="selectedElements.length < 2"
-          title="底对齐"
-          @click="alignSelected('bottom')"
-        >
+        <button class="tool-btn icon-only" :disabled="selectedElements.length < 2" title="底对齐" @click="alignSelected('bottom')">
           <span v-html="BTN_ICONS.alignBottom"></span>
         </button>
         </div>
 
         <div class="toolbar-group">
-        <button
-          class="tool-btn icon-only"
-          :disabled="selectedElements.length < 3"
-          title="水平分布"
-          @click="distributeSelected('horizontal')"
-        >
+        <button class="tool-btn icon-only" :disabled="selectedElements.length < 3" title="水平分布" @click="distributeSelected('horizontal')">
           <span v-html="BTN_ICONS.distributeHorizontal"></span>
         </button>
-        <button
-          class="tool-btn icon-only"
-          :disabled="selectedElements.length < 3"
-          title="垂直分布"
-          @click="distributeSelected('vertical')"
-        >
+        <button class="tool-btn icon-only" :disabled="selectedElements.length < 3" title="垂直分布" @click="distributeSelected('vertical')">
           <span v-html="BTN_ICONS.distributeVertical"></span>
         </button>
-        <button
-          class="tool-btn icon-only"
-          :disabled="selectedElements.length < 2"
-          title="成组"
-          @click="groupSelected"
-        >
+        <button class="tool-btn icon-only" :disabled="selectedElements.length < 2" title="成组" @click="groupSelected">
           <span v-html="BTN_ICONS.group"></span>
         </button>
-        <button
-          class="tool-btn icon-only"
-          :disabled="!hasGroupedSelection"
-          title="解组"
-          @click="ungroupSelected"
-        >
+        <button class="tool-btn icon-only" :disabled="!hasGroupedSelection" title="解组" @click="ungroupSelected">
           <span v-html="BTN_ICONS.ungroup"></span>
-        </button>
-        </div>
-
-        <div class="toolbar-separator"></div>
-
-        <div class="toolbar-group">
-        <button
-          class="tool-btn primary icon-only"
-          title="保存 Ctrl/Cmd+S"
-          @click="onSave"
-        >
-          <span v-html="BTN_ICONS.save"></span>
-        </button>
-        <button class="tool-btn icon-only" title="预览" @click="onPreview">
-          <span v-html="BTN_ICONS.preview"></span>
-        </button>
-        <button
-          class="tool-btn icon-only"
-          :disabled="elements.length === 0"
-          title="导出 JSON"
-          @click="exportJson"
-        >
-          <span v-html="BTN_ICONS.export"></span>
         </button>
         </div>
       </div>
@@ -2594,12 +2490,15 @@ const props = defineProps<{
   templateId?: string
   templateJson?: string
   value?: string
+  modelValue?: string
+  onSaveTemplate?: (templateJson: string) => void | Promise<void>
 }>()
 
 const emit = defineEmits<{
   saved: [data: { templateJson: string }]
   preview: [data: { templateJson: string }]
   updateTemplateJson: [value: string]
+  'update:modelValue': [value: string]
   'update:value': [value: string]
 }>()
 
@@ -2729,13 +2628,22 @@ const REGION_PURPOSE_CONFIG_DEFAULTS: Record<string, Record<string, any>> = {
   }
 }
 
+// px 值统一按 A4 基准 (794px/21cm ≈ 37.81 px/cm) 换算
 const CANVAS_PRESETS = {
+  'A5-portrait': { w: 560, h: 794, label: 'A5 纵向', cmW: 14.8, cmH: 21 },
+  'A5-landscape': { w: 794, h: 560, label: 'A5 横向', cmW: 21, cmH: 14.8 },
   'A4-portrait': { w: 794, h: 1123, label: 'A4 纵向', cmW: 21, cmH: 29.7 },
   'A4-landscape': { w: 1123, h: 794, label: 'A4 横向', cmW: 29.7, cmH: 21 },
-  'A3-portrait': { w: 1123, h: 1587, label: 'A3 纵向', cmW: 29.7, cmH: 42 },
-  'A3-landscape': { w: 1587, h: 1123, label: 'A3 横向', cmW: 42, cmH: 29.7 },
-  'letter-portrait': { w: 816, h: 1054, label: 'Letter 纵向', cmW: 21.6, cmH: 27.9 },
-  'letter-landscape': { w: 1054, h: 816, label: 'Letter 横向', cmW: 27.9, cmH: 21.6 }
+  'A3-portrait': { w: 1123, h: 1588, label: 'A3 纵向', cmW: 29.7, cmH: 42 },
+  'A3-landscape': { w: 1588, h: 1123, label: 'A3 横向', cmW: 42, cmH: 29.7 },
+  'letter-portrait': { w: 817, h: 1055, label: 'Letter 纵向', cmW: 21.6, cmH: 27.9 },
+  'letter-landscape': { w: 1055, h: 817, label: 'Letter 横向', cmW: 27.9, cmH: 21.6 },
+  'B5-portrait': { w: 666, h: 945, label: 'B5 纵向', cmW: 17.6, cmH: 25 },
+  'B5-landscape': { w: 945, h: 666, label: 'B5 横向', cmW: 25, cmH: 17.6 },
+  'legal-portrait': { w: 817, h: 1346, label: 'Legal 纵向', cmW: 21.6, cmH: 35.6 },
+  'legal-landscape': { w: 1346, h: 817, label: 'Legal 横向', cmW: 35.6, cmH: 21.6 },
+  'tabloid-portrait': { w: 1055, h: 1633, label: 'Tabloid 纵向', cmW: 27.9, cmH: 43.2 },
+  'tabloid-landscape': { w: 1633, h: 1055, label: 'Tabloid 横向', cmW: 43.2, cmH: 27.9 }
 } as const
 const EMPTY_IMAGE =
   'data:image/svg+xml;utf8,' +
@@ -2849,6 +2757,7 @@ const filteredPurposeOptions = computed(() => {
   )
 })
 const canvasSizePreset = ref('A4-portrait')
+const sizeDropdownOpen = ref(false)
 const canvasSizeCustom = ref<{ w: number; h: number } | null>(null)
 const showQrMarkers = ref(true)
 const showBleedGuides = ref(true)
@@ -2884,7 +2793,7 @@ const viewportRef = ref<HTMLElement | null>(null)
 const canvasRef = ref<HTMLElement | null>(null)
 const pageNameInputRef = ref<HTMLInputElement | null>(null)
 
-const incomingTemplateJson = computed(() => props.templateJson ?? props.value ?? '')
+const incomingTemplateJson = computed(() => props.modelValue ?? props.value ?? props.templateJson ?? '')
 const currentPage = computed(() => pages.value[currentPageIdx.value] ?? null)
 const elements = computed<TemplateElement[]>({
   get: () => currentPage.value?.elements ?? [],
@@ -3026,8 +2935,32 @@ const horizontalGuides = computed(() => guides.value.filter(guide => guide.axis 
 
 const canvasSizePresetLabel = computed(() => {
   const p = CANVAS_PRESETS[canvasSizePreset.value as keyof typeof CANVAS_PRESETS]
-  return p?.label || '自定义'
+  if (!p) return '自定义'
+  // 根据当前方向返回对应标签
+  const isLand = CANVAS_W.value > CANVAS_H.value
+  if (isLand) return p.label.replace('纵向', '横向')
+  return p.label.replace('横向', '纵向')
 })
+
+// 自定义下拉: 仅显示竖版选项
+const canvasSizeOptions = computed(() => {
+  return Object.entries(CANVAS_PRESETS)
+    .filter(([k]) => k.endsWith('-portrait'))
+    .map(([k, v]) => ({ key: k, label: v.label }))
+})
+
+// 下拉按钮上的简洁标签 (仅尺寸名, 不含方向)
+const canvasSizeLabelSimple = computed(() => {
+  const p = CANVAS_PRESETS[canvasSizePreset.value as keyof typeof CANVAS_PRESETS]
+  if (!p) return 'A4'
+  return p.label.replace(/[  ](纵向|横向)/, '')
+})
+
+function selectCanvasSize(key: string) {
+  canvasSizePreset.value = key
+  sizeDropdownOpen.value = false
+  onCanvasSizeChange()
+}
 
 const qrSize = computed(() => Math.round(12 / 25.4 * 96))
 const qrMargin = computed(() => Math.round(12 / 25.4 * 96))
@@ -3066,10 +2999,19 @@ function onCanvasSizeChange() {
   const key = canvasSizePreset.value as keyof typeof CANVAS_PRESETS
   const preset = CANVAS_PRESETS[key]
   if (preset) {
-    CANVAS_W.value = preset.w
-    CANVAS_H.value = preset.h
-    A4_WIDTH_CM.value = preset.cmW
-    A4_HEIGHT_CM.value = preset.cmH
+    // 保持当前横竖方向，只切换纸张尺寸
+    const landscape = CANVAS_W.value > CANVAS_H.value
+    if (landscape) {
+      CANVAS_W.value = preset.h
+      CANVAS_H.value = preset.w
+      A4_WIDTH_CM.value = preset.cmH
+      A4_HEIGHT_CM.value = preset.cmW
+    } else {
+      CANVAS_W.value = preset.w
+      CANVAS_H.value = preset.h
+      A4_WIDTH_CM.value = preset.cmW
+      A4_HEIGHT_CM.value = preset.cmH
+    }
   }
 }
 
@@ -3080,17 +3022,11 @@ function toggleOrientation() {
   const tmpCm = A4_WIDTH_CM.value
   A4_WIDTH_CM.value = A4_HEIGHT_CM.value
   A4_HEIGHT_CM.value = tmpCm
-  const key = canvasSizePreset.value as keyof typeof CANVAS_PRESETS
-  const preset = CANVAS_PRESETS[key]
-  if (preset && preset.w === CANVAS_W.value && preset.h === CANVAS_H.value) {
-    // orientation matched a preset
-  } else {
-    // try to find matching preset
-    for (const [k, v] of Object.entries(CANVAS_PRESETS)) {
-      if (v.w === CANVAS_W.value && v.h === CANVAS_H.value) {
-        canvasSizePreset.value = k
-        return
-      }
+  // find the portrait key matching current dimensions
+  for (const [k, v] of Object.entries(CANVAS_PRESETS)) {
+    if (k.endsWith('-portrait') && (v.w === CANVAS_W.value || v.w === CANVAS_H.value) && (v.h === CANVAS_H.value || v.h === CANVAS_W.value)) {
+      canvasSizePreset.value = k
+      break
     }
   }
 }
@@ -3142,6 +3078,20 @@ watch(incomingTemplateJson, (json) => {
 
   loadFromJson(json)
 }, { immediate: true })
+
+// 自动同步：每次 canvas 数据变更后 debounce 0.5s 自动 emit templateJson
+// 确保用户点抽屉"确认"时 AMIS 表单已有最新数据
+let autoSyncTimer: ReturnType<typeof setTimeout> | null = null
+function scheduleAutoSync() {
+  if (autoSyncTimer) clearTimeout(autoSyncTimer)
+  autoSyncTimer = setTimeout(() => {
+    const json = toJson()
+    console.log('[template-canvas] auto-sync templateJson, length:', json.length)
+    emitTemplateValue(json)
+  }, 500)
+}
+
+watch(pages, () => scheduleAutoSync(), { deep: true })
 
 // 文本编辑现在由 InlineTextEditor 组件内部管理
 
@@ -5624,7 +5574,9 @@ function fitToViewport() {
 }
 
 function emitTemplateValue(json: string) {
+  console.log('[template-canvas] emitTemplateValue, length:', json.length)
   lastSyncedJson.value = json
+  emit('update:modelValue', json)
   emit('update:value', json)
   emit('updateTemplateJson', json)
 }
@@ -5638,18 +5590,29 @@ function formatTime(date: Date) {
   }).format(date)
 }
 
-function onSave() {
+async function onSave() {
   const json = toJson()
   emitTemplateValue(json)
+  await props.onSaveTemplate?.(json)
   dirty.value = false
   lastSavedAt.value = formatTime(new Date())
   statusHint.value = '已发起保存'
-  emit('saved', { templateJson: json })
+  emit('saved', {
+    templateJson: json,
+    value: json,
+    modelValue: json,
+    result: json
+  })
 }
 
 function onPreview() {
   const json = toJson()
-  emit('preview', { templateJson: json })
+  emit('preview', {
+    templateJson: json,
+    value: json,
+    modelValue: json,
+    result: json
+  })
   previewVisible.value = true
 }
 
@@ -6323,6 +6286,79 @@ onUnmounted(() => {
   outline: none;
 }
 
+/* 页面尺寸自定义下拉 */
+.canvas-size-picker {
+  position: relative;
+}
+.canvas-size-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid rgba(23, 32, 51, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.64);
+  color: var(--text-main);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+.canvas-size-btn:hover {
+  border-color: rgba(23, 105, 224, 0.35);
+  background: rgba(234, 242, 255, 0.55);
+}
+.canvas-size-arrow {
+  font-size: 9px;
+  color: var(--text-sub);
+  transition: transform 0.18s ease;
+}
+.canvas-size-picker.open .canvas-size-arrow {
+  transform: rotate(180deg);
+}
+.canvas-size-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 150;
+  min-width: 110px;
+  padding: 4px;
+  border: 1px solid var(--line-color);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.985);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 12px 28px rgba(23, 32, 51, 0.12), 0 2px 6px rgba(23, 32, 51, 0.06);
+  max-height: 260px;
+  overflow: auto;
+}
+.canvas-size-option {
+  display: block;
+  width: 100%;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-main);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: background 0.12s ease;
+}
+.canvas-size-option:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.canvas-size-option.active {
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(23, 105, 224, 0.07);
+}
+
 .toolbar-input-small {
   width: 48px;
   height: 24px;
@@ -6789,13 +6825,13 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   overflow: auto;
-  padding: 8px;
+  padding: 0 32px 0 0;
 }
 
 .canvas-board {
   display: grid;
   gap: 0;
-  margin: 0 auto;
+  margin: 0 0 0 auto;
 }
 
 .ruler-corner,
@@ -8650,5 +8686,24 @@ onUnmounted(() => {
 .cutout-list-item.active {
   background: var(--accent-soft);
   color: var(--accent);
+}
+
+/* ══════ 弹窗 padding 清除 (global, 穿透 drawer) ══════ */
+:global(.nop-drawer-no-pad) {
+  padding: 0 !important;
+}
+:global(.ant-drawer .ant-drawer-body) {
+  padding: 0 !important;
+  border: none !important;
+}
+:global(.ant-drawer .ant-drawer-body::before),
+:global(.ant-drawer .ant-drawer-body::after) {
+  content: none !important;
+}
+:global(.ant-drawer .ant-drawer-content) {
+  border: none !important;
+}
+:global(.ant-drawer .ant-drawer-header) {
+  display: none !important;
 }
 </style>

@@ -15,9 +15,9 @@
       </div>
       <div class="toolbar-right">
         <span class="toolbar-hint">点击节点编辑皮肤属性</span>
-        <el-tooltip v-if="selectedElementId" content="取消选中 (Esc)" placement="bottom">
-          <el-button size="small" @click="$emit('select-element', null)">取消选中</el-button>
-        </el-tooltip>
+        <a-tooltip v-if="selectedElementId" content="取消选中 (Esc)" placement="bottom">
+          <a-button size="small" @click="$emit('select-element', null)">取消选中</a-button>
+        </a-tooltip>
       </div>
     </div>
 

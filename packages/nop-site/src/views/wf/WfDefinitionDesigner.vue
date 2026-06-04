@@ -2,23 +2,23 @@
   <div class="wf-definition-designer">
     <div class="wf-designer-header">
       <div class="header-left">
-        <el-button @click="handleBack" text>
-          <el-icon><ArrowLeft /></el-icon>
+        <a-button @click="handleBack" type="text">
+          <ArrowLeftOutlined />
           返回
-        </el-button>
+        </a-button>
         <h3>{{ displayName || wfName || '流程设计器' }}</h3>
-        <el-tag v-if="wfId" size="small" type="info" class="ml-2">{{ wfName }}</el-tag>
+        <a-tag v-if="wfId" size="small" color="blue" class="ml-2">{{ wfName }}</a-tag>
       </div>
       <div class="header-right">
-        <el-button @click="handleSave" type="primary" :loading="saving">
-          <el-icon><Check /></el-icon>
+        <a-button @click="handleSave" type="primary" :loading="saving">
+          <CheckOutlined />
           保存
-        </el-button>
+        </a-button>
       </div>
     </div>
     <div class="bpmn-designer-wrapper">
       <div v-if="loading" class="designer-loading">
-        <el-icon class="is-loading" :size="24"><Loading /></el-icon>
+        <a-spin />
         <span>加载流程定义...</span>
       </div>
       <ProcessDesigner
@@ -37,8 +37,9 @@ import { useRoute, useRouter } from 'vue-router'
 import { ProcessDesigner } from 'bpmn-process-designer'
 import { nopSiteExecutorApi } from '../../api/bpmn/executorApi'
 import { ajaxRequest } from '@nop-chaos/sdk'
-import { ElMessage } from 'element-plus'
-import { ArrowLeft, Check, Loading } from '@element-plus/icons-vue'
+import { message } from 'ant-design-vue'
+import { ArrowLeftOutlined, CheckOutlined } from '@ant-design/icons-vue'
+import { providePageContext } from '../../components/AiCopilot'
 // bpmn-js 样式
 import 'bpmn-process-designer/dist/bpmn-process-designer.css'
 import 'bpmn-js/dist/assets/diagram-js.css'
@@ -65,6 +66,18 @@ const loading = ref(false)
 const saving = ref(false)
 
 onMounted(async () => {
+  // 注册页面上下文，使 AI Copilot 可以操作流程设计器
+  providePageContext({
+    pageType: 'wf-designer',
+    route: route.fullPath,
+    state: { wfId: wfId, wfName: wfName, displayName: displayName },
+    actions: {
+      saveProcess: async () => {
+        await handleSave()
+      },
+    },
+  })
+
   if (wfId) {
     await loadDefinition()
   }
@@ -81,7 +94,7 @@ async function loadDefinition() {
     }
   } catch (e) {
     console.error('加载工作流定义失败:', e)
-    ElMessage.error('加载工作流定义失败')
+    message.error('加载工作流定义失败')
   } finally {
     loading.value = false
   }
@@ -93,7 +106,7 @@ async function handleSave() {
     saving.value = true
     const xml = await processDesignerRef.value.getXml()
     if (!xml) {
-      ElMessage.warning('无法获取流程 XML')
+      message.warning('无法获取流程 XML')
       return
     }
     await ajaxRequest({
@@ -105,10 +118,10 @@ async function handleSave() {
         },
       },
     })
-    ElMessage.success('保存成功')
+    message.success('保存成功')
   } catch (e) {
     console.error('保存失败:', e)
-    ElMessage.error('保存失败')
+    message.error('保存失败')
   } finally {
     saving.value = false
   }

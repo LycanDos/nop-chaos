@@ -65,7 +65,7 @@ export default defineReactPageComponent((props: {actions?: Record<string,Functio
           ;(window as any).__amisScoped__ = scoped
         },
         locale: locale, // amis内部会自动替换zh_CN为zh-CN
-        theme: 'cxd'
+        theme: 'antd'
       };
 
       setDefaultLocale(locale);

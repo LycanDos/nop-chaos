@@ -7,16 +7,16 @@
       <div class="transform-section">
         <div class="section-header">
           <!-- 转换按钮 -->
-          <el-button 
+          <a-button 
             :class="['transform-btn', { 'active': transformChecks.length > 0 }]"
             @click="toggleTransform"
             size="small"
           >
-            <el-icon :class="['transform-icon', { 'rotating': transformChecks.length > 0 }]">
-              <Refresh />
-            </el-icon>
+            <RefreshOutlined :class="['transform-icon', { 'rotating': transformChecks.length > 0 }]" />
+
+            
             <span>转换</span>
-          </el-button>
+          </a-button>
         </div>
         
         <!-- 有转换类型时显示转换结果 -->
@@ -29,22 +29,22 @@
             @click="onSelectCheck(check)"
           >
             <div class="transform-header">
-              <el-icon class="transform-icon"><Refresh /></el-icon>
+              <RefreshOutlined class="transform-icon" />
               <span class="transform-type">{{ getTransformTypeLabel(check.condition?.operationValue) }}</span>
-              <el-button 
+              <a-button 
                 type="text" 
                 size="small" 
                 class="delete-btn"
                 @click.stop="removeCheck(0, 'transform')"
               >
-                <el-icon><Delete /></el-icon>
-              </el-button>
+                <DeleteOutlined />
+              </a-button>
             </div>
             <div class="transform-tree">
-              <el-tree
-                :data="getTransformResultTree(check)"
-                :props="{ label: 'name', children: 'children' }"
-                node-key="id"
+              <a-tree
+                :treeData="getTransformResultTree(check)"
+                :fieldNames="{ title: 'name', children: 'children' }"
+                key-field="id"
                 @node-click="(node) => onTransformNodeClick(node, check)"
                 style="background: transparent;"
               >
@@ -54,7 +54,7 @@
                     <span class="property-type">: {{ data.type }}</span>
                   </span>
                 </template>
-              </el-tree>
+              </a-tree>
             </div>
           </div>
         </div>
@@ -63,14 +63,14 @@
         <div v-else class="default-transform">
           <div class="default-transform-card">
             <div class="default-transform-header">
-              <el-icon class="default-icon"><Document /></el-icon>
+              <FileTextOutlined class="default-icon" />
               <span>方法参数类型</span>
             </div>
             <div class="default-transform-tree">
-              <el-tree
-                :data="getDefaultParameterTree()"
-                :props="{ label: 'name', children: 'children' }"
-                node-key="id"
+              <a-tree
+                :treeData="getDefaultParameterTree()"
+                :fieldNames="{ title: 'name', children: 'children' }"
+                key-field="id"
                 @node-click="(node) => onTransformNodeClick(node, undefined)"
                 style="background: transparent;"
               >
@@ -80,7 +80,7 @@
                     <span class="property-type">: {{ data.type }}</span>
                   </span>
                 </template>
-              </el-tree>
+              </a-tree>
             </div>
           </div>
         </div>
@@ -89,19 +89,19 @@
       <!-- 校验类型Check列表 -->
       <div class="validation-section">
         <div class="section-header">
-          <el-icon><Check /></el-icon>
+          <CheckOutlined />
           <span>校验</span>
-          <el-button 
+          <a-button 
             type="primary" 
             size="small" 
             class="add-validation-btn"
             @click="addValidation"
           >
             新增校验
-          </el-button>
+          </a-button>
         </div>
-        <el-table 
-          :data="validationChecks" 
+        <a-table 
+          :treeData="validationChecks" 
           size="small" 
           border 
           highlight-current-row 
@@ -110,18 +110,18 @@
           :row-key="row => row.id" 
           style="width:100%; border-radius: 0; box-shadow: none; border: none; background: #fff;"
         >
-          <el-table-column prop="id" label="ID" width="120" />
-          <el-table-column prop="errorDescription" label="错误描述" min-width="200" />
-          <el-table-column label="操作" width="80">
+          <a-table-column prop="id" label="ID" width="120" />
+          <a-table-column prop="errorDescription" label="错误描述" min-width="200" />
+          <a-table-column label="操作" width="80">
             <template #default="scope">
-              <el-button type="text" size="small" @click.stop="removeCheck(scope.$index, 'validation')">删除</el-button>
+              <a-button type="text" size="small" @click.stop="removeCheck(scope.$index, 'validation')">删除</a-button>
             </template>
-          </el-table-column>
-        </el-table>
+          </a-table-column>
+        </a-table>
         
         <!-- 空状态 -->
         <div v-if="validationChecks.length === 0" class="empty-state">
-          <el-empty description="暂无校验配置" />
+          <a-empty description="暂无校验配置" />
         </div>
       </div>
     </div>
@@ -129,91 +129,91 @@
     <!-- 右侧表单面板 -->
     <div class="form-panel" style="flex: 2; min-width: 520px; background: #fff; box-shadow: none; border-radius: 0; padding: 18px 24px; min-height: 480px; display: flex; flex-direction: column; justify-content: flex-start;">
       <div v-if="!selectedCheck" class="no-selection">
-        <el-empty description="请选择一个Check进行配置" />
+        <a-empty description="请选择一个Check进行配置" />
       </div>
       
       <div v-else>
         <!-- 转换类型配置 -->
         <div v-if="isTransformType" class="transform-config">
           <h3>转换配置</h3>
-          <el-form :model="localCheck" label-width="100px" size="small" @input="onFormChange" @change="onFormChange">
-            <el-form-item label="转换类型" style="margin-bottom:8px;">
-              <el-select v-model="localCheck!.condition.operationValue" @change="onFormChange" style="width: 100%;">
-                <el-option v-for="type in transformTypes" :key="type.value" :label="type.label" :value="type.value" />
-              </el-select>
-            </el-form-item>
-          </el-form>
+          <a-form :model="localCheck" label-width="100px" size="small" @input="onFormChange" @change="onFormChange">
+            <a-form-item label="转换类型" style="margin-bottom:8px;">
+              <a-select v-model="localCheck!.condition.operationValue" @change="onFormChange" style="width: 100%;">
+                <a-select-option v-for="type in transformTypes" :key="type.value" :label="type.label" :value="type.value" />
+              </a-select>
+            </a-form-item>
+          </a-form>
         </div>
         
         <!-- 校验类型配置 -->
         <div v-else class="validation-config">
           <h3>校验配置</h3>
-          <el-form :model="localCheck" label-width="100px" size="small" @input="onFormChange" @change="onFormChange">
-            <el-form-item label="ID" style="margin-bottom:8px;">
-              <el-input v-model="localCheck!.id" @input="onFormChange" />
-            </el-form-item>
-            <el-form-item label="错误码" style="margin-bottom:8px;">
-              <el-select 
+          <a-form :model="localCheck" label-width="100px" size="small" @input="onFormChange" @change="onFormChange">
+            <a-form-item label="ID" style="margin-bottom:8px;">
+              <a-input v-model="localCheck!.id" @input="onFormChange" />
+            </a-form-item>
+            <a-form-item label="错误码" style="margin-bottom:8px;">
+              <a-select 
                 v-model="localCheck!.errorCode" 
                 filterable 
                 placeholder="请选择错误码" 
                 @change="onErrorCodeChange"
                 style="width: 100%;"
               >
-                <el-option v-for="code in errorCodes" :key="code.value" :label="code.label" :value="code.value" />
-              </el-select>
-            </el-form-item>
-            <el-form-item label="错误消息" style="margin-bottom:8px;">
-              <el-input 
+                <a-select-option v-for="code in errorCodes" :key="code.value" :label="code.label" :value="code.value" />
+              </a-select>
+            </a-form-item>
+            <a-form-item label="错误消息" style="margin-bottom:8px;">
+              <a-input 
                 v-model="localCheck!.errorDescription" 
                 type="textarea" 
                 :rows="3"
                 @input="onFormChange" 
               />
-            </el-form-item>
-            <el-form-item label="语言版本" style="margin-bottom:8px;">
-              <el-select v-model="currentLanguage" @change="onLanguageChange" style="width: 100px;">
-                <el-option label="中文" value="zh" />
-                <el-option label="英文" value="en" />
-              </el-select>
-            </el-form-item>
+            </a-form-item>
+            <a-form-item label="语言版本" style="margin-bottom:8px;">
+              <a-select v-model="currentLanguage" @change="onLanguageChange" style="width: 100px;">
+                <a-select-option label="中文" :value="zh" />
+                <a-select-option label="英文" :value="en" />
+              </a-select>
+            </a-form-item>
             
             <!-- 属性值、操作方式、配置值在一行显示 -->
-            <el-form-item style="margin-bottom:8px;">
+            <a-form-item style="margin-bottom:8px;">
               <div class="validation-row">
-                <el-input 
+                <a-input 
                   v-model="localCheck!.condition.name" 
                   @input="onFormChange"
                   placeholder="点击左侧转换结果树添加属性"
                   readonly
                   style="flex: 4; margin-right: 8px;"
                 />
-                <el-select 
+                <a-select 
                   v-model="localCheck!.condition.type" 
                   @change="onFormChange" 
                   style="flex: 2; margin-right: 8px;"
                   placeholder="操作方式"
                 >
-                  <el-option v-for="op in operationTypes" :key="op.value" :label="op.label" :value="op.value" />
-                </el-select>
+                  <a-select-option v-for="op in operationTypes" :key="op.value" :label="op.label" :value="op.value" />
+                </a-select>
                 
                 <!-- 根据操作类型显示不同的配置值输入 -->
                 <div v-if="localCheck!.condition.type === 'between'" class="range-input" style="flex: 4;">
-                  <el-input 
+                  <a-input 
                     v-model="rangeValues.min" 
                     placeholder="最小值" 
                     @input="onRangeChange"
                     style="width: 45%;"
                   />
                   <span style="margin: 0 10px;">至</span>
-                  <el-input 
+                  <a-input 
                     v-model="rangeValues.max" 
                     placeholder="最大值" 
                     @input="onRangeChange"
                     style="width: 45%;"
                   />
                 </div>
-                <el-input 
+                <a-input 
                   v-else
                   v-model="localCheck!.condition.value" 
                   @input="onFormChange"
@@ -221,8 +221,8 @@
                   style="flex: 4;"
                 />
               </div>
-            </el-form-item>
-          </el-form>
+            </a-form-item>
+          </a-form>
         </div>
       </div>
     </div>
@@ -231,7 +231,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { Refresh, Check, Delete, Document } from '@element-plus/icons-vue';
+import { ReloadOutlined, CheckOutlined, DeleteOutlined, FileTextOutlined } from '@ant-design/icons-vue'
+const RefreshOutlined = ReloadOutlined;
 
 interface CheckItem {
   id: string;

@@ -115,7 +115,7 @@ export default ({ command, mode }: ConfigEnv): UserConfig => {
           manualChunks(id) {
                  // console.log("id="+id)
              const libs = ["amis-editor","monaco-editor","codemirror",
-                       "exceljs","xlsx","office-viewer","ant-design-vue","element-plus"];
+                       "exceljs","xlsx","office-viewer","ant-design-vue"];
              for(let lib of libs){
           	   if(id.includes("node_modules/"+lib+'/'))
           		  return lib

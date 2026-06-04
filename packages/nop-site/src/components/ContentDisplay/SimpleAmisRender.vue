@@ -159,7 +159,7 @@ const renderSchema = () => {
     copy: (content) => {
       navigator.clipboard?.writeText(content)
     },
-    theme: 'cxd',
+    theme: 'antd',
     // 配置弹出层容器，让它渲染到body而不是foreignObject内
     getModalContainer: () => document.body,
     // 配置toast容器

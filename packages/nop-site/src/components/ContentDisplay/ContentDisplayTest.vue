@@ -20,9 +20,9 @@
 
     <div class="test-section">
       <h3>3. 编辑模式 - HTML内容</h3>
-      <el-button @click="toggleHtmlEditor" size="small" style="margin-bottom: 10px;">
+      <a-button @click="toggleHtmlEditor" size="small" style="margin-bottom: 10px;">
         {{ showHtmlEditor ? '关闭编辑器' : '打开编辑器' }}
-      </el-button>
+      </a-button>
       <ContentDisplay
         :content="htmlContent"
         content-type="html"
@@ -35,9 +35,9 @@
 
     <div class="test-section">
       <h3>4. 编辑模式 - AMIS内容</h3>
-      <el-button @click="toggleAmisEditor" size="small" style="margin-bottom: 10px;">
+      <a-button @click="toggleAmisEditor" size="small" style="margin-bottom: 10px;">
         {{ showAmisEditor ? '关闭编辑器' : '打开编辑器' }}
-      </el-button>
+      </a-button>
       <ContentDisplay
         :content="amisContent"
         content-type="amis"
@@ -50,9 +50,9 @@
 
     <div class="test-section">
       <h3>5. 编辑模式 - 带初始内容</h3>
-      <el-button @click="toggleInitialEditor" size="small" style="margin-bottom: 10px;">
+      <a-button @click="toggleInitialEditor" size="small" style="margin-bottom: 10px;">
         {{ showInitialEditor ? '关闭编辑器' : '打开编辑器' }}
-      </el-button>
+      </a-button>
       <ContentDisplay
         :content="initialContent"
         content-type="html"

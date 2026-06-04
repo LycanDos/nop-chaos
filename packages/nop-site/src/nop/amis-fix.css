@@ -1,0 +1,43 @@
+/**
+ * AMIS 操作栏按钮对齐修复
+ *
+ * 问题：操作栏中 dropdown-button（由 actionGroup 转换而来）与普通 button
+ * 使用不同的 HTML 结构，导致边距不一致。
+ * 原 CSS 规则 .antd-OperationField > .antd-Button 设置了 margin: 0.1875rem，
+ * 但未覆盖 .antd-DropDown 包装器。
+ */
+.antd-OperationField > .antd-DropDown {
+    margin: 0.1875rem;
+}
+
+/** 修正表格工具栏中 dropdown-button 与普通 button 的对齐 */
+.antd-Table-toolbar > .antd-DropDown {
+    vertical-align: middle;
+}
+
+/* ========================================
+ * 模板设计器 Drawer 样式修复
+ * AMIS antd 主题用的是 antd-Drawer 类名（不是 ant-drawer）
+ * ======================================== */
+/* 去掉 drawer body 内边距、边框、:before 伪元素 */
+.antd-Drawer-content:has(.nop-template-editor-page) {
+    border: none !important;
+}
+.antd-Drawer-body:has(.nop-template-editor-page),
+.antd-Drawer-content:has(.nop-template-editor-page) .antd-Drawer-body {
+    padding: 0 !important;
+    border: none !important;
+}
+.antd-Drawer-content:has(.nop-template-editor-page) .antd-Drawer-body::before {
+    content: none !important;
+    display: none !important;
+    height: 0 !important;
+}
+/* 隐藏 drawer 标题栏（关闭按钮所在） */
+.antd-Drawer-content:has(.nop-template-editor-page) .antd-Drawer-header {
+    display: none !important;
+}
+/* 隐藏 drawer 底部按钮栏 */
+.antd-Drawer-content:has(.nop-template-editor-page) .antd-Drawer-footer {
+    display: none !important;
+}

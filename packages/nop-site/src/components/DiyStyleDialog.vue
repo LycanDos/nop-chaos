@@ -1,7 +1,7 @@
 <template>
-  <el-dialog
-    :model-value="visible"
-    @update:model-value="$emit('update:visible', $event)"
+  <a-modal
+    v-model:visible="visible"
+    @updatev-model:visible="$emit('update:visible', $event)"
     title="DIY样式编辑器"
     width="90%"
     :before-close="handleClose"
@@ -11,39 +11,39 @@
       <!-- 左侧编辑区域 -->
       <div class="edit-section">
         <h3>样式编辑</h3>
-        <el-form :model="styleForm" label-width="100px">
-          <el-form-item label="菜单名称">
-            <el-input v-model="styleForm.name" placeholder="请输入菜单名称" />
-          </el-form-item>
-          <el-form-item label="菜单类型">
-            <el-select v-model="styleForm.type" placeholder="请选择菜单类型">
-              <el-option label="用户任务" value="bpmn:UserTask" />
-              <el-option label="服务任务" value="bpmn:ServiceTask" />
-              <el-option label="发送任务" value="bpmn:SendTask" />
-              <el-option label="接收任务" value="bpmn:ReceiveTask" />
-              <el-option label="手工任务" value="bpmn:ManualTask" />
-              <el-option label="业务规则任务" value="bpmn:BusinessRuleTask" />
-              <el-option label="脚本任务" value="bpmn:ScriptTask" />
-              <el-option label="调用活动" value="bpmn:CallActivity" />
-              <el-option label="子流程" value="bpmn:SubProcess" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="图标颜色">
-            <el-color-picker v-model="styleForm.iconColor" />
-          </el-form-item>
-          <el-form-item label="背景颜色">
-            <el-color-picker v-model="styleForm.bgColor" />
-          </el-form-item>
-          <el-form-item label="图标类名">
-            <el-input v-model="styleForm.iconClass" placeholder="请输入图标类名" />
-          </el-form-item>
-          <el-form-item label="自定义图标">
-            <el-input v-model="styleForm.icon" placeholder="请输入SVG图标路径或内容" />
-          </el-form-item>
-          <el-form-item label="API活动ID">
-            <el-input v-model="styleForm.apiActivityId" placeholder="请输入API活动ID（用于接口调用）" />
-          </el-form-item>
-          <el-form-item label="HTML内容">
+        <a-form :model="styleForm" label-col-width="100px">
+          <a-form-item label="菜单名称">
+            <a-input v-model:value="styleForm.name" placeholder="请输入菜单名称" />
+          </a-form-item>
+          <a-form-item label="菜单类型">
+            <a-select v-model:value="styleForm.type" placeholder="请选择菜单类型">
+              <a-select-option label="用户任务" value="bpmn:UserTask" />
+              <a-select-option label="服务任务" value="bpmn:ServiceTask" />
+              <a-select-option label="发送任务" value="bpmn:SendTask" />
+              <a-select-option label="接收任务" value="bpmn:ReceiveTask" />
+              <a-select-option label="手工任务" value="bpmn:ManualTask" />
+              <a-select-option label="业务规则任务" value="bpmn:BusinessRuleTask" />
+              <a-select-option label="脚本任务" value="bpmn:ScriptTask" />
+              <a-select-option label="调用活动" value="bpmn:CallActivity" />
+              <a-select-option label="子流程" value="bpmn:SubProcess" />
+            </a-select>
+          </a-form-item>
+          <a-form-item label="图标颜色">
+            <ColorPicker v-model:value="styleForm.iconColor" />
+          </a-form-item>
+          <a-form-item label="背景颜色">
+            <ColorPicker v-model:value="styleForm.bgColor" />
+          </a-form-item>
+          <a-form-item label="图标类名">
+            <a-input v-model:value="styleForm.iconClass" placeholder="请输入图标类名" />
+          </a-form-item>
+          <a-form-item label="自定义图标">
+            <a-input v-model:value="styleForm.icon" placeholder="请输入SVG图标路径或内容" />
+          </a-form-item>
+          <a-form-item label="API活动ID">
+            <a-input v-model:value="styleForm.apiActivityId" placeholder="请输入API活动ID（用于接口调用）" />
+          </a-form-item>
+          <a-form-item label="HTML内容">
             <div style="display: flex; gap: 10px; align-items: flex-start;">
               <ContentDisplay
                 :content="styleForm.htmlContent"
@@ -56,28 +56,28 @@
                 @change="handleHtmlContentChange"
               />
               <div style="display: flex; flex-direction: column; gap: 8px;">
-                <el-button
+                <a-button
                   type="primary"
                   @click="toggleHtmlEditor"
                   size="small"
                   :title="showHtmlEditor ? '关闭编辑器' : '打开编辑器'"
                 >
-                  <i :class="showHtmlEditor ? 'el-icon-close' : 'el-icon-edit'"></i>
+                  <component :is="showHtmlEditor ? CloseOutlined : EditOutlined" />
                   {{ showHtmlEditor ? '关闭' : '编辑' }}
-                </el-button>
-                <el-button
+                </a-button>
+                <a-button
                   type="info"
                   @click="previewHtmlContent"
                   size="small"
                   title="预览HTML内容"
                 >
-                  <i class="el-icon-view"></i>
+                  <EyeOutlined />
                   预览
-                </el-button>
+                </a-button>
               </div>
             </div>
-          </el-form-item>
-        </el-form>
+          </a-form-item>
+        </a-form>
       </div>
 
       <!-- 右侧预览区域 -->
@@ -91,8 +91,8 @@
               class="bpmn-node-preview"
               :style="{
                 backgroundColor: '#fff',
-                border: '2px solid #ccc',
-                borderRadius: '8px',
+                bordered: '2px solid #ccc',
+                borderedRadius: '8px',
                 margin: '10px 0',
                 display: 'flex',
                 alignItems: 'center',
@@ -164,8 +164,8 @@
                 class="menu-item"
                 :style="{
                   backgroundColor: '#fff',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
+                  bordered: '1px solid #ddd',
+                  borderedRadius: '4px',
                   padding: '8px 12px',
                   margin: '4px 0',
                   display: 'flex',
@@ -184,7 +184,7 @@
                     fontSize: '16px',
                     width: '24px',
                     height: '24px',
-                    borderRadius: '4px',
+                    borderedRadius: '4px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
@@ -202,13 +202,13 @@
           <div class="current-activity-info" v-if="currentActivityInfo">
             <h4>当前Activity信息</h4>
             <div class="activity-info-preview">
-              <el-descriptions :column="1" border>
-                <el-descriptions-item label="节点名称">{{ currentActivityInfo.name || '未设置' }}</el-descriptions-item>
-                <el-descriptions-item label="节点类型">{{ currentActivityInfo.type || '未设置' }}</el-descriptions-item>
-                <el-descriptions-item label="节点ID">{{ currentActivityInfo.id || '未设置' }}</el-descriptions-item>
-                <el-descriptions-item label="API活动ID">{{ currentActivityInfo.apiActivityId || '未设置' }}</el-descriptions-item>
-                <el-descriptions-item label="HTML内容长度">{{ styleForm.htmlContent ? styleForm.htmlContent.length : 0 }} 字符</el-descriptions-item>
-              </el-descriptions>
+              <a-descriptions :column="1" bordered>
+                <a-descriptions-item label="节点名称">{{ currentActivityInfo.name || '未设置' }}</a-descriptions-item>
+                <a-descriptions-item label="节点类型">{{ currentActivityInfo.type || '未设置' }}</a-descriptions-item>
+                <a-descriptions-item label="节点ID">{{ currentActivityInfo.id || '未设置' }}</a-descriptions-item>
+                <a-descriptions-item label="API活动ID">{{ currentActivityInfo.apiActivityId || '未设置' }}</a-descriptions-item>
+                <a-descriptions-item label="HTML内容长度">{{ styleForm.htmlContent ? styleForm.htmlContent.length : 0 }} 字符</a-descriptions-item>
+              </a-descriptions>
             </div>
           </div>
 
@@ -216,9 +216,9 @@
           <div class="api-preview" v-if="apiData && showApiData">
             <h4>API数据预览</h4>
             <div class="api-data-preview">
-              <el-tag v-for="(item, index) in apiData" :key="index" class="api-tag">
+              <a-tag v-for="(item, index) in apiData" :key="index" class="api-tag">
                 {{ item.name }}
-              </el-tag>
+              </a-tag>
             </div>
           </div>
         </div>
@@ -227,10 +227,10 @@
 
     <template #footer>
       <span class="dialog-footer">
-        <el-button @click="handleClose">取消</el-button>
-        <el-button @click="handleLoadFromApi" :loading="loadingApi">从API加载</el-button>
-        <el-button @click="toggleApiData">{{ showApiData ? '隐藏' : '显示' }}API数据</el-button>
-        <el-button type="primary" @click="handleSave">保存</el-button>
+        <a-button @click="handleClose">取消</a-button>
+        <a-button @click="handleLoadFromApi" :loading="loadingApi">从API加载</a-button>
+        <a-button @click="toggleApiData">{{ showApiData ? '隐藏' : '显示' }}API数据</a-button>
+        <a-button type="primary" @click="handleSave">保存</a-button>
       </span>
     </template>
 
@@ -241,12 +241,14 @@
       @update:visible="showAmisEditor = $event"
       @save="handleAmisSave"
     />
-  </el-dialog>
+  </a-modal>
 </template>
 
 <script setup>
 import { ref, reactive, watch, onMounted, computed, nextTick } from 'vue'
-import { ElMessage } from 'element-plus'
+import { message } from 'ant-design-vue'
+import { CloseOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons-vue'
+import ColorPicker from './ColorPicker/index.vue'
 import AmisEditorDialog from './AmisEditorDialog.vue'
 import { ContentDisplay } from './ContentDisplay'
 
@@ -313,7 +315,7 @@ const loadActivityHtmlContent = async (apiActivityId) => {
         styleForm.htmlContent = data.itemStyle.htmlContent;
         
         console.log('[DiyStyleDialog] 加载到HTML内容并更新缓存:', data.itemStyle.htmlContent)
-        ElMessage.success('已加载Activity的HTML内容')
+        message.success('已加载Activity的HTML内容')
       }
     }
   } catch (error) {
@@ -701,12 +703,12 @@ const loadFromApi = async () => {
           ...itemStyle.itemStyle,
           htmlContentType: itemStyle.itemStyle.htmlContentType || 'html'
         })
-        ElMessage.success('已从API加载样式数据')
+        message.success('已从API加载样式数据')
       }
     }
   } catch (error) {
     console.error('[DiyStyleDialog] 加载API数据失败:', error)
-    ElMessage.error('加载API数据失败')
+    message.error('加载API数据失败')
   } finally {
     loadingApi.value = false
   }
@@ -804,7 +806,7 @@ const openAmisEditor = () => {
 // 预览HTML内容
 const previewHtmlContent = () => {
   if (!styleForm.htmlContent) {
-    ElMessage.warning('请先输入内容')
+    message.warning('请先输入内容')
     return
   }
 
@@ -827,7 +829,7 @@ const previewHtmlContent = () => {
         .preview-container {
           background: white;
           padding: 20px;
-          border-radius: 4px;
+          bordered-radius: 4px;
           box-shadow: 0 2px 4px rgba(0,0,0,0.1);
           max-width: 800px;
           margin: 0 auto;
@@ -835,7 +837,7 @@ const previewHtmlContent = () => {
         .preview-header {
           margin-bottom: 15px;
           padding-bottom: 10px;
-          border-bottom: 1px solid #eee;
+          bordered-bottom: 1px solid #eee;
         }
         .content-type {
           color: #666;
@@ -846,14 +848,14 @@ const previewHtmlContent = () => {
           color: #f56c6c;
           background-color: #fef0f0;
           padding: 10px;
-          border-radius: 4px;
-          border-left: 4px solid #f56c6c;
+          bordered-radius: 4px;
+          bordered-left: 4px solid #f56c6c;
         }
         .original-content {
           font-family: monospace;
           background-color: #f4f4f4;
           padding: 10px;
-          border-radius: 4px;
+          bordered-radius: 4px;
           white-space: pre-wrap;
           word-break: break-all;
         }
@@ -917,7 +919,7 @@ const handleAmisSave = (data) => {
   if (data && data.schema) {
     // 保存AMIS schema为JSON字符串
     styleForm.htmlContent = JSON.stringify(data.schema, null, 2)
-    ElMessage.success('AMIS内容已保存到HTML内容')
+    message.success('AMIS内容已保存到HTML内容')
   }
   showAmisEditor.value = false
 }
@@ -1027,19 +1029,19 @@ const handleSave = async () => {
     if (styleForm.apiActivityId) {
       try {
         await saveToApi(styleData)
-        ElMessage.success('样式已保存到本地和API')
+        message.success('样式已保存到本地和API')
       } catch (error) {
-        ElMessage.warning('样式已保存到本地，但API保存失败')
+        message.warning('样式已保存到本地，但API保存失败')
       }
     } else {
-      ElMessage.success('样式已保存到本地')
+      message.success('样式已保存到本地')
     }
 
     emit('save', styleData)
     handleClose()
   } catch (error) {
     console.error('保存样式失败:', error)
-    ElMessage.error('保存失败')
+    message.error('保存失败')
   }
 }
 
@@ -1059,15 +1061,15 @@ onMounted(() => {
 .edit-section {
   flex: 1;
   padding: 20px;
-  border: 1px solid #e4e7ed;
-  border-radius: 4px;
+  bordered: 1px solid #e4e7ed;
+  bordered-radius: 4px;
 }
 
 .preview-section {
   flex: 1;
   padding: 20px;
-  border: 1px solid #e4e7ed;
-  border-radius: 4px;
+  bordered: 1px solid #e4e7ed;
+  bordered-radius: 4px;
 }
 
 .preview-container {
@@ -1138,8 +1140,8 @@ onMounted(() => {
 .api-data-preview {
   max-height: 150px;
   overflow-y: auto;
-  border: 1px solid #e4e7ed;
-  border-radius: 4px;
+  bordered: 1px solid #e4e7ed;
+  bordered-radius: 4px;
   padding: 10px;
   background-color: #fafafa;
 }

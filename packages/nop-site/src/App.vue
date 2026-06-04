@@ -1,10 +1,10 @@
 <template>
   <ConfigProvider :locale="getAntdLocale">
-    <AmisToast theme="cxd"/>
+    <AmisToast theme="antd"/>
     <AppProvider>
       <RouterView />
     </AppProvider>
-    <MethodDialog v-if="showMethodDialog" :visible="showMethodDialog" @update:model-value="showMethodDialog = false" />
+    <MethodDialog v-if="showMethodDialog" v-model:visible="showMethodDialog" />
     <AmisEditDialog 
       v-if="showAmisDialog" 
       :visible="showAmisDialog" 

@@ -2,6 +2,7 @@
 // SSE 通信客户端
 // ============================================================
 
+import { useAdapter } from '@nop-chaos/sdk';
 import type { ChatRequest } from './types';
 import { dispatchCopilotEvent, SseEventParser, type StreamCallbacks } from './sse';
 
@@ -33,14 +34,35 @@ export class CopilotClient {
 
     request.sessionId = this.sessionId;
     this.abortController = new AbortController();
+    const adapter = useAdapter();
+    const token = adapter.useAuthToken?.();
+    const tenantId = adapter.useTenantId?.() || '0';
+    const locale = adapter.useLocale?.()?.replace('_', '-');
+    const appId = adapter.useAppId?.();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Accept: 'text/event-stream',
+      'x-requested-with': 'XMLHttpRequest',
+    };
+
+    if (locale) {
+      headers['nop-locale'] = locale;
+    }
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+      headers['x-timestamp'] = `${Date.now()}`;
+      headers['x-tenant-id'] = tenantId;
+      headers['x-version'] = adapter.globalVersion || 'v3';
+      if (appId) {
+        headers['nop-app-id'] = appId;
+      }
+    }
 
     try {
       const response = await fetch(this.baseUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'text/event-stream',
-        },
+        headers,
+        credentials: 'include',
         body: JSON.stringify(request),
         signal: this.abortController.signal,
       });

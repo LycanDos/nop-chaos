@@ -3,15 +3,15 @@
     <div v-if="hasFields" class="validator-form">
       <div class="form-row">
         <label>操作类型：</label>
-        <el-select v-model="operationType" placeholder="请选择操作类型" style="width: 150px;">
-          <el-option v-for="op in operationTypeList" :key="op.value" :label="op.label" :value="op.value" />
-        </el-select>
+        <a-select v-model:value="operationType" placeholder="请选择操作类型" style="width: 150px;">
+          <a-select-option v-for="op in operationTypeList" :key="op.value" :value="op.value">{{ op.label }}</a-select-option>
+        </a-select>
       </div>
       <div class="form-row">
         <label>操作：</label>
-        <el-select v-model="operationValue" placeholder="请选择操作值" style="width: 150px;">
-          <el-option v-for="val in currentOperationValues" :key="val.value" :label="val.label" :value="val.value" />
-        </el-select>
+        <a-select v-model:value="operationValue" placeholder="请选择操作值" style="width: 150px;">
+          <a-select-option v-for="val in currentOperationValues" :key="val.value" :value="val.value">{{ val.label }}</a-select-option>
+        </a-select>
         <button v-if="canRemove" class="remove-btn" @click="$emit('remove')">删除</button>
       </div>
       <div class="form-row">
