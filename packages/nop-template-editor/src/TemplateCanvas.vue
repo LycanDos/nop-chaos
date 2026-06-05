@@ -2468,6 +2468,8 @@
         </div>
       </div>
     </div>
+    <!-- 文本编辑工具栏 Portal 目标（在 drawer 内部，避免 closeOnOutside） -->
+    <div id="text-editor-toolbar-portal" style="position:fixed;top:0;left:0;z-index:9999"></div>
   </div>
 </template>
 
@@ -2946,7 +2948,7 @@ const canvasSizePresetLabel = computed(() => {
 const canvasSizeOptions = computed(() => {
   return Object.entries(CANVAS_PRESETS)
     .filter(([k]) => k.endsWith('-portrait'))
-    .map(([k, v]) => ({ key: k, label: v.label }))
+    .map(([k, v]) => ({ key: k, label: `${v.label.replace(' 纵向', '')} ${v.cmW}×${v.cmH}cm` }))
 })
 
 // 下拉按钮上的简洁标签 (仅尺寸名, 不含方向)
@@ -6825,13 +6827,13 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   overflow: auto;
-  padding: 0 32px 0 0;
+  padding: 0;
 }
 
 .canvas-board {
   display: grid;
   gap: 0;
-  margin: 0 0 0 auto;
+  margin: 0 auto;
 }
 
 .ruler-corner,

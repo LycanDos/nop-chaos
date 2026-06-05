@@ -8,7 +8,7 @@ import {
   buildVariablePoolPreview,
 } from './outputDeltaPreview.ts'
 
-defineOptions({ name: 'OutputDeltaDrawer' })
+defineOptions({ name: 'OutputDeltaDrawer' , inheritAttrs: false })
 
 interface OpenDrawerOptions {
   currentDeltas: OutputDeltaItem[]
@@ -151,14 +151,7 @@ defineExpose({ openDrawer })
 </script>
 
 <template>
-  <el-drawer
-    v-model="visible"
-    direction="rtl"
-    size="96%"
-    :close-on-click-modal="true"
-    :show-close="false"
-    :with-header="false"
-  >
+  <a-drawer v-model:visible="visible" placement="rtl" width="96%" :show-close="false" :closable="false">
     <div v-if="warnings.length" class="delta-output-warnings">
       {{ prettyWarnings }}
     </div>
@@ -175,10 +168,10 @@ defineExpose({ openDrawer })
     </div>
 
     <template #footer>
-      <el-button @click="cancel">取消</el-button>
-      <el-button type="primary" @click="confirm">确认</el-button>
+      <a-button @click="cancel">取消</a-button>
+      <a-button type="primary" @click="confirm">确认</a-button>
     </template>
-  </el-drawer>
+  </a-drawer>
 </template>
 
 <style scoped lang="less">

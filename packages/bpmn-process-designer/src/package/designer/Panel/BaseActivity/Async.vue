@@ -8,13 +8,12 @@ import {
   removeExtensionElements,
 } from '@/designer/utils/ExtensionElementsUtil.ts'
 import { getBusinessObject } from 'bpmn-js/lib/util/ModelUtil'
-import { useFormItem } from 'element-plus'
 
 defineOptions({
   name: 'Async',
 })
 
-const { form } = useFormItem()
+const form = { labelPosition: 'right', size: 'small' }
 const { selectedElement, updateProperties } = useBpmnContextService()
 const asyncBefore = useCustomRef<boolean>('asyncBefore')
 const asyncAfter = useCustomRef<boolean>('asyncAfter')
@@ -57,26 +56,26 @@ const retryTimeCycle = customRef((track, trigger) => {
 </script>
 
 <template>
-  <el-row :gutter="10">
-    <el-col :span="form?.labelPosition === 'top' ? 8 : 24">
-      <el-form-item label="前异步">
-        <el-switch v-model="asyncBefore" />
-      </el-form-item>
-    </el-col>
-    <el-col :span="form?.labelPosition === 'top' ? 8 : 24">
-      <el-form-item label="后异步">
-        <el-switch v-model="asyncAfter" />
-      </el-form-item>
-    </el-col>
-    <el-col :span="form?.labelPosition === 'top' ? 8 : 24">
-      <el-form-item label="排他">
-        <el-switch v-model="exclusive" :disabled="!(asyncBefore || asyncAfter)" />
-      </el-form-item>
-    </el-col>
-  </el-row>
-  <el-form-item label="失败重试周期" v-show="asyncBefore || asyncAfter">
-    <el-input v-model="retryTimeCycle" clearable placeholder="请输入失败重试周期" />
-  </el-form-item>
+  <a-row :gutter="10">
+    <a-col :span="form?.labelPosition === 'top' ? 8 : 24">
+      <a-form-item label="前异步">
+        <a-switch v-model:checked="asyncBefore" />
+      </a-form-item>
+    </a-col>
+    <a-col :span="form?.labelPosition === 'top' ? 8 : 24">
+      <a-form-item label="后异步">
+        <a-switch v-model:checked="asyncAfter" />
+      </a-form-item>
+    </a-col>
+    <a-col :span="form?.labelPosition === 'top' ? 8 : 24">
+      <a-form-item label="排他">
+        <a-switch v-model:checked="exclusive" :disabled="!(asyncBefore || asyncAfter)" />
+      </a-form-item>
+    </a-col>
+  </a-row>
+  <a-form-item label="失败重试周期" v-show="asyncBefore || asyncAfter">
+    <a-input v-model="retryTimeCycle" clearable placeholder="请输入失败重试周期" />
+  </a-form-item>
 </template>
 
 <style scoped lang="scss"></style>

@@ -148,6 +148,7 @@
 
           <!-- 聊天内容 -->
           <ChatPanel
+            ref="chatPanelRef"
             :messages="store.messages"
             :loading="store.sending"
             :pending-confirm="store.pendingConfirm"
@@ -191,15 +192,66 @@
   const fabRef = ref<HTMLElement | null>(null);
   const dialogRef = ref<HTMLElement | null>(null);
   const avatarRef = ref<HTMLElement | null>(null);
+  const chatPanelRef = ref<InstanceType<typeof ChatPanel> | null>(null);
   const fabVisible = ref(true);
 
   // 当前页面上下文（由页面 providePageContext 注入）
   const pageContext = ref<PageRuntimeContext | null>(null);
   const selectedElement = ref<ElementInfo | null>(null);
 
-  // Agentic Loop 控制
-  const MAX_AGENTIC_LOOPS = 5
+  /** 判断指令是否安全（无需用户确认，直接执行） */
+  const SAFE_ACTION_TYPES = new Set(['navigate', 'fillForm', 'openDialog', 'query', 'call'])
+  const DANGEROUS_CLICK_NAMES = /^(delete|remove|batchDelete|batchRemove)$/i
+
+  function isSafeInstruction(instruction: FrontendInstruction): boolean {
+    if (!instruction.actions || instruction.actions.length === 0) return true
+    return instruction.actions.every((action) => {
+      if (!action.type) return true
+      if (SAFE_ACTION_TYPES.has(action.type)) return true
+      if (action.type === 'click') {
+        const name = action.actionName || ''
+        return !DANGEROUS_CLICK_NAMES.test(name) && !name.toLowerCase().includes('delete') && !name.toLowerCase().includes('remove')
+      }
+      if (action.type === 'submitForm') return false
+      return false // unknown type — 保守处理
+    })
+  }
+
+  /** 需要确认的操作，但如果指令安全则直接执行 */
+  function resolveConfirmOrExecute(
+    instruction: FrontendInstruction,
+    userMessage: string,
+  ): boolean {
+    if (isSafeInstruction(instruction)) {
+      // 安全指令：跳过确认，直接执行
+      addAssistantBubble()
+      runAgenticLoop(instruction, userMessage)
+      return true // 已处理
+    }
+    return false // 留给调用方处理确认
+  }
+
+  function addAssistantBubble(): void {
+    store.addMessage({
+      id: store.generateId(),
+      role: 'assistant',
+      content: '',
+      timestamp: Date.now(),
+      isStreaming: true,
+      instruction: null,
+    })
+  }
+  const MAX_AGENTIC_LOOPS_MIN = 5
+  const MAX_AGENTIC_LOOPS_LIMIT = 15
   let agenticLoopCount = 0
+  let currentMaxLoops = MAX_AGENTIC_LOOPS_MIN
+
+  /** 根据指令中 action 数量动态计算最大轮次 */
+  function getMaxLoops(instruction: FrontendInstruction): number {
+    const actionCount = instruction.actions?.length || 0
+    const estimated = actionCount > 3 ? actionCount + 3 : MAX_AGENTIC_LOOPS_MIN
+    return Math.max(MAX_AGENTIC_LOOPS_MIN, Math.min(MAX_AGENTIC_LOOPS_LIMIT, estimated))
+  }
 
   // UI state
   const expanded = computed({
@@ -581,6 +633,8 @@
     destroyFlyClone();
     fabVisible.value = false;
     if (fabRef.value) { fabRef.value.style.transition = ''; fabRef.value.style.opacity = ''; }
+    // 展开完成后自动聚焦输入框
+    (chatPanelRef.value as any)?.focusInput?.();
   }
 
   // ── 收缩：逆动画 ──
@@ -924,6 +978,7 @@
   async function onSendMessage(message: string): Promise<void> {
     if (!message.trim() || store.sending) return;
     agenticLoopCount = 0; // 新用户消息重置循环计数
+    currentMaxLoops = MAX_AGENTIC_LOOPS_MIN;
 
     // Scope 检查
     if (store.scope === CopilotScopeLevel.STRICT_PAGE) {
@@ -965,14 +1020,17 @@
           store.appendToLastMessage(text);
         },
         onInstruction(instruction: FrontendInstruction): void {
+          // 根据指令复杂度动态调整最大轮次
+          currentMaxLoops = getMaxLoops(instruction);
           // 将指令描述消息加入聊天显示
           if (instruction.message) {
             store.appendToLastMessage(instruction.message);
           }
           store.finalizeLastMessage();
 
-          // 检查是否需要确认
+          // 检查是否需要确认 —— 只有真正危险的操作才弹确认框
           if (instruction.type === 'confirm_required') {
+            if (resolveConfirmOrExecute(instruction, message)) return;
             store.setPendingConfirm({
               instruction,
               resolve: async (confirmed: boolean) => {
@@ -996,6 +1054,12 @@
           runAgenticLoop(instruction, message);
         },
         onConfirmRequired(instruction: FrontendInstruction): void {
+          // 修复空白气泡：将 message 追加到当前对话中
+          if (instruction.message) {
+            store.appendToLastMessage(instruction.message);
+          }
+          if (resolveConfirmOrExecute(instruction, message)) return;
+          store.finalizeLastMessage();
           store.setPendingConfirm({
             instruction,
             resolve: async (confirmed: boolean) => {
@@ -1056,11 +1120,11 @@
   ): Promise<void> {
     agenticLoopCount++;
 
-    if (agenticLoopCount >= MAX_AGENTIC_LOOPS) {
+    if (agenticLoopCount >= currentMaxLoops) {
       store.addMessage({
         id: store.generateId(),
         role: 'system',
-        content: `已达到最大操作轮次 (${MAX_AGENTIC_LOOPS})，如有需要请继续指示。`,
+        content: `已达到最大操作轮次 (${currentMaxLoops})，如有需要请继续指示。`,
         timestamp: Date.now(),
       });
       agenticLoopCount = 0;
@@ -1072,7 +1136,12 @@
     const results = await actionExecutor.executeWithRetry(instruction);
     const allOk = results.every((r) => r.success);
 
+    // 执行后刷新页面上下文 — 导航后 pageContext 可能已更新
+    refreshPageContextAfterActions(instruction);
+
     // 构建结构化执行反馈
+    // 关键修复：不再仅依赖 r.data（fillForm 等操作常返回空 data），
+    // 而是从对应的 instruction action 中提取类型和目标信息
     const feedback = {
       status: allOk ? 'success' : 'partial' as const,
       summary: allOk
@@ -1080,18 +1149,58 @@
         : `${results.filter((r) => !r.success).length} 个操作失败`,
       cancelled: false,
       timestamp: Date.now(),
-      results: results.map((r) => ({
-        actionType: r.data?.type || 'unknown',
-        target: r.data?.target || '',
-        success: r.success,
-        error: r.error,
-        data: r.data,
-      })),
+      results: results.map((r, idx) => {
+        const action = instruction.actions[idx] as FrontendAction | undefined;
+        // 优先从执行结果 data 获取类型，回退到指令 action 的类型
+        const resolvedType = r.data?.type
+          || (action?.type === 'fillForm' ? 'fillForm'
+            : action?.type === 'click' ? 'click'
+            : action?.type === 'navigate' ? 'navigate'
+            : action?.type === 'submitForm' ? 'submitForm'
+            : action?.type === 'openDialog' ? 'openDialog'
+            : action?.type === 'query' ? 'query'
+            : action?.type === 'call' ? 'call'
+            : 'unknown');
+        // 优先从执行结果 data 获取 target，回退到指令 action 的语义标识
+        const resolvedTarget = r.data?.target
+          || (action?.fieldName || action?.actionName || action?.target || action?.route
+            || action?.entityName || action?.dialogName || '');
+        return {
+          actionType: resolvedType,
+          target: resolvedTarget,
+          success: r.success,
+          error: r.error,
+          data: r.data,
+        };
+      }),
     };
 
     store.recordExecutionFeedback(feedback);
 
     if (!allOk) {
+      // 计算已成功的 action 数量（第一个失败 action 的索引即 succeededCount）
+      const failIndex = results.findIndex((r) => !r.success)
+      const succeededCount = failIndex === -1 ? results.length : failIndex
+
+      // 逆序执行已成功 action 的补偿操作（回滚）
+      if (succeededCount > 0) {
+        const hasCompensation = instruction.actions
+          .slice(0, succeededCount)
+          .some((a) => a.compensationType)
+        if (hasCompensation) {
+          const compResults = await actionExecutor.executeCompensations(instruction, succeededCount)
+          const compFailed = compResults.filter((r) => !r.success)
+          if (compFailed.length > 0) {
+            store.addMessage({
+              id: store.generateId(),
+              role: 'system',
+              content: `回滚操作部分失败: ${compFailed.map((r) => r.error).join('; ')}`,
+              timestamp: Date.now(),
+            })
+          }
+        }
+      }
+
       // 操作失败：报告并停止循环
       store.addMessage({
         id: store.generateId(),
@@ -1134,12 +1243,15 @@
           store.appendToLastMessage(text);
         },
         onInstruction(nextInstruction: FrontendInstruction): void {
+          // 根据后续指令复杂度更新最大轮次
+          currentMaxLoops = Math.max(currentMaxLoops, getMaxLoops(nextInstruction));
           if (nextInstruction.message) {
             store.appendToLastMessage(nextInstruction.message);
           }
           store.finalizeLastMessage();
 
           if (nextInstruction.type === 'confirm_required') {
+            if (resolveConfirmOrExecute(nextInstruction, userMessage)) return;
             store.setPendingConfirm({
               instruction: nextInstruction,
               resolve: async (confirmed: boolean) => {
@@ -1162,6 +1274,12 @@
           runAgenticLoop(nextInstruction, userMessage);
         },
         onConfirmRequired(nextInstruction: FrontendInstruction): void {
+          // 修复空白气泡：将 message 追加到当前对话中
+          if (nextInstruction.message) {
+            store.appendToLastMessage(nextInstruction.message);
+          }
+          store.finalizeLastMessage();
+          if (resolveConfirmOrExecute(nextInstruction, userMessage)) return;
           store.setPendingConfirm({
             instruction: nextInstruction,
             resolve: async (confirmed: boolean) => {
@@ -1218,6 +1336,78 @@
     }
   }
 
+  /**
+   * 执行 actions 后刷新页面上下文。
+   * 导航操作后页面切换、弹窗打开后表单可见——这些状态变化需要反映到后续请求的 context 中。
+   */
+  function refreshPageContextAfterActions(instruction: FrontendInstruction): void {
+    if (!instruction.actions || instruction.actions.length === 0) return;
+
+    // 检测是否有导航操作 — 如果有，等待目标页面注册新上下文
+    const hasNavigate = instruction.actions.some((a) => a.type === 'navigate');
+    if (hasNavigate) {
+      const navAction = instruction.actions.find((a) => a.type === 'navigate');
+      const targetPageType = instruction.targetPage?.pageType
+        || navAction?.route?.replace(/^.*\/([^/]+?)(?:-.*)?$/, '$1');
+      if (targetPageType) {
+        // 等待新页面注册上下文（最多 2s），然后刷新
+        let waited = 0;
+        const checkInterval = 100;
+        const maxWait = 2000;
+        const check = () => {
+          const ctx = pageContext.value;
+          if (ctx && (ctx.pageType === targetPageType
+            || ctx.route === navAction?.route
+            || ctx.route === navAction?.target)) {
+            return true;
+          }
+          return false;
+        };
+        // 快速轮询等待
+        const startTime = Date.now();
+        while (!check() && Date.now() - startTime < maxWait) {
+          // 微等待（同步循环以避免异步复杂性）
+        }
+        // 强制重新 materialize — 即使 waitForPageContext 未完全就绪，getState 也能获取最新状态
+        if (pageContext.value) {
+          // 触发 getState 调用以获取最新 crudContext/state
+          const ctx = pageContext.value;
+          if (typeof (ctx as any).getState === 'function') {
+            try {
+              const freshState = (ctx as any).getState();
+              ctx.state = { ...(ctx.state || {}), ...freshState };
+            } catch (_) { /* ignore */ }
+          }
+        }
+      }
+    }
+
+    // 检测是否有 click(add) — 标记弹窗可能已打开，context 中应反映 dialog 状态
+    const hasAddClick = instruction.actions.some(
+      (a) => a.type === 'click' && (a.actionName === 'add' || a.target === 'add'),
+    );
+    if (hasAddClick && pageContext.value) {
+      // 在 context state 中标记弹窗状态
+      const ctx = pageContext.value;
+      ctx.state = { ...(ctx.state || {}), _dialogOpened: true };
+    }
+
+    // 检测 fillForm — 在 context state 中标记已填充字段
+    const fillActions = instruction.actions.filter((a) => a.type === 'fillForm');
+    if (fillActions.length > 0 && pageContext.value) {
+      const ctx = pageContext.value;
+      const filledFields = fillActions
+        .map((a) => a.fieldName)
+        .filter(Boolean) as string[];
+      if (filledFields.length > 0) {
+        ctx.state = {
+          ...(ctx.state || {}),
+          _filledFields: [...(ctx.state?._filledFields || []), ...filledFields],
+        };
+      }
+    }
+  }
+
   function clearChat(): void {
     createNewSession();
   }
@@ -1260,7 +1450,6 @@
       message,
       context: materializePageContext(ctx),
       selectedElement: selectedElement.value,
-      userPermissions: store.userPermissions,
       executionFeedback: store.lastExecutionFeedback,
       pageChange: store.lastPageChange,
       traceEnabled: store.traceEnabled,

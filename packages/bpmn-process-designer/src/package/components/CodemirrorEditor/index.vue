@@ -5,7 +5,6 @@ import useCodemirror, {
 import { computed, ref } from 'vue'
 import { minimalSetup } from 'codemirror'
 import theme from './theme.ts'
-import { useFormSize } from 'element-plus'
 import type { Diagnostic } from '@codemirror/lint'
 import SvgIcon from '@/components/SvgIcon/index.vue'
 import { type ViewUpdate } from '@codemirror/view'

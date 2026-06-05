@@ -109,7 +109,7 @@ import { setValueAtPath } from './delta-three-pane/model/jsonPath'
 import JsonEditorPane from './delta-three-pane/components/JsonEditorPane.vue'
 import WorkbenchPanel from './delta-three-pane/components/WorkbenchPanel.vue'
 
-defineOptions({ name: 'ExecutorOutputDeltaThreePane' })
+defineOptions({ name: 'ExecutorOutputDeltaThreePane' , inheritAttrs: false })
 
 const props = defineProps<{
   variablePoolData: Record<string, unknown>

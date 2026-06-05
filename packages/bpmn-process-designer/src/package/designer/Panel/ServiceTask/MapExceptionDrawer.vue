@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Delete, Plus } from '@element-plus/icons-vue'
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import type { ErrorEvent, MapException } from '@/types'
-import { type FormInstance, type FormItemRule, useFormSize } from 'element-plus'
 import { useCloned } from '@vueuse/core'
 import { isClassValid } from '@/designer/utils/ValidationUtil.ts'
 import { getBusinessObject } from 'bpmn-js/lib/util/ModelUtil'
@@ -96,35 +95,18 @@ defineExpose({
 </script>
 
 <template>
-  <el-drawer
-    v-model="drawerVisible"
-    size="40%"
-    append-to-body
-    :lock-scroll="false"
-    @closed="onClosed"
-    :show-close="false"
-    :with-header="false"
-  >
-    <el-form ref="formRef" label-position="top" :model="cloned" :size="formSize">
-      <el-form-item>
+  <a-drawer v-model:visible="drawerVisible" width="40%" append-to-body :lock-scroll="false" @closed="onClosed" :show-close="false" :closable="false">
+    <a-form ref="formRef" label-position="top" :model="cloned" :size="formSize">
+      <a-form-item>
         <template #label>
-          <el-button
-            type="primary"
-            text
-            bg
-            class="el-icon--right"
-            :icon="Plus"
-            @click="addException"
-          >
-            添加映射
-          </el-button>
+          <a-button type="primary" text bg @click="addException" ><PlusOutlined /> 添加映射 </a-button>
         </template>
-        <el-table :data="cloned.exceptions" height="400px">
-          <el-table-column prop="errorCode" label="错误码">
+        <a-table :dataSource="cloned.exceptions" height="400px">
+          <a-table-column prop="errorCode" label="错误码">
             <template #default="{ row, $index }">
-              <el-form-item :prop="`exceptions.${$index}.errorCode`" :rules="errorCodeFormRule">
-                <el-select v-model="row.errorCode" placeholder="请选择错误码">
-                  <el-option
+              <a-form-item :prop="`exceptions.${$index}.errorCode`" :rules="errorCodeFormRule">
+                <a-select v-model:value="row.errorCode" placeholder="请选择错误码">
+                  <a-select-option
                     v-for="item in errorEvents.filter(
                       (e) =>
                         !cloned.exceptions.some(
@@ -135,64 +117,45 @@ defineExpose({
                     :key="item.errorCode"
                     :label="item.name"
                     :value="item.errorCode"
-                  ></el-option>
+                  ></a-select-option>
                   <template #footer>
-                    <el-button
-                      text
-                      bg
-                      size="small"
-                      style="width: 100%"
-                      :icon="Plus"
-                      @click="addErrorEvent()"
-                    >
-                      新增错误定义
-                    </el-button>
+                    <a-button text bg size="small" style="width: 100%" @click="addErrorEvent()" ><PlusOutlined /> 新增错误定义 </a-button>
                   </template>
-                </el-select>
-              </el-form-item>
+                </a-select>
+              </a-form-item>
             </template>
-          </el-table-column>
-          <el-table-column prop="exceptionClass" min-width="120px" label="异常类">
+          </a-table-column>
+          <a-table-column prop="exceptionClass" min-width="120px" label="异常类">
             <template #default="{ row, $index }">
-              <el-form-item
-                :prop="`exceptions.${$index}.exceptionClass`"
-                :rules="exceptionClassFormRule"
-              >
-                <el-input v-model="row.exceptionClass" placeholder="java异常类路径" />
-              </el-form-item>
+              <a-form-item :prop="`exceptions.${$index}.exceptionClass`" :rules="exceptionClassFormRule">
+                <a-input v-model="row.exceptionClass" placeholder="java异常类路径" />
+              </a-form-item>
             </template>
-          </el-table-column>
-          <el-table-column
+          </a-table-column>
+          <a-table-column
             align="center"
             prop="includeChildExceptions"
             min-width="60px"
             label="包含子异常"
           >
             <template #default="{ row }">
-              <el-switch v-model="row.includeChildExceptions" />
+              <a-switch v-model:checked="row.includeChildExceptions" />
             </template>
-          </el-table-column>
-          <el-table-column align="center" min-width="40px" label="操作">
+          </a-table-column>
+          <a-table-column align="center" min-width="40px" label="操作">
             <template #default="{ $index }">
-              <el-button
-                type="danger"
-                :icon="Delete"
-                circle
-                text
-                bg
-                @click="cloned.exceptions.splice($index, 1)"
-              />
+              <a-button danger circle text bg @click="cloned.exceptions.splice($index, 1)" ><DeleteOutlined /></a-button>
             </template>
-          </el-table-column>
-        </el-table>
-      </el-form-item>
-    </el-form>
+          </a-table-column>
+        </a-table>
+      </a-form-item>
+    </a-form>
     <ErrorEventDrawer ref="errorEventDrawerRef" @confirm="confirmErrorEvent" />
     <template #footer>
-      <el-button @click="drawerVisible = false">取 消</el-button>
-      <el-button type="primary" @click="handleConfirm">确 定</el-button>
+      <a-button @click="drawerVisible = false">取 消</a-button>
+      <a-button type="primary" @click="handleConfirm">确 定</a-button>
     </template>
-  </el-drawer>
+  </a-drawer>
 </template>
 
 <style scoped lang="scss"></style>

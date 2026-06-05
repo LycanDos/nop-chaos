@@ -24,11 +24,11 @@ const horizontal = customRef((track, trigger) => {
 </script>
 
 <template>
-  <el-collapse-item name="arg1" title="泳道">
-    <el-form-item label="方向">
-      <el-switch v-model="horizontal" inactive-text="垂直" active-text="水平"></el-switch>
-    </el-form-item>
-  </el-collapse-item>
+  <a-collapse-panel key="arg1" header="泳道">
+    <a-form-item label="方向">
+      <a-switch v-model:checked="horizontal" inactive-text="垂直" active-text="水平"></a-switch>
+    </a-form-item>
+  </a-collapse-panel>
 </template>
 
 <style scoped lang="scss"></style>

@@ -57,8 +57,8 @@ defineExpose({
 </script>
 
 <template>
-  <el-dialog
-    v-model="dialogVisible"
+  <a-modal
+    v-model:visible="dialogVisible"
     align-center
     draggable
     append-to-body
@@ -72,10 +72,10 @@ defineExpose({
       <div ref="codemirrorRef" class="codemirror-editor" />
     </div>
     <template #footer>
-      <el-button type="primary" @click="handleConfirm">确定</el-button>
-      <el-button @click="dialogVisible = false">取消</el-button>
+      <a-button type="primary" @click="handleConfirm">确定</a-button>
+      <a-button @click="dialogVisible = false">取消</a-button>
     </template>
-  </el-dialog>
+  </a-modal>
 </template>
 
 <style scoped lang="scss">

@@ -146,13 +146,13 @@ onMounted(() => {
 <template>
   <div class="panel-container">
     <div v-if="panelType === 'none'" class="panel-fallback">
-      <el-empty description="请在画布中选择一个元素" />
+      <a-empty description="请在画布中选择一个元素" />
     </div>
-    <el-form v-else v-bind="$attrs" label-width="110px">
+    <a-form v-else v-bind="$attrs" class="bpmn-panel-form">
       <!-- 流程级别面板 -->
       <BaseActivity v-if="panelType === 'process'">
         <template #basic>
-          <Process />
+          <Process key="arg1" header="流程" />
         </template>
         <template #other>
           <EventListener />
@@ -163,8 +163,8 @@ onMounted(() => {
       <!-- 用户任务面板 -->
       <BaseActivity v-else-if="panelType === 'userTask'">
         <template #basic>
-          <UserTask />
-          <Advanced />
+          <UserTask key="arg1" header="处理人" />
+          <Advanced key="arg2" header="高级" />
         </template>
         <template #other>
           <SkinConfig />
@@ -175,126 +175,128 @@ onMounted(() => {
       <!-- 服务任务面板 -->
       <BaseActivity v-else-if="panelType === 'serviceTask'">
         <template #basic>
-          <ServiceTask />
-          <Advanced />
-          <SkinConfig />
+          <ServiceTask key="arg1" header="服务" />
+          <Advanced key="arg2" header="高级" />
+          <SkinConfig key="skin-config" header="皮肤配置" />
         </template>
       </BaseActivity>
 
       <!-- HTTP 任务面板 -->
       <BaseActivity v-else-if="panelType === 'httpTask'">
         <template #basic>
-          <HttpTask />
-          <Advanced />
-          <SkinConfig />
+          <HttpTask key="arg1" header="请求" />
+          <Advanced key="arg2" header="高级" />
+          <SkinConfig key="skin-config" header="皮肤配置" />
         </template>
       </BaseActivity>
 
       <!-- Camel 任务面板 -->
       <BaseActivity v-else-if="panelType === 'camelTask'">
         <template #basic>
-          <CamelTask />
-          <Advanced />
-          <SkinConfig />
+          <CamelTask key="arg1" header="驼峰" />
+          <Advanced key="arg2" header="高级" />
+          <SkinConfig key="skin-config" header="皮肤配置" />
         </template>
       </BaseActivity>
 
       <!-- Shell 任务面板 -->
       <BaseActivity v-else-if="panelType === 'shellTask'">
         <template #basic>
-          <ShellTask />
-          <Advanced />
-          <SkinConfig />
+          <ShellTask key="arg1" header="命令" />
+          <Advanced key="arg2" header="高级" />
+          <SkinConfig key="skin-config" header="皮肤配置" />
         </template>
       </BaseActivity>
 
       <!-- Email 任务面板 -->
       <BaseActivity v-else-if="panelType === 'emailTask'">
         <template #basic>
-          <EmailTask />
-          <Advanced />
-          <SkinConfig />
+          <EmailTask key="arg1" header="邮件" />
+          <Advanced key="arg2" header="高级" />
+          <SkinConfig key="skin-config" header="皮肤配置" />
         </template>
       </BaseActivity>
 
       <!-- 外部任务面板 -->
       <BaseActivity v-else-if="panelType === 'externalTask'">
         <template #basic>
-          <ExternalTask />
-          <Advanced />
-          <SkinConfig />
+          <ExternalTask key="arg1" header="外部工作" />
+          <Advanced key="arg2" header="高级" />
+          <SkinConfig key="skin-config" header="皮肤配置" />
         </template>
       </BaseActivity>
 
       <!-- 决策任务面板 -->
       <BaseActivity v-else-if="panelType === 'decisionTask'">
         <template #basic>
-          <DecisionTask />
-          <Advanced />
-          <SkinConfig />
+          <DecisionTask key="arg1" header="决策" />
+          <Advanced key="arg2" header="高级" />
+          <SkinConfig key="skin-config" header="皮肤配置" />
         </template>
       </BaseActivity>
 
       <!-- Mule 任务面板 -->
       <BaseActivity v-else-if="panelType === 'muleTask'">
         <template #basic>
-          <MuleTask />
-          <Advanced />
-          <SkinConfig />
+          <MuleTask key="arg1" header="骡子" />
+          <Advanced key="arg2" header="高级" />
+          <SkinConfig key="skin-config" header="皮肤配置" />
         </template>
       </BaseActivity>
 
       <!-- 跳转任务面板 -->
       <BaseActivity v-else-if="panelType === 'jumpTask'">
         <template #basic>
-          <JumpTask />
-          <Advanced />
-          <SkinConfig />
+          <JumpTask key="arg1" header="节点路由" />
+          <Advanced key="arg2" header="高级" />
+          <SkinConfig key="skin-config" header="皮肤配置" />
         </template>
       </BaseActivity>
 
       <!-- 抄送任务面板 -->
       <BaseActivity v-else-if="panelType === 'ccTask'">
         <template #basic>
-          <CcTask />
-          <Advanced />
-          <SkinConfig />
+          <CcTask key="arg1" header="抄送" />
+          <Advanced key="arg2" header="高级" />
+          <SkinConfig key="skin-config" header="皮肤配置" />
         </template>
       </BaseActivity>
 
       <!-- 执行器任务面板 -->
       <BaseActivity v-else-if="panelType === 'executorTask'">
-        <template #basic>
+        <template #basicExtra>
           <ExecutorTask />
-          <Advanced />
-          <SkinConfig />
+        </template>
+        <template #basic>
+          <Advanced key="arg2" header="高级" />
+          <SkinConfig key="skin-config" header="皮肤配置" />
         </template>
       </BaseActivity>
 
       <!-- 脚本任务面板 -->
       <BaseActivity v-else-if="panelType === 'scriptTask'">
         <template #basic>
-          <ScriptTask />
-          <Advanced />
-          <SkinConfig />
+          <ScriptTask key="arg1" header="调用脚本" />
+          <Advanced key="arg2" header="高级" />
+          <SkinConfig key="skin-config" header="皮肤配置" />
         </template>
       </BaseActivity>
 
       <!-- 调用活动面板 -->
       <BaseActivity v-else-if="panelType === 'callActivity'">
         <template #basic>
-          <CallActivity />
-          <Advanced />
-          <SkinConfig />
+          <CallActivity key="arg1" header="调用活动" />
+          <Advanced key="arg2" header="高级" />
+          <SkinConfig key="skin-config" header="皮肤配置" />
         </template>
       </BaseActivity>
 
       <!-- 业务规则任务面板 -->
       <BaseActivity v-else-if="panelType === 'businessRuleTask'">
         <template #basic>
-          <BusinessRuleTask />
-          <Advanced />
-          <SkinConfig />
+          <BusinessRuleTask key="arg1" header="业务规则" />
+          <Advanced key="arg2" header="高级" />
+          <SkinConfig key="skin-config" header="皮肤配置" />
         </template>
       </BaseActivity>
 
@@ -304,28 +306,28 @@ onMounted(() => {
           <StartEvent />
         </template>
         <template #basic>
-          <Advanced />
-          <SkinConfig />
+          <Advanced key="arg2" header="高级" />
+          <SkinConfig key="skin-config" header="皮肤配置" />
         </template>
       </BaseActivity>
 
       <!-- 序列流面板 -->
       <BaseActivity v-else-if="panelType === 'sequenceFlow'">
         <template #basic>
-          <SequenceFlow />
-          <Advanced />
-          <SkinConfig />
+          <SequenceFlow key="arg1" header="流转条件" />
+          <Advanced key="arg2" header="高级" />
+          <SkinConfig key="skin-config" header="皮肤配置" />
         </template>
       </BaseActivity>
 
       <!-- 默认面板（其他元素类型） -->
       <BaseActivity v-else>
         <template #basic>
-          <Advanced />
-          <SkinConfig />
+          <Advanced key="arg2" header="高级" />
+          <SkinConfig key="skin-config" header="皮肤配置" />
         </template>
       </BaseActivity>
-    </el-form>
+    </a-form>
   </div>
 </template>
 
@@ -333,6 +335,7 @@ onMounted(() => {
 .panel-container {
   height: 100%;
   overflow-y: auto;
+  background: #fff;
 }
 .panel-fallback {
   display: flex;
@@ -341,8 +344,30 @@ onMounted(() => {
   height: 100%;
 }
 :deep {
-  .el-form, .el-tabs, .el-tab-pane { height: 100%; }
-  .el-collapse { height: calc(100% - 2px); }
-  .el-tabs__header { margin: 0; }
+  .bpmn-panel-form .ant-form-item { margin-bottom: 12px; }
+  .bpmn-panel-form .ant-form-item-label { flex: 0 0 80px; }
+  .bpmn-panel-form .ant-form-item-label > label { font-size: 12px; color: #8c8c8c; }
+  .ant-form { height: 100%; }
+  .ant-tabs { height: 100%; }
+  .ant-tabs-content-holder { height: calc(100% - 40px); overflow: auto; }
+  .ant-tabs-content { height: 100%; }
+  .ant-tabs-tabpane { height: 100%; overflow: auto; padding: 0 !important; }
+  .ant-collapse { border: none; border-radius: 0; background: transparent; }
+  .ant-collapse-item { border-bottom: 1px solid #f0f0f0 !important; }
+  .ant-collapse-item:last-child { border-bottom: none !important; }
+  .ant-collapse-header { 
+    padding: 10px 12px !important; 
+    font-size: 13px !important; 
+    font-weight: 500 !important; 
+    color: #262626 !important;
+    background: #fafafa !important;
+    border-radius: 0 !important;
+  }
+  .ant-collapse-content-box { padding: 12px !important; }
+  .ant-tabs-nav { margin: 0 0 8px 0 !important; padding: 0 8px; }
+  .ant-tabs-tab { font-size: 13px; padding: 6px 12px; }
+  .ant-input, .ant-select-selector, .ant-input-number { font-size: 12px; }
+  .ant-btn { font-size: 12px; }
+  .ant-col .ant-form-item { margin-bottom: 8px; }
 }
 </style>

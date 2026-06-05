@@ -110,7 +110,7 @@
           <a-button type="primary" size="small" :disabled="!bindingForm.methodCode" @click="saveBinding">
             保存绑定
           </a-button>
-          <a-button type="danger" size="small" ghost @click="clearBinding">
+          <a-button danger size="small" ghost @click="clearBinding">
             清除绑定
           </a-button>
         </div>

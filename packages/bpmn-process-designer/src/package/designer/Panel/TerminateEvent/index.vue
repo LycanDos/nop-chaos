@@ -5,11 +5,11 @@ const terminateAll = useCustomRef('terminateAll')
 </script>
 
 <template>
-  <el-collapse-item name="arg1" title="结束">
-    <el-form-item label="终止所有">
-      <el-switch v-model="terminateAll"></el-switch>
-    </el-form-item>
-  </el-collapse-item>
+  <a-collapse-panel key="arg1" header="结束">
+    <a-form-item label="终止所有">
+      <a-switch v-model:checked="terminateAll"></a-switch>
+    </a-form-item>
+  </a-collapse-panel>
 </template>
 
 <style scoped lang="scss"></style>

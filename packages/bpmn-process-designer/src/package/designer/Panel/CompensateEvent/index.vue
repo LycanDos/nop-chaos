@@ -114,21 +114,21 @@ onMounted(() => {
 </script>
 
 <template>
-  <el-collapse-item name="arg1" title="补偿事件">
-    <el-form-item prop="activityRef" label="补偿活动">
-      <el-select v-model="activityRef" placeholder="请选择补偿活动">
-        <el-option
+  <a-collapse-panel key="arg1" header="补偿事件">
+    <a-form-item prop="activityRef" label="补偿活动">
+      <a-select v-model:value="activityRef" placeholder="请选择补偿活动">
+        <a-select-option
           v-for="item in activityOptions"
           :key="item.id"
           :label="item.name"
           :value="item.id"
-        ></el-option>
-      </el-select>
-    </el-form-item>
-    <el-form-item prop="waitForCompletion" label="等待完成">
-      <el-switch v-model="waitForCompletion"></el-switch>
-    </el-form-item>
-  </el-collapse-item>
+        ></a-select-option>
+      </a-select>
+    </a-form-item>
+    <a-form-item prop="waitForCompletion" label="等待完成">
+      <a-switch v-model:checked="waitForCompletion"></a-switch>
+    </a-form-item>
+  </a-collapse-panel>
 </template>
 
 <style scoped lang="scss"></style>

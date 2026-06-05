@@ -1,4 +1,43 @@
-// @use 'element-plus/theme-chalk/src/dark/css-vars.scss' as *;
+// Element Plus CSS 变量 polyfill（不依赖 element-plus）
+// 当宿主项目未加载 element-plus CSS 时提供默认值
+:root {
+  --el-color-primary: #409eff;
+  --el-color-primary-light-5: #a0cfff;
+  --el-color-primary-light-7: #a0cfff;
+  --el-color-primary-light-9: #ecf5ff;
+  --el-color-success: #67c23a;
+  --el-color-warning: #e6a23c;
+  --el-color-danger: #f56c6c;
+  --el-color-error: #f56c6c;
+  --el-color-info: #909399;
+  --el-color-info-light-8: #e9e9eb;
+  --el-color-info-light-9: #f4f4f5;
+  --el-text-color-primary: #303133;
+  --el-text-color-regular: #606266;
+  --el-text-color-secondary: #909399;
+  --el-text-color-placeholder: #a8abb2;
+  --el-border-color: #dcdfe6;
+  --el-border-color-light: #e4e7ed;
+  --el-border-color-lighter: #ebeef5;
+  --el-border-radius-base: 4px;
+  --el-border: 0px;
+  --el-bg-color: #ffffff;
+  --el-bg-color-overlay: #ffffff;
+  --el-fill-color: #f0f2f5;
+  --el-fill-color-blank: #ffffff;
+  --el-fill-color-light: #f5f7fa;
+  --el-fill-color-lighter: #fafafa;
+  --el-fill-color-darker: #e6e8eb;
+  --el-font-size-base: 14px;
+  --el-dialog-padding-primary: 20px;
+  --el-drawer-padding-primary: 0px;
+}
+
+$color-primary: var(--el-color-primary);
+$color-success: var(--el-color-success);
+$color-warning: var(--el-color-warning);
+$color-danger: var(--el-color-danger);
+$color-info: var(--el-color-info);
 
 body {
   font-family:

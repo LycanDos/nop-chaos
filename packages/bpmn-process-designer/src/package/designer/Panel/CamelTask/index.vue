@@ -8,11 +8,11 @@ const camelContext = useFieldRef('camelContext')
 </script>
 
 <template>
-  <el-collapse-item name="arg1" title="驼峰">
-    <el-form-item label="驼峰内容">
-      <el-input v-model="camelContext" placeholder="请输入驼峰内容" />
-    </el-form-item>
-  </el-collapse-item>
+  <a-collapse-panel key="arg1" header="驼峰">
+    <a-form-item label="驼峰内容">
+      <a-input v-model="camelContext" placeholder="请输入驼峰内容" />
+    </a-form-item>
+  </a-collapse-panel>
 </template>
 
 <style scoped lang="scss"></style>

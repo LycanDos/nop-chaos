@@ -12,7 +12,7 @@ import {
   getSignalEventDefinition,
 } from '@/designer/utils/EventDefinitionUtil.ts'
 import SignalEventDrawer from '@/designer/Panel/Process/SignalEventDrawer.vue'
-import { Plus } from '@element-plus/icons-vue'
+import { PlusOutlined } from '@ant-design/icons-vue'
 
 defineOptions({
   name: 'SignalEvent',
@@ -68,31 +68,22 @@ onMounted(() => {
 </script>
 
 <template>
-  <el-collapse-item name="arg1" title="信号事件">
-    <el-form-item prop="signalRef" label="信号引用">
-      <el-select v-model="signalRef" placeholder="请选择信号引用">
-        <el-option
+  <a-collapse-panel key="arg1" header="信号事件">
+    <a-form-item prop="signalRef" label="信号引用">
+      <a-select v-model:value="signalRef" placeholder="请选择信号引用">
+        <a-select-option
           v-for="item in signals"
           :key="item.id"
           :label="item.name"
           :value="item.id"
-        ></el-option>
+        ></a-select-option>
         <template #footer>
-          <el-button
-            text
-            bg
-            size="small"
-            style="width: 100%"
-            :icon="Plus"
-            @click="addSignalEvent()"
-          >
-            新增信号定义
-          </el-button>
+          <a-button text bg size="small" style="width: 100%" @click="addSignalEvent()" ><PlusOutlined /> 新增信号定义 </a-button>
         </template>
-      </el-select>
+      </a-select>
       <SignalEventDrawer ref="signalEventDrawerRef" @confirm="confirmSignalEvent" />
-    </el-form-item>
-  </el-collapse-item>
+    </a-form-item>
+  </a-collapse-panel>
 </template>
 
 <style scoped lang="scss"></style>

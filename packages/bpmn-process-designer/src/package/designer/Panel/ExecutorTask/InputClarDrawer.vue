@@ -11,13 +11,13 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { PolicyStudio } from '@nop-chaos/policy-studio'
-import { DArrowLeft, DArrowRight, Loading, Setting } from '@element-plus/icons-vue'
+import { DoubleLeftOutlined, DoubleRightOutlined, LoadingOutlined, SettingOutlined } from '@ant-design/icons-vue'
 import type { InputPolicyDocument, MethodSchemaFieldItem, VariableItem } from '@/types/executor.ts'
 import type { PolicyDocument, PolicySchema, PolicyLayer } from '@nop-chaos/policy-studio/types'
 import { ajaxRequest } from '@nop-chaos/nop-core'
 import JsonPreviewEditor from './JsonPreviewEditor.vue'
 
-defineOptions({ name: 'InputClarDrawer' })
+defineOptions({ name: 'InputClarDrawer' , inheritAttrs: false })
 
 const emit = defineEmits<{
   (e: 'confirm', document: InputPolicyDocument): void
@@ -1158,7 +1158,7 @@ onMounted(() => {
   document.addEventListener('mouseup', endDragPanel)
   
   setTimeout(() => {
-    const wrapper = document.querySelector('.el-drawer__wrapper')
+    const wrapper = document.querySelector('.ant-drawer-content-wrapper')
     if (wrapper) {
       wrapper.addEventListener('click', handleWrapperClick)
     }
@@ -1169,7 +1169,7 @@ onBeforeUnmount(() => {
   document.removeEventListener('mousemove', handleDragPanel)
   document.removeEventListener('mouseup', endDragPanel)
   
-  const wrapper = document.querySelector('.el-drawer__wrapper')
+  const wrapper = document.querySelector('.ant-drawer-content-wrapper')
   if (wrapper) {
     wrapper.removeEventListener('click', handleWrapperClick)
   }
@@ -1179,25 +1179,16 @@ defineExpose({ openDrawer })
 </script>
 
 <template>
-  <el-drawer
-    v-model="visible"
-    :show-close="false"
-    :close-on-click-modal="true"
-    direction="rtl"
-    size="90%"
-    :with-header="false"
-    class="input-clar-drawer-wrapper"
-    @close="close"
-  >
+  <a-drawer v-model:visible="visible" :show-close="false" placement="rtl" width="90%" :closable="false" class="input-clar-drawer-wrapper" @close="close">
     <div class="input-clar-drawer">
       <!-- 加载中 -->
       <div v-if="loading" class="loading-container">
-        <el-icon class="is-loading" :size="32"><Loading /></el-icon>
+        <LoadingOutlined spin :style="{ fontSize: '32px' }" />
         <span>正在加载入参 Clar 数据...</span>
       </div>
       
       <!-- 错误提示 -->
-      <el-alert v-if="error" :title="error" type="error" :closable="false" class="error-alert" />
+      <a-alert v-if="error" :title="error" type="error" :closable="false" class="error-alert" />
       
       <!-- Clar 编辑器 -->
       <div v-if="!loading && !error" class="clar-container">
@@ -1214,33 +1205,33 @@ defineExpose({ openDrawer })
           >
             <!-- 折叠状态: 只显示竖排标签 -->
             <div v-if="variablePanelCollapsed" class="panel-collapsed-bar" @click="toggleVariablePanel">
-              <el-tooltip content="展开可用变量" placement="right">
+              <a-tooltip title="展开可用变量" placement="right">
                 <div class="panel-collapsed-content">
-                  <el-icon :size="16"><DArrowRight /></el-icon>
+                  <DoubleRightOutlined :style="{ fontSize: '16px' }" />
                   <span class="panel-collapsed-text">可用变量</span>
                 </div>
-              </el-tooltip>
+              </a-tooltip>
             </div>
             
             <!-- 展开状态 -->
             <template v-else>
               <div class="panel-header">
                 <span class="panel-title">可用变量</span>
-                <el-button 
+                <a-button 
                   link 
                   size="small" 
                   class="collapse-btn"
                   @click="toggleVariablePanel"
                 >
-                  <el-icon><DArrowLeft /></el-icon>
-                </el-button>
+                  <DoubleLeftOutlined />
+                </a-button>
               </div>
               
-              <el-tabs v-model="activeVariableTab" class="variable-tabs">
-                <el-tab-pane label="系统注入" name="system" />
-                <el-tab-pane label="变量池" name="context" />
-                <el-tab-pane label="当前入参" name="field" />
-              </el-tabs>
+              <a-tabs v-model:activeKey="activeVariableTab" class="variable-tabs">
+                <a-tab-pane tab="系统注入" key="system" />
+                <a-tab-pane tab="变量池" key="context" />
+                <a-tab-pane tab="当前入参" key="field" />
+              </a-tabs>
               
               <!-- JSON 展示变量 -->
               <div class="variable-json-preview">
@@ -1257,12 +1248,12 @@ defineExpose({ openDrawer })
                 >
                   <div class="variable-info">
                     <span class="variable-name">{{ variable.name }}</span>
-                    <el-tag size="small" type="info">{{ variable.type }}</el-tag>
+                    <a-tag size="small" color="processing">{{ variable.type }}</a-tag>
                   </div>
                   <div class="variable-path">${{ variable.path }}</div>
                 </div>
                 
-                <el-empty v-if="availableVariables[activeVariableTab].length === 0" description="暂无可用变量" :image-size="60" />
+                <a-empty v-if="availableVariables[activeVariableTab].length === 0" description="暂无可用变量" :image-size="60" />
               </div>
             </template>
             
@@ -1286,29 +1277,29 @@ defineExpose({ openDrawer })
               @update:sample-data="handleSampleDataChange"
             />
             
-            <el-empty v-else description="未加载到方法入参 Schema" :image-size="120" />
+            <a-empty v-else description="未加载到方法入参 Schema" :image-size="120" />
           </div>
         </div>
         
         <!-- 底部操作栏 -->
         <div class="clar-footer">
-          <el-button @click="close">取消</el-button>
-          <el-button type="primary" :loading="saving" :disabled="loading" @click="confirm">
+          <a-button @click="close">取消</a-button>
+          <a-button type="primary" :loading="saving" :disabled="loading" @click="confirm">
             {{ saving ? '保存中...' : '保存 Clar' }}
-          </el-button>
+          </a-button>
         </div>
       </div>
     </div>
-  </el-drawer>
+  </a-drawer>
 </template>
 
 <style scoped lang="scss">
 .input-clar-drawer-wrapper {
-  :deep(.el-drawer__header) {
+  :deep(.ant-drawer-header) {
     display: none;
   }
   
-  :deep(.el-drawer__body) {
+  :deep(.ant-drawer-body) {
     padding: 0;
     height: 100%;
   }
@@ -1423,12 +1414,12 @@ defineExpose({ openDrawer })
   flex-shrink: 0;
   height: auto !important;
   
-  :deep(.el-tabs__header) {
+  :deep(.ant-tabs-nav) {
     margin: 0;
     padding: 0 16px;
   }
 
-  :deep(.el-tabs__content) {
+  :deep(.ant-tabs-content) {
     display: none !important;
     height: 0 !important;
     min-height: 0 !important;
@@ -1437,7 +1428,7 @@ defineExpose({ openDrawer })
     overflow: hidden !important;
   }
   
-  :deep(.el-tabs__item) {
+  :deep(.ant-tabs-tab) {
     font-size: 12px;
     padding: 0 8px;
   }

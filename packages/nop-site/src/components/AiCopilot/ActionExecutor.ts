@@ -99,6 +99,100 @@ export class ActionExecutor {
     return lastResults
   }
 
+  /**
+   * 执行补偿操作 - 多步操作失败时逆序回滚已成功的步骤。
+   * @param instruction 包含 compensation 信息的指令
+   * @param succeededCount 已成功执行的 action 数量
+   */
+  async executeCompensations(
+    instruction: FrontendInstruction,
+    succeededCount: number,
+  ): Promise<ActionResult[]> {
+    const results: ActionResult[] = []
+    // 逆序回滚：先回滚最后成功的操作，再回滚之前的
+    for (let i = succeededCount - 1; i >= 0; i--) {
+      const action = instruction.actions[i]
+      if (!action.compensationType) continue
+
+      const result = await this.executeCompensationAction(
+        action,
+        instruction.targetPage?.pageType,
+      )
+      results.push(result)
+    }
+    return results
+  }
+
+  /**
+   * 执行单个补偿操作
+   */
+  private async executeCompensationAction(
+    action: FrontendAction,
+    pageType?: string,
+  ): Promise<ActionResult> {
+    const compType = action.compensationType
+    const compParams = action.compensationParams
+
+    switch (compType) {
+      case 'navigateBack': {
+        const router = (window as any).__router__
+        if (!router) return { success: false, error: 'Router not available for compensation' }
+        await router.push(compParams?.route || '/')
+        return { success: true, data: { type: 'navigateBack' } }
+      }
+
+      case 'clearField': {
+        const fieldName = compParams?.fieldName || action.fieldName
+        if (!fieldName) return { success: false, error: 'No fieldName for clearField compensation' }
+        const element = this.findFormField({
+          ...action,
+          fieldName,
+        } as FrontendAction)
+        if (element) {
+          // 使用原生 setter 清空值（兼容 AMIS/React 受控组件）
+          const proto = Object.getPrototypeOf(element)
+          const nativeSetter = Object.getOwnPropertyDescriptor(proto, 'value')?.set
+          if (nativeSetter) {
+            nativeSetter.call(element, '')
+            element.dispatchEvent(new Event('input', { bubbles: true }))
+            element.dispatchEvent(new Event('change', { bubbles: true }))
+          }
+          return { success: true, data: { type: 'clearField', fieldName } }
+        }
+        return { success: false, error: `Field not found for compensation: ${fieldName}` }
+      }
+
+      case 'deleteCreatedRecord': {
+        // 通过 AMIS CRUD 的删除操作清理刚创建但后续步骤失败的记录
+        // 当前为占位实现，依赖页面注册的 deleteRecord handler
+        const handler = this.findRegisteredHandler('deleteRecord', pageType)
+        if (handler) {
+          try {
+            await handler(compParams)
+            return { success: true, data: { type: 'deleteCreatedRecord' } }
+          } catch (err: any) {
+            return { success: false, error: err.message }
+          }
+        }
+        return { success: false, error: 'No deleteRecord handler for compensation' }
+      }
+
+      case 'custom': {
+        // 执行自定义补偿操作（如点击取消按钮、关闭弹窗）
+        const compAction: FrontendAction = {
+          type: (compParams?.type as FrontendAction['type']) || 'click',
+          target: compParams?.target || '',
+          actionName: compParams?.actionName,
+          params: compParams || {},
+        }
+        return this.executeAction(compAction, pageType)
+      }
+
+      default:
+        return { success: false, error: `Unknown compensation type: ${compType}` }
+    }
+  }
+
   private async executeAction(
     action: FrontendAction,
     pageType?: string,
@@ -257,6 +351,116 @@ export class ActionExecutor {
     }
   }
 
+  /**
+   * 通过 AMIS 内部 API 设置表单字段值，触发完整的响应式链路。
+   * 优先于 DOM setter 执行；不可用时返回 null 降级到 DOM 路径。
+   *
+   * 策略：
+   * 1. 通过 fieldName 在 store 的 data 中定位实际 key（支持中文→英文映射）
+   * 2. 调用 amisScoped.getComponentByName(formName).props.store.setValue(key, value)
+   * 3. 如果 fieldName 本身就是 store key，直接 setValue
+   */
+  private fillFormViaAmisScope(
+    fieldName: string | undefined,
+    value: any,
+    label?: string,
+  ): ActionResult | null {
+    if (!fieldName) return null
+
+    try {
+      const scoped = (window as any).__amisScoped__
+      if (!scoped) return null
+
+      const comps = scoped.getComponents?.()
+      if (!comps || !comps.length) return null
+
+      // 查找 form 组件（AMIS form 的 type 可能是 'form'、'input-form'、'wizard'）
+      let formComp: any = null
+      for (const comp of comps) {
+        const type = comp?.props?.type
+        if (type === 'form' || type === 'input-form' || type === 'wizard') {
+          formComp = comp
+          break
+        }
+      }
+      if (!formComp) {
+        // try body-level form
+        for (const comp of comps) {
+          const body = comp?.props?.body
+          if (body?.type === 'form' || body?.type === 'input-form') {
+            formComp = comp.context?.getComponentByName?.(body.name)
+            if (formComp) break
+          }
+        }
+      }
+      if (!formComp) return null
+
+      const store = formComp.props?.store
+      if (!store || typeof store.setValue !== 'function') return null
+
+      // Resolve the actual store key from fieldName/label
+      const resolvedKey = this.resolveStoreKey(fieldName, label, store)
+      if (!resolvedKey) return null
+
+      store.setValue(resolvedKey, value)
+      return { success: true, data: { type: 'fillForm', target: resolvedKey, via: 'amis' } }
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * 将语义 fieldName / label 解析为 AMIS store 中的实际 data key。
+   * 支持：精确key匹配 → label→key映射 → 归一化模糊匹配
+   */
+  private resolveStoreKey(
+    fieldName: string,
+    label: string | undefined,
+    store: any,
+  ): string | null {
+    const data = store.data || {}
+    const keys = Object.keys(data)
+
+    // 1. 精确匹配 store key
+    if (keys.includes(fieldName)) return fieldName
+
+    // 2. 遍历 components 查找 label→name 映射
+    const formItems = store.formItems || []
+    for (const item of formItems) {
+      const itemLabel = item?.label || item?.props?.label || ''
+      const itemName = item?.name || item?.props?.name || ''
+      if (itemName && keys.includes(itemName)) {
+        if (itemLabel === label || itemLabel === fieldName) return itemName
+        const norm = (s: string) => (s || '').replace(/[\s_-]/g, '').toLowerCase()
+        const fln = norm(fieldName)
+        if (norm(itemLabel).includes(fln) || fln.includes(norm(itemLabel))) return itemName
+        if (norm(itemName).includes(fln) || fln.includes(norm(itemName))) return itemName
+      }
+    }
+
+    // 3. label 反向查找（遍历 form body 中的控件）
+    const body = store.form?.body || store.form?.controls || []
+    for (const ctrl of body) {
+      const ctrlName = ctrl?.name || ctrl?.props?.name || ''
+      const ctrlLabel = ctrl?.label || ctrl?.props?.label || ''
+      if (ctrlName && keys.includes(ctrlName)) {
+        if (ctrlLabel === label || ctrlLabel === fieldName) return ctrlName
+        const norm = (s: string) => (s || '').replace(/[\s_-]/g, '').toLowerCase()
+        if (norm(ctrlLabel).includes(norm(fieldName)) || norm(fieldName).includes(norm(ctrlLabel))) return ctrlName
+      }
+    }
+
+    // 4. 归一化模糊匹配所有 store keys（fallback）
+    const norm = (s: string) => (s || '').replace(/[\s_-]/g, '').toLowerCase()
+    for (const key of keys) {
+      if (norm(key).includes(norm(fieldName)) || norm(fieldName).includes(norm(key))) {
+        return key
+      }
+    }
+
+    return null
+  }
+
   private async handleFillForm(
     action: FrontendAction,
     pageType?: string,
@@ -276,13 +480,19 @@ export class ActionExecutor {
           label: action.label,
           domSelector: action.domSelector,
         })
-        return { success: true }
+        return { success: true, data: { type: 'fillForm', target: action.fieldName || action.target || '', value } }
       } catch (err: any) {
         return { success: false, error: err.message }
       }
     }
 
-    // 2. DOM 路径（带重试，适配弹窗渲染延迟）
+    // 2. 尝试通过 AMIS 作用域 API 设置值（触发完整响应式链路）
+    const amisResult = this.fillFormViaAmisScope(action.fieldName, value, action.label)
+    if (amisResult) {
+      return amisResult
+    }
+
+    // 3. DOM 路径（带重试，适配弹窗渲染延迟）
     let element: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null = null
     for (let attempt = 0; attempt < 5; attempt++) {
       if (attempt > 0) {
@@ -319,7 +529,7 @@ export class ActionExecutor {
     element.dispatchEvent(new Event('input', { bubbles: true }))
     element.dispatchEvent(new Event('change', { bubbles: true }))
 
-    return { success: true }
+    return { success: true, data: { type: 'fillForm', target: action.fieldName || action.target || '', value } }
   }
 
   private async handleSubmitForm(
@@ -541,6 +751,27 @@ export class ActionExecutor {
         if (formItem) {
           const input = formItem.querySelector('input, select, textarea') as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
           if (input) return input
+        }
+      }
+    }
+    // 5. 归一化模糊匹配 — name/label 去空格/下划线后包含匹配（最后兜底）
+    if (fieldName) {
+      const norm = (s: string) => (s || '').replace(/[\s_-]/g, '').toLowerCase()
+      const nf = norm(fieldName)
+      const inputs = container.querySelectorAll('input, select, textarea')
+      for (const input of Array.from(inputs)) {
+        const name = input.getAttribute('name') || ''
+        if (norm(name).includes(nf) || nf.includes(norm(name))) {
+          return input as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+        }
+        // 也尝试通过 label
+        const formItem = input.closest('.ant-form-item, .cxd-FormItem, .amis-form-group, .form-group')
+        if (formItem) {
+          const labelEl = formItem.querySelector('label')
+          const labelText = labelEl?.textContent?.trim() || ''
+          if (norm(labelText).includes(nf) || nf.includes(norm(labelText))) {
+            return input as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+          }
         }
       }
     }

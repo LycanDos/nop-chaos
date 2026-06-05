@@ -5,7 +5,7 @@ import { useBpmnContextService } from '@/hooks/useService.ts'
 import { is } from 'bpmn-js/lib/util/ModelUtil'
 import type BpmnFactory from 'bpmn-js/lib/features/modeling/BpmnFactory'
 import type { Element } from 'bpmn-js/lib/model/Types'
-import { Delete, EditPen, Plus } from '@element-plus/icons-vue'
+import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import FormPropertyDialog from './FormPropertyDialog.vue'
 import {
   addExtensionElements,
@@ -207,84 +207,79 @@ watch(
 </script>
 
 <template>
-  <el-tab-pane label="表单权限" name="form">
-    <el-scrollbar>
+  <a-tab-pane tab="表单权限" key="form">
+    <div style="overflow:auto">
       <div class="form-permissions">
-        <el-form-item label="表单标识">
-          <el-input v-model="formKey" clearable placeholder="请输入表单标识"></el-input>
-        </el-form-item>
-        <el-form-item label-position="top" label="表单属性">
+        <a-form-item label="表单标识">
+          <a-input v-model="formKey" clearable placeholder="请输入表单标识"></a-input>
+        </a-form-item>
+        <a-form-item label="表单属性">
           <template #label>
             表单属性
-            <el-button type="primary" link :icon="Plus" @click="addFormProperty">添加</el-button>
+            <a-button type="primary" link @click="addFormProperty"><PlusOutlined />添加</a-button>
           </template>
-          <el-table :data="formPropertyData" height="250px">
-            <el-table-column type="expand" width="48">
+          <a-table :dataSource="formPropertyData" height="250px">
+            <a-table-column type="expand" width="48">
               <template #default="{ row }">
-                <el-descriptions :column="2" label-width="50" size="small" class="p20px">
-                  <el-descriptions-item label="变量名：">
+                <a-descriptions :column="2" label-width="50" size="small" class="p20px">
+                  <a-descriptions-item label="变量名：">
                     {{ toDisplayText(row.variable) }}
-                  </el-descriptions-item>
-                  <el-descriptions-item label="表达式：">
+                  </a-descriptions-item>
+                  <a-descriptions-item label="表达式：">
                     {{ toDisplayText(row.expression) }}
-                  </el-descriptions-item>
-                  <el-descriptions-item label="默认值：">
+                  </a-descriptions-item>
+                  <a-descriptions-item label="默认值：">
                     {{ toDisplayText(row.default) }}
-                  </el-descriptions-item>
-                  <el-descriptions-item label="必填：">
+                  </a-descriptions-item>
+                  <a-descriptions-item label="必填：">
                     {{ toSwitchLabel(row.required) }}
-                  </el-descriptions-item>
-                  <el-descriptions-item label="可读：">
+                  </a-descriptions-item>
+                  <a-descriptions-item label="可读：">
                     {{ toSwitchLabel(row.readable) }}
-                  </el-descriptions-item>
-                  <el-descriptions-item label="可写：">
+                  </a-descriptions-item>
+                  <a-descriptions-item label="可写：">
                     {{ toSwitchLabel(row.writable) }}
-                  </el-descriptions-item>
-                </el-descriptions>
+                  </a-descriptions-item>
+                </a-descriptions>
               </template>
-            </el-table-column>
-            <el-table-column prop="id" label="id" show-overflow-tooltip></el-table-column>
-            <el-table-column prop="name" label="名称" show-overflow-tooltip></el-table-column>
-            <el-table-column
+            </a-table-column>
+            <a-table-column prop="id" label="id" show-overflow-tooltip></a-table-column>
+            <a-table-column prop="name" label="名称" show-overflow-tooltip></a-table-column>
+            <a-table-column
               prop="type"
               align="center"
               min-width="65"
               label="类型"
-            ></el-table-column>
-            <el-table-column label="操作" min-width="75" align="center">
+            ></a-table-column>
+            <a-table-column label="操作" min-width="75" align="center">
               <template #default="{ row, $index }">
-                <el-button
-                  link
-                  type="primary"
-                  :icon="EditPen"
-                  @click="editFormProperty(row)"
-                ></el-button>
-                <el-popconfirm title="您确定要删除该属性吗？" @confirm="delFormProperty($index)">
+                <a-button link type="primary" @click="editFormProperty(row)" ><EditOutlined /></a-button>
+                <a-popconfirm title="您确定要删除该属性吗？" @confirm="delFormProperty($index)">
                   <template #reference>
-                    <el-button type="danger" :icon="Delete" link></el-button>
+                    <a-button danger link><DeleteOutlined /></a-button>
                   </template>
-                </el-popconfirm>
+                </a-popconfirm>
               </template>
-            </el-table-column>
-          </el-table>
-        </el-form-item>
+            </a-table-column>
+          </a-table>
+        </a-form-item>
 
         <FormPropertyDialog ref="formPropertyDialogRef" @confirm="confirmFormProperty" />
 
-        <el-form-item label="操作权限" label-position="top" v-if="isUserTask">
-          <el-table :data="operationData" height="200px">
-            <el-table-column label="按钮" prop="label"></el-table-column>
-            <el-table-column label="属性" prop="value"></el-table-column>
-            <el-table-column label="是否启用" align="center" prop="enable">
+        <a-form-item label="操作权限" v-if="isUserTask">
+          <a-table :dataSource="operationData" height="200px">
+            <a-table-column label="按钮" prop="label"></a-table-column>
+            <a-table-column label="属性" prop="value"></a-table-column>
+            <a-table-column label="是否启用" align="center" prop="enable">
               <template #default="{ row }">
-                <el-switch v-model="row.enable" @change="handleOperationChange(row)" />
+                <a-switch v-model:checked="row.enable" @change="handleOperationChange(row)" />
               </template>
-            </el-table-column>
-          </el-table>
-        </el-form-item>
+            </a-table-column>
+          </a-table>
+        </a-form-item>
       </div>
-    </el-scrollbar>
-  </el-tab-pane>
+    </div>
+  </a-tab-pane>
 </template>
 
 <style scoped lang="scss">

@@ -8,11 +8,11 @@ const topic = useCustomRef('topic')
 </script>
 
 <template>
-  <el-collapse-item name="arg1" title="外部工作">
-    <el-form-item label="工作主题">
-      <el-input v-model="topic" placeholder="请输入工作主题" />
-    </el-form-item>
-  </el-collapse-item>
+  <a-collapse-panel key="arg1" header="外部工作">
+    <a-form-item label="工作主题">
+      <a-input v-model="topic" placeholder="请输入工作主题" />
+    </a-form-item>
+  </a-collapse-panel>
 </template>
 
 <style scoped lang="scss"></style>

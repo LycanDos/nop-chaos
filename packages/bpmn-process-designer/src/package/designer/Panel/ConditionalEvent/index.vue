@@ -39,8 +39,8 @@ const condition = customRef<string>((track, trigger) => {
 </script>
 
 <template>
-  <el-collapse-item name="arg1" title="事件条件">
-    <el-form-item prop="condition" label="条件表达式">
+  <a-collapse-panel key="arg1" header="事件条件">
+    <a-form-item prop="condition" label="条件表达式">
       <Codemirror
         :rows="3"
         :max-rows="6"
@@ -50,9 +50,9 @@ const condition = customRef<string>((track, trigger) => {
         :extensions="[juelSupport()]"
         v-model="condition"
       />
-      <!--      <el-input v-model="condition" type="textarea" :rows="4" placeholder="请输入条件表达式" />-->
-    </el-form-item>
-  </el-collapse-item>
+      <!--      <a-input v-model="condition" type="textarea" :rows="4" placeholder="请输入条件表达式" />-->
+    </a-form-item>
+  </a-collapse-panel>
 </template>
 
 <style scoped lang="scss"></style>

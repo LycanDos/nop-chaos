@@ -443,14 +443,41 @@ export default defineComponent({
     function buildCrudPageActions(_crudCtx: any, _schema: any): Record<string, (params?: any) => Promise<any>> {
       const actions: Record<string, (params?: any) => Promise<any>> = {}
 
-      async function ensureDialogOpened(timeoutMs = 3000): Promise<void> {
+      async function ensureDialogOpened(timeoutMs = 5000): Promise<void> {
+        // 方案1: 先用 CSS 选择器快速检测（大多数情况够用）
+        const quickCheck = document.querySelector(
+          '.ant-modal-root, .ant-modal-wrap, .ant-modal, .ant-drawer-open, ' +
+          '.cxd-Modal--open, .cxd-Modal, .cxd-Dialog--open, .cxd-Dialog, ' +
+          '[role="dialog"], [class*="modal-"], [class*="Modal"], [class*="dialog-"], [class*="drawer-"]'
+        )
+        if (quickCheck) return
+
+        // 方案2: MutationObserver 兜底——监听 body 新增子节点
+        const bodyChildCount = document.body.childElementCount
+        let resolved = false
+        const observer = new MutationObserver((mutations) => {
+          for (const m of mutations) {
+            if (m.addedNodes.length > 0) {
+              resolved = true
+              observer.disconnect()
+              return
+            }
+          }
+          if (document.body.childElementCount > bodyChildCount) {
+            resolved = true
+            observer.disconnect()
+          }
+        })
+        observer.observe(document.body, { childList: true, subtree: true })
+
         const start = Date.now()
-        while (Date.now() - start < timeoutMs) {
-          const modal = document.querySelector('.ant-modal-wrap, .ant-modal, .cxd-Modal--open')
-          if (modal) return
-          await new Promise(resolve => setTimeout(resolve, 100))
+        while (!resolved && Date.now() - start < timeoutMs) {
+          await new Promise(resolve => setTimeout(resolve, 50))
         }
-        throw new Error('新增对话框未打开')
+        observer.disconnect()
+        if (!resolved) {
+          throw new Error('新增对话框未打开')
+        }
       }
 
       /** 打开新增弹窗：优先 AMIS API，降级 DOM */

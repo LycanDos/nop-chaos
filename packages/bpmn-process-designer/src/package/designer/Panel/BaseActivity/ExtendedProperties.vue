@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Delete, EditPen, Plus } from '@element-plus/icons-vue'
+import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import { onMounted, ref } from 'vue'
 import type { Properties } from '@/types'
 import PropertiesDrawer from './PropertiesDrawer.vue'
@@ -97,25 +97,25 @@ onMounted(() => {
 <template>
   <div class="properties-container">
     <div class="properties-header">
-      <el-text>扩展属性</el-text>
-      <el-button type="primary" link :icon="Plus" @click="editAttribute()">添加</el-button>
+      <span>扩展属性</span>
+      <a-button type="primary" link @click="editAttribute()"><PlusOutlined />添加</a-button>
     </div>
-    <el-table :data="propertiesData" height="200px">
-      <el-table-column prop="name" show-overflow-tooltip label="属性名"></el-table-column>
-      <el-table-column prop="value" show-overflow-tooltip label="属性值"></el-table-column>
-      <el-table-column label="操作" min-width="60px" align="center">
+    <a-table :dataSource="propertiesData" height="200px">
+      <a-table-column prop="name" show-overflow-tooltip label="属性名"></a-table-column>
+      <a-table-column prop="value" show-overflow-tooltip label="属性值"></a-table-column>
+      <a-table-column label="操作" min-width="60px" align="center">
         <template #default="{ row }">
-          <el-space>
-            <el-button type="primary" :icon="EditPen" link @click="editAttribute(row)"></el-button>
-            <el-popconfirm title="您确定要删除该属性吗？" @confirm="removeAttribute(row)">
+          <a-space>
+            <a-button type="primary" link @click="editAttribute(row)"><EditOutlined /></a-button>
+            <a-popconfirm title="您确定要删除该属性吗？" @confirm="removeAttribute(row)">
               <template #reference>
-                <el-button type="danger" :icon="Delete" link></el-button>
+                <a-button danger link><DeleteOutlined /></a-button>
               </template>
-            </el-popconfirm>
-          </el-space>
+            </a-popconfirm>
+          </a-space>
         </template>
-      </el-table-column>
-    </el-table>
+      </a-table-column>
+    </a-table>
     <PropertiesDrawer ref="propertiesDrawerRef" @confirm="propertiesConfirm" />
   </div>
 </template>

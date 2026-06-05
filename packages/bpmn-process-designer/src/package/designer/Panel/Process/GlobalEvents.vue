@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { Delete, EditPen, Plus } from '@element-plus/icons-vue'
+import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import MessageEventDrawer from './MessageEventDrawer.vue'
 import ErrorEventDrawer from './ErrorEventDrawer.vue'
 import SignalEventDrawer from './SignalEventDrawer.vue'
@@ -131,8 +131,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <el-tab-pane label="全局事件" name="globalEvents">
-    <el-scrollbar>
+  <a-tab-pane tab="全局事件" key="globalEvents">
+    <div style="overflow:auto">
       <MessageEventDrawer ref="messageEventDrawerRef" @confirm="confirmMessageEvent" />
       <ErrorEventDrawer ref="errorEventDrawerRef" @confirm="confirmErrorEvent" />
       <SignalEventDrawer ref="signalEventDrawerRef" @confirm="confirmSignalEvent" />
@@ -140,118 +140,101 @@ onMounted(() => {
       <div class="events-list">
         <div class="events-container">
           <div class="events-header">
-            <el-text> 消息定义</el-text>
-            <el-button type="primary" link :icon="Plus" @click="addMessageEvent()">添加</el-button>
+            <span> 消息定义</span>
+            <a-button type="primary" link @click="addMessageEvent()"><PlusOutlined />添加</a-button>
           </div>
-          <el-table :data="messages" height="200px">
-            <el-table-column prop="id" show-overflow-tooltip label="id"></el-table-column>
-            <el-table-column prop="name" show-overflow-tooltip label="名称"></el-table-column>
-            <el-table-column label="操作" min-width="45px" align="center">
+          <a-table :dataSource="messages" height="200px">
+            <a-table-column prop="id" show-overflow-tooltip label="id"></a-table-column>
+            <a-table-column prop="name" show-overflow-tooltip label="名称"></a-table-column>
+            <a-table-column label="操作" min-width="45px" align="center">
               <template #default="{ row }">
-                <el-space>
-                  <el-button type="primary" :icon="EditPen" link @click="addMessageEvent(row)" />
-                  <el-popconfirm title="您确定要删除该事件吗？" @confirm="removeMessageEvent(row)">
+                <a-space>
+                  <a-button type="primary" link @click="addMessageEvent(row)"><EditOutlined /></a-button>
+                  <a-popconfirm title="您确定要删除该事件吗？" @confirm="removeMessageEvent(row)">
                     <template #reference>
-                      <el-button type="danger" :icon="Delete" link></el-button>
+                      <a-button danger link><DeleteOutlined /></a-button>
                     </template>
-                  </el-popconfirm>
-                </el-space>
+                  </a-popconfirm>
+                </a-space>
               </template>
-            </el-table-column>
-          </el-table>
+            </a-table-column>
+          </a-table>
         </div>
 
         <div class="events-container">
           <div class="events-header">
-            <el-text> 错误定义</el-text>
-            <el-button type="primary" link :icon="Plus" @click="addErrorEvent()">添加</el-button>
+            <span> 错误定义</span>
+            <a-button type="primary" link @click="addErrorEvent()"><PlusOutlined />添加</a-button>
           </div>
-          <el-table :data="errors" height="200px">
-            <el-table-column prop="id" show-overflow-tooltip label="id"></el-table-column>
-            <el-table-column prop="name" show-overflow-tooltip label="名称"></el-table-column>
-            <el-table-column label="操作" min-width="45px" align="center">
+          <a-table :dataSource="errors" height="200px">
+            <a-table-column prop="id" show-overflow-tooltip label="id"></a-table-column>
+            <a-table-column prop="name" show-overflow-tooltip label="名称"></a-table-column>
+            <a-table-column label="操作" min-width="45px" align="center">
               <template #default="{ row }">
-                <el-space>
-                  <el-button
-                    type="primary"
-                    :icon="EditPen"
-                    link
-                    @click="addErrorEvent(row)"
-                  ></el-button>
-                  <el-popconfirm title="您确定要删除该事件吗？" @confirm="removeErrorEvent(row)">
+                <a-space>
+                  <a-button type="primary" link @click="addErrorEvent(row)" ><EditOutlined /></a-button>
+                  <a-popconfirm title="您确定要删除该事件吗？" @confirm="removeErrorEvent(row)">
                     <template #reference>
-                      <el-button type="danger" :icon="Delete" link></el-button>
+                      <a-button danger link><DeleteOutlined /></a-button>
                     </template>
-                  </el-popconfirm>
-                </el-space>
+                  </a-popconfirm>
+                </a-space>
               </template>
-            </el-table-column>
-          </el-table>
+            </a-table-column>
+          </a-table>
         </div>
 
         <div class="events-container">
           <div class="events-header">
-            <el-text> 信号定义</el-text>
-            <el-button type="primary" link :icon="Plus" @click="addSignalEvent()">添加</el-button>
+            <span> 信号定义</span>
+            <a-button type="primary" link @click="addSignalEvent()"><PlusOutlined />添加</a-button>
           </div>
-          <el-table :data="signals" height="200px">
-            <el-table-column prop="id" show-overflow-tooltip label="id"></el-table-column>
-            <el-table-column prop="name" show-overflow-tooltip label="名称"></el-table-column>
-            <el-table-column label="操作" min-width="45px" align="center">
+          <a-table :dataSource="signals" height="200px">
+            <a-table-column prop="id" show-overflow-tooltip label="id"></a-table-column>
+            <a-table-column prop="name" show-overflow-tooltip label="名称"></a-table-column>
+            <a-table-column label="操作" min-width="45px" align="center">
               <template #default="{ row }">
-                <el-space>
-                  <el-button
-                    type="primary"
-                    :icon="EditPen"
-                    link
-                    @click="addSignalEvent(row)"
-                  ></el-button>
-                  <el-popconfirm title="您确定要删除该事件吗？" @confirm="removeSignalEvent(row)">
+                <a-space>
+                  <a-button type="primary" link @click="addSignalEvent(row)" ><EditOutlined /></a-button>
+                  <a-popconfirm title="您确定要删除该事件吗？" @confirm="removeSignalEvent(row)">
                     <template #reference>
-                      <el-button type="danger" :icon="Delete" link></el-button>
+                      <a-button danger link><DeleteOutlined /></a-button>
                     </template>
-                  </el-popconfirm>
-                </el-space>
+                  </a-popconfirm>
+                </a-space>
               </template>
-            </el-table-column>
-          </el-table>
+            </a-table-column>
+          </a-table>
         </div>
 
         <div class="events-container">
           <div class="events-header">
-            <el-text> 升级定义</el-text>
-            <el-button type="primary" link :icon="Plus" @click="addEscalationEvent()"
-              >添加
-            </el-button>
+            <span> 升级定义</span>
+            <a-button type="primary" link @click="addEscalationEvent()" ><PlusOutlined />添加 </a-button>
           </div>
-          <el-table :data="escalations" height="200px">
-            <el-table-column prop="id" show-overflow-tooltip label="id"></el-table-column>
-            <el-table-column prop="name" show-overflow-tooltip label="名称"></el-table-column>
-            <el-table-column label="操作" min-width="45px" align="center">
+          <a-table :dataSource="escalations" height="200px">
+            <a-table-column prop="id" show-overflow-tooltip label="id"></a-table-column>
+            <a-table-column prop="name" show-overflow-tooltip label="名称"></a-table-column>
+            <a-table-column label="操作" min-width="45px" align="center">
               <template #default="{ row }">
-                <el-space>
-                  <el-button
-                    type="primary"
-                    :icon="EditPen"
-                    link
-                    @click="addEscalationEvent(row)"
-                  ></el-button>
-                  <el-popconfirm
+                <a-space>
+                  <a-button type="primary" link @click="addEscalationEvent(row)" ><EditOutlined /></a-button>
+                  <a-popconfirm
                     title="您确定要删除该事件吗？"
                     @confirm="removeEscalationEvent(row)"
                   >
                     <template #reference>
-                      <el-button type="danger" :icon="Delete" link></el-button>
+                      <a-button danger link><DeleteOutlined /></a-button>
                     </template>
-                  </el-popconfirm>
-                </el-space>
+                  </a-popconfirm>
+                </a-space>
               </template>
-            </el-table-column>
-          </el-table>
+            </a-table-column>
+          </a-table>
         </div>
       </div>
-    </el-scrollbar>
-  </el-tab-pane>
+    </div>
+  </a-tab-pane>
 </template>
 
 <style scoped lang="scss">

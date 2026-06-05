@@ -35,19 +35,19 @@ const variableName = useEventRef('variableName')
 </script>
 
 <template>
-  <el-collapse-item name="arg1" title="参数监听">
-    <el-form-item label="参数事件">
-      <el-radio-group v-model="variableChangeType">
-        <el-radio-button value="all" label="全部"></el-radio-button>
-        <el-radio-button value="create" label="创建"></el-radio-button>
-        <el-radio-button value="update" label="更新"></el-radio-button>
-        <el-radio-button value="createupdate" label="创建或更新"></el-radio-button>
-      </el-radio-group>
-    </el-form-item>
-    <el-form-item label="参数名称">
-      <el-input v-model="variableName" placeholder="请输入参数名"></el-input>
-    </el-form-item>
-  </el-collapse-item>
+  <a-collapse-panel key="arg1" header="参数监听">
+    <a-form-item label="参数事件">
+      <a-radio-group v-model="variableChangeType">
+        <a-radio-button value="all" label="全部"></a-radio-button>
+        <a-radio-button value="create" label="创建"></a-radio-button>
+        <a-radio-button value="update" label="更新"></a-radio-button>
+        <a-radio-button value="createupdate" label="创建或更新"></a-radio-button>
+      </a-radio-group>
+    </a-form-item>
+    <a-form-item label="参数名称">
+      <a-input v-model="variableName" placeholder="请输入参数名"></a-input>
+    </a-form-item>
+  </a-collapse-panel>
 </template>
 
 <style scoped lang="scss"></style>

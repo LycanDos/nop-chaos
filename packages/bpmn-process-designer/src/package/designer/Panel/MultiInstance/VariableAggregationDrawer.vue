@@ -2,9 +2,8 @@
 import { ref } from 'vue'
 import { useCloned } from '@vueuse/core'
 import type { VariableAggregation } from '@/types'
-import { type FormInstance, type FormItemRule, type FormRules, useFormSize } from 'element-plus'
 import { cloneDeep } from 'lodash-es'
-import { Delete, Plus } from '@element-plus/icons-vue'
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons-vue'
 
 const emits = defineEmits<{
   (e: 'confirm', variableAggregation: VariableAggregation): void
@@ -84,17 +83,8 @@ defineExpose({
 </script>
 
 <template>
-  <el-drawer
-    v-model="drawerVisible"
-    append-to-body
-    :lock-scroll="false"
-    size="35%"
-    @closed="onClosed"
-    :show-close="false"
-    :with-header="false"
-    v-bind="$attrs"
-  >
-    <el-form
+  <a-drawer v-model:visible="drawerVisible" append-to-body :lock-scroll="false" width="35%" @closed="onClosed" :show-close="false" :closable="false" v-bind="$attrs">
+    <a-form
       ref="formRef"
       label-position="top"
       :model="cloned"
@@ -102,58 +92,51 @@ defineExpose({
       label-width="90px"
       :size="formSize"
     >
-      <el-form-item label="聚合变量" prop="target">
-        <el-input v-model="cloned.target" placeholder="请输入变量名/委托表达式"></el-input>
-      </el-form-item>
-      <el-form-item label="自定义实现" prop="expression">
-        <el-input v-model="cloned.expression" placeholder="请输入java类/委托表达式"></el-input>
-      </el-form-item>
-      <el-form-item label="变量类型" prop="variableType">
-        <el-radio-group v-model="cloned.variableType">
-          <el-radio-button label="普通变量" value="createOverviewVariable" />
-          <el-radio-button label="瞬态变量" value="storeAsTransientVariable" />
-        </el-radio-group>
-      </el-form-item>
-      <el-form-item label="变量定义" prop="variables">
+      <a-form-item label="聚合变量" prop="target">
+        <a-input v-model="cloned.target" placeholder="请输入变量名/委托表达式"></a-input>
+      </a-form-item>
+      <a-form-item label="自定义实现" prop="expression">
+        <a-input v-model="cloned.expression" placeholder="请输入java类/委托表达式"></a-input>
+      </a-form-item>
+      <a-form-item label="变量类型" prop="variableType">
+        <a-radio-group v-model="cloned.variableType">
+          <a-radio-button label="普通变量" value="createOverviewVariable" />
+          <a-radio-button label="瞬态变量" value="storeAsTransientVariable" />
+        </a-radio-group>
+      </a-form-item>
+      <a-form-item label="变量定义" prop="variables">
         <template #label>
           变量定义
-          <el-button type="primary" :icon="Plus" link @click="addVariable"> 添加变量</el-button>
+          <a-button type="primary" link @click="addVariable"><PlusOutlined /> 添加变量</a-button>
         </template>
-        <el-table :data="cloned.variables" height="250px">
-          <el-table-column prop="source" label="源变量">
+        <a-table :dataSource="cloned.variables" height="250px">
+          <a-table-column prop="source" label="源变量">
             <template #default="{ row, $index }">
-              <el-form-item :prop="`variables.${$index}.source`" required :rules="expressionRule">
-                <el-input v-model="row.source" placeholder="源变量"></el-input>
-              </el-form-item>
+              <a-form-item :prop="`variables.${$index}.source`" required :rules="expressionRule">
+                <a-input v-model="row.source" placeholder="源变量"></a-input>
+              </a-form-item>
             </template>
-          </el-table-column>
-          <el-table-column prop="target" label="目标变量">
+          </a-table-column>
+          <a-table-column prop="target" label="目标变量">
             <template #default="{ row, $index }">
-              <el-form-item :prop="`variables.${$index}.target`" required :rules="expressionRule">
-                <el-input v-model="row.target" placeholder="目标变量"></el-input>
-              </el-form-item>
+              <a-form-item :prop="`variables.${$index}.target`" required :rules="expressionRule">
+                <a-input v-model="row.target" placeholder="目标变量"></a-input>
+              </a-form-item>
             </template>
-          </el-table-column>
-          <el-table-column align="center" min-width="45px" label="操作">
+          </a-table-column>
+          <a-table-column align="center" min-width="45px" label="操作">
             <template #default="{ $index }">
-              <el-button
-                type="danger"
-                circle
-                :icon="Delete"
-                text
-                bg
-                @click="delVariable($index)"
-              ></el-button>
+              <a-button danger circle text bg @click="delVariable($index)" ><DeleteOutlined /></a-button>
             </template>
-          </el-table-column>
-        </el-table>
-      </el-form-item>
-    </el-form>
+          </a-table-column>
+        </a-table>
+      </a-form-item>
+    </a-form>
     <template #footer>
-      <el-button @click="drawerVisible = false">取 消</el-button>
-      <el-button type="primary" @click="handleConfirm">确 定</el-button>
+      <a-button @click="drawerVisible = false">取 消</a-button>
+      <a-button type="primary" @click="handleConfirm">确 定</a-button>
     </template>
-  </el-drawer>
+  </a-drawer>
 </template>
 
 <style scoped lang="scss"></style>

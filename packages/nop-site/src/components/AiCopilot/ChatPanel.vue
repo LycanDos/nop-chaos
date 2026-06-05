@@ -90,6 +90,14 @@ const inputText = ref('')
 const inputRef = ref<HTMLTextAreaElement | null>(null)
 const msgListRef = ref<HTMLDivElement | null>(null)
 
+function focusInput(): void {
+  nextTick(() => {
+    inputRef.value?.focus()
+  })
+}
+
+defineExpose({ focusInput })
+
 function sendMessage(): void {
   const text = inputText.value.trim()
   if (!text || props.loading) return

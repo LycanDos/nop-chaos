@@ -1098,15 +1098,36 @@ const _sfc_main$1 = defineComponent({
     }
     function buildCrudPageActions(_crudCtx, _schema) {
       const actions2 = {};
-      async function ensureDialogOpened(timeoutMs = 3e3) {
+      async function ensureDialogOpened(timeoutMs = 5e3) {
+        const quickCheck = document.querySelector(
+          '.ant-modal-root, .ant-modal-wrap, .ant-modal, .ant-drawer-open, .cxd-Modal--open, .cxd-Modal, .cxd-Dialog--open, .cxd-Dialog, [role="dialog"], [class*="modal-"], [class*="Modal"], [class*="dialog-"], [class*="drawer-"]'
+        );
+        if (quickCheck)
+          return;
+        const bodyChildCount = document.body.childElementCount;
+        let resolved = false;
+        const observer = new MutationObserver((mutations) => {
+          for (const m of mutations) {
+            if (m.addedNodes.length > 0) {
+              resolved = true;
+              observer.disconnect();
+              return;
+            }
+          }
+          if (document.body.childElementCount > bodyChildCount) {
+            resolved = true;
+            observer.disconnect();
+          }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
         const start = Date.now();
-        while (Date.now() - start < timeoutMs) {
-          const modal = document.querySelector(".ant-modal-wrap, .ant-modal, .cxd-Modal--open");
-          if (modal)
-            return;
-          await new Promise((resolve) => setTimeout(resolve, 100));
+        while (!resolved && Date.now() - start < timeoutMs) {
+          await new Promise((resolve) => setTimeout(resolve, 50));
         }
-        throw new Error("新增对话框未打开");
+        observer.disconnect();
+        if (!resolved) {
+          throw new Error("新增对话框未打开");
+        }
       }
       async function openAddDialog() {
         const r = dispatchAmisCrudAction("add");

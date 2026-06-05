@@ -31,10 +31,20 @@ watch(selectedElementRef, (el) => {
 </script>
 
 <template>
-  <el-form-item v-if="hasSkin" label="皮肤">
-    <el-tag type="info" style="margin:0">
-      {{ skinCode }}
-    </el-tag>
-    <el-text type="info" size="small" style="margin-left:8px">(皮肤已绑定)</el-text>
-  </el-form-item>
+  <a-collapse-panel key="skin-config" header="皮肤配置">
+    <a-form-item v-if="hasSkin" label="皮肤">
+      <a-tag color="processing" style="margin:0">
+        {{ skinCode }}
+      </a-tag>
+      <span type="info" size="small" style="margin-left:8px">(皮肤已绑定)</span>
+    </a-form-item>
+    <div v-else class="skin-config-empty">未绑定皮肤</div>
+  </a-collapse-panel>
 </template>
+
+<style scoped lang="scss">
+.skin-config-empty {
+  color: var(--el-text-color-placeholder);
+  font-size: 12px;
+}
+</style>

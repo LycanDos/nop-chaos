@@ -1,7 +1,6 @@
 <template>
   <a-modal
-    v-model:visible="visible"
-    @updatev-model:visible="$emit('update:visible', $event)"
+    v-model:visible="localVisible"
     title="DIY样式编辑器"
     width="90%"
     :before-close="handleClose"
@@ -264,6 +263,11 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:visible', 'save'])
+
+const localVisible = computed({
+  get: () => props.visible,
+  set: (val) => emit('update:visible', val)
+})
 
 const styleForm = reactive({
   name: '',

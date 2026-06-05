@@ -11,7 +11,7 @@ import {
   createOrUpdateEventDefinition,
   getEscalationEventDefinition,
 } from '@/designer/utils/EventDefinitionUtil.ts'
-import { Plus } from '@element-plus/icons-vue'
+import { PlusOutlined } from '@ant-design/icons-vue'
 import EscalationEventDrawer from '@/designer/Panel/Process/EscalationEventDrawer.vue'
 
 defineOptions({
@@ -71,31 +71,22 @@ onMounted(() => {
 </script>
 
 <template>
-  <el-collapse-item name="arg1" title="升级事件">
-    <el-form-item prop="escalationRef" label="升级引用">
-      <el-select v-model="escalationRef" placeholder="请选择升级引用">
-        <el-option
+  <a-collapse-panel key="arg1" header="升级事件">
+    <a-form-item prop="escalationRef" label="升级引用">
+      <a-select v-model:value="escalationRef" placeholder="请选择升级引用">
+        <a-select-option
           v-for="item in escalations"
           :key="item.id"
           :label="item.name"
           :value="item.id"
-        ></el-option>
+        ></a-select-option>
         <template #footer>
-          <el-button
-            text
-            bg
-            size="small"
-            style="width: 100%"
-            :icon="Plus"
-            @click="addEscalationEvent()"
-          >
-            新增升级定义
-          </el-button>
+          <a-button text bg size="small" style="width: 100%" @click="addEscalationEvent()" ><PlusOutlined /> 新增升级定义 </a-button>
         </template>
-      </el-select>
-    </el-form-item>
+      </a-select>
+    </a-form-item>
     <EscalationEventDrawer ref="escalationEventDrawerRef" @confirm="confirmEscalationEvent" />
-  </el-collapse-item>
+  </a-collapse-panel>
 </template>
 
 <style scoped lang="scss"></style>

@@ -12,7 +12,7 @@ import {
   getErrorEventDefinition,
 } from '@/designer/utils/EventDefinitionUtil.ts'
 import ErrorEventDrawer from '../Process/ErrorEventDrawer.vue'
-import { Plus } from '@element-plus/icons-vue'
+import { PlusOutlined } from '@ant-design/icons-vue'
 
 defineOptions({
   name: 'ErrorEvent',
@@ -67,24 +67,24 @@ onMounted(() => {
 </script>
 
 <template>
-  <el-collapse-item name="arg1" title="错误事件">
-    <el-form-item prop="errorRef" label="错误引用">
-      <el-select v-model="errorRef" placeholder="请选择错误引用">
-        <el-option
+  <a-collapse-panel key="arg1" header="错误事件">
+    <a-form-item prop="errorRef" label="错误引用">
+      <a-select v-model:value="errorRef" placeholder="请选择错误引用">
+        <a-select-option
           v-for="item in errors"
           :key="item.id"
           :label="item.name"
           :value="item.id"
-        ></el-option>
+        ></a-select-option>
         <template #footer>
-          <el-button text bg size="small" style="width: 100%" :icon="Plus" @click="addErrorEvent()"
-            >新增错误定义</el-button
+          <a-button text bg size="small" style="width: 100%" @click="addErrorEvent()"
+            ><PlusOutlined />新增错误定义</a-button
           >
         </template>
-      </el-select>
-    </el-form-item>
+      </a-select>
+    </a-form-item>
     <ErrorEventDrawer ref="errorEventDrawerRef" @confirm="confirmErrorEvent" />
-  </el-collapse-item>
+  </a-collapse-panel>
 </template>
 
 <style scoped lang="scss"></style>

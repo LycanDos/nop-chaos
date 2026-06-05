@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Delete, EditPen, Plus } from '@element-plus/icons-vue'
+import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import { onMounted, ref } from 'vue'
 import type { AnyEventListener } from '@/types'
 import { useBpmnContextService } from '@/hooks/useService.ts'
@@ -91,31 +91,26 @@ onMounted(() => {
 <template>
   <div class="event-container">
     <div class="event-header">
-      <el-text>事件监听器</el-text>
-      <el-button type="primary" link :icon="Plus" @click="editEventListener()">添加</el-button>
+      <span>事件监听器</span>
+      <a-button type="primary" link @click="editEventListener()"><PlusOutlined />添加</a-button>
     </div>
-    <el-table :data="events" height="200px">
-      <el-table-column prop="events" show-overflow-tooltip label="事件"></el-table-column>
-      <el-table-column prop="type" show-overflow-tooltip label="类型"></el-table-column>
-      <el-table-column prop="value" show-overflow-tooltip label="监听"></el-table-column>
-      <el-table-column label="操作" min-width="63px" align="center">
+    <a-table :dataSource="events" height="200px">
+      <a-table-column prop="events" show-overflow-tooltip label="事件"></a-table-column>
+      <a-table-column prop="type" show-overflow-tooltip label="类型"></a-table-column>
+      <a-table-column prop="value" show-overflow-tooltip label="监听"></a-table-column>
+      <a-table-column label="操作" min-width="63px" align="center">
         <template #default="{ row }">
-          <el-space>
-            <el-button
-              type="primary"
-              :icon="EditPen"
-              link
-              @click="editEventListener(row)"
-            ></el-button>
-            <el-popconfirm title="您确定要删除该事件吗？" @confirm="removeEventListener(row)">
+          <a-space>
+            <a-button type="primary" link @click="editEventListener(row)" ><EditOutlined /></a-button>
+            <a-popconfirm title="您确定要删除该事件吗？" @confirm="removeEventListener(row)">
               <template #reference>
-                <el-button type="danger" :icon="Delete" link></el-button>
+                <a-button danger link><DeleteOutlined /></a-button>
               </template>
-            </el-popconfirm>
-          </el-space>
+            </a-popconfirm>
+          </a-space>
         </template>
-      </el-table-column>
-    </el-table>
+      </a-table-column>
+    </a-table>
     <EventListenerDrawer ref="eventListenerDrawerRef" @confirm="confirmEventListener" />
   </div>
 </template>

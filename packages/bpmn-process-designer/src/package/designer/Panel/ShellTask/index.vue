@@ -4,17 +4,16 @@ import {
   removeExtensionElements,
 } from '@/designer/utils/ExtensionElementsUtil.ts'
 import { onMounted, ref } from 'vue'
-import { Delete, Plus } from '@element-plus/icons-vue'
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import { useFieldRef } from '@/designer/utils/ElementUtil.ts'
 import { useBpmnContextService } from '@/hooks/useService.ts'
-import { useFormItem } from 'element-plus'
 import Codemirror from '@/components/CodemirrorEditor/index.vue'
 import shellSupport from '@/components/CodemirrorEditor/language/shell'
 
 defineOptions({
   name: 'ShellTask',
 })
-const { form } = useFormItem()
+const form = { labelPosition: 'right', size: 'small' }
 const { selectedElement } = useBpmnContextService()
 const command = useFieldRef('command')
 const outputVariable = useFieldRef('outputVariable')
@@ -50,8 +49,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <el-collapse-item name="arg1" title="命令">
-    <el-form-item label="命令">
+  <a-collapse-panel key="arg1" header="命令">
+    <a-form-item label="命令">
       <Codemirror
         :rows="4"
         :max-rows="10"
@@ -61,63 +60,56 @@ onMounted(() => {
         :extensions="[shellSupport]"
         v-model="command"
       />
-      <!--      <el-input v-model="command" type="textarea" :rows="3" placeholder="请输入命令" />-->
-    </el-form-item>
-    <el-form-item label="参数">
+      <!--      <a-input v-model="command" type="textarea" :rows="3" placeholder="请输入命令" />-->
+    </a-form-item>
+    <a-form-item label="参数">
       <template #label>
         <div class="flex-center">
           参数
-          <el-button
-            :icon="Plus"
-            type="primary"
-            link
-            @click="args.push('')"
-            :disabled="args.length > 4"
-            >添加
-          </el-button>
+          <a-button type="primary" link @click="args.push('')" :disabled="args.length >= 4" ><PlusOutlined />添加 </a-button>
         </div>
       </template>
-      <el-row :gutter="10" v-for="(_, index) in args" :key="index" class="w-full mb7px">
-        <el-col :span="21">
-          <el-input
+      <a-row :gutter="10" v-for="(_, index) in args" :key="index" class="w-full mb7px">
+        <a-col :span="21">
+          <a-input
             :model-value="args[index]"
             @update:model-value="updateModelValue($event, index)"
             clearable
             placeholder="请输入参数"
-          ></el-input>
-        </el-col>
-        <el-col :span="3">
-          <el-button :icon="Delete" type="danger" circle text bg @click="delArg(index)" />
-        </el-col>
-      </el-row>
-    </el-form-item>
-    <el-form-item label="输出变量">
-      <el-input v-model="outputVariable" placeholder="请输入输出变量" />
-    </el-form-item>
-    <el-row :gutter="10">
-      <el-col :span="form?.labelPosition === 'top' ? 8 : 24">
-        <el-form-item label="等待">
-          <el-switch v-model="wait" active-value="true" inactive-value="false" />
-        </el-form-item>
-      </el-col>
-      <el-col :span="form?.labelPosition === 'top' ? 8 : 24">
-        <el-form-item label="重定向错误">
-          <el-switch v-model="redirectError" active-value="true" inactive-value="false" />
-        </el-form-item>
-      </el-col>
-      <el-col :span="form?.labelPosition === 'top' ? 8 : 24">
-        <el-form-item label="清除环境变量">
-          <el-switch v-model="cleanEnv" active-value="true" inactive-value="false" />
-        </el-form-item>
-      </el-col>
-    </el-row>
-    <el-form-item label="执行目录">
-      <el-input v-model="directory" placeholder="请输入执行目录，默认当前目录" />
-    </el-form-item>
-    <el-form-item label="错误代码变量">
-      <el-input v-model="errorCodeVariable" placeholder="请输入错误代码存储变量" />
-    </el-form-item>
-  </el-collapse-item>
+          ></a-input>
+        </a-col>
+        <a-col :span="3">
+          <a-button danger text @click="delArg(index)" shape="circle"><DeleteOutlined /></a-button>
+        </a-col>
+      </a-row>
+    </a-form-item>
+    <a-form-item label="输出变量">
+      <a-input v-model="outputVariable" placeholder="请输入输出变量" />
+    </a-form-item>
+    <a-row :gutter="10">
+      <a-col :span="form?.labelPosition === 'top' ? 8 : 24">
+        <a-form-item label="等待">
+          <a-switch v-model:checked="wait" active-value="true" inactive-value="false" />
+        </a-form-item>
+      </a-col>
+      <a-col :span="form?.labelPosition === 'top' ? 8 : 24">
+        <a-form-item label="重定向错误">
+          <a-switch v-model:checked="redirectError" active-value="true" inactive-value="false" />
+        </a-form-item>
+      </a-col>
+      <a-col :span="form?.labelPosition === 'top' ? 8 : 24">
+        <a-form-item label="清除环境变量">
+          <a-switch v-model:checked="cleanEnv" active-value="true" inactive-value="false" />
+        </a-form-item>
+      </a-col>
+    </a-row>
+    <a-form-item label="执行目录">
+      <a-input v-model="directory" placeholder="请输入执行目录，默认当前目录" />
+    </a-form-item>
+    <a-form-item label="错误代码变量">
+      <a-input v-model="errorCodeVariable" placeholder="请输入错误代码存储变量" />
+    </a-form-item>
+  </a-collapse-panel>
 </template>
 
 <style scoped lang="scss"></style>

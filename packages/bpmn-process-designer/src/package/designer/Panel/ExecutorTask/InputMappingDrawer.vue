@@ -4,10 +4,10 @@
 -->
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Delete, Plus } from '@element-plus/icons-vue'
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import type { InputMappingItem, MethodSchemaFieldItem } from '@/types/executor.ts'
 
-defineOptions({ name: 'InputMappingDrawer' })
+defineOptions({ name: 'InputMappingDrawer' , inheritAttrs: false })
 
 const emit = defineEmits<{
   (e: 'confirm', mappings: InputMappingItem[]): void
@@ -67,19 +67,10 @@ defineExpose({ openDrawer })
 </script>
 
 <template>
-  <el-drawer
-    v-model="visible"
-    direction="rtl"
-    size="520px"
-    :close-on-click-modal="true"
-    :show-close="false"
-    :with-header="false"
-  >
+  <a-drawer v-model:visible="visible" placement="rtl" width="520px" :show-close="false" :closable="false">
     <div class="mapping-drawer-content">
       <div class="mapping-toolbar">
-        <el-button type="primary" :icon="Plus" size="small" @click="addMapping">
-          添加映射
-        </el-button>
+        <a-button type="primary" size="small" @click="addMapping"><PlusOutlined /> 添加映射 </a-button>
         <span class="mapping-count">共 {{ mappings.length }} 条映射</span>
       </div>
 
@@ -87,71 +78,71 @@ defineExpose({ openDrawer })
         <div v-for="(item, index) in mappings" :key="index" class="mapping-item">
           <div class="mapping-item__header">
             <span class="mapping-item__index">#{{ index + 1 }}</span>
-            <el-popconfirm title="确定删除此映射？" @confirm="removeMapping(index)">
+            <a-popconfirm title="确定删除此映射？" @confirm="removeMapping(index)">
               <template #reference>
-                <el-button type="danger" :icon="Delete" link size="small" />
+                <a-button danger link size="small"><DeleteOutlined /></a-button>
               </template>
-            </el-popconfirm>
+            </a-popconfirm>
           </div>
 
-          <el-form label-width="80px" size="small">
-            <el-form-item label="来源类型">
-              <el-select v-model="item.sourceType" style="width: 100%">
-                <el-option
+          <a-form label-width="80px" size="small">
+            <a-form-item label="来源类型">
+              <a-select v-model:value="item.sourceType" style="width: 100%">
+                <a-select-option
                   v-for="opt in sourceTypeOptions"
                   :key="opt.value"
                   :label="opt.label"
                   :value="opt.value"
                 />
-              </el-select>
-            </el-form-item>
+              </a-select>
+            </a-form-item>
 
-            <el-form-item label="来源">
-              <el-input
+            <a-form-item label="来源">
+              <a-input
                 v-model="item.source"
                 :placeholder="item.sourceType === 'variable' ? '流程变量名' : item.sourceType === 'literal' ? '字面量值' : '表达式'"
               />
-            </el-form-item>
+            </a-form-item>
 
-            <el-form-item label="目标参数">
-              <el-select
+            <a-form-item label="目标参数">
+              <a-select
                 v-if="inputFields.length"
-                v-model="item.target"
-                filterable
+                v-model:value="item.target"
+                showSearch
                 allow-create
                 placeholder="选择或输入目标参数"
                 style="width: 100%"
               >
-                <el-option
+                <a-select-option
                   v-for="field in inputFields"
                   :key="field.fieldId"
                   :label="`${field.fieldName} (${field.dataType})${field.required ? ' *' : ''}`"
                   :value="field.fieldPath || field.fieldName"
                 />
-              </el-select>
-              <el-input v-else v-model="item.target" placeholder="目标参数路径" />
-            </el-form-item>
+              </a-select>
+              <a-input v-else v-model="item.target" placeholder="目标参数路径" />
+            </a-form-item>
 
-            <el-form-item v-if="item.sourceType === 'expression'" label="表达式">
-              <el-input
+            <a-form-item v-if="item.sourceType === 'expression'" label="表达式">
+              <a-input
                 v-model="item.expression"
                 type="textarea"
                 :rows="2"
                 placeholder="转换表达式（JUEL）"
               />
-            </el-form-item>
-          </el-form>
+            </a-form-item>
+          </a-form>
         </div>
 
-        <el-empty v-if="!mappings.length" description="暂无映射，点击上方按钮添加" />
+        <a-empty v-if="!mappings.length" description="暂无映射，点击上方按钮添加" />
       </div>
     </div>
 
     <template #footer>
-      <el-button @click="cancel">取消</el-button>
-      <el-button type="primary" @click="confirm">确认</el-button>
+      <a-button @click="cancel">取消</a-button>
+      <a-button type="primary" @click="confirm">确认</a-button>
     </template>
-  </el-drawer>
+  </a-drawer>
 </template>
 
 <style scoped lang="scss">

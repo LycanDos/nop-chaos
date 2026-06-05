@@ -42,9 +42,9 @@ const findDocumentation = (docs: Record<string, string>[]) =>
 </script>
 
 <template>
-  <el-form-item label="描述信息">
-    <el-input v-model="document" type="textarea" :rows="3" placeholder="请输入描述信息" />
-  </el-form-item>
+  <a-form-item label="描述信息">
+    <a-input v-model="document" type="textarea" :rows="3" placeholder="请输入描述信息" />
+  </a-form-item>
 </template>
 
 <style scoped lang="scss"></style>

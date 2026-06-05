@@ -3,7 +3,7 @@ import { customRef, onMounted, ref, toRaw } from 'vue'
 import { useBpmnContextService } from '@/hooks/useService.ts'
 import { getBusinessObject } from 'bpmn-js/lib/util/ModelUtil'
 import { createElement, useCustomRef } from '@/designer/utils/ElementUtil.ts'
-import { Delete, EditPen, Plus } from '@element-plus/icons-vue'
+import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import FieldDrawer from './FieldDrawer.vue'
 import type { Field, MapException } from '@/types'
 import type BpmnFactory from 'bpmn-js/lib/features/modeling/BpmnFactory'
@@ -149,15 +149,15 @@ onMounted(() => {
 </script>
 
 <template>
-  <el-collapse-item name="arg1" title="服务">
-    <el-form-item prop="executeType" label="执行类型">
-      <el-radio-group v-model="executeType" @change="changeExecuteType">
-        <el-radio-button label="Java类" value="class" />
-        <el-radio-button label="表达式" value="expression" />
-        <el-radio-button label="委托表达式" value="delegateExpression" />
-      </el-radio-group>
-    </el-form-item>
-    <el-form-item prop="class" label="java类" v-if="executeType === 'class'">
+  <a-collapse-panel key="arg1" header="服务">
+    <a-form-item prop="executeType" label="执行类型">
+      <a-radio-group v-model="executeType" @change="changeExecuteType">
+        <a-radio-button label="Java类" value="class" />
+        <a-radio-button label="表达式" value="expression" />
+        <a-radio-button label="委托表达式" value="delegateExpression" />
+      </a-radio-group>
+    </a-form-item>
+    <a-form-item prop="class" label="java类" v-if="executeType === 'class'">
       <Codemirror
         :rows="2"
         :max-rows="6"
@@ -167,10 +167,10 @@ onMounted(() => {
         placeholder="请输入java类"
         v-model="javaClass"
       />
-      <!--      <el-input v-model="javaClass" type="textarea" :rows="2" placeholder="请输入java类" />-->
-    </el-form-item>
+      <!--      <a-input v-model="javaClass" type="textarea" :rows="2" placeholder="请输入java类" />-->
+    </a-form-item>
     <div v-else-if="executeType === 'expression'">
-      <el-form-item prop="expression" label="表达式">
+      <a-form-item prop="expression" label="表达式">
         <Codemirror
           :rows="2"
           :max-rows="6"
@@ -181,16 +181,12 @@ onMounted(() => {
           :extensions="[juelLinter, closeBrackets()]"
           v-model="expression"
         />
-      </el-form-item>
+      </a-form-item>
       <!--el-form-item prop="resultVariableName" label="结果变量">
-        <el-input v-model="resultVariableName" placeholder="请输入返回结果变量名" />
-      </el-form-item>-->
+        <a-input v-model="resultVariableName" placeholder="请输入返回结果变量名" />
+      </a-form-item>-->
     </div>
-    <el-form-item
-      prop="delegateExpression"
-      label="委托表达式"
-      v-else-if="executeType === 'delegateExpression'"
-    >
+    <a-form-item prop="delegateExpression" label="委托表达式" v-else-if="executeType === 'delegateExpression'">
       <Codemirror
         :rows="2"
         :max-rows="6"
@@ -201,51 +197,49 @@ onMounted(() => {
         :extensions="[juelLinter, closeBrackets()]"
         v-model="delegateExpression"
       />
-      <!--      <el-input
+      <!--      <a-input
         v-model="delegateExpression"
         type="textarea"
         :rows="2"
         placeholder="请输入委托表达式"
       />-->
-    </el-form-item>
-    <el-form-item label-position="top">
+    </a-form-item>
+    <a-form-item>
       <template #label>
         注入字段
-        <el-button type="primary" class="el-icon--right" :icon="Plus" link @click="editField()">
-          创建字段
-        </el-button>
+        <a-button type="primary" link @click="editField()"><PlusOutlined /> 创建字段 </a-button>
       </template>
-      <el-table :data="injectFields" height="200px">
-        <el-table-column prop="name" show-overflow-tooltip label="字段名" />
-        <el-table-column prop="type" show-overflow-tooltip label="字段类型" />
-        <el-table-column prop="value" show-overflow-tooltip label="字段值" />
-        <el-table-column align="center" min-width="66px" label="操作">
+      <a-table :dataSource="injectFields" height="200px">
+        <a-table-column prop="name" show-overflow-tooltip label="字段名" />
+        <a-table-column prop="type" show-overflow-tooltip label="字段类型" />
+        <a-table-column prop="value" show-overflow-tooltip label="字段值" />
+        <a-table-column align="center" min-width="66px" label="操作">
           <template #default="{ row }">
-            <el-space>
-              <el-button type="primary" :icon="EditPen" link @click="editField(row)" />
-              <el-popconfirm title="您确定要删除该字段吗？" @confirm="removeField(row)">
+            <a-space>
+              <a-button type="primary" link @click="editField(row)"><EditOutlined /></a-button>
+              <a-popconfirm title="您确定要删除该字段吗？" @confirm="removeField(row)">
                 <template #reference>
-                  <el-button type="danger" :icon="Delete" link></el-button>
+                  <a-button danger link><DeleteOutlined /></a-button>
                 </template>
-              </el-popconfirm>
-            </el-space>
+              </a-popconfirm>
+            </a-space>
           </template>
-        </el-table-column>
-      </el-table>
+        </a-table-column>
+      </a-table>
       <FieldDrawer ref="fieldDrawerRef" @confirm="confirmField" />
-    </el-form-item>
-    <el-form-item prop="triggerable" label="可触发" v-show="false">
-      <el-switch v-model="triggerable" />
-    </el-form-item>
-    <el-form-item prop="mapException" label="异常映射">
-      <el-badge :show-zero="false" :value="mapExceptionSize" class="w-full">
-        <el-button type="info" text bg plain class="w-full" @click="editException"
+    </a-form-item>
+    <a-form-item prop="triggerable" label="可触发" v-show="false">
+      <a-switch v-model:checked="triggerable" />
+    </a-form-item>
+    <a-form-item prop="mapException" label="异常映射">
+      <a-badge :show-zero="false" :value="mapExceptionSize" class="w-full">
+        <a-button type="info" text bg plain class="w-full" @click="editException"
           >编辑映射
-        </el-button>
-      </el-badge>
+        </a-button>
+      </a-badge>
       <MapExceptionDrawer ref="mapExceptionDrawerRef" @confirm="mapExceptionConfirm" />
-    </el-form-item>
-  </el-collapse-item>
+    </a-form-item>
+  </a-collapse-panel>
 </template>
 
 <style scoped lang="scss"></style>

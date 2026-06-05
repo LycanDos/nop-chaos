@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useCloned } from '@vueuse/core'
-import { type FormInstance, type FormRules, useFormSize } from 'element-plus'
 import { cloneDeep } from 'lodash-es'
 import { nextId } from '@/designer/utils/ElementUtil.ts'
 import type { DataObject } from '@/types'
-import { Refresh } from '@element-plus/icons-vue'
+import { ReloadOutlined } from '@ant-design/icons-vue'
 
 const emits = defineEmits<{
   (e: 'confirm', data: DataObject): void
@@ -51,15 +50,8 @@ defineExpose({
 </script>
 
 <template>
-  <el-drawer
-    v-model="drawerVisible"
-    append-to-body
-    :lock-scroll="false"
-    @closed="onClosed"
-    :show-close="false"
-    :with-header="false"
-  >
-    <el-form
+  <a-drawer v-model:visible="drawerVisible" append-to-body :lock-scroll="false" @closed="onClosed" :show-close="false" :closable="false">
+    <a-form
       ref="formRef"
       label-position="top"
       :model="cloned"
@@ -67,32 +59,32 @@ defineExpose({
       label-width="90px"
       :size="formSize"
     >
-      <el-form-item label="id" prop="id">
-        <el-input v-model="cloned.id" placeholder="请输入id">
+      <a-form-item label="id" prop="id">
+        <a-input v-model="cloned.id" placeholder="请输入id">
           <template #append>
-            <el-button :icon="Refresh" @click="cloned.id = nextId('DataObject_')" />
+            <a-button @click="cloned.id = nextId('DataObject_')"><ReloadOutlined /></a-button>
           </template>
-        </el-input>
-      </el-form-item>
-      <el-form-item label="名称" prop="name">
-        <el-input v-model="cloned.name" placeholder="请输入名称" />
-      </el-form-item>
-      <el-form-item label="类型" prop="type">
-        <el-select
-          v-model="cloned.type"
+        </a-input>
+      </a-form-item>
+      <a-form-item label="名称" prop="name">
+        <a-input v-model="cloned.name" placeholder="请输入名称" />
+      </a-form-item>
+      <a-form-item label="类型" prop="type">
+        <a-select
+          v-model:value="cloned.type"
           placeholder="请选择类型"
           @change="cloned.value = undefined"
         >
-          <el-option label="字符串" value="xsd:string" />
-          <el-option label="整数" value="xsd:int" />
-          <el-option label="长整数" value="xsd:long" />
-          <el-option label="布尔" value="xsd:boolean" />
-          <el-option label="浮点数" value="xsd:double" />
-          <el-option label="时间" value="xsd:datetime" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="默认值" prop="value">
-        <el-input
+          <a-select-option label="字符串" value="xsd:string" />
+          <a-select-option label="整数" value="xsd:int" />
+          <a-select-option label="长整数" value="xsd:long" />
+          <a-select-option label="布尔" value="xsd:boolean" />
+          <a-select-option label="浮点数" value="xsd:double" />
+          <a-select-option label="时间" value="xsd:datetime" />
+        </a-select>
+      </a-form-item>
+      <a-form-item label="默认值" prop="value">
+        <a-input
           type="textarea"
           :rows="4"
           :autosize="{ minRows: 4, maxRows: 10 }"
@@ -100,7 +92,7 @@ defineExpose({
           placeholder="请输入默认值"
           v-if="cloned.type === 'xsd:string'"
         />
-        <el-input-number
+        <a-input-number
           v-model="cloned.value"
           placeholder="请输入默认值"
           :min="-2147483648"
@@ -108,14 +100,14 @@ defineExpose({
           v-else-if="cloned.type === 'xsd:int'"
           class="w-full"
         />
-        <el-input-number
+        <a-input-number
           v-model="cloned.value"
           placeholder="请输入默认值"
           v-else-if="cloned.type === 'xsd:long'"
           class="w-full"
         />
-        <el-switch v-model="cloned.value" v-else-if="cloned.type === 'xsd:boolean'" />
-        <el-input-number
+        <a-switch v-model:checked="cloned.value" v-else-if="cloned.type === 'xsd:boolean'" />
+        <a-input-number
           v-model="cloned.value"
           placeholder="请输入默认值"
           :min="4.9e-324"
@@ -123,7 +115,7 @@ defineExpose({
           v-else-if="cloned.type === 'xsd:double'"
           class="w-full"
         />
-        <el-date-picker
+        <a-date-picker
           type="datetime"
           value-format="YYYY-MM-DDTHH:mm:ss"
           v-model="cloned.value"
@@ -131,13 +123,13 @@ defineExpose({
           v-else-if="cloned.type === 'xsd:datetime'"
           class="w-full"
         />
-      </el-form-item>
-    </el-form>
+      </a-form-item>
+    </a-form>
     <template #footer>
-      <el-button @click="drawerVisible = false">取 消</el-button>
-      <el-button type="primary" @click="handleConfirm">确 定</el-button>
+      <a-button @click="drawerVisible = false">取 消</a-button>
+      <a-button type="primary" @click="handleConfirm">确 定</a-button>
     </template>
-  </el-drawer>
+  </a-drawer>
 </template>
 
 <style scoped lang="scss"></style>

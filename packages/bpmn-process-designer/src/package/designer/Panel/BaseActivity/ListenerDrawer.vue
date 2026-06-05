@@ -2,15 +2,8 @@
 import { ref } from 'vue'
 import { useCloned } from '@vueuse/core'
 import type { ExecutionListener } from '@/types'
-import {
-  ElMessage,
-  type FormInstance,
-  type FormItemRule,
-  type FormRules,
-  useFormSize,
-} from 'element-plus'
 import { cloneDeep } from 'lodash-es'
-import { Delete, Plus } from '@element-plus/icons-vue'
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons-vue'
 
 const emits = defineEmits<{
   (e: 'confirm', listener: ExecutionListener): void
@@ -122,17 +115,8 @@ defineExpose({
 </script>
 
 <template>
-  <el-drawer
-    v-model="drawerVisible"
-    append-to-body
-    :lock-scroll="false"
-    size="35%"
-    @closed="onClosed"
-    :show-close="false"
-    :with-header="false"
-    v-bind="$attrs"
-  >
-    <el-form
+  <a-drawer v-model:visible="drawerVisible" append-to-body :lock-scroll="false" width="35%" @closed="onClosed" :show-close="false" :closable="false" v-bind="$attrs">
+    <a-form
       ref="formRef"
       label-position="top"
       :model="cloned"
@@ -140,76 +124,64 @@ defineExpose({
       label-width="90px"
       :size="formSize"
     >
-      <el-form-item label="事件" prop="event">
-        <el-radio-group v-model="cloned.event">
+      <a-form-item label="事件" prop="event">
+        <a-radio-group v-model="cloned.event">
           <slot name="eventOptions"></slot>
-        </el-radio-group>
-      </el-form-item>
-      <el-form-item label="类型" prop="type">
-        <el-radio-group v-model="cloned.type">
-          <el-radio-button label="java类" value="class" />
-          <el-radio-button label="表达式" value="expression" />
-          <el-radio-button label="委托表达式" value="delegateExpression" />
-        </el-radio-group>
-      </el-form-item>
-      <el-form-item label="监听器" prop="impl">
-        <el-input v-model="cloned.impl" placeholder="请输入监听器"></el-input>
-      </el-form-item>
-      <el-form-item prop="fields">
+        </a-radio-group>
+      </a-form-item>
+      <a-form-item label="类型" prop="type">
+        <a-radio-group v-model="cloned.type">
+          <a-radio-button label="java类" value="class" />
+          <a-radio-button label="表达式" value="expression" />
+          <a-radio-button label="委托表达式" value="delegateExpression" />
+        </a-radio-group>
+      </a-form-item>
+      <a-form-item label="监听器" prop="impl">
+        <a-input v-model="cloned.impl" placeholder="请输入监听器"></a-input>
+      </a-form-item>
+      <a-form-item prop="fields">
         <template #label>
           注入字段
-          <el-button type="primary" class="el-icon--right" :icon="Plus" link @click="addField()">
-            创建字段
-          </el-button>
+          <a-button type="primary" link @click="addField()"><PlusOutlined /> 创建字段 </a-button>
         </template>
-        <el-table :data="cloned.fields" height="270px">
-          <el-table-column prop="name" label="字段名">
+        <a-table :dataSource="cloned.fields" height="270px">
+          <a-table-column prop="name" label="字段名">
             <template #default="{ row, $index }">
-              <el-form-item :prop="`fields.${$index}.name`" :rules="fieldNameRule">
-                <el-input v-model="row.name" placeholder="字段名"></el-input>
-              </el-form-item>
+              <a-form-item :prop="`fields.${$index}.name`" :rules="fieldNameRule">
+                <a-input v-model="row.name" placeholder="字段名"></a-input>
+              </a-form-item>
             </template>
-          </el-table-column>
-          <el-table-column prop="type" min-width="75px" label="字段类型">
+          </a-table-column>
+          <a-table-column prop="type" min-width="75px" label="字段类型">
             <template #default="{ row, $index }">
-              <el-form-item
-                :prop="`fields.${$index}.type`"
-                :rules="{ required: true, message: '字段类型不能为空', trigger: 'change' }"
-              >
-                <el-select v-model="row.type" placeholder="字段类型">
-                  <el-option label="字符串" value="string" />
-                  <el-option label="表达式" value="expression" />
-                </el-select>
-              </el-form-item>
+              <a-form-item :prop="`fields.${$index}.type`" :rules="{ required: true, message: '字段类型不能为空', trigger: 'change' }">
+                <a-select v-model:value="row.type" placeholder="字段类型">
+                  <a-select-option label="字符串" value="string" />
+                  <a-select-option label="表达式" value="expression" />
+                </a-select>
+              </a-form-item>
             </template>
-          </el-table-column>
-          <el-table-column prop="value" label="字段值">
+          </a-table-column>
+          <a-table-column prop="value" label="字段值">
             <template #default="{ row, $index }">
-              <el-form-item :prop="`fields.${$index}.value`" :rules="fieldValueRule">
-                <el-input v-model="row.value" placeholder="字段值"></el-input>
-              </el-form-item>
+              <a-form-item :prop="`fields.${$index}.value`" :rules="fieldValueRule">
+                <a-input v-model="row.value" placeholder="字段值"></a-input>
+              </a-form-item>
             </template>
-          </el-table-column>
-          <el-table-column align="center" min-width="35px" label="操作">
+          </a-table-column>
+          <a-table-column align="center" min-width="35px" label="操作">
             <template #default="{ $index }">
-              <el-button
-                type="danger"
-                circle
-                :icon="Delete"
-                text
-                bg
-                @click="delField($index)"
-              ></el-button>
+              <a-button danger circle text bg @click="delField($index)" ><DeleteOutlined /></a-button>
             </template>
-          </el-table-column>
-        </el-table>
-      </el-form-item>
-    </el-form>
+          </a-table-column>
+        </a-table>
+      </a-form-item>
+    </a-form>
     <template #footer>
-      <el-button @click="drawerVisible = false">取 消</el-button>
-      <el-button type="primary" @click="handleConfirm">确 定</el-button>
+      <a-button @click="drawerVisible = false">取 消</a-button>
+      <a-button type="primary" @click="handleConfirm">确 定</a-button>
     </template>
-  </el-drawer>
+  </a-drawer>
 </template>
 
 <style scoped lang="scss"></style>

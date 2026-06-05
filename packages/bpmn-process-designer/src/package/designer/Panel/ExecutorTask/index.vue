@@ -27,14 +27,14 @@ import type {
   FailureStrategy,
   InputPolicyDocument,
 } from '@/types/executor.ts'
-import { EditPen, InfoFilled } from '@element-plus/icons-vue'
+import { EditOutlined, InfoCircleFilled } from '@ant-design/icons-vue'
 import { useExecutorApi } from '@/hooks/useExecutorApi.ts'
 import InputMappingDrawer from './InputMappingDrawer.vue'
 import InputClarDrawer from './InputClarDrawer.vue'
 import OutputDeltaDrawer from './OutputDeltaDrawer.vue'
 import ExecutorConfigDrawer from './ExecutorConfigDrawer.vue'
 
-defineOptions({ name: 'ExecutorTask' })
+defineOptions({ name: 'ExecutorTask', inheritAttrs: false })
 
 const { selectedElement, updateProperties, getService } = useBpmnContextService()
 const bpmnFactory = getService<BpmnFactory>('bpmnFactory')
@@ -76,6 +76,14 @@ const inputClarDrawerRef = ref<InstanceType<typeof InputClarDrawer>>()
 const outputDeltaDrawerRef = ref<InstanceType<typeof OutputDeltaDrawer>>()
 const executorConfigDrawerRef = ref<InstanceType<typeof ExecutorConfigDrawer>>()
 const executorConfigDrawerVisible = ref(false)
+const actives = ref<string[]>([
+  'executor-method-editor',
+  'executor-binding',
+  'executor-input-clar',
+  'executor-input',
+  'executor-output',
+  'executor-config',
+])
 
 // 当前选中方法的自定义编辑器字段（如 Hoppscotch）
 const methodEditorField = computed<MethodSchemaFieldItem | undefined>(() => {
@@ -548,70 +556,61 @@ onMounted(() => {
 </script>
 
 <template>
-  <!-- 参数配置面板（Hoppscotch 请求编辑器） -->
-  <el-collapse-item
-    v-if="methodEditorField"
-    name="executor-method-editor"
-    title="参数配置"
-  >
-    <el-form-item label-position="top">
+  <a-collapse v-model:activeKey="actives">
+    <!-- 参数配置面板（Hoppscotch 请求编辑器） -->
+    <a-collapse-panel
+      v-if="methodEditorField"
+      key="executor-method-editor" header="参数配置"
+    >
+    <a-form-item>
       <template #label>
         请求信息
-        <el-button
-          v-if="methodEditorField.editorUrl"
-          type="primary"
-          class="el-icon--right"
-          :icon="EditPen"
-          link
-          @click="openExecutorConfigDrawer"
-        >
-          编辑请求
-        </el-button>
+        <a-button v-if="methodEditorField.editorUrl" type="primary" link @click="openExecutorConfigDrawer" ><EditOutlined /> 编辑请求 </a-button>
       </template>
 
       <!-- 摘要显示：method + URL + 详情 -->
       <div v-if="configSummary" class="config-summary">
         <div class="summary-row">
-          <el-tag :type="methodTagType" size="small">
+          <a-tag :type="methodTagType" size="small">
             {{ configSummary.method }}
-          </el-tag>
+          </a-tag>
           <span class="config-url">{{ configSummary.url }}</span>
         </div>
         <div class="summary-details">
-          <el-tag v-if="configSummary.queryParamsCount" size="small" type="info">
+          <a-tag v-if="configSummary.queryParamsCount" size="small" color="processing">
             参数: {{ configSummary.queryParamsCount }}
-          </el-tag>
-          <el-tag v-if="configSummary.headersCount" size="small" type="info">
+          </a-tag>
+          <a-tag v-if="configSummary.headersCount" size="small" color="processing">
             Headers: {{ configSummary.headersCount }}
-          </el-tag>
-          <el-tag v-if="configSummary.authType !== 'none'" size="small" type="warning">
+          </a-tag>
+          <a-tag v-if="configSummary.authType !== 'none'" size="small" color="warning">
             Auth: {{ { bearer: 'Bearer', basic: 'Basic', apikey: 'API Key' }[configSummary.authType] || configSummary.authType }}
-          </el-tag>
-          <el-tag v-if="configSummary.hasBody" size="small" type="success">
+          </a-tag>
+          <a-tag v-if="configSummary.hasBody" size="small" color="success">
             Body
-          </el-tag>
+          </a-tag>
         </div>
       </div>
       <div v-else class="config-empty">
-        <el-icon><InfoFilled /></el-icon>
+        <InfoCircleFilled />
         <span>点击"编辑请求"打开 Hoppscotch 配置 HTTP 请求</span>
       </div>
-    </el-form-item>
-  </el-collapse-item>
+    </a-form-item>
+    </a-collapse-panel>
 
-  <!-- 执行器绑定（DB 执行器） -->
-  <el-collapse-item name="executor-binding" title="执行器绑定">
-    <el-form-item label="执行器">
-      <el-select
-        v-model="bindingForm.executorDefId"
-        filterable
-        clearable
+    <!-- 执行器绑定（DB 执行器） -->
+    <a-collapse-panel key="executor-binding" header="执行器绑定">
+    <a-form-item label="执行器">
+      <a-select
+        v-model:value="bindingForm.executorDefId"
+        showSearch
+        allowClear
         placeholder="选择执行器"
         style="width: 100%"
         :loading="loading"
         @change="handleExecutorChange"
       >
-        <el-option
+        <a-select-option
           v-for="item in executorList"
           :key="item.executorDefId"
           :label="`${item.executorName} (${item.executorCode})`"
@@ -620,43 +619,43 @@ onMounted(() => {
           <div style="display: flex; justify-content: space-between; align-items: center">
             <span>{{ item.executorName }}</span>
             <span style="display: flex; gap: 4px">
-              <el-tag v-if="isOptionEmbedded(item)" size="small" type="success">内置</el-tag>
-              <el-tag size="small" type="info">{{ item.executorCode }}</el-tag>
+              <a-tag v-if="isOptionEmbedded(item)" size="small" color="success">内置</a-tag>
+              <a-tag size="small" color="processing">{{ item.executorCode }}</a-tag>
             </span>
           </div>
-        </el-option>
-      </el-select>
-    </el-form-item>
+        </a-select-option>
+      </a-select>
+    </a-form-item>
 
     <!-- 版本策略 -->
-    <el-form-item label="版本策略">
-      <el-select
-        v-model="bindingForm.versionStrategy"
+    <a-form-item label="版本策略">
+      <a-select
+        v-model:value="bindingForm.versionStrategy"
         style="width: 100%"
         :disabled="isEmbeddedExecutor"
         @change="handleVersionStrategyChange"
       >
-        <el-option
+        <a-select-option
           v-for="opt in availableVersionStrategies"
           :key="opt.value"
           :label="opt.label"
           :value="opt.value"
         />
-      </el-select>
-    </el-form-item>
+      </a-select>
+    </a-form-item>
 
     <!-- 精确版本选择 -->
-    <el-form-item v-if="bindingForm.versionStrategy === 'EXACT'" label="版本">
-      <el-select
-        v-model="bindingForm.executorReleaseId"
-        filterable
-        clearable
+    <a-form-item v-if="bindingForm.versionStrategy === 'EXACT'" label="版本">
+      <a-select
+        v-model:value="bindingForm.executorReleaseId"
+        showSearch
+        allowClear
         :disabled="!bindingForm.executorDefId"
         placeholder="选择版本"
         style="width: 100%"
         @change="handleReleaseChange"
       >
-        <el-option
+        <a-select-option
           v-for="item in releaseList"
           :key="item.executorReleaseId"
           :label="item.releaseVersion"
@@ -664,61 +663,61 @@ onMounted(() => {
         >
           <div style="display: flex; justify-content: space-between; align-items: center">
             <span>{{ item.releaseVersion }}</span>
-            <el-tag v-if="item.compatLevel" size="small" :type="item.compatLevel === 'FULL' ? 'success' : 'warning'">
+            <a-tag v-if="item.compatLevel" size="small" :type="item.compatLevel === 'FULL' ? 'success' : 'warning'">
               {{ item.compatLevel }}
-            </el-tag>
+            </a-tag>
           </div>
-        </el-option>
-      </el-select>
-    </el-form-item>
+        </a-select-option>
+      </a-select>
+    </a-form-item>
 
     <!-- 版本规则表达式 -->
-    <el-form-item v-if="showVersionExpr && bindingForm.versionStrategy !== 'EXACT'" label="版本规则">
-      <el-input
+    <a-form-item v-if="showVersionExpr && bindingForm.versionStrategy !== 'EXACT'" label="版本规则">
+      <a-input
         v-model="bindingForm.versionExpr"
         :placeholder="versionExprPlaceholder"
         @change="saveBindingToElement"
       >
         <template #suffix>
-          <el-tooltip :content="versionExprPlaceholder" placement="top">
-            <el-icon><InfoFilled /></el-icon>
-          </el-tooltip>
+          <a-tooltip :title="versionExprPlaceholder" placement="top">
+            <InfoCircleFilled />
+          </a-tooltip>
         </template>
-      </el-input>
-    </el-form-item>
+      </a-input>
+    </a-form-item>
 
     <!-- LATEST 策略下选择版本预览（用于加载方法列表） -->
-    <el-form-item v-if="bindingForm.versionStrategy === 'LATEST'" label="当前版本">
-      <el-select
-        v-model="bindingForm.executorReleaseId"
-        filterable
-        clearable
+    <a-form-item v-if="bindingForm.versionStrategy === 'LATEST'" label="当前版本">
+      <a-select
+        v-model:value="bindingForm.executorReleaseId"
+        showSearch
+        allowClear
         :disabled="!bindingForm.executorDefId"
         placeholder="自动使用最新版本（可预览）"
         style="width: 100%"
         @change="handleReleaseChange"
       >
-        <el-option
+        <a-select-option
           v-for="item in releaseList"
           :key="item.executorReleaseId"
           :label="`${item.releaseVersion} (预览)`"
           :value="item.executorReleaseId"
         />
-      </el-select>
-    </el-form-item>
+      </a-select>
+    </a-form-item>
 
     <!-- 方法选择 -->
-    <el-form-item label="执行方法">
-      <el-select
-        v-model="bindingForm.methodId"
-        filterable
-        clearable
+    <a-form-item label="执行方法">
+      <a-select
+        v-model:value="bindingForm.methodId"
+        showSearch
+        allowClear
         :disabled="!bindingForm.executorReleaseId"
         placeholder="选择执行方法"
         style="width: 100%"
         @change="handleMethodChange"
       >
-        <el-option
+        <a-select-option
           v-for="item in methodList"
           :key="item.methodId"
           :label="`${item.methodName} (${item.methodCode})`"
@@ -726,42 +725,34 @@ onMounted(() => {
         >
           <div style="display: flex; justify-content: space-between; align-items: center">
             <span>{{ item.methodName }}</span>
-            <el-tag size="small" type="info">{{ item.methodCode }}</el-tag>
+            <a-tag size="small" color="processing">{{ item.methodCode }}</a-tag>
           </div>
-        </el-option>
-      </el-select>
-    </el-form-item>
+        </a-select-option>
+      </a-select>
+    </a-form-item>
 
     <!-- 方法描述 -->
-    <el-form-item v-if="bindingForm.methodId" label="方法描述">
+    <a-form-item v-if="bindingForm.methodId" label="方法描述">
       <span class="method-desc">
         {{ methodList.find(m => m.methodId === bindingForm.methodId)?.description || '(无描述)' }}
       </span>
-    </el-form-item>
-  </el-collapse-item>
+    </a-form-item>
+    </a-collapse-panel>
 
-  <!-- 入参 Clar -->
-  <el-collapse-item v-if="useInputClar" name="executor-input-clar" title="入参 Clar">
-    <el-form-item label-position="top">
-      <template #label>
-        入参 Clar
-        <el-button
-          type="primary"
-          class="el-icon--right"
-          :icon="EditPen"
-          link
-          :disabled="!bindingForm.methodId"
-          @click="openInputClarDrawer"
-        >
-          编辑 Clar
-        </el-button>
-      </template>
+    <!-- 入参 Clar -->
+    <a-collapse-panel v-if="useInputClar" key="executor-input-clar" header="入参 Clar">
+    <div class="panel-action-row">
+      <span class="panel-action-row__title">入参 Clar</span>
+      <a-button type="primary" size="small" :disabled="!bindingForm.methodId" @click="openInputClarDrawer">
+        <EditOutlined /> 编辑 Clar
+      </a-button>
+    </div>
       
       <!-- Clar 概览 -->
       <div v-if="bindingForm.inputPolicyDocument" class="clar-overview">
         <div class="clar-meta">
           <span class="clar-name">{{ bindingForm.inputPolicyDocument.name }}</span>
-          <el-tag size="small">Layers: {{ bindingForm.inputPolicyDocument.layers?.length || 0 }}</el-tag>
+          <a-tag size="small">Layers: {{ bindingForm.inputPolicyDocument.layers?.length || 0 }}</a-tag>
         </div>
         
         <div class="clar-layers">
@@ -771,141 +762,125 @@ onMounted(() => {
             class="layer-item"
           >
             <span class="layer-name">{{ layer.name }}</span>
-            <el-tag size="small" type="info">{{ layer.layerType }}</el-tag>
-            <el-tag size="small">Rules: {{ layer.rules?.length || 0 }}</el-tag>
+            <a-tag size="small" color="processing">{{ layer.layerType }}</a-tag>
+            <a-tag size="small">Rules: {{ layer.rules?.length || 0 }}</a-tag>
           </div>
         </div>
       </div>
       
       <div v-else class="clar-empty">
-        <el-icon><InfoFilled /></el-icon>
+        <InfoCircleFilled />
         <span>点击"编辑 Clar"配置入参校验规则和默认值</span>
       </div>
-    </el-form-item>
     <InputClarDrawer ref="inputClarDrawerRef" @confirm="handleInputClarConfirm" />
-  </el-collapse-item>
+    </a-collapse-panel>
 
-  <!-- 入参映射 (旧版,保留向后兼容) -->
-  <el-collapse-item v-else name="executor-input" title="入参映射">
-    <el-form-item label-position="top">
-      <template #label>
-        入参映射
-        <el-tag size="small" type="warning" class="el-icon--right">旧版</el-tag>
-        <el-button
-          type="primary"
-          class="el-icon--right"
-          :icon="EditPen"
-          link
-          :disabled="!bindingForm.methodId"
-          @click="openInputMappingDrawer"
-        >
-          编辑映射
-        </el-button>
-      </template>
-      <el-table :data="bindingForm.inputMappings" height="180px" size="small">
-        <el-table-column prop="source" show-overflow-tooltip label="来源" />
-        <el-table-column prop="target" show-overflow-tooltip label="目标参数" />
-        <el-table-column prop="sourceType" show-overflow-tooltip label="类型" width="80">
-          <template #default="{ row }">
-            <el-tag size="small" :type="row.sourceType === 'variable' ? '' : 'warning'">
-              {{ row.sourceType === 'variable' ? '变量' : row.sourceType === 'literal' ? '字面量' : '表达式' }}
-            </el-tag>
+    <!-- 入参映射 (旧版,保留向后兼容) -->
+    <a-collapse-panel v-else key="executor-input" header="入参映射">
+    <div class="panel-action-row">
+      <span class="panel-action-row__title">
+        入参映射 
+        <a-tag size="small" color="warning">旧版</a-tag>
+      </span>
+      <a-button type="primary" size="small" :disabled="!bindingForm.methodId" @click="openInputMappingDrawer">
+        <EditOutlined /> 编辑映射
+      </a-button>
+    </div>
+      <a-table :data-source="bindingForm.inputMappings" :pagination="false" size="small" class="executor-mini-table">
+        <a-table-column data-index="source" title="来源" :ellipsis="true" />
+        <a-table-column data-index="target" title="目标参数" :ellipsis="true" />
+        <a-table-column data-index="sourceType" title="类型" width="80">
+          <template #default="{ record }">
+            <a-tag size="small" :color="record.sourceType === 'variable' ? 'processing' : 'warning'">
+              {{ record.sourceType === 'variable' ? '变量' : record.sourceType === 'literal' ? '字面量' : '表达式' }}
+            </a-tag>
           </template>
-        </el-table-column>
-      </el-table>
+        </a-table-column>
+      </a-table>
       <div v-if="selectedMethodInputs.length && !bindingForm.inputMappings.length" class="mapping-hint">
-        <el-icon><InfoFilled /></el-icon>
+        <InfoCircleFilled />
         <span>该方法有 {{ selectedMethodInputs.length }} 个入参，点击"编辑映射"配置</span>
       </div>
-    </el-form-item>
     <InputMappingDrawer ref="inputMappingDrawerRef" @confirm="handleInputMappingConfirm" />
-  </el-collapse-item>
+    </a-collapse-panel>
 
-  <!-- 出参 Delta -->
-  <el-collapse-item name="executor-output" title="出参 Delta">
-    <el-form-item label-position="top">
-      <template #label>
-        出参 Delta
-        <el-button
-          type="primary"
-          class="el-icon--right"
-          :icon="EditPen"
-          link
-          :disabled="!bindingForm.methodId"
-          @click="openOutputDeltaDrawer"
-        >
-          编辑 Delta
-        </el-button>
-      </template>
-      <el-table :data="bindingForm.outputDeltas" height="180px" size="small">
-        <el-table-column prop="source" show-overflow-tooltip label="出参字段" />
-        <el-table-column prop="target" show-overflow-tooltip label="流程变量" />
-        <el-table-column prop="mergeStrategy" show-overflow-tooltip label="策略" width="80">
-          <template #default="{ row }">
-            <el-tag size="small" :type="row.mergeStrategy === 'overwrite' ? '' : 'success'">
-              {{ row.mergeStrategy === 'overwrite' ? '覆盖' : row.mergeStrategy === 'merge' ? '合并' : '追加' }}
-            </el-tag>
+    <!-- 出参 Delta -->
+    <a-collapse-panel key="executor-output" header="出参 Delta">
+    <div class="panel-action-row">
+      <span class="panel-action-row__title">出参 Delta</span>
+      <a-button type="primary" size="small" :disabled="!bindingForm.methodId" @click="openOutputDeltaDrawer">
+        <EditOutlined /> 编辑 Delta
+      </a-button>
+    </div>
+      <a-table :data-source="bindingForm.outputDeltas" :pagination="false" size="small" class="executor-mini-table">
+        <a-table-column data-index="source" title="出参字段" :ellipsis="true" />
+        <a-table-column data-index="target" title="流程变量" :ellipsis="true" />
+        <a-table-column data-index="mergeStrategy" title="策略" width="80">
+          <template #default="{ record }">
+            <a-tag size="small" :color="record.mergeStrategy === 'overwrite' ? 'default' : 'success'">
+              {{ record.mergeStrategy === 'overwrite' ? '覆盖' : record.mergeStrategy === 'merge' ? '合并' : '追加' }}
+            </a-tag>
           </template>
-        </el-table-column>
-      </el-table>
+        </a-table-column>
+      </a-table>
       <div v-if="selectedMethodOutputs.length && !bindingForm.outputDeltas.length" class="mapping-hint">
-        <el-icon><InfoFilled /></el-icon>
+        <InfoCircleFilled />
         <span>该方法有 {{ selectedMethodOutputs.length }} 个出参，点击"编辑 Delta"配置</span>
       </div>
-    </el-form-item>
     <OutputDeltaDrawer ref="outputDeltaDrawerRef" @confirm="handleOutputDeltaConfirm" />
-  </el-collapse-item>
+    </a-collapse-panel>
 
-  <!-- 执行配置 -->
-  <el-collapse-item name="executor-config" title="执行配置">
-    <el-form-item label="超时(ms)">
-      <el-input-number
+    <!-- 执行配置 -->
+    <a-collapse-panel key="executor-config" header="执行配置">
+    <a-form-item label="超时(ms)">
+      <a-input-number
         v-model="bindingForm.timeoutMs"
         :min="0"
         :step="1000"
-        controls-position="right"
+        controls
         style="width: 100%"
         @change="saveBindingToElement"
       />
-    </el-form-item>
-    <el-form-item label="重试次数">
-      <el-input-number
+    </a-form-item>
+    <a-form-item label="重试次数">
+      <a-input-number
         v-model="bindingForm.retryCount"
         :min="0"
         :max="10"
-        controls-position="right"
+        controls
         style="width: 100%"
         @change="saveBindingToElement"
       />
-    </el-form-item>
-    <el-form-item v-if="bindingForm.retryCount > 0" label="重试间隔(ms)">
-      <el-input-number
+    </a-form-item>
+    <a-form-item v-if="bindingForm.retryCount> 0" label="重试间隔(ms)">
+      <a-input-number
         v-model="bindingForm.retryIntervalMs"
         :min="100"
         :step="1000"
-        controls-position="right"
+        controls
         style="width: 100%"
         @change="saveBindingToElement"
       />
-    </el-form-item>
-    <el-form-item label="异步执行">
-      <el-switch v-model="bindingForm.asyncFlag" @change="saveBindingToElement" />
-    </el-form-item>
-    <el-form-item label="失败策略">
-      <el-select
-        v-model="bindingForm.failureStrategy"
+    </a-form-item>
+    <a-form-item label="异步执行">
+      <a-switch v-model:checked="bindingForm.asyncFlag" @change="saveBindingToElement" />
+    </a-form-item>
+    <a-form-item label="失败策略">
+      <a-select
+        v-model:value="bindingForm.failureStrategy"
         style="width: 100%"
         @change="saveBindingToElement"
       >
-        <el-option
+        <a-select-option
           v-for="opt in failureStrategyOptions"
           :key="opt.value"
           :label="opt.label"
           :value="opt.value"
         />
-      </el-select>
-    </el-form-item>
-  </el-collapse-item>
+      </a-select>
+    </a-form-item>
+    </a-collapse-panel>
+  </a-collapse>
 
   <!-- 执行器配置 Drawer（微前端编辑器） -->
   <ExecutorConfigDrawer
@@ -932,6 +907,36 @@ onMounted(() => {
   font-size: 12px;
   color: var(--el-text-color-placeholder);
   margin-top: 8px;
+}
+
+.panel-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.panel-action-row__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--el-text-color-primary);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.executor-mini-table {
+  width: 100%;
+}
+
+.executor-mini-table :deep(.ant-table) {
+  font-size: 12px;
+}
+
+.executor-mini-table :deep(.ant-table-cell) {
+  padding: 6px 8px !important;
 }
 
 // Clar 相关样式

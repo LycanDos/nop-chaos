@@ -41,17 +41,17 @@ const completionCondition = customRef((track, trigger) => {
 </script>
 
 <template>
-  <el-collapse-item name="arg1" title="临时子流程">
-    <el-form-item label="排序">
-      <el-radio-group v-model="ordering">
-        <el-radio-button label="并行" value="Parallel" />
-        <el-radio-button label="串行" value="Sequential" />
-      </el-radio-group>
-    </el-form-item>
-    <el-form-item label="取消剩余实例">
-      <el-switch v-model="cancelRemainingInstances" active-value="true" inactive-value="false" />
-    </el-form-item>
-    <el-form-item label="完成条件">
+  <a-collapse-panel key="arg1" header="临时子流程">
+    <a-form-item label="排序">
+      <a-radio-group v-model="ordering">
+        <a-radio-button label="并行" value="Parallel" />
+        <a-radio-button label="串行" value="Sequential" />
+      </a-radio-group>
+    </a-form-item>
+    <a-form-item label="取消剩余实例">
+      <a-switch v-model:checked="cancelRemainingInstances" active-value="true" inactive-value="false" />
+    </a-form-item>
+    <a-form-item label="完成条件">
       <Codemirror
         :rows="3"
         :max-rows="6"
@@ -61,14 +61,14 @@ const completionCondition = customRef((track, trigger) => {
         :extensions="[juelSupport()]"
         v-model="completionCondition"
       />
-      <!--      <el-input
+      <!--      <a-input
         v-model="completionCondition"
         type="textarea"
         :rows="3"
         placeholder="请输入完成条件"
       />-->
-    </el-form-item>
-  </el-collapse-item>
+    </a-form-item>
+  </a-collapse-panel>
 </template>
 
 <style scoped lang="scss"></style>

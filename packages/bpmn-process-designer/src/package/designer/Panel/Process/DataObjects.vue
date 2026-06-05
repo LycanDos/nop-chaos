@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Delete, EditPen, Plus } from '@element-plus/icons-vue'
+import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import type { DataObject } from '@/types'
 import type { Element } from 'bpmn-js/lib/model/Types.ts'
 import { onMounted, ref } from 'vue'
@@ -89,26 +89,26 @@ onMounted(() => {
 <template>
   <div class="data-container">
     <div class="data-header">
-      <el-text>数据对象</el-text>
-      <el-button type="primary" link :icon="Plus" @click="editDataObject()">添加</el-button>
+      <span>数据对象</span>
+      <a-button type="primary" link @click="editDataObject()"><PlusOutlined />添加</a-button>
     </div>
-    <el-table :data="dataObjects" height="200px">
-      <el-table-column prop="name" show-overflow-tooltip label="名称"></el-table-column>
-      <el-table-column prop="type" show-overflow-tooltip label="类型"></el-table-column>
-      <el-table-column prop="value" show-overflow-tooltip label="默认值"></el-table-column>
-      <el-table-column label="操作" min-width="63px" align="center">
+    <a-table :dataSource="dataObjects" height="200px">
+      <a-table-column prop="name" show-overflow-tooltip label="名称"></a-table-column>
+      <a-table-column prop="type" show-overflow-tooltip label="类型"></a-table-column>
+      <a-table-column prop="value" show-overflow-tooltip label="默认值"></a-table-column>
+      <a-table-column label="操作" min-width="63px" align="center">
         <template #default="{ row }">
-          <el-space>
-            <el-button type="primary" :icon="EditPen" link @click="editDataObject(row)"></el-button>
-            <el-popconfirm title="您确定要删除该数据对象吗？" @confirm="removeDataObject(row)">
+          <a-space>
+            <a-button type="primary" link @click="editDataObject(row)"><EditOutlined /></a-button>
+            <a-popconfirm title="您确定要删除该数据对象吗？" @confirm="removeDataObject(row)">
               <template #reference>
-                <el-button type="danger" :icon="Delete" link></el-button>
+                <a-button danger link><DeleteOutlined /></a-button>
               </template>
-            </el-popconfirm>
-          </el-space>
+            </a-popconfirm>
+          </a-space>
         </template>
-      </el-table-column>
-    </el-table>
+      </a-table-column>
+    </a-table>
     <DataObjectDrawer ref="dataObjectDrawerRef" @confirm="confirmDataObject" />
   </div>
 </template>

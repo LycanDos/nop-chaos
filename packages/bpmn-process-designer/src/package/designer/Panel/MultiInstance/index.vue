@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { customRef, onMounted, ref, toRaw } from 'vue'
 import { useBpmnContextService } from '@/hooks/useService.ts'
-import { Delete, EditPen, Plus } from '@element-plus/icons-vue'
+import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import VariableAggregationDrawer from './VariableAggregationDrawer.vue'
 import { getLoopCharacteristics } from '@/designer/utils/ElementUtil.ts'
 import type { VariableAggregation } from '@/types'
@@ -14,7 +14,6 @@ import {
 } from '@/designer/utils/ExtensionElementsUtil.ts'
 import type BpmnFactory from 'bpmn-js/lib/features/modeling/BpmnFactory'
 import type { Element } from 'bpmn-js/lib/model/Types.ts'
-import { useFormItem } from 'element-plus'
 import type EventBus from 'diagram-js/lib/core/EventBus'
 import juelSupport from '@/components/CodemirrorEditor/language/juel'
 import Codemirror from '@/components/CodemirrorEditor/index.vue'
@@ -23,7 +22,7 @@ import { isExpressionValid } from '@/designer/utils/ValidationUtil.ts'
 defineOptions({
   name: 'MultiInstance',
 })
-const { form } = useFormItem()
+const form = { labelPosition: 'right', size: 'small' }
 const { updateProperties, getService, selectedElement } = useBpmnContextService()
 const bpmnFactory = getService<BpmnFactory>('bpmnFactory')
 const eventBus = getService<EventBus>('eventBus')
@@ -243,49 +242,49 @@ onMounted(() => {
 
 <template>
   <div>
-    <el-form-item label="实例类型">
-      <el-radio-group v-model="loopCharacteristicsType">
-        <el-radio-button label="无" value="" />
-        <el-radio-button label="并行" value="Parallel" />
-        <el-radio-button label="串行" value="Sequential" />
-      </el-radio-group>
-    </el-form-item>
+    <a-form-item label="实例类型">
+      <a-radio-group v-model="loopCharacteristicsType">
+        <a-radio-button label="无" value="" />
+        <a-radio-button label="并行" value="Parallel" />
+        <a-radio-button label="串行" value="Sequential" />
+      </a-radio-group>
+    </a-form-item>
     <div v-if="loopCharacteristicsType">
-      <el-form-item label="基数">
-        <el-input v-model="loopCardinality" placeholder="请输入基数" />
-      </el-form-item>
-      <el-row :gutter="10">
-        <el-col :span="form?.labelPosition === 'top' ? 12 : 24">
-          <el-form-item label="集合变量">
-            <el-input v-model="collection" placeholder="请输入集合变量" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="form?.labelPosition === 'top' ? 12 : 24">
-          <el-form-item label="元素变量">
-            <el-input
+      <a-form-item label="基数">
+        <a-input v-model="loopCardinality" placeholder="请输入基数" />
+      </a-form-item>
+      <a-row :gutter="10">
+        <a-col :span="form?.labelPosition === 'top' ? 12 : 24">
+          <a-form-item label="集合变量">
+            <a-input v-model="collection" placeholder="请输入集合变量" />
+          </a-form-item>
+        </a-col>
+        <a-col :span="form?.labelPosition === 'top' ? 12 : 24">
+          <a-form-item label="元素变量">
+            <a-input
               v-model="elementVariable"
               @change="changeElementVariable"
               placeholder="请输入元素变量"
             />
-          </el-form-item>
-        </el-col>
-        <el-col :span="form?.labelPosition === 'top' ? 12 : 24" v-show="false">
-          <el-form-item label="索引变量">
-            <el-input v-model="elementIndexVariable" placeholder="请输入索引变量" />
-          </el-form-item>
-        </el-col>
-      </el-row>
-      <el-form-item label="无等待离开" v-show="loopCharacteristicsType === 'Parallel' && false">
-        <el-switch
-          v-model="noWaitStatesAsyncLeave"
+          </a-form-item>
+        </a-col>
+        <a-col :span="form?.labelPosition === 'top' ? 12 : 24" v-show="false">
+          <a-form-item label="索引变量">
+            <a-input v-model="elementIndexVariable" placeholder="请输入索引变量" />
+          </a-form-item>
+        </a-col>
+      </a-row>
+      <a-form-item label="无等待离开" v-show="loopCharacteristicsType === 'Parallel' && false">
+        <a-switch
+          v-model:checked="noWaitStatesAsyncLeave"
           :active-value="true"
           :inactive-value="undefined"
         />
-      </el-form-item>
-      <el-form-item label="集合处理器" v-show="false">
-        <el-input v-model="collectionHandler" placeholder="请输入集合处理器" />
-      </el-form-item>
-      <el-form-item label="完成条件">
+      </a-form-item>
+      <a-form-item label="集合处理器" v-show="false">
+        <a-input v-model="collectionHandler" placeholder="请输入集合处理器" />
+      </a-form-item>
+      <a-form-item label="完成条件">
         <Codemirror
           autosize
           :max-rows="5"
@@ -294,48 +293,41 @@ onMounted(() => {
           :extensions="[juelExtension]"
           v-model="completionCondition"
         />
-        <!--        <el-input v-model="completionCondition" placeholder="请输入完成条件" />-->
-      </el-form-item>
-      <el-form-item label-position="top">
+        <!--        <a-input v-model="completionCondition" placeholder="请输入完成条件" />-->
+      </a-form-item>
+      <a-form-item>
         <template #label>
           变量聚合
-          <el-button type="primary" :icon="Plus" link @click="addVariableAggregation()">
-            添加聚合
-          </el-button>
+          <a-button type="primary" link @click="addVariableAggregation()"><PlusOutlined /> 添加聚合 </a-button>
         </template>
-        <el-table :data="variableAggregations" height="150px">
-          <el-table-column prop="target" label="聚合变量" />
-          <el-table-column prop="variableType" label="变量类型">
+        <a-table :dataSource="variableAggregations" height="150px">
+          <a-table-column prop="target" label="聚合变量" />
+          <a-table-column prop="variableType" label="变量类型">
             <template #default="{ row }">
               {{ row.variableType === 'createOverviewVariable' ? '普通变量' : '瞬态变量' }}
             </template>
-          </el-table-column>
-          <el-table-column align="center" min-width="50px" label="操作">
+          </a-table-column>
+          <a-table-column align="center" min-width="50px" label="操作">
             <template #default="{ row }">
-              <el-space>
-                <el-button
-                  type="primary"
-                  :icon="EditPen"
-                  link
-                  @click="addVariableAggregation(row)"
-                />
-                <el-popconfirm
+              <a-space>
+                <a-button type="primary" link @click="addVariableAggregation(row)" ><EditOutlined /></a-button>
+                <a-popconfirm
                   title="您确定要删除该字段吗？"
                   @confirm="removeVariableAggregation(row)"
                 >
                   <template #reference>
-                    <el-button type="danger" :icon="Delete" link></el-button>
+                    <a-button danger link><DeleteOutlined /></a-button>
                   </template>
-                </el-popconfirm>
-              </el-space>
+                </a-popconfirm>
+              </a-space>
             </template>
-          </el-table-column>
-        </el-table>
+          </a-table-column>
+        </a-table>
         <VariableAggregationDrawer
           ref="variableAggregationDrawerRef"
           @confirm="confirmVariableAggregation"
         />
-      </el-form-item>
+      </a-form-item>
     </div>
   </div>
 </template>

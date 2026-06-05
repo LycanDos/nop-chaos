@@ -22,7 +22,7 @@
   </div>
 
   <!-- 工具栏 Teleport 到文本元素上方 -->
-  <Teleport to="body">
+  <Teleport to="#text-editor-toolbar-portal">
     <div
       v-if="isEditing && toolbarPos"
       class="inline-text-toolbar"

@@ -12,7 +12,7 @@ import {
   getMessageEventDefinition,
 } from '@/designer/utils/EventDefinitionUtil.ts'
 import MessageEventDrawer from '../Process/MessageEventDrawer.vue'
-import { Plus } from '@element-plus/icons-vue'
+import { PlusOutlined } from '@ant-design/icons-vue'
 
 defineOptions({
   name: 'MessageEvent',
@@ -67,30 +67,30 @@ onMounted(() => {
 </script>
 
 <template>
-  <el-collapse-item name="arg1" title="消息事件">
-    <el-form-item prop="messageRef" label="消息引用">
-      <el-select v-model="messageRef" placeholder="请选择消息引用">
-        <el-option
+  <a-collapse-panel key="arg1" header="消息事件">
+    <a-form-item prop="messageRef" label="消息引用">
+      <a-select v-model:value="messageRef" placeholder="请选择消息引用">
+        <a-select-option
           v-for="item in messages"
           :key="item.id"
           :label="item.name"
           :value="item.id"
-        ></el-option>
+        ></a-select-option>
         <template #footer>
-          <el-button
+          <a-button
             text
             bg
             size="small"
             style="width: 100%"
-            :icon="Plus"
+            :icon="PlusOutlined"
             @click="addMessageEvent()"
-            >新增消息定义</el-button
+            >新增消息定义</a-button
           >
         </template>
-      </el-select>
-    </el-form-item>
+      </a-select>
+    </a-form-item>
     <MessageEventDrawer ref="messageEventDrawerRef" @confirm="confirmMessageEvent" />
-  </el-collapse-item>
+  </a-collapse-panel>
 </template>
 
 <style scoped lang="scss"></style>

@@ -12,7 +12,7 @@
 -->
 <script setup lang="ts">
 import { computed, watch } from 'vue'
-import { InfoFilled, Delete } from '@element-plus/icons-vue'
+import { InfoCircleFilled, DeleteOutlined } from '@ant-design/icons-vue'
 
 const props = defineProps<{
   schema: Record<string, any>
@@ -79,30 +79,26 @@ function removeKvItem(field: string, index: number) {
 <template>
   <div class="schema-form">
     <template v-for="(propSchema, key) in schema.properties" :key="key">
-      <el-form-item
-        :label="propSchema.title || key"
-        :required="schema.required?.includes(key)"
-        :label-position="'top'"
-      >
+      <a-form-item :label="propSchema.title || key" :required="schema.required?.includes(key)" :label-position="'top'">
         <!-- select (enum) -->
         <template v-if="getFieldWidget(propSchema) === 'select'">
-          <el-select
+          <a-select
             :model-value="localValue[key]"
             style="width: 100%"
             @update:model-value="localValue = { ...localValue, [key]: $event }"
           >
-            <el-option
+            <a-select-option
               v-for="opt in propSchema.enum"
               :key="opt"
               :label="propSchema['ui:enumLabels']?.[opt] || opt"
               :value="opt"
             />
-          </el-select>
+          </a-select>
         </template>
 
         <!-- switch (boolean) -->
         <template v-else-if="getFieldWidget(propSchema) === 'switch'">
-          <el-switch
+          <a-switch
             :model-value="localValue[key]"
             @update:model-value="localValue = { ...localValue, [key]: $event }"
           />
@@ -110,11 +106,11 @@ function removeKvItem(field: string, index: number) {
 
         <!-- input-number -->
         <template v-else-if="getFieldWidget(propSchema) === 'input-number'">
-          <el-input-number
+          <a-input-number
             :model-value="localValue[key] ?? getDefaultValue(propSchema)"
             :min="propSchema.minimum"
             :max="propSchema.maximum"
-            controls-position="right"
+            controls
             style="width: 100%"
             @update:model-value="localValue = { ...localValue, [key]: $event }"
           />
@@ -122,7 +118,7 @@ function removeKvItem(field: string, index: number) {
 
         <!-- textarea -->
         <template v-else-if="getFieldWidget(propSchema) === 'textarea'">
-          <el-input
+          <a-input
             :model-value="localValue[key]"
             type="textarea"
             :rows="3"
@@ -133,7 +129,7 @@ function removeKvItem(field: string, index: number) {
 
         <!-- json-editor (简单 JSON 文本编辑) -->
         <template v-else-if="getFieldWidget(propSchema) === 'json-editor'">
-          <el-input
+          <a-input
             :model-value="localValue[key] ? JSON.stringify(localValue[key], null, 2) : ''"
             type="textarea"
             :rows="4"
@@ -157,11 +153,11 @@ function removeKvItem(field: string, index: number) {
               :key="idx"
               class="kv-row"
             >
-              <el-checkbox
+              <a-checkbox
                 :model-value="item.enabled !== false"
                 @change="toggleKvItem(key, idx)"
               />
-              <el-input
+              <a-input
                 :model-value="item.key"
                 placeholder="Key"
                 size="small"
@@ -172,7 +168,7 @@ function removeKvItem(field: string, index: number) {
                   localValue = { ...localValue, [key]: arr }
                 }"
               />
-              <el-input
+              <a-input
                 :model-value="item.value"
                 placeholder="Value"
                 size="small"
@@ -183,21 +179,15 @@ function removeKvItem(field: string, index: number) {
                   localValue = { ...localValue, [key]: arr }
                 }"
               />
-              <el-button
-                size="small"
-                type="danger"
-                :icon="Delete"
-                circle
-                @click="removeKvItem(key, idx)"
-              />
+              <a-button size="small" danger circle @click="removeKvItem(key, idx)" ><DeleteOutlined /></a-button>
             </div>
-            <el-button size="small" @click="addKvItem(key)">+ 添加</el-button>
+            <a-button size="small" @click="addKvItem(key)">+ 添加</a-button>
           </div>
         </template>
 
         <!-- default: input -->
         <template v-else>
-          <el-input
+          <a-input
             :model-value="localValue[key]"
             :placeholder="propSchema.description || propSchema.title"
             clearable
@@ -207,10 +197,10 @@ function removeKvItem(field: string, index: number) {
 
         <!-- 字段描述 -->
         <div v-if="propSchema.description" class="field-desc">
-          <el-icon><InfoFilled /></el-icon>
+          <InfoCircleFilled />
           <span>{{ propSchema.description }}</span>
         </div>
-      </el-form-item>
+      </a-form-item>
     </template>
 
     <!-- 空状态 -->

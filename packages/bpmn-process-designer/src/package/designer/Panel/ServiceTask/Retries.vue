@@ -42,9 +42,9 @@ const body = useCustomRef('body')
 </script>
 
 <template>
-  <el-form-item label="失败重试">
-    <el-input v-model="body"></el-input>
-  </el-form-item>
+  <a-form-item label="失败重试">
+    <a-input v-model="body"></a-input>
+  </a-form-item>
 </template>
 
 <style scoped lang="scss"></style>

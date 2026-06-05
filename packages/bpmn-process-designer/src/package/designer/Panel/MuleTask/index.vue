@@ -27,17 +27,17 @@ const changeLanguage = (val: string) => {
 </script>
 
 <template>
-  <el-collapse-item name="arg1" title="骡子">
-    <el-form-item label="终端url">
-      <el-input v-model="endpointUrl" placeholder="请输入终端url" />
-    </el-form-item>
-    <el-form-item label="表达式语言">
-      <el-select v-model="language" placeholder="请选择表达式语言" @change="changeLanguage">
-        <el-option label="juel" value="juel" />
-        <el-option label="groovy" value="groovy" />
-      </el-select>
-    </el-form-item>
-    <el-form-item label="有效载荷表达式">
+  <a-collapse-panel key="arg1" header="骡子">
+    <a-form-item label="终端url">
+      <a-input v-model="endpointUrl" placeholder="请输入终端url" />
+    </a-form-item>
+    <a-form-item label="表达式语言">
+      <a-select v-model:value="language" placeholder="请选择表达式语言" @change="changeLanguage">
+        <a-select-option label="juel" value="juel" />
+        <a-select-option label="groovy" value="groovy" />
+      </a-select>
+    </a-form-item>
+    <a-form-item label="有效载荷表达式">
       <Codemirror
         :rows="4"
         :max-rows="10"
@@ -47,17 +47,17 @@ const changeLanguage = (val: string) => {
         :extensions="extensions"
         v-model="payloadExpression"
       />
-      <!--      <el-input
+      <!--      <a-input
               v-model="payloadExpression"
               type="textarea"
               :rows="3"
               placeholder="请输入有效载荷表达式"
             />-->
-    </el-form-item>
-    <el-form-item label="返回变量">
-      <el-input v-model="resultVariable" placeholder="请输入返回变量" />
-    </el-form-item>
-  </el-collapse-item>
+    </a-form-item>
+    <a-form-item label="返回变量">
+      <a-input v-model="resultVariable" placeholder="请输入返回变量" />
+    </a-form-item>
+  </a-collapse-panel>
 </template>
 
 <style scoped lang="scss"></style>

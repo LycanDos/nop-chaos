@@ -21,8 +21,8 @@ const propertiesByName = computed(() => {
 </script>
 
 <template>
-  <el-collapse-item name="arg2" title="高级">
-    <el-form-item label="跳过表达式" v-if="propertiesByName['skipExpression']">
+  <a-collapse-panel key="arg2" header="高级">
+    <a-form-item label="跳过表达式" v-if="propertiesByName['skipExpression']">
       <Codemirror
         no-wrap
         :max-rows="5"
@@ -31,12 +31,12 @@ const propertiesByName = computed(() => {
         :extensions="[juelSupport()]"
         v-model="skipExpression"
       />
-      <!--      <el-input v-model="skipExpression" clearable placeholder="请输入跳过表达式" />-->
-    </el-form-item>
+      <!--      <a-input v-model="skipExpression" clearable placeholder="请输入跳过表达式" />-->
+    </a-form-item>
     <MultiInstance v-if="propertiesByName['loopCharacteristics']" />
     <Async v-if="propertiesByName['async']" />
     <Document />
-  </el-collapse-item>
+  </a-collapse-panel>
 </template>
 
 <style scoped lang="scss"></style>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import type { ExecutionListener, Field } from '@/types'
-import { Delete, EditPen, Plus } from '@element-plus/icons-vue'
+import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons-vue'
 import { useBpmnContextService } from '@/hooks/useService.ts'
 import type BpmnFactory from 'bpmn-js/lib/features/modeling/BpmnFactory'
 import {
@@ -93,32 +93,32 @@ onMounted(() => {
 <template>
   <div class="listener-container">
     <div class="listener-header">
-      <el-text>任务监听器</el-text>
-      <el-button type="primary" link :icon="Plus" @click="editListener()">添加</el-button>
+      <span>任务监听器</span>
+      <a-button type="primary" link @click="editListener()"><PlusOutlined />添加</a-button>
     </div>
-    <el-table :data="listeners" height="200px">
-      <el-table-column prop="event" label="事件"></el-table-column>
-      <el-table-column prop="type" show-overflow-tooltip label="类型"></el-table-column>
-      <el-table-column prop="impl" show-overflow-tooltip label="监听"></el-table-column>
-      <el-table-column label="操作" min-width="60px" align="center">
+    <a-table :dataSource="listeners" height="200px">
+      <a-table-column prop="event" label="事件"></a-table-column>
+      <a-table-column prop="type" show-overflow-tooltip label="类型"></a-table-column>
+      <a-table-column prop="impl" show-overflow-tooltip label="监听"></a-table-column>
+      <a-table-column label="操作" min-width="60px" align="center">
         <template #default="{ row }">
-          <el-space>
-            <el-button type="primary" :icon="EditPen" link @click="editListener(row)"></el-button>
-            <el-popconfirm title="您确定要删除该事件吗？" @confirm="removeListener(row)">
+          <a-space>
+            <a-button type="primary" link @click="editListener(row)"><EditOutlined /></a-button>
+            <a-popconfirm title="您确定要删除该事件吗？" @confirm="removeListener(row)">
               <template #reference>
-                <el-button type="danger" :icon="Delete" link></el-button>
+                <a-button danger link><DeleteOutlined /></a-button>
               </template>
-            </el-popconfirm>
-          </el-space>
+            </a-popconfirm>
+          </a-space>
         </template>
-      </el-table-column>
-    </el-table>
+      </a-table-column>
+    </a-table>
     <ListenerDrawer ref="listenerDrawerRef" title="任务监听器" @confirm="confirmListener">
       <template #eventOptions>
-        <el-radio-button label="创建" value="create" />
-        <el-radio-button label="完成" value="complete" />
-        <el-radio-button label="指派" value="assignment" />
-        <el-radio-button label="删除" value="delete" />
+        <a-radio-button label="创建" value="create" />
+        <a-radio-button label="完成" value="complete" />
+        <a-radio-button label="指派" value="assignment" />
+        <a-radio-button label="删除" value="delete" />
       </template>
     </ListenerDrawer>
   </div>

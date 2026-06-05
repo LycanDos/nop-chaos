@@ -135,6 +135,10 @@ export interface FrontendAction {
   domSelector?: string;
   label?: string;
   params: Record<string, any>;
+  /** 补偿操作类型：多步操作失败时用于回滚 */
+  compensationType?: string;
+  /** 补偿操作参数 */
+  compensationParams?: Record<string, any>;
 }
 
 // ---- 执行反馈与页面切换 ----
@@ -171,7 +175,6 @@ export interface ChatRequest {
   message: string;
   context?: PageRuntimeContext;
   selectedElement?: ElementInfo | null;
-  userPermissions?: UserPermissionInfo;
   executionFeedback?: ExecutionFeedback;
   pageChange?: PageChange;
   traceEnabled?: boolean;
@@ -213,13 +216,6 @@ export interface DebugPlan {
 }
 
 // ---- 权限与用量 ----
-
-export interface UserPermissionInfo {
-  /** @deprecated 角色由后端服务端计算，前端不再传入。保留字段仅为兼容，始终为空。 */
-  roles?: string[];
-  menuAccess: string[];
-  siteId?: string;
-}
 
 export interface CopilotUsage {
   promptTokens: number;

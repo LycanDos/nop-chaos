@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { useFieldRef } from '@/designer/utils/ElementUtil.ts'
-import { useFormItem } from 'element-plus'
 import Codemirror from '@/components/CodemirrorEditor/index.vue'
 import jsonSupport from '@/components/CodemirrorEditor/language/json'
 
 defineOptions({
   name: 'HttpTask',
 })
-const { form } = useFormItem()
+const form = { labelPosition: 'right', size: 'small' }
 const requestMethod = useFieldRef('requestMethod')
 const requestUrl = useFieldRef('requestUrl')
 const requestHeaders = useFieldRef('requestHeaders')
@@ -19,24 +18,24 @@ const saveResponseParametersTransient = useFieldRef('saveResponseParametersTrans
 </script>
 
 <template>
-  <el-collapse-item name="arg1" title="请求">
-    <el-form-item label="请求地址">
-      <el-input v-model="requestUrl" placeholder="请输入请求地址">
+  <a-collapse-panel key="arg1" header="请求">
+    <a-form-item label="请求地址">
+      <a-input v-model="requestUrl" placeholder="请输入请求地址">
         <template #prepend>
-          <el-select
-            v-model="requestMethod"
+          <a-select
+            v-model:value="requestMethod"
             placeholder="请求方法"
             :style="{ width: form?.size === 'small' ? '77px' : '95px' }"
           >
-            <el-option label="GET" value="GET"></el-option>
-            <el-option label="POST" value="POST"></el-option>
-            <el-option label="PUT" value="PUT"></el-option>
-            <el-option label="DELETE" value="DELETE"></el-option>
-          </el-select>
+            <a-select-option label="GET" value="GET"></a-select-option>
+            <a-select-option label="POST" value="POST"></a-select-option>
+            <a-select-option label="PUT" value="PUT"></a-select-option>
+            <a-select-option label="DELETE" value="DELETE"></a-select-option>
+          </a-select>
         </template>
-      </el-input>
-    </el-form-item>
-    <el-form-item label="请求头">
+      </a-input>
+    </a-form-item>
+    <a-form-item label="请求头">
       <Codemirror
         :rows="4"
         :max-rows="6"
@@ -46,9 +45,9 @@ const saveResponseParametersTransient = useFieldRef('saveResponseParametersTrans
         :extensions="[jsonSupport]"
         v-model="requestHeaders"
       />
-      <!--      <el-input v-model="requestHeaders" type="textarea" :rows="3" placeholder="请输入请求头" />-->
-    </el-form-item>
-    <el-form-item label="请求体">
+      <!--      <a-input v-model="requestHeaders" type="textarea" :rows="3" placeholder="请输入请求头" />-->
+    </a-form-item>
+    <a-form-item label="请求体">
       <Codemirror
         :rows="4"
         :max-rows="6"
@@ -58,39 +57,39 @@ const saveResponseParametersTransient = useFieldRef('saveResponseParametersTrans
         :extensions="[jsonSupport]"
         v-model="requestBody"
       />
-      <!--      <el-input v-model="requestBody" type="textarea" :rows="3" placeholder="请输入请求体" />-->
-    </el-form-item>
-    <el-row :gutter="10">
-      <el-col :span="form?.labelPosition === 'top' ? 12 : 24">
-        <el-form-item label="忽略异常">
-          <el-switch v-model="ignoreException" active-value="true" inactive-value="false" />
-        </el-form-item>
-      </el-col>
-      <el-col :span="form?.labelPosition === 'top' ? 12 : 24">
-        <el-form-item label="禁止重定向">
-          <el-switch v-model="disallowRedirects" active-value="true" inactive-value="false" />
-        </el-form-item>
-      </el-col>
-      <el-col :span="form?.labelPosition === 'top' ? 12 : 24">
-        <el-form-item label="保存响应变量为JSON">
-          <el-switch
-            v-model="saveResponseVariableAsJson"
+      <!--      <a-input v-model="requestBody" type="textarea" :rows="3" placeholder="请输入请求体" />-->
+    </a-form-item>
+    <a-row :gutter="10">
+      <a-col :span="form?.labelPosition === 'top' ? 12 : 24">
+        <a-form-item label="忽略异常">
+          <a-switch v-model:checked="ignoreException" active-value="true" inactive-value="false" />
+        </a-form-item>
+      </a-col>
+      <a-col :span="form?.labelPosition === 'top' ? 12 : 24">
+        <a-form-item label="禁止重定向">
+          <a-switch v-model:checked="disallowRedirects" active-value="true" inactive-value="false" />
+        </a-form-item>
+      </a-col>
+      <a-col :span="form?.labelPosition === 'top' ? 12 : 24">
+        <a-form-item label="保存响应变量为JSON">
+          <a-switch
+            v-model:checked="saveResponseVariableAsJson"
             active-value="true"
             inactive-value="false"
           />
-        </el-form-item>
-      </el-col>
-      <el-col :span="form?.labelPosition === 'top' ? 12 : 24">
-        <el-form-item label="保存响应参数为瞬时">
-          <el-switch
-            v-model="saveResponseParametersTransient"
+        </a-form-item>
+      </a-col>
+      <a-col :span="form?.labelPosition === 'top' ? 12 : 24">
+        <a-form-item label="保存响应参数为瞬时">
+          <a-switch
+            v-model:checked="saveResponseParametersTransient"
             active-value="true"
             inactive-value="false"
           />
-        </el-form-item>
-      </el-col>
-    </el-row>
-  </el-collapse-item>
+        </a-form-item>
+      </a-col>
+    </a-row>
+  </a-collapse-panel>
 </template>
 
 <style scoped lang="scss"></style>

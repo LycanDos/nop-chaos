@@ -63,18 +63,18 @@ onMounted(() => {
 </script>
 
 <template>
-  <el-collapse-item name="arg1" title="节点路由">
-    <el-form-item label="跳转目标">
-      <el-select v-model="targetNodeId" placeholder="请选择跳转目标">
-        <el-option
+  <a-collapse-panel key="arg1" header="节点路由">
+    <a-form-item label="跳转目标">
+      <a-select v-model:value="targetNodeId" placeholder="请选择跳转目标">
+        <a-select-option
           v-for="node in nodes"
           :key="node.value"
           :label="node.label"
           :value="node.value"
         />
-      </el-select>
-    </el-form-item>
-    <el-form-item label="条件表达式">
+      </a-select>
+    </a-form-item>
+    <a-form-item label="条件表达式">
       <Codemirror
         :rows="3"
         :max-rows="6"
@@ -84,8 +84,8 @@ onMounted(() => {
         :extensions="[juelSupport()]"
         v-model="conditionExpression"
       />
-    </el-form-item>
-  </el-collapse-item>
+    </a-form-item>
+  </a-collapse-panel>
 </template>
 
 <style scoped lang="scss"></style>

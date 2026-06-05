@@ -66,6 +66,8 @@ export default defineConfig(({ command, mode }: ConfigEnv): UserConfig => {
         external: (id) => {
           if (id === 'vue' || id === 'element-plus' || id === 'pinia') return true
           if (/^@element-plus\/icons-vue/.test(id)) return true
+          if (/^@ant-design\/icons-vue/.test(id)) return true
+          if (/^ant-design-vue/.test(id)) return true
           if (/^@nop-chaos\/policy-studio/.test(id)) return true
           if (/^@nop-chaos\/nop-core/.test(id)) return true
           if (/App\.vue$/.test(id) || /main\.ts$/.test(id)) return true
@@ -76,6 +78,8 @@ export default defineConfig(({ command, mode }: ConfigEnv): UserConfig => {
             vue: 'Vue',
             'element-plus': 'ElementPlus',
             pinia: 'Pinia',
+            'ant-design-vue': 'antd',
+            '@ant-design/icons-vue': 'icons',
             '@nop-chaos/policy-studio': 'PolicyStudio',
             '@nop-chaos/nop-core': 'NopCore',
           },

@@ -18,26 +18,56 @@
 /* ========================================
  * 模板设计器 Drawer 样式修复
  * AMIS antd 主题用的是 antd-Drawer 类名（不是 ant-drawer）
+ * AMIS 运行时动态注入 <style>，通过 CSS 变量控制 drawer padding
+ * 必须从 :root 变量层面清零，否则后续注入的样式会覆盖
  * ======================================== */
+/* 清零 drawer 相关的 CSS 变量，AMIS 运行时生成的 padding 将解析为 0 */
+:root,
+.antd-Drawer,
+.ant-drawer {
+    --drawer-content-paddingTop: 0px !important;
+    --drawer-content-paddingBottom: 0px !important;
+    --drawer-content-paddingLeft: 0px !important;
+    --drawer-content-paddingRight: 0px !important;
+}
 /* 去掉 drawer body 内边距、边框、:before 伪元素 */
-.antd-Drawer-content:has(.nop-template-editor-page) {
+/* 同时覆盖 AMIS antd 主题 (.antd-Drawer) 和 ant-design-vue 原生 (.ant-drawer) */
+.antd-Drawer-body,
+.ant-drawer-body,
+.nop-drawer-no-pad {
+    padding: 0 !important;
+}
+.antd-Drawer-content:has(.nop-template-editor-page),
+.ant-drawer-content:has(.nop-template-editor-page) {
     border: none !important;
 }
 .antd-Drawer-body:has(.nop-template-editor-page),
-.antd-Drawer-content:has(.nop-template-editor-page) .antd-Drawer-body {
+.antd-Drawer-content:has(.nop-template-editor-page) .antd-Drawer-body,
+.ant-drawer-body:has(.nop-template-editor-page),
+.ant-drawer-content:has(.nop-template-editor-page) .ant-drawer-body {
     padding: 0 !important;
     border: none !important;
 }
-.antd-Drawer-content:has(.nop-template-editor-page) .antd-Drawer-body::before {
+.antd-Drawer-content:has(.nop-template-editor-page) .antd-Drawer-body::before,
+.ant-drawer-content:has(.nop-template-editor-page) .ant-drawer-body::before {
     content: none !important;
     display: none !important;
     height: 0 !important;
 }
 /* 隐藏 drawer 标题栏（关闭按钮所在） */
-.antd-Drawer-content:has(.nop-template-editor-page) .antd-Drawer-header {
+.antd-Drawer-content:has(.nop-template-editor-page) .antd-Drawer-header,
+.ant-drawer-content:has(.nop-template-editor-page) .ant-drawer-header {
     display: none !important;
 }
 /* 隐藏 drawer 底部按钮栏 */
-.antd-Drawer-content:has(.nop-template-editor-page) .antd-Drawer-footer {
+.antd-Drawer-content:has(.nop-template-editor-page) .antd-Drawer-footer,
+.ant-drawer-content:has(.nop-template-editor-page) .ant-drawer-footer {
     display: none !important;
+}
+/* 模板编辑器页面在 drawer 内时，让 form body 占满全宽 */
+.nop-template-editor-page .cxd-Form,
+.nop-template-editor-page .cxd-Page-body,
+.nop-template-editor-page .cxd-Page-content {
+    width: 100% !important;
+    padding: 0 !important;
 }

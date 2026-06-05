@@ -5,7 +5,7 @@ defineOptions({
 </script>
 
 <template>
-  <el-collapse-item name="arg1" title="独占网关"> </el-collapse-item>
+  <a-collapse-panel key="arg1" header="独占网关"> </a-collapse-panel>
 </template>
 
 <style scoped lang="scss"></style>

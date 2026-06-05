@@ -2,10 +2,9 @@
 import { ref } from 'vue'
 import { useCloned } from '@vueuse/core'
 import type { Properties } from '@/types'
-import { type FormInstance, type FormRules, useFormSize } from 'element-plus'
 import { cloneDeep } from 'lodash-es'
 import { nextId } from '@/designer/utils/ElementUtil.ts'
-import { Refresh } from '@element-plus/icons-vue'
+import { ReloadOutlined } from '@ant-design/icons-vue'
 
 const emits = defineEmits<{
   (e: 'confirm', listener: Properties): void
@@ -51,17 +50,8 @@ defineExpose({
 </script>
 
 <template>
-  <el-drawer
-    v-model="drawerVisible"
-    append-to-body
-    :lock-scroll="false"
-    size="35%"
-    @closed="onClosed"
-    :show-close="false"
-    :with-header="false"
-    v-bind="$attrs"
-  >
-    <el-form
+  <a-drawer v-model:visible="drawerVisible" append-to-body :lock-scroll="false" width="35%" @closed="onClosed" :show-close="false" :closable="false" v-bind="$attrs">
+    <a-form
       ref="formRef"
       label-position="top"
       :model="cloned"
@@ -69,25 +59,25 @@ defineExpose({
       label-width="90px"
       :size="formSize"
     >
-      <el-form-item label="id" prop="id">
-        <el-input v-model="cloned.id" placeholder="请输入id">
+      <a-form-item label="id" prop="id">
+        <a-input v-model="cloned.id" placeholder="请输入id">
           <template #append>
-            <el-button :icon="Refresh" @click="cloned.id = nextId('Property_')" />
+            <a-button @click="cloned.id = nextId('Property_')"><ReloadOutlined /></a-button>
           </template>
-        </el-input>
-      </el-form-item>
-      <el-form-item label="属性名" prop="name">
-        <el-input v-model="cloned.name" placeholder="请输入属性名"></el-input>
-      </el-form-item>
-      <el-form-item label="属性值" prop="value">
-        <el-input v-model="cloned.value" placeholder="请输入属性值"></el-input>
-      </el-form-item>
-    </el-form>
+        </a-input>
+      </a-form-item>
+      <a-form-item label="属性名" prop="name">
+        <a-input v-model="cloned.name" placeholder="请输入属性名"></a-input>
+      </a-form-item>
+      <a-form-item label="属性值" prop="value">
+        <a-input v-model="cloned.value" placeholder="请输入属性值"></a-input>
+      </a-form-item>
+    </a-form>
     <template #footer>
-      <el-button @click="drawerVisible = false">取 消</el-button>
-      <el-button type="primary" @click="handleConfirm">确 定</el-button>
+      <a-button @click="drawerVisible = false">取 消</a-button>
+      <a-button type="primary" @click="handleConfirm">确 定</a-button>
     </template>
-  </el-drawer>
+  </a-drawer>
 </template>
 
 <style scoped lang="scss"></style>

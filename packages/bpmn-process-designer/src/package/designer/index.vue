@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { message } from 'ant-design-vue'
 import { computed, customRef, markRaw, nextTick, onBeforeUnmount, onMounted, provide, ref, shallowRef } from 'vue'
 // CSS 依赖由使用方（如 nop-site）自行导入，避免库构建后字体路径断裂
 // 使用方需要导入：
@@ -13,19 +14,19 @@ import { computed, customRef, markRaw, nextTick, onBeforeUnmount, onMounted, pro
 import ToggleMode from 'bpmn-js-token-simulation/lib/features/toggle-mode/modeler/ToggleMode'
 import BpmnModeler from 'bpmn-js/lib/Modeler'
 import {
-  CaretLeft,
-  CaretRight,
-  Delete,
-  Download,
-  FolderOpened,
-  RefreshLeft,
-  RefreshRight,
-  Setting,
-  VideoPause,
-  VideoPlay,
-  ZoomIn,
-  ZoomOut,
-} from '@element-plus/icons-vue'
+  CaretLeftOutlined,
+  CaretRightOutlined,
+  DeleteOutlined,
+  DownloadOutlined,
+  FolderOpenOutlined,
+  RotateLeftOutlined,
+  RotateRightOutlined,
+  SettingOutlined,
+  PauseCircleOutlined,
+  PlayCircleOutlined,
+  ZoomInOutlined,
+  ZoomOutOutlined,
+} from '@ant-design/icons-vue'
 import type CommandStack from 'diagram-js/lib/command/CommandStack'
 import BpmnPanel from './BpmnPanel.vue'
 import BpmnDesigner from './BpmnModeler.tsx'
@@ -36,7 +37,6 @@ import type { ElementIssue, Issues, Linting } from 'bpmn-js-bpmnlint'
 import type Canvas from 'diagram-js/lib/core/Canvas'
 import type { Minimap } from 'diagram-js-minimap'
 import { layoutProcess } from 'bpmn-auto-layout'
-import { ElMessage } from 'element-plus'
 import { EXECUTOR_API_KEY, type ExecutorApiAdapter } from '../hooks/useExecutorApi'
 import { ReverseSimulationController } from './reverseSimulation.ts'
 
@@ -105,6 +105,7 @@ const zoom = customRef<number>((track, trigger) => {
     },
   }
 })
+const zoomPercent = computed(() => (zoom.value * 100).toFixed(0) + '%')
 const isDark = customRef<boolean>((track, trigger) => {
   return {
     get() {
@@ -289,7 +290,7 @@ const resetZoom = () => {
 }
 const toggleRightArrow = () => {
   if (isPreviewMode.value) {
-    return ElMessage.warning('请先退出模拟预览模式')
+    return message.warning('请先退出模拟预览模式')
   }
   rightArrow.value = !rightArrow.value
 }
@@ -389,83 +390,79 @@ defineExpose({
       type="file"
     />
     <div class="design-toolbar">
-      <el-space :size="10">
-        <el-button-group size="small">
-          <el-tooltip placement="top" content="导入">
-            <el-button :icon="FolderOpened" @click="fileRef?.click()" />
-          </el-tooltip>
-          <el-tooltip placement="top" content="导出">
-            <el-button :icon="Download" size="small" @click="exportXml" />
-          </el-tooltip>
-        </el-button-group>
+      <a-space :size="4">
+        <a-button-group>
+          <a-tooltip placement="top" title="导入">
+            <a-button type="text" @click="fileRef?.click()"><FolderOpenOutlined /></a-button>
+          </a-tooltip>
+          <a-tooltip placement="top" title="导出">
+            <a-button type="text" @click="exportXml"><DownloadOutlined /></a-button>
+          </a-tooltip>
+        </a-button-group>
 
-        <el-button-group size="small">
-          <el-tooltip placement="top" content="撤销">
-            <el-button :icon="RefreshLeft" @click="undo" />
-          </el-tooltip>
-          <el-tooltip placement="top" content="恢复">
-            <el-button :icon="RefreshRight" @click="redo" />
-          </el-tooltip>
-        </el-button-group>
+        <a-button-group>
+          <a-tooltip placement="top" title="撤销">
+            <a-button type="text" @click="undo"><RotateLeftOutlined /></a-button>
+          </a-tooltip>
+          <a-tooltip placement="top" title="恢复">
+            <a-button type="text" @click="redo"><RotateRightOutlined /></a-button>
+          </a-tooltip>
+        </a-button-group>
 
-        <el-button-group size="small">
-          <el-tooltip content="放大" placement="top-start">
-            <el-button :icon="ZoomIn" @click="zoom += 0.1" :disabled="zoom >= 1.7"></el-button>
-          </el-tooltip>
-          <el-tooltip content="重置缩放" placement="top-start">
-            <el-button @click="resetZoom"> {{ (zoom * 100).toFixed(0) }}%</el-button>
-          </el-tooltip>
-          <el-tooltip content="缩小" placement="top-start">
-            <el-button :icon="ZoomOut" @click="zoom -= 0.1" :disabled="zoom <= 0.5"></el-button>
-          </el-tooltip>
-        </el-button-group>
+        <a-button-group>
+          <a-tooltip title="放大" placement="top-start">
+            <a-button type="text" @click="zoom += 0.1" :disabled="zoom >= 1.7"><ZoomInOutlined /></a-button>
+          </a-tooltip>
+          <a-tooltip title="重置缩放" placement="top-start">
+            <a-button type="text" @click="resetZoom">{{ zoomPercent }}</a-button>
+          </a-tooltip>
+          <a-tooltip title="缩小" placement="top-start">
+            <a-button type="text" @click="zoom -= 0.1" :disabled="zoom <= 0.5"><ZoomOutOutlined /></a-button>
+          </a-tooltip>
+        </a-button-group>
 
-        <el-button-group size="small">
-          <el-tooltip placement="top" content="重做">
-            <el-button :icon="Delete" @click="restart" />
-          </el-tooltip>
-          <el-tooltip placement="top" content="流程模拟">
-            <el-button
-              :icon="mockVisible ? VideoPause : VideoPlay"
-              @click="toggleMockVisible"
-            >
+        <a-button-group>
+          <a-tooltip placement="top" title="重做">
+            <a-button type="text" @click="restart"><DeleteOutlined /></a-button>
+          </a-tooltip>
+          <a-tooltip placement="top" title="流程模拟">
+            <a-button type="text" @click="toggleMockVisible">
+              <template #icon><PauseCircleOutlined v-if="mockVisible" /><PlayCircleOutlined v-else /></template>
               {{ mockVisible ? '退出模拟' : '开启模拟' }}
-            </el-button>
-          </el-tooltip>
-          <el-tooltip placement="top" content="回退模拟">
-            <el-button
-              :icon="reverseMockVisible ? VideoPause : VideoPlay"
-              @click="toggleReverseMockVisible"
-            >
+            </a-button>
+          </a-tooltip>
+          <a-tooltip placement="top" title="回退模拟">
+            <a-button type="text" @click="toggleReverseMockVisible">
+              <template #icon><PauseCircleOutlined v-if="reverseMockVisible" /><PlayCircleOutlined v-else /></template>
               {{ reverseMockVisible ? '退出回退预览' : '开启回退预览' }}
-            </el-button>
-          </el-tooltip>
-          <el-tooltip placement="top" content="流程校验">
-            <el-button
-              :icon="lintVisible ? VideoPause : VideoPlay"
+            </a-button>
+          </a-tooltip>
+          <a-tooltip placement="top" title="流程校验">
+            <a-button
+              type="text"
               @click="lintVisible = !lintVisible"
             >
+              <template #icon><PauseCircleOutlined v-if="lintVisible" /><PlayCircleOutlined v-else /></template>
               {{ lintVisible ? '关闭校验' : '开启校验' }}
-            </el-button>
-          </el-tooltip>
-          <el-tooltip placement="top" content="小地图">
-            <el-button
-              :icon="mapVisible ? VideoPause : VideoPlay"
+            </a-button>
+          </a-tooltip>
+          <a-tooltip placement="top" title="小地图">
+            <a-button
+              type="text"
               @click="mapVisible = !mapVisible"
             >
+              <template #icon><PauseCircleOutlined v-if="mapVisible" /><PlayCircleOutlined v-else /></template>
               {{ mapVisible ? '收起地图' : '展开地图' }}
-            </el-button>
-          </el-tooltip>
-        </el-button-group>
-      </el-space>
+            </a-button>
+          </a-tooltip>
+        </a-button-group>
+      </a-space>
     </div>
     <div class="design-body">
       <div class="design-canvas">
         <bpmn-designer @modeler-ready="modelerReady" />
         <div v-if="!isPreviewMode" class="right-panel-arrow" @click.stop="toggleRightArrow">
-          <el-icon :size="16">
-            <Setting />
-          </el-icon>
+          <SettingOutlined :style="{ fontSize: '16px' }" />
         </div>
       </div>
       <!-- 拖拽分割条 -->
@@ -504,14 +501,50 @@ defineExpose({
 }
 
 .design-toolbar {
-  height: 40px;
-  line-height: 40px;
-  flex: 0 0 40px;
+  height: 36px;
+  flex: 0 0 36px;
   display: flex;
   align-items: center;
-  padding: 0 10px;
-  border-bottom: 1px solid var(--el-border-color, #dcdfe6);
+  padding: 0 8px;
+  border-bottom: 1px solid #e8e8e8;
   box-sizing: border-box;
+  background: #fafafa;
+
+  :deep(.ant-space) { width: 100%; }
+  :deep(.ant-btn-group) { 
+    display: inline-flex; 
+    border: 1px solid #d9d9d9; 
+    border-radius: 6px; 
+    overflow: hidden; 
+  }
+  :deep(.ant-btn-group .ant-btn) { 
+    border: none; 
+    border-radius: 0; 
+    height: 28px; 
+    width: 28px;
+    min-width: 28px;
+    padding: 0; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 14px;
+    color: #595959;
+  }
+  :deep(.ant-btn-group .ant-btn:not(:last-child)) { border-right: 1px solid #d9d9d9; }
+  :deep(.ant-btn-group .ant-btn:hover) { color: #1677ff; background: #e6f4ff; }
+  :deep(.ant-btn-text) { 
+    border: 1px solid transparent !important; 
+    border-radius: 6px;
+    padding: 0 8px !important;
+    width: auto !important;
+    min-width: auto !important;
+    height: 28px;
+    font-size: 12px;
+    color: #434343;
+  }
+  :deep(.ant-btn-text:hover) { border-color: #d9d9d9 !important; color: #1677ff; background: #f0f0f0; }
+  :deep(.ant-btn-text .anticon) { margin-right: 4px; }
+  .ant-space-item { display: flex; align-items: center; }
 }
 
 .design-body {

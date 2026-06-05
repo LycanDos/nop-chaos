@@ -91,15 +91,15 @@ const updateCondition = (condition?: Element) => {
 </script>
 
 <template>
-  <el-collapse-item name="arg1" title="流转条件">
-    <el-form-item prop="type" label="流转类型">
-      <el-radio-group v-model="circulationType">
-        <el-radio-button label="普通" value="none" />
-        <el-radio-button label="默认" value="default" />
-        <el-radio-button label="条件" value="conditional" />
-      </el-radio-group>
-    </el-form-item>
-    <el-form-item v-if="circulationType === 'conditional'" label="条件表达式">
+  <a-collapse-panel key="arg1" header="流转条件">
+    <a-form-item prop="type" label="流转类型">
+      <a-radio-group v-model="circulationType">
+        <a-radio-button label="普通" value="none" />
+        <a-radio-button label="默认" value="default" />
+        <a-radio-button label="条件" value="conditional" />
+      </a-radio-group>
+    </a-form-item>
+    <a-form-item v-if="circulationType === 'conditional'" label="条件表达式">
       <Codemirror
         :rows="3"
         :max-rows="6"
@@ -109,14 +109,14 @@ const updateCondition = (condition?: Element) => {
         :extensions="[juelSupport()]"
         v-model="conditionExpression"
       />
-      <!--      <el-input
+      <!--      <a-input
         v-model="conditionExpression"
         placeholder="请输入条件表达式"
         type="textarea"
         :rows="3"
       />-->
-    </el-form-item>
-  </el-collapse-item>
+    </a-form-item>
+  </a-collapse-panel>
 </template>
 
 <style scoped lang="scss"></style>

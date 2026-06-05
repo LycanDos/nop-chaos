@@ -3,7 +3,6 @@ import { useCloned } from '@vueuse/core'
 import { cloneDeep } from 'lodash-es'
 import { nextId } from '@/designer/utils/ElementUtil.ts'
 import type { FormProperty } from '@/types'
-import { type FormInstance, type FormRules, useFormSize } from 'element-plus'
 
 const emits = defineEmits<{
   (e: 'confirm', data: FormProperty): void
@@ -89,8 +88,8 @@ defineExpose({
 </script>
 
 <template>
-  <el-dialog
-    v-model="drawerVisible"
+  <a-modal
+    v-model:visible="drawerVisible"
     append-to-body
     class="form-property-dialog"
     width="min(92vw, 520px)"
@@ -100,7 +99,7 @@ defineExpose({
     @closed="onClosed"
     title="表单属性"
   >
-    <el-form
+    <a-form
       ref="formRef"
       class="form-property-form"
       label-position="top"
@@ -108,58 +107,58 @@ defineExpose({
       :rules="formRules"
       :size="formSize || 'default'"
     >
-      <el-row :gutter="10">
-        <el-col :span="24">
-          <el-form-item label="id" prop="id">
-            <el-input v-model="cloned.id" placeholder="请输入表单属性id"></el-input>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="名称" prop="name">
-            <el-input v-model="cloned.name" placeholder="请输入表单属性名称"></el-input>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="类型" prop="type">
-            <el-select v-model="cloned.type" placeholder="请选择类型">
-              <el-option
+      <a-row :gutter="10">
+        <a-col :span="24">
+          <a-form-item label="id" prop="id">
+            <a-input v-model="cloned.id" placeholder="请输入表单属性id"></a-input>
+          </a-form-item>
+        </a-col>
+        <a-col :span="12">
+          <a-form-item label="名称" prop="name">
+            <a-input v-model="cloned.name" placeholder="请输入表单属性名称"></a-input>
+          </a-form-item>
+        </a-col>
+        <a-col :span="12">
+          <a-form-item label="类型" prop="type">
+            <a-select v-model:value="cloned.type" placeholder="请选择类型">
+              <a-select-option
                 v-for="item in typeOptions"
                 :key="item.value"
                 :label="item.label"
                 :value="item.value"
               />
-            </el-select>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="表达式" prop="expression">
-            <el-input v-model="cloned.expression" placeholder="可选"></el-input>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="变量名" prop="variable">
-            <el-input v-model="cloned.variable" placeholder="可选"></el-input>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="默认值" prop="default">
-            <el-input v-model="cloned.default" placeholder="可选"></el-input>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item :prop="['required', 'readable', 'writable']" label="操作">
-            <el-checkbox v-model="cloned.required" label="必填" />
-            <el-checkbox v-model="cloned.readable" label="可读" />
-            <el-checkbox v-model="cloned.writable" label="可写" />
-          </el-form-item>
-        </el-col>
-      </el-row>
-    </el-form>
+            </a-select>
+          </a-form-item>
+        </a-col>
+        <a-col :span="12">
+          <a-form-item label="表达式" prop="expression">
+            <a-input v-model="cloned.expression" placeholder="可选"></a-input>
+          </a-form-item>
+        </a-col>
+        <a-col :span="12">
+          <a-form-item label="变量名" prop="variable">
+            <a-input v-model="cloned.variable" placeholder="可选"></a-input>
+          </a-form-item>
+        </a-col>
+        <a-col :span="12">
+          <a-form-item label="默认值" prop="default">
+            <a-input v-model="cloned.default" placeholder="可选"></a-input>
+          </a-form-item>
+        </a-col>
+        <a-col :span="12">
+          <a-form-item :prop="['required', 'readable', 'writable']" label="操作">
+            <a-checkbox v-model="cloned.required" label="必填" />
+            <a-checkbox v-model="cloned.readable" label="可读" />
+            <a-checkbox v-model="cloned.writable" label="可写" />
+          </a-form-item>
+        </a-col>
+      </a-row>
+    </a-form>
     <template #footer>
-      <el-button @click="drawerVisible = false">取消</el-button>
-      <el-button type="primary" @click="handleConfirm">确定</el-button>
+      <a-button @click="drawerVisible = false">取消</a-button>
+      <a-button type="primary" @click="handleConfirm">确定</a-button>
     </template>
-  </el-dialog>
+  </a-modal>
 </template>
 
 <style scoped lang="scss">
