@@ -135,13 +135,7 @@ const useInputClar = ref(true)
 const isEmbeddedExecutor = computed(() => {
   if (!bindingForm.executorDefId) return false
   const executor = executorList.value.find(e => e.executorDefId === bindingForm.executorDefId)
-  if (!executor?.versionRuleJson) return false
-  try {
-    const meta = JSON.parse(executor.versionRuleJson)
-    return meta.sourceMode === 'embedded'
-  } catch {
-    return false
-  }
+  return executor ? isOptionEmbedded(executor) : false
 })
 
 /** 内置执行器只允许 LATEST 策略（无版本概念） */
@@ -187,6 +181,7 @@ async function loadExecutors() {
     if (isEmbeddedExecutor.value) {
       bindingForm.versionStrategy = 'LATEST'
       releaseList.value = []
+      loadEmbeddedMethods(bindingForm.executorDefId)
     }
   } catch (e) {
     console.warn('[ExecutorTask] 加载执行器列表失败:', e)
@@ -216,10 +211,87 @@ async function loadMethods(executorReleaseId: string) {
   }
 }
 
+function buildEmbeddedMethod(executor: ExecutorDefItem): ExecutorMethodItem {
+  const code = executor.executorCode || 'embedded'
+  const methodCodeByExecutor: Record<string, string> = {
+    'lycan.hoppscotch': 'executeRequest',
+    'lycan.http-api': 'executeRequest',
+    'lycan.db-query': 'executeQuery',
+    'lycan.ai': 'execute',
+    'lycan.rule': 'execute',
+    'lycan.local-java': 'execute',
+    'lycan.script': 'execute',
+    'lycan.container-job': 'execute',
+    'lycan.message-async': 'execute',
+  }
+  const methodCode = methodCodeByExecutor[code] || 'execute'
+  return {
+    methodId: `embedded:${code}:${methodCode}`,
+    executorReleaseId: '',
+    methodCode,
+    methodName: methodCode === 'executeRequest' ? '执行请求' : methodCode === 'executeQuery' ? '执行查询' : '执行',
+    methodSignature: `${code}.${methodCode}(executorConfigJson)`,
+    returnJavaType: 'java.util.Map',
+    invokeMode: 'SYNC',
+    description: '内置执行器无独立发布版本，设计态直接配置执行参数。',
+    versionStatus: 'ACTIVE',
+  }
+}
+
+function buildEmbeddedSchema(methodId: string): MethodSchemaFieldItem[] {
+  const executorCode = methodId.split(':')[1] || bindingForm.executorCode
+  const hasRequestEditor = executorCode === 'lycan.hoppscotch' || executorCode === 'lycan.http-api'
+  return [
+    {
+      fieldId: `${methodId}:executorConfigJson`,
+      methodId,
+      schemaRole: 'INPUT',
+      fieldPath: 'executorConfigJson',
+      fieldName: hasRequestEditor ? '请求配置' : '执行配置',
+      dataType: 'object',
+      javaType: 'java.lang.String',
+      required: true,
+      editorUrl: hasRequestEditor ? '/plugins/lycan.hoppscotch/editor/index.html' : undefined,
+    },
+    {
+      fieldId: `${methodId}:result`,
+      methodId,
+      schemaRole: 'OUTPUT',
+      fieldPath: 'result',
+      fieldName: '执行结果',
+      dataType: 'object',
+      javaType: 'java.util.Map',
+      required: false,
+    },
+  ]
+}
+
+function loadEmbeddedMethods(executorDefId: string) {
+  const executor = executorList.value.find(e => e.executorDefId === executorDefId)
+  if (!executor) {
+    methodList.value = []
+    return
+  }
+  const method = buildEmbeddedMethod(executor)
+  methodList.value = [method]
+  if (!bindingForm.methodId || !methodList.value.some(item => item.methodId === bindingForm.methodId)) {
+    bindingForm.methodId = method.methodId
+    bindingForm.methodCode = method.methodCode
+    bindingForm.methodName = method.methodName
+  }
+  loadMethodSchema(bindingForm.methodId)
+}
+
 async function loadMethodSchema(methodId: string) {
   if (!methodId) {
     selectedMethodInputs.value = []
     selectedMethodOutputs.value = []
+    return
+  }
+  if (methodId.startsWith('embedded:')) {
+    const fields = buildEmbeddedSchema(methodId)
+    selectedMethodInputs.value = fields.filter(f => f.schemaRole === 'INPUT')
+    selectedMethodOutputs.value = fields.filter(f => f.schemaRole === 'OUTPUT')
     return
   }
   try {
@@ -269,18 +341,21 @@ const methodTagType = computed(() => {
   const method = configSummary.value?.method || ''
   if (['GET', 'HEAD', 'OPTIONS'].includes(method)) return 'success'
   if (['POST', 'PATCH'].includes(method)) return 'warning'
-  if (['PUT'].includes(method)) return 'primary'
-  if (['DELETE'].includes(method)) return 'danger'
-  return 'info'
+  if (['PUT'].includes(method)) return 'processing'
+  if (['DELETE'].includes(method)) return 'error'
+  return 'default'
 })
 
 // ========== 事件处理 ==========
 /** 判断下拉选项是否为内置执行器 */
 function isOptionEmbedded(item: ExecutorDefItem): boolean {
-  if (!item.versionRuleJson) return false
+  const raw = item.versionRuleJson || ''
+  if (!raw) return false
+  if (raw.includes('"sourceMode":"embedded"') || raw.includes('"sourceMode": "embedded"')) return true
+  if (item.executorCode?.startsWith('@builtin/') || item.currentReleaseId === '__embedded__') return true
   try {
-    const meta = JSON.parse(item.versionRuleJson)
-    return meta.sourceMode === 'embedded'
+    const meta = JSON.parse(raw)
+    return meta.sourceMode === 'embedded' || meta.entryType?.startsWith?.('@builtin/')
   } catch {
     return false
   }
@@ -304,7 +379,10 @@ function handleExecutorChange(executorDefId: string) {
   // 内置执行器无版本概念，跳过版本加载
   if (isEmbeddedExecutor.value) {
     bindingForm.versionStrategy = 'LATEST'
+    bindingForm.executorReleaseId = ''
+    bindingForm.releaseVersion = ''
     releaseList.value = []
+    loadEmbeddedMethods(executorDefId)
   } else {
     loadReleases(executorDefId)
   }
@@ -523,9 +601,19 @@ function readBindingFromElement() {
     bindingForm.executorConfigJson = binding.get('executorConfigJson') || ''
 
     // 级联加载数据
-    if (bindingForm.executorDefId) loadReleases(bindingForm.executorDefId)
-    if (bindingForm.executorReleaseId) loadMethods(bindingForm.executorReleaseId)
-    if (bindingForm.methodId) loadMethodSchema(bindingForm.methodId)
+    if (bindingForm.executorDefId) {
+      if (isEmbeddedExecutor.value) {
+        bindingForm.versionStrategy = 'LATEST'
+        bindingForm.executorReleaseId = ''
+        bindingForm.releaseVersion = ''
+        releaseList.value = []
+        loadEmbeddedMethods(bindingForm.executorDefId)
+      } else {
+        loadReleases(bindingForm.executorDefId)
+        if (bindingForm.executorReleaseId) loadMethods(bindingForm.executorReleaseId)
+        if (bindingForm.methodId) loadMethodSchema(bindingForm.methodId)
+      }
+    }
   } else {
     resetForm()
   }
@@ -560,33 +648,34 @@ onMounted(() => {
     <!-- 参数配置面板（Hoppscotch 请求编辑器） -->
     <a-collapse-panel
       v-if="methodEditorField"
-      key="executor-method-editor" header="参数配置"
+      key="executor-method-editor"
     >
+    <template #header><span class="panel-section-title">参数配置</span></template>
     <a-form-item>
       <template #label>
         请求信息
-        <a-button v-if="methodEditorField.editorUrl" type="primary" link @click="openExecutorConfigDrawer" ><EditOutlined /> 编辑请求 </a-button>
+        <a-button v-if="methodEditorField.editorUrl" type="link" class="panel-inline-action" @click="openExecutorConfigDrawer"><EditOutlined /> 编辑请求</a-button>
       </template>
 
       <!-- 摘要显示：method + URL + 详情 -->
       <div v-if="configSummary" class="config-summary">
         <div class="summary-row">
-          <a-tag :type="methodTagType" size="small">
+          <a-tag :color="methodTagType" class="bpd-tag">
             {{ configSummary.method }}
           </a-tag>
           <span class="config-url">{{ configSummary.url }}</span>
         </div>
         <div class="summary-details">
-          <a-tag v-if="configSummary.queryParamsCount" size="small" color="processing">
+          <a-tag v-if="configSummary.queryParamsCount" class="bpd-tag" color="processing">
             参数: {{ configSummary.queryParamsCount }}
           </a-tag>
-          <a-tag v-if="configSummary.headersCount" size="small" color="processing">
+          <a-tag v-if="configSummary.headersCount" class="bpd-tag" color="processing">
             Headers: {{ configSummary.headersCount }}
           </a-tag>
-          <a-tag v-if="configSummary.authType !== 'none'" size="small" color="warning">
+          <a-tag v-if="configSummary.authType !== 'none'" class="bpd-tag" color="warning">
             Auth: {{ { bearer: 'Bearer', basic: 'Basic', apikey: 'API Key' }[configSummary.authType] || configSummary.authType }}
           </a-tag>
-          <a-tag v-if="configSummary.hasBody" size="small" color="success">
+          <a-tag v-if="configSummary.hasBody" class="bpd-tag" color="success">
             Body
           </a-tag>
         </div>
@@ -599,7 +688,8 @@ onMounted(() => {
     </a-collapse-panel>
 
     <!-- 执行器绑定（DB 执行器） -->
-    <a-collapse-panel key="executor-binding" header="执行器绑定">
+    <a-collapse-panel key="executor-binding">
+    <template #header><span class="panel-section-title">执行器绑定</span></template>
     <a-form-item label="执行器">
       <a-select
         v-model:value="bindingForm.executorDefId"
@@ -608,6 +698,7 @@ onMounted(() => {
         placeholder="选择执行器"
         style="width: 100%"
         :loading="loading"
+        option-label-prop="label"
         @change="handleExecutorChange"
       >
         <a-select-option
@@ -616,11 +707,11 @@ onMounted(() => {
           :label="`${item.executorName} (${item.executorCode})`"
           :value="item.executorDefId"
         >
-          <div style="display: flex; justify-content: space-between; align-items: center">
-            <span>{{ item.executorName }}</span>
-            <span style="display: flex; gap: 4px">
-              <a-tag v-if="isOptionEmbedded(item)" size="small" color="success">内置</a-tag>
-              <a-tag size="small" color="processing">{{ item.executorCode }}</a-tag>
+          <div class="executor-option">
+            <span class="executor-option__name">{{ item.executorName }}</span>
+            <span class="executor-option__tags">
+              <a-tag v-if="isOptionEmbedded(item)" class="bpd-tag" color="success">内置</a-tag>
+              <a-tag class="bpd-tag" color="processing">{{ item.executorCode }}</a-tag>
             </span>
           </div>
         </a-select-option>
@@ -633,6 +724,7 @@ onMounted(() => {
         v-model:value="bindingForm.versionStrategy"
         style="width: 100%"
         :disabled="isEmbeddedExecutor"
+        option-label-prop="label"
         @change="handleVersionStrategyChange"
       >
         <a-select-option
@@ -640,12 +732,14 @@ onMounted(() => {
           :key="opt.value"
           :label="opt.label"
           :value="opt.value"
-        />
+        >
+          {{ opt.label }}
+        </a-select-option>
       </a-select>
     </a-form-item>
 
     <!-- 精确版本选择 -->
-    <a-form-item v-if="bindingForm.versionStrategy === 'EXACT'" label="版本">
+    <a-form-item v-if="bindingForm.versionStrategy === 'EXACT' && !isEmbeddedExecutor" label="版本">
       <a-select
         v-model:value="bindingForm.executorReleaseId"
         showSearch
@@ -653,6 +747,7 @@ onMounted(() => {
         :disabled="!bindingForm.executorDefId"
         placeholder="选择版本"
         style="width: 100%"
+        option-label-prop="label"
         @change="handleReleaseChange"
       >
         <a-select-option
@@ -661,9 +756,9 @@ onMounted(() => {
           :label="item.releaseVersion"
           :value="item.executorReleaseId"
         >
-          <div style="display: flex; justify-content: space-between; align-items: center">
-            <span>{{ item.releaseVersion }}</span>
-            <a-tag v-if="item.compatLevel" size="small" :type="item.compatLevel === 'FULL' ? 'success' : 'warning'">
+          <div class="executor-option">
+            <span class="executor-option__name">{{ item.releaseVersion }}</span>
+            <a-tag v-if="item.compatLevel" class="bpd-tag" :color="item.compatLevel === 'FULL' ? 'success' : 'warning'">
               {{ item.compatLevel }}
             </a-tag>
           </div>
@@ -674,7 +769,7 @@ onMounted(() => {
     <!-- 版本规则表达式 -->
     <a-form-item v-if="showVersionExpr && bindingForm.versionStrategy !== 'EXACT'" label="版本规则">
       <a-input
-        v-model="bindingForm.versionExpr"
+        v-model:value="bindingForm.versionExpr"
         :placeholder="versionExprPlaceholder"
         @change="saveBindingToElement"
       >
@@ -687,7 +782,7 @@ onMounted(() => {
     </a-form-item>
 
     <!-- LATEST 策略下选择版本预览（用于加载方法列表） -->
-    <a-form-item v-if="bindingForm.versionStrategy === 'LATEST'" label="当前版本">
+    <a-form-item v-if="bindingForm.versionStrategy === 'LATEST' && !isEmbeddedExecutor" label="当前版本">
       <a-select
         v-model:value="bindingForm.executorReleaseId"
         showSearch
@@ -695,6 +790,7 @@ onMounted(() => {
         :disabled="!bindingForm.executorDefId"
         placeholder="自动使用最新版本（可预览）"
         style="width: 100%"
+        option-label-prop="label"
         @change="handleReleaseChange"
       >
         <a-select-option
@@ -702,7 +798,9 @@ onMounted(() => {
           :key="item.executorReleaseId"
           :label="`${item.releaseVersion} (预览)`"
           :value="item.executorReleaseId"
-        />
+        >
+          {{ item.releaseVersion }} (预览)
+        </a-select-option>
       </a-select>
     </a-form-item>
 
@@ -712,9 +810,10 @@ onMounted(() => {
         v-model:value="bindingForm.methodId"
         showSearch
         allowClear
-        :disabled="!bindingForm.executorReleaseId"
+        :disabled="!bindingForm.executorReleaseId && !isEmbeddedExecutor"
         placeholder="选择执行方法"
         style="width: 100%"
+        option-label-prop="label"
         @change="handleMethodChange"
       >
         <a-select-option
@@ -723,9 +822,9 @@ onMounted(() => {
           :label="`${item.methodName} (${item.methodCode})`"
           :value="item.methodId"
         >
-          <div style="display: flex; justify-content: space-between; align-items: center">
-            <span>{{ item.methodName }}</span>
-            <a-tag size="small" color="processing">{{ item.methodCode }}</a-tag>
+          <div class="executor-option">
+            <span class="executor-option__name">{{ item.methodName }}</span>
+            <a-tag class="bpd-tag" color="processing">{{ item.methodCode }}</a-tag>
           </div>
         </a-select-option>
       </a-select>
@@ -740,7 +839,8 @@ onMounted(() => {
     </a-collapse-panel>
 
     <!-- 入参 Clar -->
-    <a-collapse-panel v-if="useInputClar" key="executor-input-clar" header="入参 Clar">
+    <a-collapse-panel v-if="useInputClar" key="executor-input-clar">
+    <template #header><span class="panel-section-title">入参 Clar</span></template>
     <div class="panel-action-row">
       <span class="panel-action-row__title">入参 Clar</span>
       <a-button type="primary" size="small" :disabled="!bindingForm.methodId" @click="openInputClarDrawer">
@@ -752,7 +852,7 @@ onMounted(() => {
       <div v-if="bindingForm.inputPolicyDocument" class="clar-overview">
         <div class="clar-meta">
           <span class="clar-name">{{ bindingForm.inputPolicyDocument.name }}</span>
-          <a-tag size="small">Layers: {{ bindingForm.inputPolicyDocument.layers?.length || 0 }}</a-tag>
+          <a-tag class="bpd-tag">Layers: {{ bindingForm.inputPolicyDocument.layers?.length || 0 }}</a-tag>
         </div>
         
         <div class="clar-layers">
@@ -762,8 +862,8 @@ onMounted(() => {
             class="layer-item"
           >
             <span class="layer-name">{{ layer.name }}</span>
-            <a-tag size="small" color="processing">{{ layer.layerType }}</a-tag>
-            <a-tag size="small">Rules: {{ layer.rules?.length || 0 }}</a-tag>
+            <a-tag class="bpd-tag" color="processing">{{ layer.layerType }}</a-tag>
+            <a-tag class="bpd-tag">Rules: {{ layer.rules?.length || 0 }}</a-tag>
           </div>
         </div>
       </div>
@@ -776,11 +876,12 @@ onMounted(() => {
     </a-collapse-panel>
 
     <!-- 入参映射 (旧版,保留向后兼容) -->
-    <a-collapse-panel v-else key="executor-input" header="入参映射">
+    <a-collapse-panel v-else key="executor-input">
+    <template #header><span class="panel-section-title">入参映射</span></template>
     <div class="panel-action-row">
       <span class="panel-action-row__title">
         入参映射 
-        <a-tag size="small" color="warning">旧版</a-tag>
+        <a-tag class="bpd-tag" color="warning">旧版</a-tag>
       </span>
       <a-button type="primary" size="small" :disabled="!bindingForm.methodId" @click="openInputMappingDrawer">
         <EditOutlined /> 编辑映射
@@ -791,7 +892,7 @@ onMounted(() => {
         <a-table-column data-index="target" title="目标参数" :ellipsis="true" />
         <a-table-column data-index="sourceType" title="类型" width="80">
           <template #default="{ record }">
-            <a-tag size="small" :color="record.sourceType === 'variable' ? 'processing' : 'warning'">
+            <a-tag class="bpd-tag" :color="record.sourceType === 'variable' ? 'processing' : 'warning'">
               {{ record.sourceType === 'variable' ? '变量' : record.sourceType === 'literal' ? '字面量' : '表达式' }}
             </a-tag>
           </template>
@@ -805,7 +906,8 @@ onMounted(() => {
     </a-collapse-panel>
 
     <!-- 出参 Delta -->
-    <a-collapse-panel key="executor-output" header="出参 Delta">
+    <a-collapse-panel key="executor-output">
+    <template #header><span class="panel-section-title">出参 Delta</span></template>
     <div class="panel-action-row">
       <span class="panel-action-row__title">出参 Delta</span>
       <a-button type="primary" size="small" :disabled="!bindingForm.methodId" @click="openOutputDeltaDrawer">
@@ -817,7 +919,7 @@ onMounted(() => {
         <a-table-column data-index="target" title="流程变量" :ellipsis="true" />
         <a-table-column data-index="mergeStrategy" title="策略" width="80">
           <template #default="{ record }">
-            <a-tag size="small" :color="record.mergeStrategy === 'overwrite' ? 'default' : 'success'">
+            <a-tag class="bpd-tag" :color="record.mergeStrategy === 'overwrite' ? 'default' : 'success'">
               {{ record.mergeStrategy === 'overwrite' ? '覆盖' : record.mergeStrategy === 'merge' ? '合并' : '追加' }}
             </a-tag>
           </template>
@@ -831,10 +933,11 @@ onMounted(() => {
     </a-collapse-panel>
 
     <!-- 执行配置 -->
-    <a-collapse-panel key="executor-config" header="执行配置">
+    <a-collapse-panel key="executor-config">
+    <template #header><span class="panel-section-title">执行配置</span></template>
     <a-form-item label="超时(ms)">
       <a-input-number
-        v-model="bindingForm.timeoutMs"
+        v-model:value="bindingForm.timeoutMs"
         :min="0"
         :step="1000"
         controls
@@ -844,7 +947,7 @@ onMounted(() => {
     </a-form-item>
     <a-form-item label="重试次数">
       <a-input-number
-        v-model="bindingForm.retryCount"
+        v-model:value="bindingForm.retryCount"
         :min="0"
         :max="10"
         controls
@@ -854,7 +957,7 @@ onMounted(() => {
     </a-form-item>
     <a-form-item v-if="bindingForm.retryCount> 0" label="重试间隔(ms)">
       <a-input-number
-        v-model="bindingForm.retryIntervalMs"
+        v-model:value="bindingForm.retryIntervalMs"
         :min="100"
         :step="1000"
         controls
@@ -869,6 +972,7 @@ onMounted(() => {
       <a-select
         v-model:value="bindingForm.failureStrategy"
         style="width: 100%"
+        option-label-prop="label"
         @change="saveBindingToElement"
       >
         <a-select-option
@@ -876,7 +980,9 @@ onMounted(() => {
           :key="opt.value"
           :label="opt.label"
           :value="opt.value"
-        />
+        >
+          {{ opt.label }}
+        </a-select-option>
       </a-select>
     </a-form-item>
     </a-collapse-panel>
@@ -925,6 +1031,52 @@ onMounted(() => {
   color: var(--el-text-color-primary);
   font-size: 13px;
   font-weight: 500;
+}
+
+.panel-section-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: var(--bpd-text-color, #262626);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.panel-inline-action {
+  height: 24px;
+  margin-left: 8px;
+  padding: 0 4px;
+  font-size: 12px;
+}
+
+.executor-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.executor-option__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.executor-option__tags {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.bpd-tag {
+  margin-right: 0;
+  line-height: 18px;
+  border-radius: 4px;
+  font-size: 12px;
 }
 
 .executor-mini-table {

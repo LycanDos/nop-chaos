@@ -16,18 +16,18 @@ const text = useFieldRef('text')
   <a-collapse-panel key="arg1" header="邮件">
     <a-form-item label="收件人">
       <a-select v-model:value="to" multiple showSearch allow-create allowClear placeholder="请选择收件人">
-        <a-select-option label="张三" value="zhangsan@qq.com" />
-        <a-select-option label="李四" value="lisi@qq.com" />
-        <a-select-option label="王五" value="wangwu@qq.com" />
-        <a-select-option label="毛六" value="maoliu@qq.com" />
-        <a-select-option label="钱七" value="qianqi@qq.com" />
+        <a-select-option value="zhangsan@qq.com">张三</a-select-option>
+        <a-select-option value="lisi@qq.com">李四</a-select-option>
+        <a-select-option value="wangwu@qq.com">王五</a-select-option>
+        <a-select-option value="maoliu@qq.com">毛六</a-select-option>
+        <a-select-option value="qianqi@qq.com">钱七</a-select-option>
       </a-select>
     </a-form-item>
     <a-form-item label="主题">
-      <a-input v-model="subject" placeholder="请输入主题" />
+      <a-input v-model:value="subject" placeholder="请输入主题" />
     </a-form-item>
     <a-form-item label="内容">
-      <a-input v-model="text" type="textarea" :rows="4" placeholder="请输入内容" />
+      <a-input v-model:value="text" type="textarea" :rows="4" placeholder="请输入内容" />
     </a-form-item>
     <a-row :gutter="10">
       <a-col :span="form?.labelPosition === 'top' ? 12 : 24">
@@ -42,11 +42,11 @@ const text = useFieldRef('text')
             allowClear
             placeholder="请选择抄送人"
           >
-            <a-select-option label="张三" value="zhangsan@qq.com" />
-            <a-select-option label="李四" value="lisi@qq.com" />
-            <a-select-option label="王五" value="wangwu@qq.com" />
-            <a-select-option label="毛六" value="maoliu@qq.com" />
-            <a-select-option label="钱七" value="qianqi@qq.com" />
+            <a-select-option value="zhangsan@qq.com">张三</a-select-option>
+            <a-select-option value="lisi@qq.com">李四</a-select-option>
+            <a-select-option value="wangwu@qq.com">王五</a-select-option>
+            <a-select-option value="maoliu@qq.com">毛六</a-select-option>
+            <a-select-option value="qianqi@qq.com">钱七</a-select-option>
           </a-select>
         </a-form-item>
       </a-col>
@@ -62,11 +62,11 @@ const text = useFieldRef('text')
             allowClear
             placeholder="请选择密送人"
           >
-            <a-select-option label="张三" value="zhangsan@qq.com" />
-            <a-select-option label="李四" value="lisi@qq.com" />
-            <a-select-option label="王五" value="wangwu@qq.com" />
-            <a-select-option label="毛六" value="maoliu@qq.com" />
-            <a-select-option label="钱七" value="qianqi@qq.com" />
+            <a-select-option value="zhangsan@qq.com">张三</a-select-option>
+            <a-select-option value="lisi@qq.com">李四</a-select-option>
+            <a-select-option value="wangwu@qq.com">王五</a-select-option>
+            <a-select-option value="maoliu@qq.com">毛六</a-select-option>
+            <a-select-option value="qianqi@qq.com">钱七</a-select-option>
           </a-select>
         </a-form-item>
       </a-col>

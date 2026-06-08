@@ -43,9 +43,9 @@ const completionCondition = customRef((track, trigger) => {
 <template>
   <a-collapse-panel key="arg1" header="临时子流程">
     <a-form-item label="排序">
-      <a-radio-group v-model="ordering">
-        <a-radio-button label="并行" value="Parallel" />
-        <a-radio-button label="串行" value="Sequential" />
+      <a-radio-group v-model:value="ordering">
+        <a-radio-button value="Parallel">并行</a-radio-button>
+        <a-radio-button value="Sequential">串行</a-radio-button>
       </a-radio-group>
     </a-form-item>
     <a-form-item label="取消剩余实例">
@@ -62,7 +62,7 @@ const completionCondition = customRef((track, trigger) => {
         v-model="completionCondition"
       />
       <!--      <a-input
-        v-model="completionCondition"
+        v-model:value="completionCondition"
         type="textarea"
         :rows="3"
         placeholder="请输入完成条件"

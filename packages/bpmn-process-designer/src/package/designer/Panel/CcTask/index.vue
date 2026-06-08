@@ -18,11 +18,11 @@ const assignee = useFieldRef('assignee')
         allowClear
         placeholder="请选择抄送人"
       >
-        <a-select-option label="张三" value="zhangsan" />
-        <a-select-option label="李四" value="lisi" />
-        <a-select-option label="王五" value="wangwu" />
-        <a-select-option label="毛六" value="maoliu" />
-        <a-select-option label="钱七" value="qianqi" />
+        <a-select-option value="zhangsan">张三</a-select-option>
+        <a-select-option value="lisi">李四</a-select-option>
+        <a-select-option value="wangwu">王五</a-select-option>
+        <a-select-option value="maoliu">毛六</a-select-option>
+        <a-select-option value="qianqi">钱七</a-select-option>
       </a-select>
     </a-form-item>
   </a-collapse-panel>

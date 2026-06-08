@@ -91,12 +91,13 @@ const updateCondition = (condition?: Element) => {
 </script>
 
 <template>
-  <a-collapse-panel key="arg1" header="流转条件">
+  <a-collapse-panel key="arg1">
+    <template #header><span class="bpd-panel-title">流转条件</span></template>
     <a-form-item prop="type" label="流转类型">
-      <a-radio-group v-model="circulationType">
-        <a-radio-button label="普通" value="none" />
-        <a-radio-button label="默认" value="default" />
-        <a-radio-button label="条件" value="conditional" />
+      <a-radio-group v-model:value="circulationType">
+        <a-radio-button value="none">普通</a-radio-button>
+        <a-radio-button value="default">默认</a-radio-button>
+        <a-radio-button value="conditional">条件</a-radio-button>
       </a-radio-group>
     </a-form-item>
     <a-form-item v-if="circulationType === 'conditional'" label="条件表达式">
@@ -110,7 +111,7 @@ const updateCondition = (condition?: Element) => {
         v-model="conditionExpression"
       />
       <!--      <a-input
-        v-model="conditionExpression"
+        v-model:value="conditionExpression"
         placeholder="请输入条件表达式"
         type="textarea"
         :rows="3"
@@ -119,4 +120,10 @@ const updateCondition = (condition?: Element) => {
   </a-collapse-panel>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.bpd-panel-title {
+  color: var(--bpd-text-color, #262626);
+  font-size: 13px;
+  font-weight: 600;
+}
+</style>

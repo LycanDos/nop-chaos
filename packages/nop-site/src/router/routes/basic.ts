@@ -159,6 +159,27 @@ export const SKIN_DESIGNER_ROUTE: AppRouteRecordRaw = {
   ],
 };
 
+export const ANTD_COMPONENT_DEMO_ROUTE: AppRouteRecordRaw = {
+  path: '/antd-component-demo',
+  name: 'AntdComponentDemoRoot',
+  component: LAYOUT,
+  meta: {
+    title: 'Antd组件Demo',
+    hideMenu: true,
+  },
+  children: [
+    {
+      path: '',
+      name: 'AntdComponentDemo',
+      component: () => import('/@/views/devtools/AntdComponentDemo.vue'),
+      meta: {
+        title: 'Antd组件Demo',
+        hideMenu: true,
+      },
+    },
+  ],
+};
+
 // 工作流运行时查看器 — 已整合到服务端菜单「流程中心 > 流程实例」中
 // 路由保留供直接URL访问，不显示在侧边栏
 export const WORKFLOW_RUNTIME_VIEWER_ROUTE: AppRouteRecordRaw = {
@@ -206,4 +227,3 @@ export const WORKFLOW_RUNTIME_VIEWER_ROUTE: AppRouteRecordRaw = {
     },
   ],
 };
-

@@ -211,53 +211,44 @@ watch(
     <div style="overflow:auto">
       <div class="form-permissions">
         <a-form-item label="表单标识">
-          <a-input v-model="formKey" clearable placeholder="请输入表单标识"></a-input>
+          <a-input v-model:value="formKey" allow-clear placeholder="请输入表单标识"></a-input>
         </a-form-item>
         <a-form-item label="表单属性">
           <template #label>
             表单属性
-            <a-button type="primary" link @click="addFormProperty"><PlusOutlined />添加</a-button>
+            <a-button type="link" size="small" @click="addFormProperty"><PlusOutlined />添加</a-button>
           </template>
-          <a-table :dataSource="formPropertyData" height="250px">
-            <a-table-column type="expand" width="48">
-              <template #default="{ row }">
-                <a-descriptions :column="2" label-width="50" size="small" class="p20px">
-                  <a-descriptions-item label="变量名：">
-                    {{ toDisplayText(row.variable) }}
-                  </a-descriptions-item>
-                  <a-descriptions-item label="表达式：">
-                    {{ toDisplayText(row.expression) }}
-                  </a-descriptions-item>
-                  <a-descriptions-item label="默认值：">
-                    {{ toDisplayText(row.default) }}
-                  </a-descriptions-item>
-                  <a-descriptions-item label="必填：">
-                    {{ toSwitchLabel(row.required) }}
-                  </a-descriptions-item>
-                  <a-descriptions-item label="可读：">
-                    {{ toSwitchLabel(row.readable) }}
-                  </a-descriptions-item>
-                  <a-descriptions-item label="可写：">
-                    {{ toSwitchLabel(row.writable) }}
-                  </a-descriptions-item>
-                </a-descriptions>
-              </template>
-            </a-table-column>
-            <a-table-column prop="id" label="id" show-overflow-tooltip></a-table-column>
-            <a-table-column prop="name" label="名称" show-overflow-tooltip></a-table-column>
-            <a-table-column
-              prop="type"
-              align="center"
-              min-width="65"
-              label="类型"
-            ></a-table-column>
-            <a-table-column label="操作" min-width="75" align="center">
-              <template #default="{ row, $index }">
-                <a-button link type="primary" @click="editFormProperty(row)" ><EditOutlined /></a-button>
-                <a-popconfirm title="您确定要删除该属性吗？" @confirm="delFormProperty($index)">
-                  <template #reference>
-                    <a-button danger link><DeleteOutlined /></a-button>
-                  </template>
+          <a-table :data-source="formPropertyData" size="small" :pagination="false" :scroll="{ y: 250 }" row-key="id">
+            <template #expandedRowRender="{ record }">
+              <a-descriptions :column="2" size="small" class="p20px">
+                <a-descriptions-item label="变量名">
+                  {{ toDisplayText(record.variable) }}
+                </a-descriptions-item>
+                <a-descriptions-item label="表达式">
+                  {{ toDisplayText(record.expression) }}
+                </a-descriptions-item>
+                <a-descriptions-item label="默认值">
+                  {{ toDisplayText(record.default) }}
+                </a-descriptions-item>
+                <a-descriptions-item label="必填">
+                  {{ toSwitchLabel(record.required) }}
+                </a-descriptions-item>
+                <a-descriptions-item label="可读">
+                  {{ toSwitchLabel(record.readable) }}
+                </a-descriptions-item>
+                <a-descriptions-item label="可写">
+                  {{ toSwitchLabel(record.writable) }}
+                </a-descriptions-item>
+              </a-descriptions>
+            </template>
+            <a-table-column data-index="id" title="id" :ellipsis="true" />
+            <a-table-column data-index="name" title="名称" :ellipsis="true" />
+            <a-table-column data-index="type" align="center" width="76" title="类型" />
+            <a-table-column title="操作" width="72" align="center">
+              <template #default="{ record, index }">
+                <a-button type="link" size="small" @click="editFormProperty(record)"><EditOutlined /></a-button>
+                <a-popconfirm title="您确定要删除该属性吗？" @confirm="delFormProperty(index)">
+                  <a-button danger type="link" size="small"><DeleteOutlined /></a-button>
                 </a-popconfirm>
               </template>
             </a-table-column>
@@ -267,12 +258,12 @@ watch(
         <FormPropertyDialog ref="formPropertyDialogRef" @confirm="confirmFormProperty" />
 
         <a-form-item label="操作权限" v-if="isUserTask">
-          <a-table :dataSource="operationData" height="200px">
-            <a-table-column label="按钮" prop="label"></a-table-column>
-            <a-table-column label="属性" prop="value"></a-table-column>
-            <a-table-column label="是否启用" align="center" prop="enable">
-              <template #default="{ row }">
-                <a-switch v-model:checked="row.enable" @change="handleOperationChange(row)" />
+          <a-table :data-source="operationData" size="small" :pagination="false" :scroll="{ y: 200 }" row-key="value">
+            <a-table-column data-index="label" title="按钮" />
+            <a-table-column data-index="value" title="属性" />
+            <a-table-column title="是否启用" align="center" data-index="enable" width="92">
+              <template #default="{ record }">
+                <a-switch v-model:checked="record.enable" @change="handleOperationChange(record)" />
               </template>
             </a-table-column>
           </a-table>
@@ -284,9 +275,9 @@ watch(
 
 <style scoped lang="scss">
 .form-permissions {
-  padding: 10px;
+  padding: 8px 0;
 }
 .p20px {
-  padding: 0 15px;
+  padding: 4px 8px;
 }
 </style>

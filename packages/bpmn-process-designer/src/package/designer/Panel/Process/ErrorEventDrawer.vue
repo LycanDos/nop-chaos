@@ -49,27 +49,26 @@ defineExpose({
 </script>
 
 <template>
-  <a-drawer v-model:visible="drawerVisible" append-to-body :lock-scroll="false" @closed="onClosed" :show-close="false" :closable="false">
+  <a-drawer v-model:visible="drawerVisible" width="420px" :closable="false" @close="onClosed">
     <a-form
       ref="formRef"
-      label-position="top"
+      layout="vertical"
       :model="cloned"
       :rules="formRules"
-      label-width="90px"
       :size="formSize"
     >
       <a-form-item label="id" prop="id">
-        <a-input v-model="cloned.id" placeholder="请输入id">
+        <a-input v-model:value="cloned.id" placeholder="请输入id">
           <template #append>
             <a-button @click="cloned.id = nextId('Error_')"><ReloadOutlined /></a-button>
           </template>
         </a-input>
       </a-form-item>
       <a-form-item label="名称" prop="name">
-        <a-input v-model="cloned.name" placeholder="请输入名称" />
+        <a-input v-model:value="cloned.name" placeholder="请输入名称" />
       </a-form-item>
       <a-form-item label="错误码" prop="errorCode">
-        <a-input v-model="cloned.errorCode" placeholder="请输入错误码" />
+        <a-input v-model:value="cloned.errorCode" placeholder="请输入错误码" />
       </a-form-item>
     </a-form>
     <template #footer>

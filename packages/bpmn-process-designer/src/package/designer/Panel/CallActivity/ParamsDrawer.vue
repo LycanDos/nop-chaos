@@ -58,10 +58,10 @@ defineExpose({
       :size="formSize"
     >
       <a-form-item label="来源" prop="source">
-        <a-input v-model="cloned.source" placeholder="请输入来源" />
+        <a-input v-model:value="cloned.source" placeholder="请输入来源" />
       </a-form-item>
       <a-form-item label="目标" prop="target">
-        <a-input v-model="cloned.target" placeholder="请输入目标" />
+        <a-input v-model:value="cloned.target" placeholder="请输入目标" />
       </a-form-item>
     </a-form>
     <template #footer>

@@ -478,12 +478,32 @@ export default defineComponent({
     <div
       ref="highlightRef"
       class="copilot-selector-highlight"
-      style="display:none;position:fixed;border:2px solid #1890ff;background:rgba(24,144,255,0.1);z-index:99999;pointer-events:none;border-radius:2px;"
+      style="display:none;position:fixed;z-index:99999;pointer-events:none;border-radius:2px;"
     />
     <div
       ref="labelRef"
       class="copilot-selector-label"
-      style="display:none;position:fixed;background:#1890ff;color:#fff;padding:4px 10px;font-size:12px;border-radius:4px;z-index:100000;pointer-events:none;white-space:nowrap;max-width:320px;overflow:hidden;text-overflow:ellipsis;box-shadow:0 2px 8px rgba(0,0,0,0.15);"
+      style="display:none;position:fixed;z-index:100000;pointer-events:none;"
     />
   </Teleport>
 </template>
+
+<style lang="less" scoped>
+.copilot-selector-highlight {
+  border: 2px solid @primary-color;
+  background: fade(@primary-color, 10%);
+}
+
+.copilot-selector-label {
+  background: @primary-color;
+  color: #fff;
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 2px 8px fade(#000, 15%);
+}
+</style>

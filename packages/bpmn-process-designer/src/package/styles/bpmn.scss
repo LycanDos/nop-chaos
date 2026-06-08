@@ -1,36 +1,80 @@
-// Element Plus CSS 变量 polyfill（不依赖 element-plus）
-// 当宿主项目未加载 element-plus CSS 时提供默认值
+// Ant Design token bridge.
+// 设计器历史子面板仍使用 --el-* 命名，这里把它们映射到宿主系统主题变量。
 :root {
-  --el-color-primary: #409eff;
-  --el-color-primary-light-5: #a0cfff;
-  --el-color-primary-light-7: #a0cfff;
-  --el-color-primary-light-9: #ecf5ff;
-  --el-color-success: #67c23a;
-  --el-color-warning: #e6a23c;
-  --el-color-danger: #f56c6c;
-  --el-color-error: #f56c6c;
-  --el-color-info: #909399;
-  --el-color-info-light-8: #e9e9eb;
-  --el-color-info-light-9: #f4f4f5;
-  --el-text-color-primary: #303133;
-  --el-text-color-regular: #606266;
-  --el-text-color-secondary: #909399;
-  --el-text-color-placeholder: #a8abb2;
-  --el-border-color: #dcdfe6;
-  --el-border-color-light: #e4e7ed;
-  --el-border-color-lighter: #ebeef5;
-  --el-border-radius-base: 4px;
-  --el-border: 0px;
-  --el-bg-color: #ffffff;
-  --el-bg-color-overlay: #ffffff;
-  --el-fill-color: #f0f2f5;
-  --el-fill-color-blank: #ffffff;
-  --el-fill-color-light: #f5f7fa;
-  --el-fill-color-lighter: #fafafa;
-  --el-fill-color-darker: #e6e8eb;
+  --bpd-primary-color: var(--primary-color, #1890ff);
+  --bpd-primary-color-hover: var(--primary-5, #40a9ff);
+  --bpd-primary-color-active: var(--primary-7, #096dd9);
+  --bpd-primary-color-bg: var(--primary-1, #e6f7ff);
+  --bpd-primary-color-bg-hover: var(--primary-2, #bae7ff);
+  --bpd-success-color: #52c41a;
+  --bpd-warning-color: #faad14;
+  --bpd-danger-color: #ff4d4f;
+  --bpd-info-color: #8c8c8c;
+  --bpd-text-color: #262626;
+  --bpd-text-color-secondary: #595959;
+  --bpd-text-color-tertiary: #8c8c8c;
+  --bpd-text-color-quaternary: #bfbfbf;
+  --bpd-border-color: #d9d9d9;
+  --bpd-border-color-split: #f0f0f0;
+  --bpd-container-bg: #ffffff;
+  --bpd-layout-bg: #f5f5f5;
+  --bpd-fill-secondary: #fafafa;
+  --bpd-fill-tertiary: #f5f5f5;
+  --bpd-fill-quaternary: #fafafa;
+  --bpd-radius: 6px;
+  --bpd-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
+
+  --el-color-primary: var(--bpd-primary-color);
+  --el-color-primary-light-5: var(--bpd-primary-color-hover);
+  --el-color-primary-light-7: var(--bpd-primary-color-bg-hover);
+  --el-color-primary-light-8: var(--bpd-primary-color-bg-hover);
+  --el-color-primary-light-9: var(--bpd-primary-color-bg);
+  --el-color-success: var(--bpd-success-color);
+  --el-color-warning: var(--bpd-warning-color);
+  --el-color-danger: var(--bpd-danger-color);
+  --el-color-error: var(--bpd-danger-color);
+  --el-color-info: var(--bpd-info-color);
+  --el-color-info-light-8: var(--bpd-border-color-split);
+  --el-color-info-light-9: var(--bpd-fill-secondary);
+  --el-color-white: #ffffff;
+  --el-text-color-primary: var(--bpd-text-color);
+  --el-text-color-regular: var(--bpd-text-color-secondary);
+  --el-text-color-secondary: var(--bpd-text-color-tertiary);
+  --el-text-color-placeholder: var(--bpd-text-color-quaternary);
+  --el-border-color: var(--bpd-border-color);
+  --el-border-color-light: var(--bpd-border-color-split);
+  --el-border-color-lighter: var(--bpd-border-color-split);
+  --el-border-radius-base: var(--bpd-radius);
+  --el-border-style: solid;
+  --el-border: 1px solid var(--bpd-border-color-split);
+  --el-bg-color: var(--bpd-container-bg);
+  --el-bg-color-overlay: var(--bpd-container-bg);
+  --el-fill-color: var(--bpd-fill-tertiary);
+  --el-fill-color-blank: var(--bpd-container-bg);
+  --el-fill-color-light: var(--bpd-fill-tertiary);
+  --el-fill-color-lighter: var(--bpd-fill-secondary);
+  --el-fill-color-darker: #e6f4ff;
+  --el-box-shadow: var(--bpd-shadow);
   --el-font-size-base: 14px;
-  --el-dialog-padding-primary: 20px;
-  --el-drawer-padding-primary: 0px;
+  --el-dialog-padding-primary: 16px;
+  --el-drawer-padding-primary: 16px;
+}
+
+html[data-theme='dark'],
+html.dark {
+  --bpd-text-color: rgba(255, 255, 255, 0.88);
+  --bpd-text-color-secondary: rgba(255, 255, 255, 0.65);
+  --bpd-text-color-tertiary: rgba(255, 255, 255, 0.45);
+  --bpd-text-color-quaternary: rgba(255, 255, 255, 0.25);
+  --bpd-border-color: #424242;
+  --bpd-border-color-split: #303030;
+  --bpd-container-bg: #141414;
+  --bpd-layout-bg: #000000;
+  --bpd-fill-secondary: #1f1f1f;
+  --bpd-fill-tertiary: #262626;
+  --bpd-fill-quaternary: #1d1d1d;
+  --bpd-primary-color-bg: rgba(24, 144, 255, 0.16);
+  --bpd-primary-color-bg-hover: rgba(24, 144, 255, 0.24);
 }
 
 $color-primary: var(--el-color-primary);
@@ -104,8 +148,9 @@ body,
   margin-bottom: 7px;
 }
 
-th.el-table__cell {
-  background: var(--el-fill-color-lighter) !important;
+th.el-table__cell,
+.ant-table-thead > tr > th {
+  background: var(--bpd-fill-secondary) !important;
 }
 
 // 隐藏模拟开关
@@ -129,8 +174,9 @@ th.el-table__cell {
 
 // 小地图大小
 .djs-minimap {
-  box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.25);
-  border: none;
+  box-shadow: var(--bpd-shadow);
+  border: 1px solid var(--bpd-border-color-split);
+  background: var(--bpd-container-bg);
   top: auto;
   right: 15px;
   bottom: 15px;
@@ -373,53 +419,51 @@ th.el-table__cell {
   background: #000;
 }
 
-.el-drawer {
-  .el-drawer__header {
+.ant-drawer {
+  .ant-drawer-header {
     margin-bottom: 0;
-    padding: calc(var(--el-drawer-padding-primary) - 5px) var(--el-drawer-padding-primary)
-      calc(var(--el-drawer-padding-primary) - 6px);
-    border-bottom: 1px var(--el-border-style) var(--el-border-color);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--bpd-border-color-split);
   }
 
-  .el-drawer__footer {
-    border-top: var(--el-border);
-    padding: calc(var(--el-drawer-padding-primary) - 5px);
+  .ant-drawer-body {
+    padding: 16px;
+    background: var(--bpd-container-bg);
+  }
+
+  .ant-drawer-footer {
+    border-top: 1px solid var(--bpd-border-color-split);
+    padding: 10px 16px;
+    background: var(--bpd-container-bg);
   }
 }
 
-.el-dialog:not(.is-fullscreen) {
+.ant-modal {
   padding: 0;
 
-  .el-dialog__header {
-    padding: calc(var(--el-dialog-padding-primary) + 4px)
-      calc(var(--el-dialog-padding-primary) + 4px) 10px;
-    margin-right: 0;
-    border-bottom: 1px var(--el-border-style) var(--el-border-color);
-
-    .el-dialog__headerbtn {
-      top: 6px;
-      width: 54px;
-      height: 54px;
-
-      .el-dialog__close {
-        font-size: 20px;
-      }
-    }
+  .ant-modal-content {
+    border-radius: var(--bpd-radius);
+    overflow: hidden;
   }
 
-  .el-dialog__body {
-    padding: var(--el-dialog-padding-primary) var(--el-dialog-padding-primary);
+  .ant-modal-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--bpd-border-color-split);
   }
 
-  .el-dialog__footer {
-    border-top: var(--el-border);
-    padding: calc(var(--el-dialog-padding-primary) - 3px)
-      calc(var(--el-dialog-padding-primary) - 3px);
+  .ant-modal-body {
+    padding: var(--el-dialog-padding-primary);
+  }
+
+  .ant-modal-footer {
+    border-top: 1px solid var(--bpd-border-color-split);
+    padding: 10px 16px;
   }
 }
 
-th.el-table__cell {
-  background: var(--el-fill-color-lighter) !important;
+th.el-table__cell,
+.ant-table-thead > tr > th {
+  background: var(--bpd-fill-secondary) !important;
 }
 
 :root {

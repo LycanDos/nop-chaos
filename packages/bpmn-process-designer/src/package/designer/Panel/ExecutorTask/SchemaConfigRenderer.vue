@@ -190,7 +190,7 @@ function removeKvItem(field: string, index: number) {
           <a-input
             :model-value="localValue[key]"
             :placeholder="propSchema.description || propSchema.title"
-            clearable
+            allow-clear
             @update:model-value="localValue = { ...localValue, [key]: $event }"
           />
         </template>

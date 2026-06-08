@@ -50,7 +50,7 @@ const condition = customRef<string>((track, trigger) => {
         :extensions="[juelSupport()]"
         v-model="condition"
       />
-      <!--      <a-input v-model="condition" type="textarea" :rows="4" placeholder="请输入条件表达式" />-->
+      <!--      <a-input v-model:value="condition" type="textarea" :rows="4" placeholder="请输入条件表达式" />-->
     </a-form-item>
   </a-collapse-panel>
 </template>

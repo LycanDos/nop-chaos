@@ -69,16 +69,16 @@ defineExpose({
       :size="formSize"
     >
       <a-form-item label="字段名" prop="name">
-        <a-input v-model="cloned.name" placeholder="请输入字段名" />
+        <a-input v-model:value="cloned.name" placeholder="请输入字段名" />
       </a-form-item>
       <a-form-item label="字段类型" prop="type">
-        <a-radio-group v-model="cloned.type">
-          <a-radio-button value="string" label="字符串" />
-          <a-radio-button value="expression" label="表达式" />
+        <a-radio-group v-model:value="cloned.type">
+          <a-radio-button value="string">字符串</a-radio-button>
+          <a-radio-button value="expression">表达式</a-radio-button>
         </a-radio-group>
       </a-form-item>
       <a-form-item label="字段值" prop="value">
-        <a-input v-model="cloned.value" placeholder="请输入字段值" />
+        <a-input v-model:value="cloned.value" placeholder="请输入字段值" />
       </a-form-item>
     </a-form>
     <template #footer>

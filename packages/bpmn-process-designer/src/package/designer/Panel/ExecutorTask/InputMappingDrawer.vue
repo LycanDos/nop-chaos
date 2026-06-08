@@ -79,9 +79,7 @@ defineExpose({ openDrawer })
           <div class="mapping-item__header">
             <span class="mapping-item__index">#{{ index + 1 }}</span>
             <a-popconfirm title="确定删除此映射？" @confirm="removeMapping(index)">
-              <template #reference>
-                <a-button danger link size="small"><DeleteOutlined /></a-button>
-              </template>
+              <a-button danger type="link" size="small"><DeleteOutlined /></a-button>
             </a-popconfirm>
           </div>
 
@@ -99,7 +97,7 @@ defineExpose({ openDrawer })
 
             <a-form-item label="来源">
               <a-input
-                v-model="item.source"
+                v-model:value="item.source"
                 :placeholder="item.sourceType === 'variable' ? '流程变量名' : item.sourceType === 'literal' ? '字面量值' : '表达式'"
               />
             </a-form-item>
@@ -120,12 +118,12 @@ defineExpose({ openDrawer })
                   :value="field.fieldPath || field.fieldName"
                 />
               </a-select>
-              <a-input v-else v-model="item.target" placeholder="目标参数路径" />
+              <a-input v-else v-model:value="item.target" placeholder="目标参数路径" />
             </a-form-item>
 
             <a-form-item v-if="item.sourceType === 'expression'" label="表达式">
               <a-input
-                v-model="item.expression"
+                v-model:value="item.expression"
                 type="textarea"
                 :rows="2"
                 placeholder="转换表达式（JUEL）"

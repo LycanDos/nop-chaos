@@ -60,7 +60,7 @@ onMounted(() => {
         :extensions="[shellSupport]"
         v-model="command"
       />
-      <!--      <a-input v-model="command" type="textarea" :rows="3" placeholder="请输入命令" />-->
+      <!--      <a-input v-model:value="command" type="textarea" :rows="3" placeholder="请输入命令" />-->
     </a-form-item>
     <a-form-item label="参数">
       <template #label>
@@ -74,7 +74,7 @@ onMounted(() => {
           <a-input
             :model-value="args[index]"
             @update:model-value="updateModelValue($event, index)"
-            clearable
+            allow-clear
             placeholder="请输入参数"
           ></a-input>
         </a-col>
@@ -84,7 +84,7 @@ onMounted(() => {
       </a-row>
     </a-form-item>
     <a-form-item label="输出变量">
-      <a-input v-model="outputVariable" placeholder="请输入输出变量" />
+      <a-input v-model:value="outputVariable" placeholder="请输入输出变量" />
     </a-form-item>
     <a-row :gutter="10">
       <a-col :span="form?.labelPosition === 'top' ? 8 : 24">
@@ -104,10 +104,10 @@ onMounted(() => {
       </a-col>
     </a-row>
     <a-form-item label="执行目录">
-      <a-input v-model="directory" placeholder="请输入执行目录，默认当前目录" />
+      <a-input v-model:value="directory" placeholder="请输入执行目录，默认当前目录" />
     </a-form-item>
     <a-form-item label="错误代码变量">
-      <a-input v-model="errorCodeVariable" placeholder="请输入错误代码存储变量" />
+      <a-input v-model:value="errorCodeVariable" placeholder="请输入错误代码存储变量" />
     </a-form-item>
   </a-collapse-panel>
 </template>

@@ -92,20 +92,18 @@ onMounted(() => {
   <div class="event-container">
     <div class="event-header">
       <span>事件监听器</span>
-      <a-button type="primary" link @click="editEventListener()"><PlusOutlined />添加</a-button>
+      <a-button type="link" size="small" @click="editEventListener()"><PlusOutlined />添加</a-button>
     </div>
-    <a-table :dataSource="events" height="200px">
-      <a-table-column prop="events" show-overflow-tooltip label="事件"></a-table-column>
-      <a-table-column prop="type" show-overflow-tooltip label="类型"></a-table-column>
-      <a-table-column prop="value" show-overflow-tooltip label="监听"></a-table-column>
-      <a-table-column label="操作" min-width="63px" align="center">
-        <template #default="{ row }">
+    <a-table :data-source="events" size="small" :pagination="false" :scroll="{ y: 200 }" row-key="value">
+      <a-table-column data-index="events" title="事件" :ellipsis="true" />
+      <a-table-column data-index="type" title="类型" :ellipsis="true" />
+      <a-table-column data-index="value" title="监听" :ellipsis="true" />
+      <a-table-column title="操作" width="72" align="center">
+        <template #default="{ record }">
           <a-space>
-            <a-button type="primary" link @click="editEventListener(row)" ><EditOutlined /></a-button>
-            <a-popconfirm title="您确定要删除该事件吗？" @confirm="removeEventListener(row)">
-              <template #reference>
-                <a-button danger link><DeleteOutlined /></a-button>
-              </template>
+            <a-button type="link" size="small" @click="editEventListener(record)"><EditOutlined /></a-button>
+            <a-popconfirm title="您确定要删除该事件吗？" @confirm="removeEventListener(record)">
+              <a-button danger type="link" size="small"><DeleteOutlined /></a-button>
             </a-popconfirm>
           </a-space>
         </template>
@@ -121,7 +119,9 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 7px 7px;
+    padding: 0 0 8px;
+    color: var(--bpd-text-color, #262626);
+    font-weight: 600;
   }
 }
 </style>

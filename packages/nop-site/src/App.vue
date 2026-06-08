@@ -102,3 +102,12 @@
     // 可以在这里添加额外的保存逻辑
   };
 </script>
+
+<style lang="less">
+.AMISCSSWrapper {
+  .cxd-Switch:not(.is-checked):not(.is-on) .cxd-Switch-option,
+  .cxd-CBInputSwitch:not(.is-checked):not(.is-on) .cxd-Switch-option {
+    color: @primary-color !important;
+  }
+}
+</style>

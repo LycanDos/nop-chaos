@@ -12,12 +12,34 @@
       <div class="copilot-fab-icon">
         <div class="copilot-fab-glow"></div>
         <svg class="copilot-fab-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="32" cy="32" r="26" stroke="rgba(255,255,255,0.25)" stroke-width="1" stroke-dasharray="8 5" />
-          <circle cx="32" cy="32" r="16" stroke="rgba(255,255,255,0.45)" stroke-width="1.5" />
-          <circle cx="32" cy="32" r="5" fill="white" opacity="0.95" />
-          <circle cx="18" cy="22" r="2.8" fill="white" opacity="0.85" />
-          <circle cx="46" cy="42" r="2.8" fill="white" opacity="0.85" />
-          <path d="M19 25 Q32 38 45 45" stroke="white" stroke-width="1.3" stroke-linecap="round" opacity="0.5" />
+          <!-- 外层谐振环 -->
+          <circle cx="32" cy="32" r="26" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-dasharray="6 5" />
+          <circle cx="32" cy="32" r="17" stroke="rgba(255,255,255,0.3)" stroke-width="1" />
+          <!-- 中央双音符 ♫（知音核心） -->
+          <ellipse cx="26" cy="32" rx="4.5" ry="3.2" transform="rotate(-15 26 32)" fill="white" opacity="0.95" />
+          <ellipse cx="33" cy="32" rx="4.5" ry="3.2" transform="rotate(-15 33 32)" fill="white" opacity="0.95" />
+          <line x1="30" y1="32" x2="30" y2="16" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.95" />
+          <line x1="37" y1="32" x2="37" y2="19" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.95" />
+          <path d="M30 16 Q35 14 34.5 20" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.85" />
+          <path d="M37 19 Q42 17 41.5 22.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.85" />
+          <!-- 左上单音符 ♪ -->
+          <ellipse cx="17" cy="20" rx="3.2" ry="2.3" transform="rotate(-20 17 20)" fill="white" opacity="0.55" />
+          <line x1="20.2" y1="19.5" x2="20.2" y2="11" stroke="white" stroke-width="1.3" stroke-linecap="round" opacity="0.55" />
+          <path d="M20.2 11 Q24 9.5 23.5 14.5" stroke="white" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.5" />
+          <!-- 右下单音符 ♪ -->
+          <ellipse cx="47" cy="44" rx="3.2" ry="2.3" transform="rotate(-20 47 44)" fill="white" opacity="0.55" />
+          <line x1="50.2" y1="43.5" x2="50.2" y2="35" stroke="white" stroke-width="1.3" stroke-linecap="round" opacity="0.55" />
+          <path d="M50.2 35 Q54 33.5 53.5 38.5" stroke="white" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.5" />
+          <!-- 连接弧线 - 音乐纽带 -->
+          <path d="M19.5 22 Q24 28 27 31" stroke="white" stroke-width="0.8" fill="none" opacity="0.3" />
+          <path d="M35 33 Q41 39 45 43" stroke="white" stroke-width="0.8" fill="none" opacity="0.3" />
+          <path d="M15 34 Q24 42 32 38 Q40 34 50 26" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" fill="none" stroke-dasharray="3 4" />
+          <!-- 装饰点 -->
+          <circle cx="13" cy="35" r="1.2" fill="white" opacity="0.3" />
+          <circle cx="53" cy="29" r="1.2" fill="white" opacity="0.3" />
+          <circle cx="32" cy="8" r="1" fill="white" opacity="0.25" />
+          <circle cx="23" cy="46" r="0.8" fill="white" opacity="0.2" />
+          <circle cx="44" cy="15" r="0.8" fill="white" opacity="0.2" />
         </svg>
       </div>
     </div>
@@ -39,12 +61,28 @@
             <div class="copilot-dialog-title-row">
               <div ref="avatarRef" class="copilot-avatar-small">
                 <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="32" cy="32" r="26" stroke="rgba(255,255,255,0.25)" stroke-width="1.2" stroke-dasharray="8 5" />
-                  <circle cx="32" cy="32" r="16" stroke="rgba(255,255,255,0.45)" stroke-width="1.5" />
-                  <circle cx="32" cy="32" r="5" fill="white" opacity="0.95" />
-                  <circle cx="18" cy="22" r="2.8" fill="white" opacity="0.85" />
-                  <circle cx="46" cy="42" r="2.8" fill="white" opacity="0.85" />
-                  <path d="M19 25 Q32 38 45 45" stroke="white" stroke-width="1.3" stroke-linecap="round" opacity="0.5" />
+                  <circle cx="32" cy="32" r="26" stroke="rgba(255,255,255,0.2)" stroke-width="1" stroke-dasharray="6 5" />
+                  <circle cx="32" cy="32" r="17" stroke="rgba(255,255,255,0.3)" stroke-width="1" />
+                  <ellipse cx="26" cy="32" rx="4.5" ry="3.2" transform="rotate(-15 26 32)" fill="white" opacity="0.95" />
+                  <ellipse cx="33" cy="32" rx="4.5" ry="3.2" transform="rotate(-15 33 32)" fill="white" opacity="0.95" />
+                  <line x1="30" y1="32" x2="30" y2="16" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.95" />
+                  <line x1="37" y1="32" x2="37" y2="19" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.95" />
+                  <path d="M30 16 Q35 14 34.5 20" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.85" />
+                  <path d="M37 19 Q42 17 41.5 22.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.85" />
+                  <ellipse cx="17" cy="20" rx="3.2" ry="2.3" transform="rotate(-20 17 20)" fill="white" opacity="0.55" />
+                  <line x1="20.2" y1="19.5" x2="20.2" y2="11" stroke="white" stroke-width="1.3" stroke-linecap="round" opacity="0.55" />
+                  <path d="M20.2 11 Q24 9.5 23.5 14.5" stroke="white" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.5" />
+                  <ellipse cx="47" cy="44" rx="3.2" ry="2.3" transform="rotate(-20 47 44)" fill="white" opacity="0.55" />
+                  <line x1="50.2" y1="43.5" x2="50.2" y2="35" stroke="white" stroke-width="1.3" stroke-linecap="round" opacity="0.55" />
+                  <path d="M50.2 35 Q54 33.5 53.5 38.5" stroke="white" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.5" />
+                  <path d="M19.5 22 Q24 28 27 31" stroke="white" stroke-width="0.8" fill="none" opacity="0.3" />
+                  <path d="M35 33 Q41 39 45 43" stroke="white" stroke-width="0.8" fill="none" opacity="0.3" />
+                  <path d="M15 34 Q24 42 32 38 Q40 34 50 26" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" fill="none" stroke-dasharray="3 4" />
+                  <circle cx="13" cy="35" r="1.2" fill="white" opacity="0.3" />
+                  <circle cx="53" cy="29" r="1.2" fill="white" opacity="0.3" />
+                  <circle cx="32" cy="8" r="1" fill="white" opacity="0.25" />
+                  <circle cx="23" cy="46" r="0.8" fill="white" opacity="0.2" />
+                  <circle cx="44" cy="15" r="0.8" fill="white" opacity="0.2" />
                 </svg>
               </div>
               <span class="copilot-dialog-title">知音</span>
@@ -1588,7 +1626,13 @@
       height: 32px;
       position: relative;
       z-index: 1;
+      animation: copilot-note-float 4s ease-in-out infinite;
     }
+  }
+
+  @keyframes copilot-note-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-1.5px); }
   }
 
   @keyframes copilot-fab-pulse {
@@ -1622,19 +1666,19 @@
     -webkit-backdrop-filter: blur(16px) saturate(1.2);
     border-radius: 12px;
     box-shadow:
-      0 8px 32px rgba(99, 102, 241, 0.08),
-      0 2px 8px rgba(0, 0, 0, 0.06);
+      0 6px 24px fade(@primary-color, 8%),
+      0 2px 8px fade(#000, 6%);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border: 1px solid rgba(139, 92, 246, 0.08);
+    border: 1px solid fade(@primary-color, 8%);
 
     &-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 12px 16px;
-      border-bottom: 1px solid rgba(99, 102, 241, 0.06);
+      border-bottom: 1px solid fade(@primary-color, 6%);
       background: rgba(255, 255, 255, 0.5);
       cursor: move;
       flex-shrink: 0;
@@ -1644,7 +1688,7 @@
     &-title {
       font-size: 15px;
       font-weight: 600;
-      color: #1a1a1a;
+      color: @text-color;
     }
 
     &-title-group {
@@ -1681,7 +1725,7 @@
 
     &-subtitle {
       font-size: 11px;
-      color: #8c8c8c;
+      color: @text-color-help-dark;
       margin-top: 2px;
       white-space: nowrap;
       overflow: hidden;
@@ -1706,7 +1750,7 @@
   .copilot-sidebar {
     width: 240px;
     flex-shrink: 0;
-    border-right: 1px solid rgba(99, 102, 241, 0.06);
+    border-right: 1px solid fade(@primary-color, 6%);
     background: rgba(249, 250, 251, 0.6);
     display: flex;
     flex-direction: column;
@@ -1720,7 +1764,7 @@
 
   .copilot-search-input {
     width: 100%;
-    border: 1px solid #e8e8e8;
+    border: 1px solid @border-color-base;
     border-radius: 6px;
     padding: 6px 10px;
     font-size: 12px;
@@ -1729,12 +1773,12 @@
     transition: border-color 0.2s;
 
     &:focus {
-      border-color: #1890ff;
-      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+      border-color: @primary-color;
+      box-shadow: 0 0 0 2px fade(@primary-color, 10%);
     }
 
     &::placeholder {
-      color: #bfbfbf;
+      color: @text-color-help-dark;
     }
   }
 
@@ -1757,22 +1801,22 @@
 
   .copilot-batch-count {
     font-size: 12px;
-    color: #595959;
+    color: @text-color-secondary;
     flex: 1;
   }
 
   .copilot-batch-delete-btn {
     padding: 3px 10px;
     font-size: 12px;
-    border: 1px solid #ff4d4f;
+    border: 1px solid @error-color;
     background: #fff;
-    color: #ff4d4f;
+    color: @error-color;
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s;
 
     &:hover:not(:disabled) {
-      background: #ff4d4f;
+      background: @error-color;
       color: #fff;
     }
 
@@ -1785,16 +1829,16 @@
   .copilot-batch-cancel-btn {
     padding: 3px 8px;
     font-size: 12px;
-    border: 1px solid #d9d9d9;
+    border: 1px solid @border-color-base;
     background: #fff;
-    color: #595959;
+    color: @text-color-secondary;
     border-radius: 4px;
     cursor: pointer;
     transition: all 0.2s;
 
     &:hover {
-      border-color: #1890ff;
-      color: #1890ff;
+      border-color: @primary-color;
+      color: @primary-color;
     }
   }
 
@@ -1807,8 +1851,8 @@
   }
 
   .copilot-session-primary-btn {
-    border: 1px solid #1890ff;
-    background: #1890ff;
+    border: 1px solid @primary-color;
+    background: @primary-color;
     color: #fff;
     padding: 4px 10px;
     flex: 1;
@@ -1820,23 +1864,23 @@
   }
 
   .copilot-session-text-btn {
-    border: 1px solid #d9d9d9;
+    border: 1px solid @border-color-base;
     background: #fff;
-    color: #595959;
+    color: @text-color-secondary;
     padding: 4px 8px;
     font-size: 14px;
     line-height: 1;
 
     &.active {
-      background: #e6f7ff;
-      border-color: #1890ff;
-      color: #1890ff;
+      background: @primary-1;
+      border-color: @primary-color;
+      color: @primary-color;
     }
   }
 
   .copilot-session-empty {
     font-size: 12px;
-    color: #999;
+    color: @text-color-help-dark;
     padding: 16px 10px;
     text-align: center;
   }
@@ -1855,20 +1899,20 @@
     align-items: flex-start;
     gap: 6px;
     width: 100%;
-    border: 1px solid #e8e8e8;
+    border: 1px solid @border-color-base;
     background: #fff;
     border-radius: 8px;
     padding: 8px 10px;
     transition: all 0.2s;
 
     &:hover {
-      border-color: #91d5ff;
-      background: #f6ffed;
+      border-color: @primary-4;
+      background: @primary-1;
     }
 
     &.active {
-      border-color: #1890ff;
-      background: #e6f7ff;
+      border-color: @primary-color;
+      background: @primary-1;
     }
   }
 
@@ -1881,7 +1925,7 @@
       width: 14px;
       height: 14px;
       cursor: pointer;
-      accent-color: #1890ff;
+      accent-color: @primary-color;
     }
   }
 
@@ -1909,7 +1953,7 @@
   .copilot-session-item-title {
     font-size: 13px;
     font-weight: 600;
-    color: #262626;
+    color: @text-color;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1918,13 +1962,13 @@
   .copilot-session-item-meta {
     margin-top: 2px;
     font-size: 11px;
-    color: #8c8c8c;
+    color: @text-color-help-dark;
   }
 
   .copilot-session-item-snippet {
     margin-top: 4px;
     font-size: 12px;
-    color: #595959;
+    color: @text-color-secondary;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -1934,7 +1978,7 @@
 
   .copilot-session-delete {
     font-size: 14px;
-    color: #ff4d4f;
+    color: @error-color;
     flex-shrink: 0;
     line-height: 1;
     cursor: pointer;
@@ -1945,15 +1989,15 @@
     display: inline-flex;
     align-items: center;
     gap: 2px;
-    background: #f0f5ff;
-    border: 1px solid #adc6ff;
+    background: @primary-1;
+    border: 1px solid @primary-3;
     border-radius: 4px;
     padding: 1px 4px 1px 8px;
     font-size: 12px;
     max-width: 240px;
 
     &-label {
-      color: #1d39c4;
+      color: @primary-color;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -1963,14 +2007,14 @@
       flex-shrink: 0;
       background: none;
       border: none;
-      color: #597ef7;
+      color: @primary-5;
       font-size: 14px;
       cursor: pointer;
       padding: 0 4px;
       line-height: 1;
 
       &:hover {
-        color: #ff4d4f;
+        color: @error-color;
       }
     }
   }
@@ -1982,18 +2026,18 @@
     font-size: 12px;
     border-radius: 6px;
     cursor: pointer;
-    color: #666;
+    color: @text-color-secondary;
     transition: all 0.2s;
 
     &:hover {
-      background: #f5f5f5;
-      color: #1a1a1a;
+      background: @primary-1;
+      color: @primary-color;
     }
 
     &.active {
-      background: #e6f7ff;
-      border-color: #1890ff;
-      color: #1890ff;
+      background: @primary-1;
+      border-color: @primary-color;
+      color: @primary-color;
     }
   }
 
@@ -2001,7 +2045,7 @@
     font-size: 16px;
     padding: 4px 8px;
     &:hover {
-      color: #ff4d4f;
+      color: @error-color;
     }
   }
 

@@ -43,7 +43,7 @@ const body = useCustomRef('body')
 
 <template>
   <a-form-item label="失败重试">
-    <a-input v-model="body"></a-input>
+    <a-input v-model:value="body"></a-input>
   </a-form-item>
 </template>
 

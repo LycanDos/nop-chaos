@@ -230,7 +230,7 @@ function clamp(value: number, min: number, max: number) {
 let activeResize: 'base' | 'workbench' | null = null
 
 function startResize(target: 'base' | 'workbench', event: MouseEvent) {
-  if (!layoutRef.value || window.innerWidth <= 1500) return
+  if (!layoutRef.value || window.innerWidth <= 1100) return
   event.preventDefault()
   activeResize = target
   window.addEventListener('mousemove', handleResizeMove)
@@ -264,6 +264,9 @@ function stopResize() {
 
 .delta-lab--embedded {
   height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  display: block;
 }
 
 .delta-lab__grid {
@@ -274,10 +277,16 @@ function stopResize() {
   gap: 0;
 }
 
+.delta-lab--embedded .delta-lab__grid {
+  height: 100%;
+  min-height: 0;
+}
+
 .delta-lab__pane {
   flex-grow: 0;
   flex-shrink: 0;
   min-width: 0;
+  min-height: 0;
   height: 100%;
 }
 
@@ -448,7 +457,7 @@ function stopResize() {
   color: #0f172a;
 }
 
-@media (max-width: 1500px) {
+@media (max-width: 1100px) {
   .delta-lab__grid {
     flex-direction: column;
     height: auto;

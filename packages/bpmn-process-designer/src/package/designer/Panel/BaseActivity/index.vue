@@ -39,21 +39,22 @@ const updateId = (val: string) => {
 <template>
   <a-tabs v-model:activeKey="activeTabName" stretch>
     <a-tab-pane tab="基础配置" key="basic">
-      <div style="overflow:auto">
+      <div class="base-activity-pane">
         <a-collapse v-model:activeKey="actives">
-          <a-collapse-panel key="general" header="常规">
+          <a-collapse-panel key="general">
+            <template #header><span class="base-activity__section-title">常规</span></template>
             <a-form-item label="id">
               <a-input
-                :model-value="id"
-                @update:model-value="updateId"
+                :value="id"
+                @update:value="updateId"
                 placeholder="请输入节点id"
               />
             </a-form-item>
             <a-form-item label="名称" v-if="propertiesByName['name']">
-              <a-input v-model="name" placeholder="请输入节点名称" />
+              <a-input v-model:value="name" placeholder="请输入节点名称" />
             </a-form-item>
             <a-form-item label="名称" v-else-if="propertiesByName['text']">
-              <a-input v-model="text" placeholder="请输入节点名称" />
+              <a-input v-model:value="text" placeholder="请输入节点名称" />
             </a-form-item>
             <a-form-item label="可执行" v-if="propertiesByName['isExecutable']">
               <a-switch v-model:checked="isExecutable" />
@@ -67,7 +68,7 @@ const updateId = (val: string) => {
     </a-tab-pane>
     <slot></slot>
     <a-tab-pane tab="其他配置" key="other">
-      <div style="overflow:auto">
+      <div class="base-activity-pane">
         <div class="other-configurations">
           <ExecuteListener v-if="supportsExecutionListener()" />
           <slot name="other"></slot>
@@ -80,10 +81,24 @@ const updateId = (val: string) => {
 
 <style scoped lang="scss">
 .other-configurations {
-  padding: 10px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.base-activity-pane {
+  height: 100%;
+  overflow: auto;
+}
+
+.base-activity__section-title {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  color: var(--bpd-text-color, #262626);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 :deep(.ant-collapse-header) {
@@ -92,9 +107,9 @@ const updateId = (val: string) => {
   padding: 10px 12px 10px 16px !important;
   font-size: 13px !important;
   font-weight: 500 !important;
-  color: #262626 !important;
+  color: var(--bpd-text-color, #262626) !important;
   position: relative;
-  background: #fafafa;
+  background: var(--bpd-fill-secondary, #fafafa);
 
   &::before {
     content: '';
@@ -104,7 +119,7 @@ const updateId = (val: string) => {
     left: 6px;
     width: 3px;
     height: 14px;
-    background-color: #1677ff;
+    background-color: var(--bpd-primary-color, #1890ff);
     border-radius: 2px;
   }
 }

@@ -9,7 +9,7 @@ const initiator = useCustomRef('initiator')
 
 <template>
   <a-form-item label="发起人">
-    <a-input v-model="initiator" placeholder="请输入发起人" />
+    <a-input v-model:value="initiator" placeholder="请输入发起人" />
   </a-form-item>
 </template>
 

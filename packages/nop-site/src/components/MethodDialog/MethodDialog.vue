@@ -1,5 +1,5 @@
 <template>
-  <a-modal v-model:visible="visible" @update:visible="onDialogClose" title="方法参数" width="900px" :maskClosable="false">
+  <a-modal v-model:visible="dialogVisible" title="方法参数" width="900px" :maskClosable="false">
     <a-tabs v-model:activeKey="activeTab">
       <a-tab-pane tab="入参" key="input">
         <div style="width: 100%">
@@ -187,6 +187,10 @@ const props = defineProps({
   onClose: Function
 })
 
+const dialogVisible = computed({
+  get: () => props.visible,
+  set: (value) => onDialogClose(value),
+})
 
 const activeTab = ref('input')
 const inputParams = ref([

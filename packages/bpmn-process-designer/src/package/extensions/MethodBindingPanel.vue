@@ -26,7 +26,7 @@
       <!-- 节点信息 -->
       <div class="method-binding-panel__section">
         <div class="method-binding-panel__section-title">节点信息</div>
-        <a-form label-width="80px" size="small">
+        <a-form size="small" layout="vertical">
           <a-form-item label="节点 ID">
             <span>{{ nodeInfo.id }}</span>
           </a-form-item>
@@ -42,14 +42,15 @@
       <!-- 绑定配置 -->
       <div class="method-binding-panel__section">
         <div class="method-binding-panel__section-title">绑定配置</div>
-        <a-form label-width="80px" size="small">
+        <a-form size="small" layout="vertical">
           <a-form-item label="执行器">
             <a-select
-              v-model="bindingForm.executorDefId"
+              v-model:value="bindingForm.executorDefId"
               showSearch
-              clearable
+              allowClear
               placeholder="选择执行器"
               style="width: 100%"
+              option-label-prop="label"
               @change="handleExecutorChange"
             >
               <a-select-option
@@ -57,43 +58,48 @@
                 :key="item.id"
                 :label="item.label"
                 :value="item.id"
-              />
+              >
+                {{ item.label }}
+              </a-select-option>
             </a-select>
           </a-form-item>
 
           <a-form-item label="方法">
             <a-select
-              v-model="bindingForm.methodCode"
+              v-model:value="bindingForm.methodCode"
               showSearch
-              clearable
+              allowClear
               :disabled="!bindingForm.executorDefId"
               placeholder="选择方法"
               style="width: 100%"
+              option-label-prop="label"
             >
               <a-select-option
                 v-for="item in methodList"
                 :key="item.code"
                 :label="item.label"
                 :value="item.code"
-              />
+              >
+                {{ item.label }}
+              </a-select-option>
             </a-select>
           </a-form-item>
 
           <a-form-item label="版本约束">
-            <a-select v-model="bindingForm.versionConstraintType" style="width: 100%">
-              <a-select-option label="LATEST（最新版本）" value="LATEST" />
-              <a-select-option label="EXACT（精确版本）" value="EXACT" />
-              <a-select-option label="RANGE（版本范围）" value="RANGE" />
+            <a-select v-model:value="bindingForm.versionConstraintType" style="width: 100%">
+              <a-select-option value="LATEST">LATEST（最新版本）</a-select-option>
+              <a-select-option value="EXACT">EXACT（精确版本）</a-select-option>
+              <a-select-option value="RANGE">RANGE（版本范围）</a-select-option>
             </a-select>
           </a-form-item>
 
           <a-form-item v-if="bindingForm.versionConstraintType !== 'LATEST'" label="版本表达式">
-            <a-input v-model="bindingForm.versionConstraintExpr" placeholder="版本表达式" />
+            <a-input v-model:value="bindingForm.versionConstraintExpr" placeholder="版本表达式" />
           </a-form-item>
 
           <a-form-item label="超时(ms)">
             <a-input-number
-              v-model="bindingForm.timeoutMs"
+              v-model:value="bindingForm.timeoutMs"
               :min="0"
               :step="1000"
               
@@ -102,7 +108,7 @@
           </a-form-item>
 
           <a-form-item label="异步执行">
-            <a-switch v-model="bindingForm.asyncFlag" />
+            <a-switch v-model:checked="bindingForm.asyncFlag" />
           </a-form-item>
         </a-form>
 
@@ -268,13 +274,13 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 .method-binding-panel {
-  border-left: 1px solid var(--el-border-color);
-  background: var(--el-bg-color);
+  border-left: 1px solid var(--bpd-border-color-split, #f0f0f0);
+  background: var(--bpd-container-bg, #fff);
   overflow-y: auto;
   max-height: 100%;
   transition: width 0.25s ease;
   flex-shrink: 0;
-  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.04);
+  box-shadow: -6px 0 16px -16px rgba(0, 0, 0, 0.3);
 }
 .method-binding-panel--collapsed {
   display: flex;
@@ -282,18 +288,18 @@ onMounted(async () => {
   justify-content: center;
   padding-top: 12px;
   cursor: pointer;
-  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--bpd-shadow, -4px 0 12px rgba(0, 0, 0, 0.08));
 }
 .method-binding-panel__toggle {
-  color: var(--el-text-color-secondary);
-  &:hover { color: var(--el-color-primary); }
+  color: var(--bpd-text-color-tertiary, #8c8c8c);
+  &:hover { color: var(--bpd-primary-color, #1890ff); }
 }
 .method-binding-panel__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  border-bottom: var(--el-border);
+  border-bottom: 1px solid var(--bpd-border-color-split, #f0f0f0);
 }
 .method-binding-panel__title {
   font-size: 15px;
@@ -301,17 +307,17 @@ onMounted(async () => {
 }
 .method-binding-panel__collapse-btn {
   cursor: pointer;
-  color: var(--el-text-color-secondary);
-  &:hover { color: var(--el-color-primary); }
+  color: var(--bpd-text-color-tertiary, #8c8c8c);
+  &:hover { color: var(--bpd-primary-color, #1890ff); }
 }
 .method-binding-panel__section {
   padding: 12px 16px;
-  border-bottom: var(--el-border);
+  border-bottom: 1px solid var(--bpd-border-color-split, #f0f0f0);
 }
 .method-binding-panel__section-title {
   font-size: 13px;
   font-weight: 600;
-  color: var(--el-text-color-regular);
+  color: var(--bpd-text-color-secondary, #595959);
   margin-bottom: 8px;
 }
 .method-binding-panel__actions {
@@ -319,6 +325,6 @@ onMounted(async () => {
   gap: 8px;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: var(--el-border);
+  border-top: 1px solid var(--bpd-border-color-split, #f0f0f0);
 }
 </style>

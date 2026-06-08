@@ -21,8 +21,9 @@ const propertiesByName = computed(() => {
 </script>
 
 <template>
-  <a-collapse-panel key="arg2" header="高级">
-    <a-form-item label="跳过表达式" v-if="propertiesByName['skipExpression']">
+  <a-collapse-panel key="arg2">
+    <template #header><span class="bpd-panel-title">高级</span></template>
+    <a-form-item v-if="propertiesByName['skipExpression']" label="跳过表达式">
       <Codemirror
         no-wrap
         :max-rows="5"
@@ -31,7 +32,7 @@ const propertiesByName = computed(() => {
         :extensions="[juelSupport()]"
         v-model="skipExpression"
       />
-      <!--      <a-input v-model="skipExpression" clearable placeholder="请输入跳过表达式" />-->
+      <!--      <a-input v-model:value="skipExpression" allow-clear placeholder="请输入跳过表达式" />-->
     </a-form-item>
     <MultiInstance v-if="propertiesByName['loopCharacteristics']" />
     <Async v-if="propertiesByName['async']" />
@@ -39,4 +40,10 @@ const propertiesByName = computed(() => {
   </a-collapse-panel>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.bpd-panel-title {
+  color: var(--bpd-text-color, #262626);
+  font-size: 13px;
+  font-weight: 600;
+}
+</style>

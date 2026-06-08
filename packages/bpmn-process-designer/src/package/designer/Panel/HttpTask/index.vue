@@ -20,17 +20,17 @@ const saveResponseParametersTransient = useFieldRef('saveResponseParametersTrans
 <template>
   <a-collapse-panel key="arg1" header="请求">
     <a-form-item label="请求地址">
-      <a-input v-model="requestUrl" placeholder="请输入请求地址">
+      <a-input v-model:value="requestUrl" placeholder="请输入请求地址">
         <template #prepend>
           <a-select
             v-model:value="requestMethod"
             placeholder="请求方法"
             :style="{ width: form?.size === 'small' ? '77px' : '95px' }"
           >
-            <a-select-option label="GET" value="GET"></a-select-option>
-            <a-select-option label="POST" value="POST"></a-select-option>
-            <a-select-option label="PUT" value="PUT"></a-select-option>
-            <a-select-option label="DELETE" value="DELETE"></a-select-option>
+            <a-select-option value="GET">GET</a-select-option>
+            <a-select-option value="POST">POST</a-select-option>
+            <a-select-option value="PUT">PUT</a-select-option>
+            <a-select-option value="DELETE">DELETE</a-select-option>
           </a-select>
         </template>
       </a-input>
@@ -45,7 +45,7 @@ const saveResponseParametersTransient = useFieldRef('saveResponseParametersTrans
         :extensions="[jsonSupport]"
         v-model="requestHeaders"
       />
-      <!--      <a-input v-model="requestHeaders" type="textarea" :rows="3" placeholder="请输入请求头" />-->
+      <!--      <a-input v-model:value="requestHeaders" type="textarea" :rows="3" placeholder="请输入请求头" />-->
     </a-form-item>
     <a-form-item label="请求体">
       <Codemirror
@@ -57,7 +57,7 @@ const saveResponseParametersTransient = useFieldRef('saveResponseParametersTrans
         :extensions="[jsonSupport]"
         v-model="requestBody"
       />
-      <!--      <a-input v-model="requestBody" type="textarea" :rows="3" placeholder="请输入请求体" />-->
+      <!--      <a-input v-model:value="requestBody" type="textarea" :rows="3" placeholder="请输入请求体" />-->
     </a-form-item>
     <a-row :gutter="10">
       <a-col :span="form?.labelPosition === 'top' ? 12 : 24">

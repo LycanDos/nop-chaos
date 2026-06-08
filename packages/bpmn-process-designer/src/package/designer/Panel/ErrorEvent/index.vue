@@ -67,7 +67,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <a-collapse-panel key="arg1" header="错误事件">
+  <a-collapse-panel key="arg1">
+    <template #header>
+      <span class="panel-section-title">错误事件</span>
+    </template>
     <a-form-item prop="errorRef" label="错误引用">
       <a-select v-model:value="errorRef" placeholder="请选择错误引用">
         <a-select-option
@@ -75,11 +78,13 @@ onMounted(() => {
           :key="item.id"
           :label="item.name"
           :value="item.id"
-        ></a-select-option>
+        >
+          {{ item.name }}
+        </a-select-option>
         <template #footer>
-          <a-button text bg size="small" style="width: 100%" @click="addErrorEvent()"
-            ><PlusOutlined />新增错误定义</a-button
-          >
+          <a-button type="link" size="small" block @click="addErrorEvent()">
+            <PlusOutlined /> 新增错误定义
+          </a-button>
         </template>
       </a-select>
     </a-form-item>
@@ -87,4 +92,9 @@ onMounted(() => {
   </a-collapse-panel>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.panel-section-title {
+  font-weight: 600;
+  color: var(--bpd-text-color, #262626);
+}
+</style>

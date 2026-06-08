@@ -50,24 +50,23 @@ defineExpose({
 </script>
 
 <template>
-  <a-drawer v-model:visible="drawerVisible" append-to-body :lock-scroll="false" @closed="onClosed" :show-close="false" :closable="false">
+  <a-drawer v-model:visible="drawerVisible" width="460px" :closable="false" @close="onClosed">
     <a-form
       ref="formRef"
-      label-position="top"
+      layout="vertical"
       :model="cloned"
       :rules="formRules"
-      label-width="90px"
       :size="formSize"
     >
       <a-form-item label="id" prop="id">
-        <a-input v-model="cloned.id" placeholder="请输入id">
+        <a-input v-model:value="cloned.id" placeholder="请输入id">
           <template #append>
             <a-button @click="cloned.id = nextId('DataObject_')"><ReloadOutlined /></a-button>
           </template>
         </a-input>
       </a-form-item>
       <a-form-item label="名称" prop="name">
-        <a-input v-model="cloned.name" placeholder="请输入名称" />
+        <a-input v-model:value="cloned.name" placeholder="请输入名称" />
       </a-form-item>
       <a-form-item label="类型" prop="type">
         <a-select
@@ -75,53 +74,53 @@ defineExpose({
           placeholder="请选择类型"
           @change="cloned.value = undefined"
         >
-          <a-select-option label="字符串" value="xsd:string" />
-          <a-select-option label="整数" value="xsd:int" />
-          <a-select-option label="长整数" value="xsd:long" />
-          <a-select-option label="布尔" value="xsd:boolean" />
-          <a-select-option label="浮点数" value="xsd:double" />
-          <a-select-option label="时间" value="xsd:datetime" />
+          <a-select-option value="xsd:string">字符串</a-select-option>
+          <a-select-option value="xsd:int">整数</a-select-option>
+          <a-select-option value="xsd:long">长整数</a-select-option>
+          <a-select-option value="xsd:boolean">布尔</a-select-option>
+          <a-select-option value="xsd:double">浮点数</a-select-option>
+          <a-select-option value="xsd:datetime">时间</a-select-option>
         </a-select>
       </a-form-item>
       <a-form-item label="默认值" prop="value">
         <a-input
-          type="textarea"
+          v-if="cloned.type === 'xsd:string'"
+          v-model:value="cloned.value"
           :rows="4"
           :autosize="{ minRows: 4, maxRows: 10 }"
-          v-model="cloned.value"
           placeholder="请输入默认值"
-          v-if="cloned.type === 'xsd:string'"
+          type="textarea"
         />
         <a-input-number
-          v-model="cloned.value"
-          placeholder="请输入默认值"
+          v-else-if="cloned.type === 'xsd:int'"
+          v-model:value="cloned.value"
           :min="-2147483648"
           :max="2147483647"
-          v-else-if="cloned.type === 'xsd:int'"
           class="w-full"
+          placeholder="请输入默认值"
         />
         <a-input-number
-          v-model="cloned.value"
-          placeholder="请输入默认值"
           v-else-if="cloned.type === 'xsd:long'"
+          v-model:value="cloned.value"
           class="w-full"
+          placeholder="请输入默认值"
         />
         <a-switch v-model:checked="cloned.value" v-else-if="cloned.type === 'xsd:boolean'" />
         <a-input-number
-          v-model="cloned.value"
-          placeholder="请输入默认值"
+          v-else-if="cloned.type === 'xsd:double'"
+          v-model:value="cloned.value"
           :min="4.9e-324"
           :max="1.7976931348623157e308"
-          v-else-if="cloned.type === 'xsd:double'"
           class="w-full"
+          placeholder="请输入默认值"
         />
         <a-date-picker
-          type="datetime"
-          value-format="YYYY-MM-DDTHH:mm:ss"
-          v-model="cloned.value"
-          placeholder="请选择时间"
           v-else-if="cloned.type === 'xsd:datetime'"
+          v-model:value="cloned.value"
           class="w-full"
+          placeholder="请选择时间"
+          show-time
+          value-format="YYYY-MM-DDTHH:mm:ss"
         />
       </a-form-item>
     </a-form>

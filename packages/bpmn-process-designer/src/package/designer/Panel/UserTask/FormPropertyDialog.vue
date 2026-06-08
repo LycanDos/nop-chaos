@@ -102,7 +102,7 @@ defineExpose({
     <a-form
       ref="formRef"
       class="form-property-form"
-      label-position="top"
+      layout="vertical"
       :model="cloned"
       :rules="formRules"
       :size="formSize || 'default'"
@@ -110,12 +110,12 @@ defineExpose({
       <a-row :gutter="10">
         <a-col :span="24">
           <a-form-item label="id" prop="id">
-            <a-input v-model="cloned.id" placeholder="请输入表单属性id"></a-input>
+            <a-input v-model:value="cloned.id" placeholder="请输入表单属性id"></a-input>
           </a-form-item>
         </a-col>
         <a-col :span="12">
           <a-form-item label="名称" prop="name">
-            <a-input v-model="cloned.name" placeholder="请输入表单属性名称"></a-input>
+            <a-input v-model:value="cloned.name" placeholder="请输入表单属性名称"></a-input>
           </a-form-item>
         </a-col>
         <a-col :span="12">
@@ -126,30 +126,34 @@ defineExpose({
                 :key="item.value"
                 :label="item.label"
                 :value="item.value"
-              />
+              >
+                {{ item.label }}
+              </a-select-option>
             </a-select>
           </a-form-item>
         </a-col>
         <a-col :span="12">
           <a-form-item label="表达式" prop="expression">
-            <a-input v-model="cloned.expression" placeholder="可选"></a-input>
+            <a-input v-model:value="cloned.expression" placeholder="可选"></a-input>
           </a-form-item>
         </a-col>
         <a-col :span="12">
           <a-form-item label="变量名" prop="variable">
-            <a-input v-model="cloned.variable" placeholder="可选"></a-input>
+            <a-input v-model:value="cloned.variable" placeholder="可选"></a-input>
           </a-form-item>
         </a-col>
         <a-col :span="12">
           <a-form-item label="默认值" prop="default">
-            <a-input v-model="cloned.default" placeholder="可选"></a-input>
+            <a-input v-model:value="cloned.default" placeholder="可选"></a-input>
           </a-form-item>
         </a-col>
         <a-col :span="12">
           <a-form-item :prop="['required', 'readable', 'writable']" label="操作">
-            <a-checkbox v-model="cloned.required" label="必填" />
-            <a-checkbox v-model="cloned.readable" label="可读" />
-            <a-checkbox v-model="cloned.writable" label="可写" />
+            <a-space>
+              <a-checkbox v-model:checked="cloned.required">必填</a-checkbox>
+              <a-checkbox v-model:checked="cloned.readable">可读</a-checkbox>
+              <a-checkbox v-model:checked="cloned.writable">可写</a-checkbox>
+            </a-space>
           </a-form-item>
         </a-col>
       </a-row>
@@ -162,33 +166,33 @@ defineExpose({
 </template>
 
 <style scoped lang="scss">
-:deep(.form-property-dialog .el-dialog) {
-  border-radius: 12px;
+:deep(.form-property-dialog .ant-modal-content) {
+  border-radius: var(--bpd-radius, 6px);
   overflow: hidden;
 }
 
-:deep(.form-property-dialog .el-dialog__header) {
-  padding: 14px 16px 10px;
-  border-bottom: 1px solid var(--el-border-color-lighter);
+:deep(.form-property-dialog .ant-modal-header) {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--bpd-border-color-split, #f0f0f0);
 }
 
-:deep(.form-property-dialog .el-dialog__body) {
+:deep(.form-property-dialog .ant-modal-body) {
   max-height: 62vh;
   overflow: auto;
-  padding: 12px 16px 6px;
+  padding: 16px 16px 4px;
 }
 
-:deep(.form-property-dialog .el-dialog__footer) {
-  padding: 10px 16px 14px;
-  border-top: 1px solid var(--el-border-color-lighter);
+:deep(.form-property-dialog .ant-modal-footer) {
+  padding: 10px 16px;
+  border-top: 1px solid var(--bpd-border-color-split, #f0f0f0);
 }
 
-.form-property-form :deep(.el-form-item) {
+.form-property-form :deep(.ant-form-item) {
   margin-bottom: 12px;
 }
 
 @media (max-width: 768px) {
-  .form-property-form :deep(.el-col) {
+  .form-property-form :deep(.ant-col) {
     max-width: 100%;
     flex: 0 0 100%;
   }

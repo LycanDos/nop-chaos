@@ -157,49 +157,62 @@ watch(
 .copilot-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 16px;
+  padding: 16px 16px 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  scroll-behavior: smooth;
 }
 
 .copilot-empty {
   text-align: center;
-  color: #999;
-  margin-top: 40px;
+  color: @text-color-help-dark;
+  margin-top: 48px;
 
   p { margin: 4px 0; }
 
   .copilot-hint {
     font-size: 12px;
-    margin-top: 12px;
+    margin-top: 16px;
   }
 
   ul {
     text-align: left;
     font-size: 12px;
-    color: #bbb;
+    color: @text-color-help-dark;
     padding-left: 20px;
+    margin-top: 8px;
+    list-style: none;
 
     li {
-      margin: 4px 0;
-      &::before { content: '"'; }
-      &::after { content: '"'; }
+      margin: 6px 0;
+      position: relative;
+      padding-left: 12px;
+      &::before {
+        content: '•';
+        position: absolute;
+        left: 0;
+        color: @primary-color;
+      }
+
+      &::after { content: none; }
     }
   }
 }
 
 .copilot-typing {
   display: flex;
-  gap: 4px;
-  padding: 8px 0;
+  gap: 5px;
+  padding: 10px 0 6px;
+  align-items: center;
 
   &-dot {
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
-    background: #ccc;
-    animation: copilot-typing 1.4s infinite;
+    background: @primary-color;
+    animation: copilot-typing 1.4s infinite both;
+    opacity: 0.4;
 
     &:nth-child(2) { animation-delay: 0.2s; }
     &:nth-child(3) { animation-delay: 0.4s; }
@@ -207,21 +220,22 @@ watch(
 }
 
 @keyframes copilot-typing {
-  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
-  30% { opacity: 1; transform: translateY(-4px); }
+  0%, 60%, 100% { opacity: 0.4; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-5px); }
 }
 
 .copilot-confirm-card {
-  background: #fffbe6;
-  border: 1px solid #ffe58f;
+  background: @primary-1;
+  border: 1px solid @primary-3;
   border-radius: 8px;
-  padding: 12px;
-  margin: 4px 0;
+  padding: 12px 16px;
+  margin: 6px 0;
 
   &-text {
     font-size: 13px;
-    color: #595959;
-    margin-bottom: 8px;
+    color: @text-color;
+    margin-bottom: 10px;
+    line-height: 1.5;
   }
 
   &-actions {
@@ -231,38 +245,42 @@ watch(
 }
 
 .copilot-confirm-btn {
-  padding: 4px 16px;
+  padding: 5px 18px;
   border-radius: 6px;
   font-size: 13px;
   cursor: pointer;
+  transition: all 0.2s;
+  line-height: 1.5;
 
   &.confirm {
-    background: #1890ff;
+    background: @primary-color;
     color: #fff;
     border: none;
-    &:hover { background: #40a9ff; }
+    box-shadow: 0 2px 6px fade(@primary-color, 30%);
+    &:hover { background: @primary-5; }
   }
 
   &.cancel {
     background: #fff;
-    color: #595959;
-    border: 1px solid #d9d9d9;
-    &:hover { border-color: #1890ff; color: #1890ff; }
+    color: @text-color-secondary;
+    border: 1px solid @border-color-base;
+    &:hover { border-color: @primary-color; color: @primary-color; }
   }
 }
 
 .copilot-input-area {
-  padding: 8px 12px;
-  border-top: 1px solid #f0f0f0;
+  padding: 10px 14px 12px;
+  border-top: 1px solid @border-color-base;
   display: flex;
   gap: 8px;
   align-items: flex-end;
   flex-shrink: 0;
+  background: #fff;
 }
 
 .copilot-input {
   flex: 1;
-  border: 1px solid #e8e8e8;
+  border: 1px solid @border-color-base;
   border-radius: 8px;
   padding: 8px 12px;
   font-size: 13px;
@@ -271,16 +289,27 @@ watch(
   min-height: 36px;
   max-height: 100px;
   font-family: inherit;
+  line-height: 1.5;
+  transition: all 0.2s;
 
   &:focus {
-    border-color: #1890ff;
-    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+    border-color: @primary-color;
+    box-shadow: 0 0 0 2px fade(@primary-color, 10%);
+  }
+
+  &::placeholder {
+    color: @text-color-help-dark;
+  }
+
+  &:disabled {
+    background: #f5f5f5;
+    cursor: not-allowed;
   }
 }
 
 .copilot-send-btn {
-  padding: 8px 16px;
-  background: #1890ff;
+  padding: 8px 18px;
+  background: @primary-color;
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -288,8 +317,11 @@ watch(
   cursor: pointer;
   flex-shrink: 0;
   height: 36px;
+  transition: all 0.2s;
+  font-weight: 500;
 
-  &:hover:not(:disabled) { background: #40a9ff; }
-  &:disabled { background: #d9d9d9; cursor: not-allowed; }
+  &:hover:not(:disabled) { background: @primary-5; box-shadow: 0 2px 8px fade(@primary-color, 30%); }
+  &:active:not(:disabled) { transform: scale(0.97); }
+  &:disabled { background: @border-color-shallow-dark; cursor: not-allowed; color: #fff; }
 }
 </style>

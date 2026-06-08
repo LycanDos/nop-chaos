@@ -132,6 +132,22 @@ async function openDrawer(
   error.value = ''
   
   try {
+    if (currentMethodId.startsWith('embedded:')) {
+      const nextSchema = applyDescriptionAsLabel(buildEmbeddedPolicySchema(currentMethodId, fields))
+      schema.value = nextSchema
+      developerPolicyDocument.value = normalizeMethodPolicyDocument(null)
+      documentValue.value = normalizeInputPolicyDocument(
+        currentDocument,
+        createEmptyInputPolicyDocument(currentMethodId),
+        developerPolicyDocument.value,
+      )
+      sampleData.value = resolveSampleData(null, nextSchema)
+      availableVariables.value = normalizeAvailableVariables(null, fields, nextSchema)
+      activeVariableTab.value = resolveInitialVariableTab(availableVariables.value)
+      previewEditorKey.value += 1
+      return
+    }
+
     // 加载入参 Clar + 执行器开发者层数据
     const [inputResponse, developerResponse] = await Promise.all([
       loadInputPolicyStudio(currentMethodId, currentNodeId, currentProcessDefId),
@@ -180,6 +196,30 @@ async function openDrawer(
     console.error('[InputClarDrawer] 加载失败:', err)
   } finally {
     loading.value = false
+  }
+}
+
+function buildEmbeddedPolicySchema(currentMethodId: string, fields?: MethodSchemaFieldItem[]): PolicySchema {
+  const inputFields = (fields || []).filter(field => field.schemaRole === 'INPUT')
+  return {
+    id: `${currentMethodId}:input-schema`,
+    name: '内置执行器入参',
+    fields: inputFields.map(field => ({
+      path: field.fieldPath,
+      name: field.fieldPath,
+      label: field.description || field.fieldName || field.fieldPath,
+      type: field.dataType || 'string',
+      required: !!field.required,
+      description: field.description || field.fieldName || '',
+    })),
+  } as PolicySchema
+}
+
+function createEmptyInputPolicyDocument(currentMethodId: string): PolicyDocument {
+  return {
+    id: `${currentMethodId}:input-clar`,
+    name: '入参 Clar',
+    layers: [],
   }
 }
 

@@ -90,20 +90,18 @@ onMounted(() => {
   <div class="data-container">
     <div class="data-header">
       <span>数据对象</span>
-      <a-button type="primary" link @click="editDataObject()"><PlusOutlined />添加</a-button>
+      <a-button type="link" size="small" @click="editDataObject()"><PlusOutlined />添加</a-button>
     </div>
-    <a-table :dataSource="dataObjects" height="200px">
-      <a-table-column prop="name" show-overflow-tooltip label="名称"></a-table-column>
-      <a-table-column prop="type" show-overflow-tooltip label="类型"></a-table-column>
-      <a-table-column prop="value" show-overflow-tooltip label="默认值"></a-table-column>
-      <a-table-column label="操作" min-width="63px" align="center">
-        <template #default="{ row }">
+    <a-table :data-source="dataObjects" size="small" :pagination="false" :scroll="{ y: 200 }" row-key="id">
+      <a-table-column data-index="name" title="名称" :ellipsis="true" />
+      <a-table-column data-index="type" title="类型" :ellipsis="true" />
+      <a-table-column data-index="value" title="默认值" :ellipsis="true" />
+      <a-table-column title="操作" width="72" align="center">
+        <template #default="{ record }">
           <a-space>
-            <a-button type="primary" link @click="editDataObject(row)"><EditOutlined /></a-button>
-            <a-popconfirm title="您确定要删除该数据对象吗？" @confirm="removeDataObject(row)">
-              <template #reference>
-                <a-button danger link><DeleteOutlined /></a-button>
-              </template>
+            <a-button type="link" size="small" @click="editDataObject(record)"><EditOutlined /></a-button>
+            <a-popconfirm title="您确定要删除该数据对象吗？" @confirm="removeDataObject(record)">
+              <a-button danger type="link" size="small"><DeleteOutlined /></a-button>
             </a-popconfirm>
           </a-space>
         </template>
@@ -119,7 +117,9 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 7px 7px;
+    padding: 0 0 8px;
+    color: var(--bpd-text-color, #262626);
+    font-weight: 600;
   }
 }
 </style>

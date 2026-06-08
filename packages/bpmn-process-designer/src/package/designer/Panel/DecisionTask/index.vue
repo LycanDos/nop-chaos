@@ -12,7 +12,7 @@ const sameDeployment = useFieldRef('sameDeployment')
 <template>
   <a-collapse-panel key="arg1" header="决策">
     <a-form-item label="决策引用">
-      <a-input v-model="decisionTableReferenceKey" placeholder="请输入决策key" />
+      <a-input v-model:value="decisionTableReferenceKey" placeholder="请输入决策key" />
     </a-form-item>
     <a-form-item label="决策任务在未命中时抛出错误">
       <a-switch

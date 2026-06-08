@@ -140,20 +140,18 @@ onMounted(() => {
       <div class="events-list">
         <div class="events-container">
           <div class="events-header">
-            <span> 消息定义</span>
-            <a-button type="primary" link @click="addMessageEvent()"><PlusOutlined />添加</a-button>
+            <span>消息定义</span>
+            <a-button type="link" size="small" @click="addMessageEvent()"><PlusOutlined />添加</a-button>
           </div>
-          <a-table :dataSource="messages" height="200px">
-            <a-table-column prop="id" show-overflow-tooltip label="id"></a-table-column>
-            <a-table-column prop="name" show-overflow-tooltip label="名称"></a-table-column>
-            <a-table-column label="操作" min-width="45px" align="center">
-              <template #default="{ row }">
+          <a-table :data-source="messages" size="small" :pagination="false" :scroll="{ y: 200 }" row-key="id">
+            <a-table-column data-index="id" title="id" :ellipsis="true" />
+            <a-table-column data-index="name" title="名称" :ellipsis="true" />
+            <a-table-column title="操作" width="72" align="center">
+              <template #default="{ record }">
                 <a-space>
-                  <a-button type="primary" link @click="addMessageEvent(row)"><EditOutlined /></a-button>
-                  <a-popconfirm title="您确定要删除该事件吗？" @confirm="removeMessageEvent(row)">
-                    <template #reference>
-                      <a-button danger link><DeleteOutlined /></a-button>
-                    </template>
+                  <a-button type="link" size="small" @click="addMessageEvent(record)"><EditOutlined /></a-button>
+                  <a-popconfirm title="您确定要删除该事件吗？" @confirm="removeMessageEvent(record)">
+                    <a-button danger type="link" size="small"><DeleteOutlined /></a-button>
                   </a-popconfirm>
                 </a-space>
               </template>
@@ -163,20 +161,18 @@ onMounted(() => {
 
         <div class="events-container">
           <div class="events-header">
-            <span> 错误定义</span>
-            <a-button type="primary" link @click="addErrorEvent()"><PlusOutlined />添加</a-button>
+            <span>错误定义</span>
+            <a-button type="link" size="small" @click="addErrorEvent()"><PlusOutlined />添加</a-button>
           </div>
-          <a-table :dataSource="errors" height="200px">
-            <a-table-column prop="id" show-overflow-tooltip label="id"></a-table-column>
-            <a-table-column prop="name" show-overflow-tooltip label="名称"></a-table-column>
-            <a-table-column label="操作" min-width="45px" align="center">
-              <template #default="{ row }">
+          <a-table :data-source="errors" size="small" :pagination="false" :scroll="{ y: 200 }" row-key="id">
+            <a-table-column data-index="id" title="id" :ellipsis="true" />
+            <a-table-column data-index="name" title="名称" :ellipsis="true" />
+            <a-table-column title="操作" width="72" align="center">
+              <template #default="{ record }">
                 <a-space>
-                  <a-button type="primary" link @click="addErrorEvent(row)" ><EditOutlined /></a-button>
-                  <a-popconfirm title="您确定要删除该事件吗？" @confirm="removeErrorEvent(row)">
-                    <template #reference>
-                      <a-button danger link><DeleteOutlined /></a-button>
-                    </template>
+                  <a-button type="link" size="small" @click="addErrorEvent(record)"><EditOutlined /></a-button>
+                  <a-popconfirm title="您确定要删除该事件吗？" @confirm="removeErrorEvent(record)">
+                    <a-button danger type="link" size="small"><DeleteOutlined /></a-button>
                   </a-popconfirm>
                 </a-space>
               </template>
@@ -186,20 +182,18 @@ onMounted(() => {
 
         <div class="events-container">
           <div class="events-header">
-            <span> 信号定义</span>
-            <a-button type="primary" link @click="addSignalEvent()"><PlusOutlined />添加</a-button>
+            <span>信号定义</span>
+            <a-button type="link" size="small" @click="addSignalEvent()"><PlusOutlined />添加</a-button>
           </div>
-          <a-table :dataSource="signals" height="200px">
-            <a-table-column prop="id" show-overflow-tooltip label="id"></a-table-column>
-            <a-table-column prop="name" show-overflow-tooltip label="名称"></a-table-column>
-            <a-table-column label="操作" min-width="45px" align="center">
-              <template #default="{ row }">
+          <a-table :data-source="signals" size="small" :pagination="false" :scroll="{ y: 200 }" row-key="id">
+            <a-table-column data-index="id" title="id" :ellipsis="true" />
+            <a-table-column data-index="name" title="名称" :ellipsis="true" />
+            <a-table-column title="操作" width="72" align="center">
+              <template #default="{ record }">
                 <a-space>
-                  <a-button type="primary" link @click="addSignalEvent(row)" ><EditOutlined /></a-button>
-                  <a-popconfirm title="您确定要删除该事件吗？" @confirm="removeSignalEvent(row)">
-                    <template #reference>
-                      <a-button danger link><DeleteOutlined /></a-button>
-                    </template>
+                  <a-button type="link" size="small" @click="addSignalEvent(record)"><EditOutlined /></a-button>
+                  <a-popconfirm title="您确定要删除该事件吗？" @confirm="removeSignalEvent(record)">
+                    <a-button danger type="link" size="small"><DeleteOutlined /></a-button>
                   </a-popconfirm>
                 </a-space>
               </template>
@@ -209,23 +203,21 @@ onMounted(() => {
 
         <div class="events-container">
           <div class="events-header">
-            <span> 升级定义</span>
-            <a-button type="primary" link @click="addEscalationEvent()" ><PlusOutlined />添加 </a-button>
+            <span>升级定义</span>
+            <a-button type="link" size="small" @click="addEscalationEvent()"><PlusOutlined />添加</a-button>
           </div>
-          <a-table :dataSource="escalations" height="200px">
-            <a-table-column prop="id" show-overflow-tooltip label="id"></a-table-column>
-            <a-table-column prop="name" show-overflow-tooltip label="名称"></a-table-column>
-            <a-table-column label="操作" min-width="45px" align="center">
-              <template #default="{ row }">
+          <a-table :data-source="escalations" size="small" :pagination="false" :scroll="{ y: 200 }" row-key="id">
+            <a-table-column data-index="id" title="id" :ellipsis="true" />
+            <a-table-column data-index="name" title="名称" :ellipsis="true" />
+            <a-table-column title="操作" width="72" align="center">
+              <template #default="{ record }">
                 <a-space>
-                  <a-button type="primary" link @click="addEscalationEvent(row)" ><EditOutlined /></a-button>
+                  <a-button type="link" size="small" @click="addEscalationEvent(record)"><EditOutlined /></a-button>
                   <a-popconfirm
                     title="您确定要删除该事件吗？"
-                    @confirm="removeEscalationEvent(row)"
+                    @confirm="removeEscalationEvent(record)"
                   >
-                    <template #reference>
-                      <a-button danger link><DeleteOutlined /></a-button>
-                    </template>
+                    <a-button danger type="link" size="small"><DeleteOutlined /></a-button>
                   </a-popconfirm>
                 </a-space>
               </template>
@@ -240,13 +232,15 @@ onMounted(() => {
 <style scoped lang="scss">
 .events-list {
   height: 100%;
-  padding: 10px;
+  padding: 8px 0;
 
   .events-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 7px 7px;
+    padding: 0 0 8px;
+    color: var(--bpd-text-color, #262626);
+    font-weight: 600;
   }
 
   .events-container {

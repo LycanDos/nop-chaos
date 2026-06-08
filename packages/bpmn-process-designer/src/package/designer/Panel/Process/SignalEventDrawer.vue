@@ -49,29 +49,28 @@ defineExpose({
 </script>
 
 <template>
-  <a-drawer v-model:visible="drawerVisible" append-to-body :lock-scroll="false" @closed="onClosed" :show-close="false" :closable="false">
+  <a-drawer v-model:visible="drawerVisible" width="420px" :closable="false" @close="onClosed">
     <a-form
       ref="formRef"
-      label-position="top"
+      layout="vertical"
       :model="cloned"
       :rules="formRules"
-      label-width="90px"
       :size="formSize"
     >
       <a-form-item label="id" prop="id">
-        <a-input v-model="cloned.id" placeholder="请输入id">
+        <a-input v-model:value="cloned.id" placeholder="请输入id">
           <template #append>
             <a-button @click="cloned.id = nextId('Signal_')"><ReloadOutlined /></a-button>
           </template>
         </a-input>
       </a-form-item>
       <a-form-item label="名称" prop="name">
-        <a-input v-model="cloned.name" placeholder="请输入名称" />
+        <a-input v-model:value="cloned.name" placeholder="请输入名称" />
       </a-form-item>
       <a-form-item label="作用域" prop="flowable:scope">
-        <a-radio-group v-model="cloned['flowable:scope']">
-          <a-radio-button label="global">全局</a-radio-button>
-          <a-radio-button label="processInstance">当前实例</a-radio-button>
+        <a-radio-group v-model:value="cloned['flowable:scope']">
+          <a-radio-button value="global">全局</a-radio-button>
+          <a-radio-button value="processInstance">当前实例</a-radio-button>
         </a-radio-group>
       </a-form-item>
     </a-form>

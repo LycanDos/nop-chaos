@@ -713,7 +713,7 @@ function clamp(v: number, lo: number, hi: number) { return Math.min(hi, Math.max
 
 let activeResize: 'base' | 'workbench' | null = null;
 function startResize(target: 'base' | 'workbench', event: MouseEvent) {
-  if (!layoutRef.value || window.innerWidth <= 1500) return;
+  if (!layoutRef.value || window.innerWidth <= 1100) return;
   event.preventDefault(); activeResize = target;
   window.addEventListener('mousemove', handleResizeMove);
   window.addEventListener('mouseup', stopResize);
@@ -876,7 +876,7 @@ onBeforeUnmount(() => { stopResize(); destroyPreviewEditor(); destroyBackendEdit
 .delta-lab__inspector-resize { position: absolute; top: 0; left: 0; right: 0; height: 6px; cursor: row-resize; z-index: 2; }
 .delta-lab__inspector-resize::before { content: ''; position: absolute; top: 2px; left: 50%; transform: translateX(-50%); width: 40px; height: 2px; border-radius: 2px; background: #cbd5e1; }
 
-@media (max-width: 1500px) {
+@media (max-width: 1100px) {
   .delta-lab__grid { flex-direction: column; height: auto; min-height: auto; gap: 6px; }
   .delta-lab__pane { flex-basis: auto !important; height: 50vh; min-height: 300px; }
   .delta-lab__splitter { display: none; }

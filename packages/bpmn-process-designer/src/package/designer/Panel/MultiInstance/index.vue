@@ -242,27 +242,27 @@ onMounted(() => {
 
 <template>
   <div>
-    <a-form-item label="实例类型">
-      <a-radio-group v-model="loopCharacteristicsType">
-        <a-radio-button label="无" value="" />
-        <a-radio-button label="并行" value="Parallel" />
-        <a-radio-button label="串行" value="Sequential" />
+      <a-form-item label="实例类型">
+        <a-radio-group v-model:value="loopCharacteristicsType">
+        <a-radio-button value="">无</a-radio-button>
+        <a-radio-button value="Parallel">并行</a-radio-button>
+        <a-radio-button value="Sequential">串行</a-radio-button>
       </a-radio-group>
     </a-form-item>
     <div v-if="loopCharacteristicsType">
       <a-form-item label="基数">
-        <a-input v-model="loopCardinality" placeholder="请输入基数" />
+        <a-input v-model:value="loopCardinality" placeholder="请输入基数" />
       </a-form-item>
       <a-row :gutter="10">
         <a-col :span="form?.labelPosition === 'top' ? 12 : 24">
           <a-form-item label="集合变量">
-            <a-input v-model="collection" placeholder="请输入集合变量" />
+            <a-input v-model:value="collection" placeholder="请输入集合变量" />
           </a-form-item>
         </a-col>
         <a-col :span="form?.labelPosition === 'top' ? 12 : 24">
           <a-form-item label="元素变量">
             <a-input
-              v-model="elementVariable"
+              v-model:value="elementVariable"
               @change="changeElementVariable"
               placeholder="请输入元素变量"
             />
@@ -270,7 +270,7 @@ onMounted(() => {
         </a-col>
         <a-col :span="form?.labelPosition === 'top' ? 12 : 24" v-show="false">
           <a-form-item label="索引变量">
-            <a-input v-model="elementIndexVariable" placeholder="请输入索引变量" />
+            <a-input v-model:value="elementIndexVariable" placeholder="请输入索引变量" />
           </a-form-item>
         </a-col>
       </a-row>
@@ -282,7 +282,7 @@ onMounted(() => {
         />
       </a-form-item>
       <a-form-item label="集合处理器" v-show="false">
-        <a-input v-model="collectionHandler" placeholder="请输入集合处理器" />
+        <a-input v-model:value="collectionHandler" placeholder="请输入集合处理器" />
       </a-form-item>
       <a-form-item label="完成条件">
         <Codemirror
@@ -293,31 +293,29 @@ onMounted(() => {
           :extensions="[juelExtension]"
           v-model="completionCondition"
         />
-        <!--        <a-input v-model="completionCondition" placeholder="请输入完成条件" />-->
+        <!--        <a-input v-model:value="completionCondition" placeholder="请输入完成条件" />-->
       </a-form-item>
       <a-form-item>
         <template #label>
           变量聚合
-          <a-button type="primary" link @click="addVariableAggregation()"><PlusOutlined /> 添加聚合 </a-button>
+          <a-button type="link" size="small" @click="addVariableAggregation()"><PlusOutlined /> 添加聚合 </a-button>
         </template>
-        <a-table :dataSource="variableAggregations" height="150px">
-          <a-table-column prop="target" label="聚合变量" />
-          <a-table-column prop="variableType" label="变量类型">
-            <template #default="{ row }">
-              {{ row.variableType === 'createOverviewVariable' ? '普通变量' : '瞬态变量' }}
+        <a-table :data-source="variableAggregations" size="small" :pagination="false" :scroll="{ y: 150 }" row-key="target">
+          <a-table-column data-index="target" title="聚合变量" />
+          <a-table-column data-index="variableType" title="变量类型">
+            <template #default="{ record }">
+              {{ record.variableType === 'createOverviewVariable' ? '普通变量' : '瞬态变量' }}
             </template>
           </a-table-column>
-          <a-table-column align="center" min-width="50px" label="操作">
-            <template #default="{ row }">
+          <a-table-column align="center" width="72" title="操作">
+            <template #default="{ record }">
               <a-space>
-                <a-button type="primary" link @click="addVariableAggregation(row)" ><EditOutlined /></a-button>
+                <a-button type="link" size="small" @click="addVariableAggregation(record)"><EditOutlined /></a-button>
                 <a-popconfirm
                   title="您确定要删除该字段吗？"
-                  @confirm="removeVariableAggregation(row)"
+                  @confirm="removeVariableAggregation(record)"
                 >
-                  <template #reference>
-                    <a-button danger link><DeleteOutlined /></a-button>
-                  </template>
+                  <a-button danger type="link" size="small"><DeleteOutlined /></a-button>
                 </a-popconfirm>
               </a-space>
             </template>

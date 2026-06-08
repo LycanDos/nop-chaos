@@ -14,11 +14,12 @@ import { computed, customRef, markRaw, nextTick, onBeforeUnmount, onMounted, pro
 import ToggleMode from 'bpmn-js-token-simulation/lib/features/toggle-mode/modeler/ToggleMode'
 import BpmnModeler from 'bpmn-js/lib/Modeler'
 import {
-  CaretLeftOutlined,
-  CaretRightOutlined,
-  DeleteOutlined,
+  CheckCircleOutlined,
   DownloadOutlined,
   FolderOpenOutlined,
+  HistoryOutlined,
+  NodeIndexOutlined,
+  ReloadOutlined,
   RotateLeftOutlined,
   RotateRightOutlined,
   SettingOutlined,
@@ -393,66 +394,68 @@ defineExpose({
       <a-space :size="4">
         <a-button-group>
           <a-tooltip placement="top" title="导入">
-            <a-button type="text" @click="fileRef?.click()"><FolderOpenOutlined /></a-button>
+            <a-button class="design-toolbar__btn" type="text" @click="fileRef?.click()"><FolderOpenOutlined /></a-button>
           </a-tooltip>
           <a-tooltip placement="top" title="导出">
-            <a-button type="text" @click="exportXml"><DownloadOutlined /></a-button>
+            <a-button class="design-toolbar__btn" type="text" @click="exportXml"><DownloadOutlined /></a-button>
           </a-tooltip>
         </a-button-group>
 
         <a-button-group>
           <a-tooltip placement="top" title="撤销">
-            <a-button type="text" @click="undo"><RotateLeftOutlined /></a-button>
+            <a-button class="design-toolbar__btn" type="text" @click="undo"><RotateLeftOutlined /></a-button>
           </a-tooltip>
           <a-tooltip placement="top" title="恢复">
-            <a-button type="text" @click="redo"><RotateRightOutlined /></a-button>
+            <a-button class="design-toolbar__btn" type="text" @click="redo"><RotateRightOutlined /></a-button>
           </a-tooltip>
         </a-button-group>
 
         <a-button-group>
           <a-tooltip title="放大" placement="top-start">
-            <a-button type="text" @click="zoom += 0.1" :disabled="zoom >= 1.7"><ZoomInOutlined /></a-button>
+            <a-button class="design-toolbar__btn" type="text" @click="zoom += 0.1" :disabled="zoom >= 1.7"><ZoomInOutlined /></a-button>
           </a-tooltip>
           <a-tooltip title="重置缩放" placement="top-start">
-            <a-button type="text" @click="resetZoom">{{ zoomPercent }}</a-button>
+            <a-button class="design-toolbar__zoom" type="text" @click="resetZoom">{{ zoomPercent }}</a-button>
           </a-tooltip>
           <a-tooltip title="缩小" placement="top-start">
-            <a-button type="text" @click="zoom -= 0.1" :disabled="zoom <= 0.5"><ZoomOutOutlined /></a-button>
+            <a-button class="design-toolbar__btn" type="text" @click="zoom -= 0.1" :disabled="zoom <= 0.5"><ZoomOutOutlined /></a-button>
           </a-tooltip>
         </a-button-group>
 
         <a-button-group>
-          <a-tooltip placement="top" title="重做">
-            <a-button type="text" @click="restart"><DeleteOutlined /></a-button>
+          <a-tooltip placement="top" title="重置流程">
+            <a-button class="design-toolbar__btn" type="text" @click="restart"><ReloadOutlined /></a-button>
           </a-tooltip>
-          <a-tooltip placement="top" title="流程模拟">
-            <a-button type="text" @click="toggleMockVisible">
-              <template #icon><PauseCircleOutlined v-if="mockVisible" /><PlayCircleOutlined v-else /></template>
-              {{ mockVisible ? '退出模拟' : '开启模拟' }}
+          <a-tooltip placement="top" :title="mockVisible ? '退出模拟' : '开启模拟'">
+            <a-button class="design-toolbar__btn" :class="{ 'is-active': mockVisible }" type="text" @click="toggleMockVisible">
+              <PauseCircleOutlined v-if="mockVisible" />
+              <PlayCircleOutlined v-else />
             </a-button>
           </a-tooltip>
-          <a-tooltip placement="top" title="回退模拟">
-            <a-button type="text" @click="toggleReverseMockVisible">
-              <template #icon><PauseCircleOutlined v-if="reverseMockVisible" /><PlayCircleOutlined v-else /></template>
-              {{ reverseMockVisible ? '退出回退预览' : '开启回退预览' }}
+          <a-tooltip placement="top" :title="reverseMockVisible ? '退出回退预览' : '开启回退预览'">
+            <a-button class="design-toolbar__btn" :class="{ 'is-active': reverseMockVisible }" type="text" @click="toggleReverseMockVisible">
+              <PauseCircleOutlined v-if="reverseMockVisible" />
+              <HistoryOutlined v-else />
             </a-button>
           </a-tooltip>
-          <a-tooltip placement="top" title="流程校验">
+          <a-tooltip placement="top" :title="lintVisible ? '关闭校验' : '开启校验'">
             <a-button
+              class="design-toolbar__btn"
+              :class="{ 'is-active': lintVisible }"
               type="text"
               @click="lintVisible = !lintVisible"
             >
-              <template #icon><PauseCircleOutlined v-if="lintVisible" /><PlayCircleOutlined v-else /></template>
-              {{ lintVisible ? '关闭校验' : '开启校验' }}
+              <CheckCircleOutlined />
             </a-button>
           </a-tooltip>
-          <a-tooltip placement="top" title="小地图">
+          <a-tooltip placement="top" :title="mapVisible ? '收起地图' : '展开地图'">
             <a-button
+              class="design-toolbar__btn"
+              :class="{ 'is-active': mapVisible }"
               type="text"
               @click="mapVisible = !mapVisible"
             >
-              <template #icon><PauseCircleOutlined v-if="mapVisible" /><PlayCircleOutlined v-else /></template>
-              {{ mapVisible ? '收起地图' : '展开地图' }}
+              <NodeIndexOutlined />
             </a-button>
           </a-tooltip>
         </a-button-group>
@@ -498,53 +501,81 @@ defineExpose({
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: var(--bpd-container-bg, #fff);
 }
 
 .design-toolbar {
-  height: 36px;
-  flex: 0 0 36px;
+  height: 40px;
+  flex: 0 0 40px;
   display: flex;
   align-items: center;
-  padding: 0 8px;
-  border-bottom: 1px solid #e8e8e8;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--bpd-border-color-split, #f0f0f0);
   box-sizing: border-box;
-  background: #fafafa;
+  background: var(--bpd-container-bg, #fff);
+  box-shadow: 0 1px 0 rgba(5, 5, 5, 0.03);
+  position: relative;
+  z-index: 5;
 
   :deep(.ant-space) { width: 100%; }
   :deep(.ant-btn-group) { 
     display: inline-flex; 
-    border: 1px solid #d9d9d9; 
-    border-radius: 6px; 
+    align-items: center;
+    border: 1px solid var(--bpd-border-color, #d9d9d9);
+    border-radius: var(--bpd-radius, 6px);
     overflow: hidden; 
+    background: var(--bpd-container-bg, #fff);
   }
-  :deep(.ant-btn-group .ant-btn) { 
-    border: none; 
-    border-radius: 0; 
-    height: 28px; 
-    width: 28px;
-    min-width: 28px;
-    padding: 0; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
+
+  :deep(.ant-btn-group .ant-btn:not(:last-child)) {
+    border-right: 1px solid var(--bpd-border-color, #d9d9d9) !important;
+  }
+
+  :deep(.design-toolbar__btn),
+  :deep(.design-toolbar__zoom) {
+    width: 30px !important;
+    min-width: 30px !important;
+    height: 28px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    color: var(--bpd-text-color-secondary, #595959);
+    background: transparent;
+    box-shadow: none;
     font-size: 14px;
-    color: #595959;
+    line-height: 1;
   }
-  :deep(.ant-btn-group .ant-btn:not(:last-child)) { border-right: 1px solid #d9d9d9; }
-  :deep(.ant-btn-group .ant-btn:hover) { color: #1677ff; background: #e6f4ff; }
-  :deep(.ant-btn-text) { 
-    border: 1px solid transparent !important; 
-    border-radius: 6px;
-    padding: 0 8px !important;
-    width: auto !important;
-    min-width: auto !important;
-    height: 28px;
+
+  :deep(.design-toolbar__zoom) {
+    width: 48px !important;
+    min-width: 48px !important;
     font-size: 12px;
-    color: #434343;
+    font-variant-numeric: tabular-nums;
   }
-  :deep(.ant-btn-text:hover) { border-color: #d9d9d9 !important; color: #1677ff; background: #f0f0f0; }
-  :deep(.ant-btn-text .anticon) { margin-right: 4px; }
-  .ant-space-item { display: flex; align-items: center; }
+
+  :deep(.design-toolbar__btn .anticon),
+  :deep(.design-toolbar__zoom .anticon) {
+    margin: 0;
+  }
+
+  :deep(.design-toolbar__btn:hover),
+  :deep(.design-toolbar__zoom:hover),
+  :deep(.design-toolbar__btn.is-active),
+  :deep(.design-toolbar__zoom.is-active) {
+    color: var(--bpd-primary-color, #1890ff) !important;
+    background: var(--bpd-primary-color-bg, #e6f7ff) !important;
+  }
+
+  :deep(.design-toolbar__btn:disabled),
+  :deep(.design-toolbar__zoom:disabled) {
+    color: var(--bpd-text-color-quaternary, #bfbfbf) !important;
+    background: transparent !important;
+  }
+
+  :deep(.ant-space-item) { display: flex; align-items: center; }
 }
 
 .design-body {
@@ -559,6 +590,11 @@ defineExpose({
   flex: 1 1 0;
   position: relative;
   overflow: hidden;
+  background:
+    linear-gradient(var(--bpd-border-color-split, #f0f0f0) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bpd-border-color-split, #f0f0f0) 1px, transparent 1px),
+    var(--bpd-fill-secondary, #fafafa);
+  background-size: 24px 24px;
 }
 
 .design-canvas :deep(.canvas) {
@@ -574,9 +610,10 @@ defineExpose({
 .design-aside {
   width: 370px;
   flex: 0 0 370px;
-  border-left: 1px solid var(--el-border-color, #dcdfe6);
-  background-color: var(--el-bg-color, #fff);
+  border-left: 1px solid var(--bpd-border-color-split, #f0f0f0);
+  background-color: var(--bpd-container-bg, #fff);
   overflow: hidden;
+  box-shadow: -6px 0 16px -16px rgba(0, 0, 0, 0.3);
 }
 
 .design-resize-handle {
@@ -590,7 +627,7 @@ defineExpose({
 
   &:hover,
   &--active {
-    background-color: var(--el-color-primary-light-7, #a0cfff);
+    background-color: var(--bpd-primary-color-hover, #40a9ff);
   }
 
   &::after {
@@ -609,7 +646,7 @@ defineExpose({
   right: 0;
   z-index: 3;
   transform: translateY(-50%);
-  background-color: var(--el-bg-color, #fff);
+  background-color: var(--bpd-container-bg, #fff);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -617,12 +654,15 @@ defineExpose({
   height: 48px;
   border-radius: 8px 0 0 8px;
   cursor: pointer;
-  box-shadow: 0 4px 6px 0 rgba(8, 14, 26, 0.04), 0 1px 10px 0 rgba(8, 14, 26, 0.05), 0 2px 4px -1px rgba(8, 14, 26, 0.06);
+  color: var(--bpd-text-color-secondary, #595959);
+  border: 1px solid var(--bpd-border-color-split, #f0f0f0);
+  border-right: 0;
+  box-shadow: var(--bpd-shadow, 0 6px 16px 0 rgba(0, 0, 0, 0.08));
   transition: all 0.2s ease;
   
   &:hover {
-    background-color: var(--el-color-primary-light-9);
-    color: var(--el-color-primary);
+    background-color: var(--bpd-primary-color-bg, #e6f7ff);
+    color: var(--bpd-primary-color, #1890ff);
   }
 }
 </style>
@@ -630,10 +670,10 @@ defineExpose({
 <style lang="scss">
 /* minimap 标题栏样式（非 scoped，因为 .djs-minimap 在组件外） */
 .djs-minimap {
-  box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.25);
-  border: none;
-  background-color: #fff;
-  border-radius: 4px;
+  box-shadow: var(--bpd-shadow, 0 6px 16px 0 rgba(0, 0, 0, 0.08));
+  border: 1px solid var(--bpd-border-color-split, #f0f0f0);
+  background-color: var(--bpd-container-bg, #fff);
+  border-radius: var(--bpd-radius, 6px);
   overflow: hidden;
   width: 260px !important;
   height: auto !important;
@@ -650,8 +690,8 @@ defineExpose({
 
 .minimap-titlebar {
   height: 22px;
-  background: #f5f5f5;
-  border-bottom: 1px solid #e8e8e8;
+  background: var(--bpd-fill-secondary, #fafafa);
+  border-bottom: 1px solid var(--bpd-border-color-split, #f0f0f0);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -684,7 +724,7 @@ defineExpose({
   font-size: 14px;
   line-height: 1;
   color: #999;
-  border-radius: 2px;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -693,8 +733,8 @@ defineExpose({
   z-index: 31;
 
   &:hover {
-    background: #e0e0e0;
-    color: #333;
+    background: var(--bpd-primary-color-bg, #e6f7ff);
+    color: var(--bpd-primary-color, #1890ff);
   }
 }
 

@@ -65,7 +65,7 @@ export default defineComponent({
           gridSpacing: 100,
           gridLineStroke: 1,
           gridLineOpacity: 0.1,
-          gridLineColor: 'var(--el-border-color)',
+          gridLineColor: 'var(--bpd-border-color-split, #f0f0f0)',
         },
         bpmnRenderer: {
           defaultFillColor: 'var(--bjsl-fill-color)',

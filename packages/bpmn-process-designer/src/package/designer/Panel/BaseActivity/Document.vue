@@ -43,7 +43,7 @@ const findDocumentation = (docs: Record<string, string>[]) =>
 
 <template>
   <a-form-item label="描述信息">
-    <a-input v-model="document" type="textarea" :rows="3" placeholder="请输入描述信息" />
+    <a-input v-model:value="document" type="textarea" :rows="3" placeholder="请输入描述信息" />
   </a-form-item>
 </template>
 

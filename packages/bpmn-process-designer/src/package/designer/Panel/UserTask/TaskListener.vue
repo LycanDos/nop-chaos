@@ -94,20 +94,18 @@ onMounted(() => {
   <div class="listener-container">
     <div class="listener-header">
       <span>任务监听器</span>
-      <a-button type="primary" link @click="editListener()"><PlusOutlined />添加</a-button>
+      <a-button type="link" size="small" @click="editListener()"><PlusOutlined />添加</a-button>
     </div>
-    <a-table :dataSource="listeners" height="200px">
-      <a-table-column prop="event" label="事件"></a-table-column>
-      <a-table-column prop="type" show-overflow-tooltip label="类型"></a-table-column>
-      <a-table-column prop="impl" show-overflow-tooltip label="监听"></a-table-column>
-      <a-table-column label="操作" min-width="60px" align="center">
-        <template #default="{ row }">
+    <a-table :data-source="listeners" size="small" :pagination="false" :scroll="{ y: 200 }" row-key="impl">
+      <a-table-column data-index="event" title="事件" />
+      <a-table-column data-index="type" title="类型" :ellipsis="true" />
+      <a-table-column data-index="impl" title="监听" :ellipsis="true" />
+      <a-table-column title="操作" width="72" align="center">
+        <template #default="{ record }">
           <a-space>
-            <a-button type="primary" link @click="editListener(row)"><EditOutlined /></a-button>
-            <a-popconfirm title="您确定要删除该事件吗？" @confirm="removeListener(row)">
-              <template #reference>
-                <a-button danger link><DeleteOutlined /></a-button>
-              </template>
+            <a-button type="link" size="small" @click="editListener(record)"><EditOutlined /></a-button>
+            <a-popconfirm title="您确定要删除该事件吗？" @confirm="removeListener(record)">
+              <a-button danger type="link" size="small"><DeleteOutlined /></a-button>
             </a-popconfirm>
           </a-space>
         </template>
@@ -115,10 +113,10 @@ onMounted(() => {
     </a-table>
     <ListenerDrawer ref="listenerDrawerRef" title="任务监听器" @confirm="confirmListener">
       <template #eventOptions>
-        <a-radio-button label="创建" value="create" />
-        <a-radio-button label="完成" value="complete" />
-        <a-radio-button label="指派" value="assignment" />
-        <a-radio-button label="删除" value="delete" />
+        <a-radio-button value="create">创建</a-radio-button>
+        <a-radio-button value="complete">完成</a-radio-button>
+        <a-radio-button value="assignment">指派</a-radio-button>
+        <a-radio-button value="delete">删除</a-radio-button>
       </template>
     </ListenerDrawer>
   </div>
@@ -130,7 +128,9 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 7px 7px;
+    padding: 0 0 8px;
+    color: var(--bpd-text-color, #262626);
+    font-weight: 600;
   }
 }
 </style>

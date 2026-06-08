@@ -29,12 +29,12 @@ const changeLanguage = (val: string) => {
 <template>
   <a-collapse-panel key="arg1" header="骡子">
     <a-form-item label="终端url">
-      <a-input v-model="endpointUrl" placeholder="请输入终端url" />
+      <a-input v-model:value="endpointUrl" placeholder="请输入终端url" />
     </a-form-item>
     <a-form-item label="表达式语言">
       <a-select v-model:value="language" placeholder="请选择表达式语言" @change="changeLanguage">
-        <a-select-option label="juel" value="juel" />
-        <a-select-option label="groovy" value="groovy" />
+        <a-select-option value="juel">juel</a-select-option>
+        <a-select-option value="groovy">groovy</a-select-option>
       </a-select>
     </a-form-item>
     <a-form-item label="有效载荷表达式">
@@ -48,14 +48,14 @@ const changeLanguage = (val: string) => {
         v-model="payloadExpression"
       />
       <!--      <a-input
-              v-model="payloadExpression"
+              v-model:value="payloadExpression"
               type="textarea"
               :rows="3"
               placeholder="请输入有效载荷表达式"
             />-->
     </a-form-item>
     <a-form-item label="返回变量">
-      <a-input v-model="resultVariable" placeholder="请输入返回变量" />
+      <a-input v-model:value="resultVariable" placeholder="请输入返回变量" />
     </a-form-item>
   </a-collapse-panel>
 </template>

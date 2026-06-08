@@ -92,22 +92,22 @@ onMounted(() => {
 <template>
   <a-collapse-panel key="arg1" header="调用活动">
     <a-form-item prop="calledElementType" label="活动类型">
-      <a-radio-group v-model="calledElementType">
-        <a-radio-button label="流程定义Key" value="key" />
-        <a-radio-button label="流程定义ID" value="id" />
+      <a-radio-group v-model:value="calledElementType">
+        <a-radio-button value="key">流程定义Key</a-radio-button>
+        <a-radio-button value="id">流程定义ID</a-radio-button>
       </a-radio-group>
     </a-form-item>
     <a-form-item prop="calledElement" label="调用活动">
-      <a-input v-model="calledElement" :placeholder="`请输入流程定义${calledElementType}`" />
+      <a-input v-model:value="calledElement" :placeholder="`请输入流程定义${calledElementType}`" />
     </a-form-item>
     <a-form-item prop="processInstanceName" label="流程实例名称">
-      <a-input v-model="processInstanceName" placeholder="请输入流程实例名称" />
+      <a-input v-model:value="processInstanceName" placeholder="请输入流程实例名称" />
     </a-form-item>
     <a-form-item prop="idVariableName" label="实例id变量名">
-      <a-input v-model="idVariableName" placeholder="请输入实例id变量名" />
+      <a-input v-model:value="idVariableName" placeholder="请输入实例id变量名" />
     </a-form-item>
     <a-form-item prop="businessKey" label="业务键">
-      <a-input v-model="businessKey" placeholder="请输入业务键/表达式" />
+      <a-input v-model:value="businessKey" placeholder="请输入业务键/表达式" />
     </a-form-item>
     <a-row :gutter="10">
       <a-col :span="form?.labelPosition === 'top' ? 8 : 24">
@@ -129,19 +129,17 @@ onMounted(() => {
     <a-form-item prop="in">
       <template #label>
         入参
-        <a-button type="primary" @click="editInParams()" link><PlusOutlined /> 创建入参 </a-button>
+        <a-button type="link" size="small" @click="editInParams()"><PlusOutlined /> 创建入参 </a-button>
       </template>
-      <a-table :dataSource="inData" height="200px">
-        <a-table-column prop="source" show-overflow-tooltip label="来源" />
-        <a-table-column prop="target" show-overflow-tooltip label="目标" />
-        <a-table-column align="center" min-width="60px" label="操作">
-          <template #default="{ row }">
+      <a-table :data-source="inData" size="small" :pagination="false" :scroll="{ y: 200 }" row-key="target">
+        <a-table-column data-index="source" title="来源" :ellipsis="true" />
+        <a-table-column data-index="target" title="目标" :ellipsis="true" />
+        <a-table-column align="center" width="72" title="操作">
+          <template #default="{ record }">
             <a-space>
-              <a-button type="primary" link @click="editInParams(row)"><EditOutlined /></a-button>
-              <a-popconfirm title="您确定要删除该字段吗？" @confirm="removeParams(row)">
-                <template #reference>
-                  <a-button danger link><DeleteOutlined /></a-button>
-                </template>
+              <a-button type="link" size="small" @click="editInParams(record)"><EditOutlined /></a-button>
+              <a-popconfirm title="您确定要删除该字段吗？" @confirm="removeParams(record)">
+                <a-button danger type="link" size="small"><DeleteOutlined /></a-button>
               </a-popconfirm>
             </a-space>
           </template>
@@ -153,7 +151,7 @@ onMounted(() => {
         <div class="flex-space">
           <div>
             出参
-            <a-button type="primary" @click="editOutParams()" link ><PlusOutlined /> 创建出参 </a-button>
+            <a-button type="link" size="small" @click="editOutParams()"><PlusOutlined /> 创建出参 </a-button>
           </div>
           <a-switch
             v-model:checked="useLocalScopeForOutParameters"
@@ -163,17 +161,15 @@ onMounted(() => {
           />
         </div>
       </template>
-      <a-table :dataSource="outData" height="200px">
-        <a-table-column prop="source" show-overflow-tooltip label="来源" />
-        <a-table-column prop="target" show-overflow-tooltip label="目标" />
-        <a-table-column align="center" min-width="60px" label="操作">
-          <template #default="{ row }">
+      <a-table :data-source="outData" size="small" :pagination="false" :scroll="{ y: 200 }" row-key="target">
+        <a-table-column data-index="source" title="来源" :ellipsis="true" />
+        <a-table-column data-index="target" title="目标" :ellipsis="true" />
+        <a-table-column align="center" width="72" title="操作">
+          <template #default="{ record }">
             <a-space>
-              <a-button type="primary" link @click="editOutParams(row)"><EditOutlined /></a-button>
-              <a-popconfirm title="您确定要删除该字段吗？" @confirm="removeParams(row)">
-                <template #reference>
-                  <a-button danger link><DeleteOutlined /></a-button>
-                </template>
+              <a-button type="link" size="small" @click="editOutParams(record)"><EditOutlined /></a-button>
+              <a-popconfirm title="您确定要删除该字段吗？" @confirm="removeParams(record)">
+                <a-button danger type="link" size="small"><DeleteOutlined /></a-button>
               </a-popconfirm>
             </a-space>
           </template>

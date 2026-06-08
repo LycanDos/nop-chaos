@@ -86,47 +86,48 @@ defineExpose({
   <a-drawer v-model:visible="drawerVisible" append-to-body :lock-scroll="false" width="35%" @closed="onClosed" :show-close="false" :closable="false" v-bind="$attrs">
     <a-form
       ref="formRef"
-      label-position="top"
+      layout="vertical"
       :model="cloned"
       :rules="formRules"
-      label-width="90px"
       :size="formSize"
     >
       <a-form-item label="聚合变量" prop="target">
-        <a-input v-model="cloned.target" placeholder="请输入变量名/委托表达式"></a-input>
+        <a-input v-model:value="cloned.target" placeholder="请输入变量名/委托表达式"></a-input>
       </a-form-item>
       <a-form-item label="自定义实现" prop="expression">
-        <a-input v-model="cloned.expression" placeholder="请输入java类/委托表达式"></a-input>
+        <a-input v-model:value="cloned.expression" placeholder="请输入java类/委托表达式"></a-input>
       </a-form-item>
       <a-form-item label="变量类型" prop="variableType">
-        <a-radio-group v-model="cloned.variableType">
-          <a-radio-button label="普通变量" value="createOverviewVariable" />
-          <a-radio-button label="瞬态变量" value="storeAsTransientVariable" />
+        <a-radio-group v-model:value="cloned.variableType">
+          <a-radio-button value="createOverviewVariable">普通变量</a-radio-button>
+          <a-radio-button value="storeAsTransientVariable">瞬态变量</a-radio-button>
         </a-radio-group>
       </a-form-item>
       <a-form-item label="变量定义" prop="variables">
         <template #label>
           变量定义
-          <a-button type="primary" link @click="addVariable"><PlusOutlined /> 添加变量</a-button>
+          <a-button type="link" size="small" @click="addVariable"><PlusOutlined /> 添加变量</a-button>
         </template>
-        <a-table :dataSource="cloned.variables" height="250px">
-          <a-table-column prop="source" label="源变量">
-            <template #default="{ row, $index }">
-              <a-form-item :prop="`variables.${$index}.source`" required :rules="expressionRule">
-                <a-input v-model="row.source" placeholder="源变量"></a-input>
+        <a-table :data-source="cloned.variables" size="small" :pagination="false" :scroll="{ y: 250 }">
+          <a-table-column data-index="source" title="源变量">
+            <template #default="{ record, index }">
+              <a-form-item :prop="`variables.${index}.source`" required :rules="expressionRule">
+                <a-input v-model:value="record.source" placeholder="源变量"></a-input>
               </a-form-item>
             </template>
           </a-table-column>
-          <a-table-column prop="target" label="目标变量">
-            <template #default="{ row, $index }">
-              <a-form-item :prop="`variables.${$index}.target`" required :rules="expressionRule">
-                <a-input v-model="row.target" placeholder="目标变量"></a-input>
+          <a-table-column data-index="target" title="目标变量">
+            <template #default="{ record, index }">
+              <a-form-item :prop="`variables.${index}.target`" required :rules="expressionRule">
+                <a-input v-model:value="record.target" placeholder="目标变量"></a-input>
               </a-form-item>
             </template>
           </a-table-column>
-          <a-table-column align="center" min-width="45px" label="操作">
-            <template #default="{ $index }">
-              <a-button danger circle text bg @click="delVariable($index)" ><DeleteOutlined /></a-button>
+          <a-table-column align="center" width="52" title="操作">
+            <template #default="{ index }">
+              <a-button danger shape="circle" size="small" @click="delVariable(index)">
+                <DeleteOutlined />
+              </a-button>
             </template>
           </a-table-column>
         </a-table>

@@ -115,63 +115,70 @@ defineExpose({
 </script>
 
 <template>
-  <a-drawer v-model:visible="drawerVisible" append-to-body :lock-scroll="false" width="35%" @closed="onClosed" :show-close="false" :closable="false" v-bind="$attrs">
+  <a-drawer
+    v-model:visible="drawerVisible"
+    width="520px"
+    :closable="false"
+    v-bind="$attrs"
+    @close="onClosed"
+  >
     <a-form
       ref="formRef"
-      label-position="top"
+      layout="vertical"
       :model="cloned"
       :rules="formRules"
-      label-width="90px"
       :size="formSize"
     >
       <a-form-item label="事件" prop="event">
-        <a-radio-group v-model="cloned.event">
+        <a-radio-group v-model:value="cloned.event">
           <slot name="eventOptions"></slot>
         </a-radio-group>
       </a-form-item>
       <a-form-item label="类型" prop="type">
-        <a-radio-group v-model="cloned.type">
-          <a-radio-button label="java类" value="class" />
-          <a-radio-button label="表达式" value="expression" />
-          <a-radio-button label="委托表达式" value="delegateExpression" />
+        <a-radio-group v-model:value="cloned.type">
+          <a-radio-button value="class">java类</a-radio-button>
+          <a-radio-button value="expression">表达式</a-radio-button>
+          <a-radio-button value="delegateExpression">委托表达式</a-radio-button>
         </a-radio-group>
       </a-form-item>
       <a-form-item label="监听器" prop="impl">
-        <a-input v-model="cloned.impl" placeholder="请输入监听器"></a-input>
+        <a-input v-model:value="cloned.impl" placeholder="请输入监听器"></a-input>
       </a-form-item>
       <a-form-item prop="fields">
         <template #label>
           注入字段
-          <a-button type="primary" link @click="addField()"><PlusOutlined /> 创建字段 </a-button>
+          <a-button type="link" size="small" @click="addField()"><PlusOutlined /> 创建字段 </a-button>
         </template>
-        <a-table :dataSource="cloned.fields" height="270px">
-          <a-table-column prop="name" label="字段名">
-            <template #default="{ row, $index }">
-              <a-form-item :prop="`fields.${$index}.name`" :rules="fieldNameRule">
-                <a-input v-model="row.name" placeholder="字段名"></a-input>
+        <a-table :data-source="cloned.fields" size="small" :pagination="false" :scroll="{ y: 270 }">
+          <a-table-column data-index="name" title="字段名">
+            <template #default="{ record, index }">
+              <a-form-item :prop="`fields.${index}.name`" :rules="fieldNameRule">
+                <a-input v-model:value="record.name" placeholder="字段名"></a-input>
               </a-form-item>
             </template>
           </a-table-column>
-          <a-table-column prop="type" min-width="75px" label="字段类型">
-            <template #default="{ row, $index }">
-              <a-form-item :prop="`fields.${$index}.type`" :rules="{ required: true, message: '字段类型不能为空', trigger: 'change' }">
-                <a-select v-model:value="row.type" placeholder="字段类型">
-                  <a-select-option label="字符串" value="string" />
-                  <a-select-option label="表达式" value="expression" />
+          <a-table-column data-index="type" width="120" title="字段类型">
+            <template #default="{ record, index }">
+              <a-form-item :prop="`fields.${index}.type`" :rules="{ required: true, message: '字段类型不能为空', trigger: 'change' }">
+                <a-select v-model:value="record.type" placeholder="字段类型">
+                  <a-select-option value="string">字符串</a-select-option>
+                  <a-select-option value="expression">表达式</a-select-option>
                 </a-select>
               </a-form-item>
             </template>
           </a-table-column>
-          <a-table-column prop="value" label="字段值">
-            <template #default="{ row, $index }">
-              <a-form-item :prop="`fields.${$index}.value`" :rules="fieldValueRule">
-                <a-input v-model="row.value" placeholder="字段值"></a-input>
+          <a-table-column data-index="value" title="字段值">
+            <template #default="{ record, index }">
+              <a-form-item :prop="`fields.${index}.value`" :rules="fieldValueRule">
+                <a-input v-model:value="record.value" placeholder="字段值"></a-input>
               </a-form-item>
             </template>
           </a-table-column>
-          <a-table-column align="center" min-width="35px" label="操作">
-            <template #default="{ $index }">
-              <a-button danger circle text bg @click="delField($index)" ><DeleteOutlined /></a-button>
+          <a-table-column align="center" width="52" title="操作">
+            <template #default="{ index }">
+              <a-button danger shape="circle" size="small" @click="delField(index)">
+                <DeleteOutlined />
+              </a-button>
             </template>
           </a-table-column>
         </a-table>

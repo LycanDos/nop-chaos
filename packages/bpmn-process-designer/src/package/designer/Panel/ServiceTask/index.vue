@@ -149,12 +149,13 @@ onMounted(() => {
 </script>
 
 <template>
-  <a-collapse-panel key="arg1" header="服务">
+  <a-collapse-panel key="arg1">
+    <template #header><span class="bpd-panel-title">服务</span></template>
     <a-form-item prop="executeType" label="执行类型">
-      <a-radio-group v-model="executeType" @change="changeExecuteType">
-        <a-radio-button label="Java类" value="class" />
-        <a-radio-button label="表达式" value="expression" />
-        <a-radio-button label="委托表达式" value="delegateExpression" />
+      <a-radio-group v-model:value="executeType" @change="changeExecuteType">
+        <a-radio-button value="class">Java类</a-radio-button>
+        <a-radio-button value="expression">表达式</a-radio-button>
+        <a-radio-button value="delegateExpression">委托表达式</a-radio-button>
       </a-radio-group>
     </a-form-item>
     <a-form-item prop="class" label="java类" v-if="executeType === 'class'">
@@ -167,7 +168,7 @@ onMounted(() => {
         placeholder="请输入java类"
         v-model="javaClass"
       />
-      <!--      <a-input v-model="javaClass" type="textarea" :rows="2" placeholder="请输入java类" />-->
+      <!--      <a-input v-model:value="javaClass" type="textarea" :rows="2" placeholder="请输入java类" />-->
     </a-form-item>
     <div v-else-if="executeType === 'expression'">
       <a-form-item prop="expression" label="表达式">
@@ -183,7 +184,7 @@ onMounted(() => {
         />
       </a-form-item>
       <!--el-form-item prop="resultVariableName" label="结果变量">
-        <a-input v-model="resultVariableName" placeholder="请输入返回结果变量名" />
+        <a-input v-model:value="resultVariableName" placeholder="请输入返回结果变量名" />
       </a-form-item>-->
     </div>
     <a-form-item prop="delegateExpression" label="委托表达式" v-else-if="executeType === 'delegateExpression'">
@@ -198,7 +199,7 @@ onMounted(() => {
         v-model="delegateExpression"
       />
       <!--      <a-input
-        v-model="delegateExpression"
+        v-model:value="delegateExpression"
         type="textarea"
         :rows="2"
         placeholder="请输入委托表达式"
@@ -207,20 +208,18 @@ onMounted(() => {
     <a-form-item>
       <template #label>
         注入字段
-        <a-button type="primary" link @click="editField()"><PlusOutlined /> 创建字段 </a-button>
+        <a-button type="link" @click="editField()"><PlusOutlined /> 创建字段 </a-button>
       </template>
-      <a-table :dataSource="injectFields" height="200px">
-        <a-table-column prop="name" show-overflow-tooltip label="字段名" />
-        <a-table-column prop="type" show-overflow-tooltip label="字段类型" />
-        <a-table-column prop="value" show-overflow-tooltip label="字段值" />
-        <a-table-column align="center" min-width="66px" label="操作">
-          <template #default="{ row }">
+      <a-table :data-source="injectFields" :pagination="false" size="small">
+        <a-table-column data-index="name" title="字段名" :ellipsis="true" />
+        <a-table-column data-index="type" title="字段类型" :ellipsis="true" />
+        <a-table-column data-index="value" title="字段值" :ellipsis="true" />
+        <a-table-column align="center" width="76px" title="操作">
+          <template #default="{ record }">
             <a-space>
-              <a-button type="primary" link @click="editField(row)"><EditOutlined /></a-button>
-              <a-popconfirm title="您确定要删除该字段吗？" @confirm="removeField(row)">
-                <template #reference>
-                  <a-button danger link><DeleteOutlined /></a-button>
-                </template>
+              <a-button type="link" @click="editField(record)"><EditOutlined /></a-button>
+              <a-popconfirm title="您确定要删除该字段吗？" @confirm="removeField(record)">
+                <a-button danger type="link"><DeleteOutlined /></a-button>
               </a-popconfirm>
             </a-space>
           </template>
@@ -233,13 +232,17 @@ onMounted(() => {
     </a-form-item>
     <a-form-item prop="mapException" label="异常映射">
       <a-badge :show-zero="false" :value="mapExceptionSize" class="w-full">
-        <a-button type="info" text bg plain class="w-full" @click="editException"
-          >编辑映射
-        </a-button>
+        <a-button class="w-full" @click="editException">编辑映射</a-button>
       </a-badge>
       <MapExceptionDrawer ref="mapExceptionDrawerRef" @confirm="mapExceptionConfirm" />
     </a-form-item>
   </a-collapse-panel>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.bpd-panel-title {
+  color: var(--bpd-text-color, #262626);
+  font-size: 13px;
+  font-weight: 600;
+}
+</style>

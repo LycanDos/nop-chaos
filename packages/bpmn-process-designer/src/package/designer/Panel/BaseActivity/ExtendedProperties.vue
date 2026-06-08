@@ -98,19 +98,17 @@ onMounted(() => {
   <div class="properties-container">
     <div class="properties-header">
       <span>扩展属性</span>
-      <a-button type="primary" link @click="editAttribute()"><PlusOutlined />添加</a-button>
+      <a-button type="link" size="small" @click="editAttribute()"><PlusOutlined />添加</a-button>
     </div>
-    <a-table :dataSource="propertiesData" height="200px">
-      <a-table-column prop="name" show-overflow-tooltip label="属性名"></a-table-column>
-      <a-table-column prop="value" show-overflow-tooltip label="属性值"></a-table-column>
-      <a-table-column label="操作" min-width="60px" align="center">
-        <template #default="{ row }">
+    <a-table :data-source="propertiesData" size="small" :pagination="false" :scroll="{ y: 200 }" row-key="id">
+      <a-table-column data-index="name" title="属性名" :ellipsis="true" />
+      <a-table-column data-index="value" title="属性值" :ellipsis="true" />
+      <a-table-column title="操作" width="72" align="center">
+        <template #default="{ record }">
           <a-space>
-            <a-button type="primary" link @click="editAttribute(row)"><EditOutlined /></a-button>
-            <a-popconfirm title="您确定要删除该属性吗？" @confirm="removeAttribute(row)">
-              <template #reference>
-                <a-button danger link><DeleteOutlined /></a-button>
-              </template>
+            <a-button type="link" size="small" @click="editAttribute(record)"><EditOutlined /></a-button>
+            <a-popconfirm title="您确定要删除该属性吗？" @confirm="removeAttribute(record)">
+              <a-button danger type="link" size="small"><DeleteOutlined /></a-button>
             </a-popconfirm>
           </a-space>
         </template>
@@ -126,7 +124,9 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 7px 7px;
+    padding: 0 0 8px;
+    color: var(--bpd-text-color, #262626);
+    font-weight: 600;
   }
 }
 </style>

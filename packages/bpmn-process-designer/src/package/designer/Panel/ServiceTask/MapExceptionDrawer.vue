@@ -95,56 +95,62 @@ defineExpose({
 </script>
 
 <template>
-  <a-drawer v-model:visible="drawerVisible" width="40%" append-to-body :lock-scroll="false" @closed="onClosed" :show-close="false" :closable="false">
-    <a-form ref="formRef" label-position="top" :model="cloned" :size="formSize">
+  <a-drawer v-model:visible="drawerVisible" width="620px" :closable="false" @close="onClosed">
+    <a-form ref="formRef" layout="vertical" :model="cloned" :size="formSize">
       <a-form-item>
         <template #label>
-          <a-button type="primary" text bg @click="addException" ><PlusOutlined /> 添加映射 </a-button>
+          <a-button type="link" size="small" @click="addException"><PlusOutlined /> 添加映射 </a-button>
         </template>
-        <a-table :dataSource="cloned.exceptions" height="400px">
-          <a-table-column prop="errorCode" label="错误码">
-            <template #default="{ row, $index }">
-              <a-form-item :prop="`exceptions.${$index}.errorCode`" :rules="errorCodeFormRule">
-                <a-select v-model:value="row.errorCode" placeholder="请选择错误码">
+        <a-table :data-source="cloned.exceptions" size="small" :pagination="false" :scroll="{ y: 400 }">
+          <a-table-column data-index="errorCode" title="错误码">
+            <template #default="{ record, index }">
+              <a-form-item :prop="`exceptions.${index}.errorCode`" :rules="errorCodeFormRule">
+                <a-select v-model:value="record.errorCode" placeholder="请选择错误码">
                   <a-select-option
                     v-for="item in errorEvents.filter(
                       (e) =>
                         !cloned.exceptions.some(
                           (item) =>
-                            item.errorCode === e.errorCode && item.errorCode !== row.errorCode,
+                            item.errorCode === e.errorCode && item.errorCode !== record.errorCode,
                         ),
                     )"
                     :key="item.errorCode"
                     :label="item.name"
                     :value="item.errorCode"
-                  ></a-select-option>
+                  >
+                    {{ item.name }}
+                  </a-select-option>
                   <template #footer>
-                    <a-button text bg size="small" style="width: 100%" @click="addErrorEvent()" ><PlusOutlined /> 新增错误定义 </a-button>
+                    <a-button type="link" size="small" block @click="addErrorEvent()">
+                      <PlusOutlined /> 新增错误定义
+                    </a-button>
                   </template>
                 </a-select>
               </a-form-item>
             </template>
           </a-table-column>
-          <a-table-column prop="exceptionClass" min-width="120px" label="异常类">
-            <template #default="{ row, $index }">
-              <a-form-item :prop="`exceptions.${$index}.exceptionClass`" :rules="exceptionClassFormRule">
-                <a-input v-model="row.exceptionClass" placeholder="java异常类路径" />
+          <a-table-column data-index="exceptionClass" width="180" title="异常类">
+            <template #default="{ record, index }">
+              <a-form-item :prop="`exceptions.${index}.exceptionClass`" :rules="exceptionClassFormRule">
+                <a-input v-model:value="record.exceptionClass" placeholder="java异常类路径" />
               </a-form-item>
             </template>
           </a-table-column>
           <a-table-column
             align="center"
-            prop="includeChildExceptions"
-            min-width="60px"
-            label="包含子异常"
+            data-index="includeChildExceptions"
+            width="96"
+            title="包含子异常"
           >
-            <template #default="{ row }">
-              <a-switch v-model:checked="row.includeChildExceptions" />
+            <template #default="{ record }">
+              <a-switch v-model:checked="record.includeChildExceptions" />
             </template>
           </a-table-column>
-          <a-table-column align="center" min-width="40px" label="操作">
-            <template #default="{ $index }">
-              <a-button danger circle text bg @click="cloned.exceptions.splice($index, 1)" ><DeleteOutlined /></a-button>
+          <a-table-column align="center" width="52" title="操作">
+            <template #default="{ index }">
+              <a-button danger shape="circle" size="small" @click="cloned.exceptions.splice(index, 1)">
+                <DeleteOutlined />
+              </a-button>
             </template>
           </a-table-column>
         </a-table>

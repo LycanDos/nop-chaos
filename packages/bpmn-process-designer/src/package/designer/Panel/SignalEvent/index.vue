@@ -68,7 +68,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <a-collapse-panel key="arg1" header="信号事件">
+  <a-collapse-panel key="arg1">
+    <template #header>
+      <span class="panel-section-title">信号事件</span>
+    </template>
     <a-form-item prop="signalRef" label="信号引用">
       <a-select v-model:value="signalRef" placeholder="请选择信号引用">
         <a-select-option
@@ -76,9 +79,13 @@ onMounted(() => {
           :key="item.id"
           :label="item.name"
           :value="item.id"
-        ></a-select-option>
+        >
+          {{ item.name }}
+        </a-select-option>
         <template #footer>
-          <a-button text bg size="small" style="width: 100%" @click="addSignalEvent()" ><PlusOutlined /> 新增信号定义 </a-button>
+          <a-button type="link" size="small" block @click="addSignalEvent()">
+            <PlusOutlined /> 新增信号定义
+          </a-button>
         </template>
       </a-select>
       <SignalEventDrawer ref="signalEventDrawerRef" @confirm="confirmSignalEvent" />
@@ -86,4 +93,9 @@ onMounted(() => {
   </a-collapse-panel>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.panel-section-title {
+  font-weight: 600;
+  color: var(--bpd-text-color, #262626);
+}
+</style>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import type { CSSProperties } from 'vue'
 import type { Element } from 'bpmn-js/lib/model/Types'
 import type { MethodSchemaFieldItem, OutputDeltaItem } from '@/types/executor.ts'
 import ExecutorOutputDeltaThreePane from './ExecutorOutputDeltaThreePane.vue'
@@ -27,6 +28,32 @@ const emit = defineEmits<{
 const visible = ref(false)
 const loading = ref(false)
 const loadError = ref('')
+const drawerWidth = ref('calc(100vw - 210px)')
+const drawerBodyStyle: CSSProperties = {
+  padding: '0',
+  height: '100%',
+  overflow: 'hidden',
+  display: 'flex',
+  flexDirection: 'column',
+  minHeight: '0',
+}
+const drawerStyle: CSSProperties = {
+  height: '100%',
+}
+const drawerHeaderStyle: CSSProperties = {
+  padding: '0',
+  minHeight: '0',
+  borderBottom: '0',
+}
+const drawerFooterStyle: CSSProperties = {
+  padding: '8px 12px',
+  borderTop: '1px solid var(--ant-border-color-split, #f0f0f0)',
+  flexShrink: 0,
+}
+const drawerContentWrapperStyle = computed<CSSProperties>(() => ({
+  width: drawerWidth.value,
+  maxWidth: '100vw',
+}))
 const variablePoolData = ref<Record<string, unknown>>({})
 const currentResultData = ref<Record<string, unknown>>({})
 const deltaDocument = ref<Record<string, unknown>>({})
@@ -39,8 +66,11 @@ async function openDrawer(options: OpenDrawerOptions) {
   outputFields.value = options.fields
   loadError.value = ''
   warnings.value = []
+  updateDrawerLayout()
   visible.value = true
   loading.value = true
+  await nextTick()
+  scheduleDrawerLayoutUpdate()
 
   try {
     const [variablePoolRes, nodeResultRes] = await Promise.all([
@@ -74,6 +104,76 @@ function confirm() {
 
 function cancel() {
   visible.value = false
+}
+
+function resolveMainContentLeft() {
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return 0
+  }
+
+  if (window.innerWidth < 900) {
+    return 0
+  }
+
+  const mainContent = document.querySelector<HTMLElement>('.jeecg-default-layout-main')
+  if (mainContent) {
+    const rect = mainContent.getBoundingClientRect()
+    if (rect.width > 320 && rect.left > 0 && rect.left < window.innerWidth - 320) {
+      return Math.round(rect.left)
+    }
+  }
+
+  const siderRight = Array.from(
+    document.querySelectorAll<HTMLElement>('.jeecg-layout-mix-sider, .ant-layout-sider'),
+  ).reduce((maxRight, item) => {
+    const rect = item.getBoundingClientRect()
+    const isVisible = rect.width > 0 && rect.height > 0 && rect.right > 0 && rect.left < window.innerWidth
+    return isVisible ? Math.max(maxRight, rect.right) : maxRight
+  }, 0)
+
+  if (siderRight > 0 && siderRight < window.innerWidth - 320) {
+    return Math.round(siderRight)
+  }
+
+  return window.innerWidth > 1110 ? 210 : 0
+}
+
+function updateDrawerLayout() {
+  if (typeof window === 'undefined') return
+  const left = resolveMainContentLeft()
+  const width = Math.max(320, Math.round(window.innerWidth - left))
+  drawerWidth.value = `${Math.min(width, window.innerWidth)}px`
+}
+
+let layoutFrame = 0
+let layoutListenerBound = false
+
+function scheduleDrawerLayoutUpdate() {
+  if (typeof window === 'undefined') return
+  if (layoutFrame) {
+    window.cancelAnimationFrame(layoutFrame)
+  }
+  layoutFrame = window.requestAnimationFrame(() => {
+    layoutFrame = 0
+    updateDrawerLayout()
+  })
+}
+
+function bindDrawerLayoutListeners() {
+  if (layoutListenerBound || typeof window === 'undefined') return
+  window.addEventListener('resize', scheduleDrawerLayoutUpdate)
+  layoutListenerBound = true
+}
+
+function unbindDrawerLayoutListeners() {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('resize', scheduleDrawerLayoutUpdate)
+    if (layoutFrame) {
+      window.cancelAnimationFrame(layoutFrame)
+      layoutFrame = 0
+    }
+  }
+  layoutListenerBound = false
 }
 
 async function loadVariablePoolPreview(options: OpenDrawerOptions) {
@@ -147,11 +247,36 @@ function deltaJsonToOutputDeltas(value: Record<string, unknown>) {
   return result
 }
 
+watch(visible, async (isVisible) => {
+  if (isVisible) {
+    updateDrawerLayout()
+    bindDrawerLayoutListeners()
+    await nextTick()
+    scheduleDrawerLayoutUpdate()
+    return
+  }
+  unbindDrawerLayoutListeners()
+})
+
+onBeforeUnmount(unbindDrawerLayoutListeners)
+
 defineExpose({ openDrawer })
 </script>
 
 <template>
-  <a-drawer v-model:visible="visible" placement="rtl" width="96%" :show-close="false" :closable="false">
+  <a-drawer
+    v-model:visible="visible"
+    class="output-delta-drawer"
+    placement="right"
+    :width="drawerWidth"
+    :show-close="false"
+    :closable="false"
+    :drawer-style="drawerStyle"
+    :body-style="drawerBodyStyle"
+    :header-style="drawerHeaderStyle"
+    :footer-style="drawerFooterStyle"
+    :content-wrapper-style="drawerContentWrapperStyle"
+  >
     <div v-if="warnings.length" class="delta-output-warnings">
       {{ prettyWarnings }}
     </div>
@@ -176,11 +301,26 @@ defineExpose({ openDrawer })
 
 <style scoped lang="less">
 .delta-output-body {
-  height: calc(100vh - 140px);
-  min-height: 680px;
+  flex: 1 1 auto;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  padding: 8px;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+}
+
+.delta-output-body :deep(.delta-lab) {
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
 }
 
 .delta-output-state {
+  flex: 1 1 auto;
+  min-height: 0;
   padding: 24px;
   font-size: 12px;
   color: var(--el-text-color-secondary);
@@ -191,12 +331,44 @@ defineExpose({ openDrawer })
 }
 
 .delta-output-warnings {
-  margin-bottom: 8px;
+  flex: 0 0 auto;
+  margin: 8px 8px 0;
   padding: 8px 10px;
   border: 1px solid #fcd34d;
   border-radius: 4px;
   background: #fffbeb;
   color: #92400e;
   font-size: 12px;
+}
+</style>
+
+<style lang="less">
+.output-delta-drawer {
+  .ant-drawer-content-wrapper {
+    max-width: 100vw;
+  }
+
+  .ant-drawer-content {
+    height: 100%;
+  }
+
+  .ant-drawer-wrapper-body {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ant-drawer-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .ant-drawer-footer {
+    flex: 0 0 auto;
+  }
 }
 </style>

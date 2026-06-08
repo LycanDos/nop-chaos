@@ -74,7 +74,7 @@ const retryTimeCycle = customRef((track, trigger) => {
     </a-col>
   </a-row>
   <a-form-item label="失败重试周期" v-show="asyncBefore || asyncAfter">
-    <a-input v-model="retryTimeCycle" clearable placeholder="请输入失败重试周期" />
+    <a-input v-model:value="retryTimeCycle" allow-clear placeholder="请输入失败重试周期" />
   </a-form-item>
 </template>
 
