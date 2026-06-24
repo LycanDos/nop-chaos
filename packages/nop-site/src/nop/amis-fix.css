@@ -71,3 +71,31 @@
     width: 100% !important;
     padding: 0 !important;
 }
+
+/* ========================================
+ * footToolbar 左右分离布局修复
+ * 将 statistics + switch-per-page 保持在左侧，分页器推到右侧
+ * AMIS antd.css 默认使用 float 布局，此处改为 flex 布局
+ * ======================================== */
+.antd-Table-footToolbar .antd-Crud-toolbar {
+    align-items: center;
+    display: flex !important;
+    margin-bottom: 0.3rem;
+    margin-top: 0;
+    min-height: 32px;
+}
+
+/* 取消 AMIS 默认的 float 布局 */
+.antd-Table-footToolbar .antd-Crud-toolbar-item--left {
+    float: none !important;
+}
+
+.antd-Table-footToolbar .antd-Crud-toolbar-item--right {
+    float: none !important;
+    margin-left: auto !important;
+}
+
+/* 取消 AMIS 的 float clearfix */
+.antd-Table-footToolbar .antd-Crud-toolbar::after {
+    content: none;
+}
