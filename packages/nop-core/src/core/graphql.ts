@@ -471,6 +471,12 @@ function argQuery(data: any, arg: ArgumentDefinition, options: FetcherRequest) {
             "$type": "and",
             "$body": []
         }
+        // Known system parameter names that should not be treated as filter fields
+        const SYSTEM_KEYS = new Set([
+            'page', 'perPage', 'pageSize', 'orderBy', 'orderDir', 'orderField',
+            'limit', 'offset', 'cursor', 'timeout', 'keywords', 'query',
+            'queryBean', 'vars', 'context'
+        ]);
         for (let k in data) {
             if (k.startsWith("filter_")) {
                 let name = k.substring('filter_'.length)
@@ -505,6 +511,17 @@ function argQuery(data: any, arg: ArgumentDefinition, options: FetcherRequest) {
                     value = undefined
                 }
                 filter.$body.push({ '$type': op, name, value, min, max })
+            } else if (!k.startsWith('_') && !k.startsWith('$') && !SYSTEM_KEYS.has(k)) {
+                // AMIS column header search: bare column name as key (no filter_ prefix)
+                let value = data[k]
+                if (value == null || value == '')
+                    continue;
+                if (value == '__empty') {
+                    value = '';
+                } else if (value == '__null') {
+                    value = null;
+                }
+                filter.$body.push({ '$type': 'eq', name: k, value })
             }
         }
 
