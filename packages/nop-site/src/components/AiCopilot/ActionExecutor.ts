@@ -209,7 +209,7 @@ export class ActionExecutor {
       case 'submitForm':
         return this.handleSubmitForm(action, pageType)
       case 'openDialog':
-        return this.handleOpenDialog(action)
+        return this.handleOpenDialog(action, pageType)
       case 'query':
         return this.handleQuery(action)
       default:
@@ -337,7 +337,7 @@ export class ActionExecutor {
 
       const actionDef = allActions.find((a: any) =>
         a.id === name ||
-        (name === 'add' && (a.id?.includes('add') || a.id?.includes('create'))) ||
+        (name === 'add' && (a.id?.includes('add') || a.id?.includes('create') || a.actionType === 'dialog')) ||
         (name === 'edit' && a.id?.includes('update')) ||
         (name === 'delete' && a.id?.includes('delete'))
       )
@@ -820,17 +820,147 @@ export class ActionExecutor {
     return null
   }
 
-  private async handleOpenDialog(action: FrontendAction): Promise<ActionResult> {
-    // 语义路径：通过 dialogName
-    const dialogTarget = action.dialogName || action.target
-
-    // 通过 Mitt 事件总线打开弹窗
-    const emitter = (window as any).__emitter__
-    if (emitter) {
-      emitter.emit(dialogTarget, action.params)
-      return { success: true }
+  private getDialogActionCandidates(action: FrontendAction): string[] {
+    const candidates = new Set<string>()
+    const add = (value?: string) => {
+      if (value && value.trim()) {
+        candidates.add(value.trim())
+      }
     }
-    return { success: false, error: 'Event bus not available' }
+
+    const addNormalized = (value?: string) => {
+      if (!value) return
+      const text = value.trim()
+      const lower = text.toLowerCase()
+      if (['新增', '新建', '添加', '创建'].includes(text) ||
+        ['add', 'create', 'createrecord', 'addrecord'].includes(lower)) {
+        add('add')
+        add('create')
+        add('createRecord')
+      } else if (['编辑', '修改'].includes(text) ||
+        ['edit', 'update', 'updaterecord'].includes(lower)) {
+        add('edit')
+        add('update')
+      } else if (['删除', '移除'].includes(text) ||
+        ['delete', 'remove', 'deleterecord'].includes(lower)) {
+        add('delete')
+        add('deleteRecord')
+      }
+      add(text)
+    }
+
+    addNormalized(action.actionName)
+    addNormalized(action.target)
+    addNormalized(action.dialogName)
+
+    return Array.from(candidates)
+  }
+
+  private getOpenDialogElement(): HTMLElement | null {
+    const selectors = [
+      '.ant-modal-wrap',
+      '.ant-modal',
+      '.ant-drawer-open',
+      '.ant-drawer',
+      '.cxd-Modal--open',
+      '.cxd-Modal',
+      '.cxd-Dialog--open',
+      '.cxd-Dialog',
+      '.amis-dialog',
+      '[role="dialog"]',
+    ]
+
+    for (const selector of selectors) {
+      const elements = document.querySelectorAll(selector)
+      for (const element of Array.from(elements)) {
+        if (this.isElementVisible(element)) {
+          return element as HTMLElement
+        }
+      }
+    }
+
+    return null
+  }
+
+  private isElementVisible(element: Element): boolean {
+    const el = element as HTMLElement
+    const style = window.getComputedStyle(el)
+    if (style.display === 'none' || style.visibility === 'hidden') return false
+    return el.getClientRects().length > 0
+  }
+
+  private async waitForDialogOpen(timeoutMs: number): Promise<HTMLElement | null> {
+    const start = Date.now()
+    while (Date.now() - start < timeoutMs) {
+      const dialog = this.getOpenDialogElement()
+      if (dialog) return dialog
+      await sleep(50)
+    }
+    return null
+  }
+
+  private async handleOpenDialog(
+    action: FrontendAction,
+    pageType?: string,
+  ): Promise<ActionResult> {
+    const dialogTarget = action.dialogName || action.actionName || action.target
+
+    if (this.getOpenDialogElement()) {
+      return { success: true, data: { type: 'openDialog', target: dialogTarget, via: 'existing' } }
+    }
+
+    const emitter = (window as any).__emitter__
+    if (emitter && dialogTarget) {
+      emitter.emit(dialogTarget, action.params)
+      const opened = await this.waitForDialogOpen(800)
+      if (opened) {
+        return { success: true, data: { type: 'openDialog', target: dialogTarget, via: 'eventBus' } }
+      }
+    }
+
+    const candidates = this.getDialogActionCandidates(action)
+
+    for (const candidate of candidates) {
+      const handler = this.findRegisteredHandler(candidate, pageType)
+      if (!handler) continue
+      try {
+        await handler(action.params)
+        const opened = await this.waitForDialogOpen(1200)
+        return {
+          success: true,
+          data: { type: 'openDialog', target: candidate, via: opened ? 'handler' : 'handler-no-dialog-detected' },
+        }
+      } catch (err: any) {
+        return { success: false, error: err.message }
+      }
+    }
+
+    for (const candidate of candidates) {
+      const amisResult = this.dispatchViaAmisScope(candidate)
+      if (!amisResult) continue
+      const opened = await this.waitForDialogOpen(1200)
+      return {
+        success: true,
+        data: { type: 'openDialog', target: candidate, via: opened ? 'amis' : 'amis-no-dialog-detected' },
+      }
+    }
+
+    for (const candidate of candidates) {
+      const clickResult = await this.handleClick({
+        ...action,
+        type: 'click',
+        actionName: candidate,
+        target: candidate,
+      }, pageType)
+      if (!clickResult.success) continue
+      const opened = await this.waitForDialogOpen(1200)
+      return {
+        success: true,
+        data: { type: 'openDialog', target: candidate, via: opened ? 'dom' : 'dom-no-dialog-detected' },
+      }
+    }
+
+    return { success: false, error: `Dialog opener not found: ${dialogTarget || 'unknown'}` }
   }
 
   private async handleQuery(action: FrontendAction): Promise<ActionResult> {

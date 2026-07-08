@@ -7,6 +7,10 @@ import { onBeforeUnmount } from 'vue'
 
 const emitter = mitt()
 
+if (typeof window !== 'undefined') {
+  ;(window as any).__emitter__ = emitter
+}
+
 interface UseEmittOptions {
   name: string
   callback: (...args: any[]) => void
