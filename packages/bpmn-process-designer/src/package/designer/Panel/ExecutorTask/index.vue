@@ -215,7 +215,6 @@ function buildEmbeddedMethod(executor: ExecutorDefItem): ExecutorMethodItem {
   const code = executor.executorCode || 'embedded'
   const methodCodeByExecutor: Record<string, string> = {
     'lycan.hoppscotch': 'executeRequest',
-    'lycan.http-api': 'executeRequest',
     'lycan.db-query': 'executeQuery',
     'lycan.ai': 'execute',
     'lycan.rule': 'execute',
@@ -240,7 +239,7 @@ function buildEmbeddedMethod(executor: ExecutorDefItem): ExecutorMethodItem {
 
 function buildEmbeddedSchema(methodId: string): MethodSchemaFieldItem[] {
   const executorCode = methodId.split(':')[1] || bindingForm.executorCode
-  const hasRequestEditor = executorCode === 'lycan.hoppscotch' || executorCode === 'lycan.http-api'
+  const hasRequestEditor = executorCode === 'lycan.hoppscotch'
   return [
     {
       fieldId: `${methodId}:executorConfigJson`,
